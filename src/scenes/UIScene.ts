@@ -96,7 +96,7 @@ export class UIScene extends Phaser.Scene {
             TEXT_HINT: '#8c7a66'
         },
         SLOT_SIZE: {
-            ARMOR: 40,
+            ARMOR: 36,          // slightly smaller so the column fits the preview block
             EQUIP: 40,
             WAVE_EQUIPPED: 50,
             WAVE_STORAGE: 42
@@ -602,10 +602,12 @@ export class UIScene extends Phaser.Scene {
         // Group them to center visually
         const previewSize = 140;
         const armorSize = L.SLOT_SIZE.ARMOR;
-        const armorGap = 8;
-        const groupW = previewSize + 16 + armorSize; // Preview + gap + armor column
+        const armorGap = 6;
+        // tighten gap between preview and armor column
+        const groupW = previewSize + 12 + armorSize; // Preview + gap + armor column
         const groupStartX = leftColCenterX - (groupW / 2);
-        const groupY = contentTop;
+        // Nudge the entire preview/armor block downward so it doesn't stick to the header
+        const groupY = contentTop + 24;
 
         // Preview Box
         const previewFrame = this.add.graphics();
@@ -621,11 +623,12 @@ export class UIScene extends Phaser.Scene {
         this.inventoryContainer.add(charSprite);
 
         // Armor Slots (Vertical stack to right of preview)
-        const armorStartX = groupStartX + previewSize + 16 + (armorSize / 2);
+        const armorStartX = groupStartX + previewSize + 12 + (armorSize / 2);
         const armorTotalH = (armorSize * 4) + (armorGap * 3);
+        // vertically center armor column next to the preview
         const armorStartY = groupY + (previewSize / 2) - (armorTotalH / 2) + (armorSize / 2);
 
-        const armorLabel = this.add.text(armorStartX, armorStartY - (armorSize / 2) - 15, 'Armor', {
+        const armorLabel = this.add.text(armorStartX, armorStartY - (armorSize / 2) - 8, 'Armor', {
             font: '12px serif', color: L.COLORS.TEXT_LABEL
         }).setOrigin(0.5, 1);
         this.inventoryContainer.add(armorLabel);
@@ -637,7 +640,8 @@ export class UIScene extends Phaser.Scene {
         }
 
         // 2. Equipment Grid (Below Character)
-        const equipY = groupY + previewSize + 30;
+        // Balanced breathing room between preview block and equipment grid
+        const equipY = groupY + previewSize + 24;
 
         const equipLabel = this.add.text(leftColCenterX - (leftColW / 2), equipY, 'Equipment', {
             font: 'bold 16px serif', color: L.COLORS.TEXT_TITLE
@@ -670,23 +674,26 @@ export class UIScene extends Phaser.Scene {
         const rightColLeftX = vDividerX + (L.COL_GAP / 2);
 
         // 1. Waves Header
-        this.add.text(rightColLeftX, contentTop, 'Waves', {
+        const wavesHeader = this.add.text(rightColLeftX, contentTop, 'Waves', {
             font: 'bold 18px serif', color: L.COLORS.TEXT_TITLE
         }).setOrigin(0, 0);
+        this.inventoryContainer.add(wavesHeader);
 
         // Hint Text
-        this.add.text(halfW - L.PAD, contentTop + 4, 'L-Click: Equip / R-Click: Unequip', {
+        const hintText = this.add.text(halfW - L.PAD, contentTop + 4, 'L-Click: Equip / R-Click: Unequip', {
             font: 'italic 11px serif', color: L.COLORS.TEXT_HINT
         }).setOrigin(1, 0);
+        this.inventoryContainer.add(hintText);
 
         // 2. Equipped Waves
         const waveEquipY = contentTop + 40;
         const wEquipSize = L.SLOT_SIZE.WAVE_EQUIPPED;
         const wEquipGap = 20;
 
-        this.add.text(rightColLeftX, waveEquipY + (wEquipSize / 2), 'Equipped', {
+        const equippedLabel = this.add.text(rightColLeftX, waveEquipY + (wEquipSize / 2), 'Equipped', {
             font: '14px serif', color: L.COLORS.TEXT_LABEL
         }).setOrigin(0, 0.5);
+        this.inventoryContainer.add(equippedLabel);
 
         // Center the 3 equipped slots in the remaining space of right col? 
         // Or just align them nicely. Let's align right.
@@ -717,9 +724,10 @@ export class UIScene extends Phaser.Scene {
         // 3. Storage Waves
         const waveStorageY = waveEquipY + wEquipSize + 30;
 
-        this.add.text(rightColLeftX, waveStorageY, 'Storage', {
+        const storageLabel = this.add.text(rightColLeftX, waveStorageY, 'Storage', {
             font: '14px serif', color: L.COLORS.TEXT_LABEL
         }).setOrigin(0, 0);
+        this.inventoryContainer.add(storageLabel);
 
         const wStoreSize = L.SLOT_SIZE.WAVE_STORAGE;
         const wStoreGap = 10;
@@ -768,9 +776,10 @@ export class UIScene extends Phaser.Scene {
         starDiv.lineBetween(rightColLeftX, statsY - 15, halfW - L.PAD, statsY - 15);
         this.inventoryContainer.add(starDiv);
 
-        this.add.text(rightColLeftX, statsY, 'Stats', {
+        const statsHeader = this.add.text(rightColLeftX, statsY, 'Stats', {
             font: 'bold 16px serif', color: L.COLORS.TEXT_TITLE
         }).setOrigin(0, 0);
+        this.inventoryContainer.add(statsHeader);
 
         // Stats Columns
         const statsContentY = statsY + 30;
