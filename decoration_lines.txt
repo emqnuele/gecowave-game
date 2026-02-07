@@ -1,0 +1,141 @@
+1	export class DecorationManager {
+2	    private scene: Phaser.Scene;
+3	    private propsGroup: Phaser.GameObjects.Group | null;
+4	    private roofProps: Phaser.GameObjects.Image[];
+5	    private readonly roofOffsetPx = 20;
+6	
+7	    constructor(scene: Phaser.Scene) {
+8	        this.scene = scene;
+9	        this.propsGroup = this.scene.add.group();
+10	        this.roofProps = [];
+11	    }
+12	
+13	    public decorateLevel(layer: Phaser.Tilemaps.TilemapLayer): void {
+14	        console.log('[DecorationManager] Loading props from map objects...');
+15	        if (!this.propsGroup) return;
+16	        this.propsGroup.clear(true, true);
+17	        this.roofProps = [];
+18	
+19	        const map = layer.tilemap;
+20	        const objectLayer = map.getObjectLayer('Objects');
+21	
+22	        if (!objectLayer) {
+23	            console.warn('[DecorationManager] No Objects layer found in map.');
+24	            return;
+25	        }
+26	
+27	        let count = 0;
+28	
+29	        objectLayer.objects.forEach(obj => {
+30	            if (obj.type === 'Prop') {
+31	                this.spawnProp(obj);
+32	                count++;
+33	            }
+34	        });
+35	
+36	        this.syncRoofProps();
+37	        console.log(`[DecorationManager] Spawned ${count} props.`);
+38	    }
+39	
+40	    private spawnProp(obj: Phaser.Types.Tilemaps.TiledObject): void {
+41	        // Tiled Objects coordinates are in pixels (based on 160px tiles).
+42	        // The game world is scaled down to 0.2.
+43	        // So we need to position the props at (obj.x * 0.2, obj.y * 0.2).
+44	
+45	        const SCALE = 0.2;
+46	        const x = (obj.x || 0) * SCALE;
+47	        const y = (obj.y || 0) * SCALE;
+48	
+49	        // Ensure texture exists
+50	        if (!this.scene.textures.exists('props_atlas')) return;
+51	
+52	        const prop = this.scene.add.image(x, y, 'props_atlas', obj.name);
+53	
+54	        // Properties
+55	        // Properties parsing (handle both Array and Object formats from Phaser/Tiled)
+56	        let kind = 'floor';
+57	        if (obj.properties) {
+58	            if (Array.isArray(obj.properties)) {
+59	                const p = obj.properties.find((p: any) => p.name === 'kind');
+60	                if (p) kind = p.value;
+61	            } else {
+62	                // Determine if it's a direct dictionary (Phaser sometimes converts)
+63	                const props = obj.properties as any;
+64	                if (props.kind) kind = props.kind;
+65	            }
+66	        }
+67	
+68	        // console.log(`[DecorationManager] Prop: ${obj.name}, Kind: ${kind}`);
+69	
+70	        // Orientation & Scale
+71	        if (kind === 'floor') {
+72	            prop.setOrigin(0.5, 1); // Bottom-Center used in generation
+73	            prop.y += 15; // Shift down to embed (User requested +5 more, total ~15)
+74	
+75	            // Force behind terrain (Terrain is likely depth 0)
+76	            prop.setDepth(-1);
+77	
+78	            const isBg = obj.name.includes('bg');
+79	            if (isBg) {
+80	                prop.setTint(0xcccccc);
+81	            }
+82	        } else if (kind === 'roof') {
+83	            // ROOF PROPS: Anchored to screen top (Header style)
+84	            // Keep X in world space, Y synced to camera top
+85	            console.log(`[DecorationManager] Spawning Roof Prop: ${obj.name} at Screen Y=${this.roofOffsetPx}`);
+86	            prop.setScrollFactor(0, 0);
+87	            prop.setOrigin(0.5, 0); // Top-Center
+88	            prop.setDepth(1000); // Overlay everything (Parallax Fog is depth 10)
+89	            prop.setData('worldX', x);
+90	            this.roofProps.push(prop);
+91	        } else {
+92	            // Ceiling (Normal)
+93	            prop.setOrigin(0.5, 0);
+94	            prop.setDepth(-1);
+95	        }
+96	
+97	        // Scale Variation
+98	        // Base scale to match the 0.2 world:
+99	        // Props are 350px. Tiles are 160px.
+100	        // 350 * 0.2 = 70px.
+101	        // We want some variation around 0.2 - 0.35.
+102	        const scale = Phaser.Math.FloatBetween(0.2, 0.35);
+103	        prop.setScale(scale);
+104	
+105	        if (this.propsGroup) {
+106	            this.propsGroup.add(prop);
+107	        }
+108	    }
+109	
+110	    public update(): void {
+111	        if (this.roofProps.length === 0) return;
+112	        this.syncRoofProps();
+113	    }
+114	
+115	    private syncRoofProps(): void {
+116	        if (this.roofProps.length === 0) return;
+117	        const camera = this.scene.cameras.main;
+118	        const topY = this.roofOffsetPx / camera.zoom;
+119	        this.roofProps.forEach(prop => {
+120	            const worldX = prop.getData('worldX') as number | undefined;
+121	            if (typeof worldX === 'number') {
+122	                prop.setX(worldX - camera.scrollX);
+123	            }
+124	            prop.setY(topY);
+125	        });
+126	    }
+127	
+128	    public destroy(): void {
+129	        if (!this.propsGroup) return;
+130	
+131	        const group = this.propsGroup as any;
+132	        if (!group.children) {
+133	            this.propsGroup = null;
+134	            return;
+135	        }
+136	
+137	        this.propsGroup.clear(true, true);
+138	        this.propsGroup.destroy(true);
+139	        this.propsGroup = null;
+140	    }
+141	}
