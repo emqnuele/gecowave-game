@@ -1,7 +1,7 @@
 import { state } from './state';
 import { bus } from './events';
 
-const MUSIC_VOLUME_MULT = 0.2;
+const MUSIC_VOLUME_MULT = 0.06;
 
 class MusicManager {
     private currentAudio: HTMLAudioElement | null = null;
@@ -90,7 +90,12 @@ class MusicManager {
     }
 
     private transitionTo(path: string, loop = true): void {
-        if (this.currentPath === path) return;
+        if (this.currentPath === path) {
+            if (this.currentAudio && this.currentAudio.paused) {
+                this.currentAudio.play().catch(() => {});
+            }
+            return;
+        }
         this.currentPath = path;
 
         if (this.fadeInterval) {
