@@ -1,7 +1,7 @@
 import { state } from './state';
 import { bus } from './events';
 
-const MUSIC_VOLUME_MULT = 0.25;
+const MUSIC_VOLUME_MULT = 0.12;
 
 class MusicManager {
     private currentAudio: HTMLAudioElement | null = null;
