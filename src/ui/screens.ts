@@ -134,11 +134,11 @@ export class Screens {
 
     showMenu(): void {
         const s = this.openOverlay('screen opaque menu-screen');
-        this.setZone('green');
+        this.setZone('yellow');
 
-        s.append(this.kicker('the flux of cosenza — rec', 'glass-acid-green', ZONE_CSS.green));
+        s.append(this.kicker('the flux of cosenza — rec', 'glass-acid-gold', '#dfb15b'));
 
-        const title = el('h1', 'menu-title font-crisis', 'GECO<span class="font-marker" style="color:var(--green);display:inline-block;transform:rotate(-3deg);text-transform:lowercase">wave</span>');
+        const title = el('h1', 'menu-title font-crisis', 'GECO<span class="font-marker" style="color:#dfb15b;display:inline-block;transform:rotate(-3deg);text-transform:lowercase">wave</span>');
         s.append(title);
         const sub = el('div', 'menu-sub');
         sub.textContent = state.save.endingSeen
@@ -147,7 +147,7 @@ export class Screens {
         s.append(sub);
 
         const stack = el('div', 'menu-stack');
-        stack.append(this.btn('nuova partita', -1.5, () => this.controller.newGame(), 'glass-acid-green'));
+        stack.append(this.btn('nuova partita', -1.5, () => this.controller.newGame(), 'glass-acid-gold'));
         if (state.hasSave) {
             stack.append(this.btn('continua', 1.2, () => this.controller.continueGame()));
         }
