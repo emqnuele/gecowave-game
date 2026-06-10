@@ -1,82 +1,76 @@
 # GECOWAVE: The Flux of Cosenza
 
-GECOWAVE: The Flux of Cosenza is a pre-alpha 2D action-platformer built with Phaser 3. It focuses on tight platforming, melee combat, and "wave" abilities that consume mana and have cooldowns. Levels are authored as Tiled JSON maps and rendered with parallax layers, dynamic lighting, and particle effects.
+Action-platformer 2D in stile Hollow Knight / souls-like ambientato nel **GecoRealm**. Pedro, l'IA glitchata creata da Lametta, si è scontrata con gli dei e ha frantumato la GecoWave: il geco — custode provvisorio scelto dalla wave stessa — attraversa 7 capitoli per raccogliere i frammenti, tra bus dimensionali, santuari di specchi, trenbolone e teoremi di Analisi 1.
 
-## Tech Stack
-
-- **TypeScript** for gameplay code and systems
-- **Phaser 3** for rendering, input, physics, and scene management
-- **Vite** for the development server and production builds
-- **HTML/CSS** for bootstrapping and global styles
-- **Tiled** (JSON) maps for level layout
-
-## Getting Started
-
-> Requires Node.js 18+ (Vite 7).
+## Avvio
 
 ```bash
 npm install
-npm run dev
+npm run dev      # sviluppo su vite
+npm run build    # typecheck + build di produzione
 ```
 
-Build and preview:
+## Com'è fatto
 
-```bash
-npm run build
-npm run preview
-```
+- **Phaser 3 + TypeScript + Vite.** Canvas trasparente sopra uno sfondo DOM; la UI (menu, HUD, dialoghi, scelte) è interamente DOM in stile "Acid Glass" (`design_system.md` del sito).
+- **Asset dipinti** (in `public/assets/`): sprite sheet del protagonista, sfondi `background.png`/`background2.png`, colonne gotiche, atlante dei props, tileset in pietra a 160px scalato 0.2. Tutto il resto del cast (nemici, npc, boss, oggetti) è generato proceduralmente in `src/engine/textures.ts`.
+- **Atmosfera**: luci dinamiche Light2D (ambiente quasi nero tinto di zona, soul-glow sul geco, lanterne tremolanti, glow sui nemici), parallax a 4-5 strati con **nebbia davanti al giocatore**, decorazioni procedurali piazzate leggendo la griglia del livello, vignette sulla camera.
+- **Souls-like**: i microfoni sono i bonfire (premi E), alla morte lasci le barre a terra e torni a riprendertele, i boss bloccano l'uscita.
+- **Movimento HK**: coyote time, jump buffer, salto variabile, pogo (S+J in aria), scivolata con i-frames, combo a 3 colpi.
 
-## How the Game Works
-
-### Scene Flow
-
-1. **Preloader** loads textures, tilemaps, spritesheets, and generated textures.
-2. **MainMenuScene** shows the animated menu with start/load/settings options.
-3. **GameScene** builds the playable level: tilemap collision, player/enemy spawns, lighting, particles, parallax, and camera follow.
-4. **UIScene** is launched on top of the game, tracking health/mana, wave loadout, inventory, and progression.
-5. **PauseScene / GameOverScene / SettingsScene** handle overlays and configuration screens.
-
-### Core Gameplay Systems
-
-- **Player entity** handles movement, jumping, melee attacks, and animations.
-- **PlayerStats** tracks HP, mana, and progression; UIScene listens for stat events.
-- **Wave system** lets the player equip up to 3 waves (abilities) and cast them with mana costs and cooldowns.
-  - **Analysis Wave** fires a projectile.
-  - **Double Jump** toggles a passive double-jump.
-- **Map system** loads `public/assets/level2.json`, scales it to the 0.2 world size, and spawns torches/props based on the `Objects` layer.
-- **Visual systems** add parallax backgrounds, dynamic lights, and decorative props.
-
-### Controls
-
-- **A / D** — Move left/right
-- **Space** — Jump (double jump if enabled)
-- **Left Mouse Button** — Melee attack
-- **1 / 2 / 3** — Select wave slot
-- **R** — Cast selected wave
-- **Tab** — Toggle inventory/character panel
-- **Esc** — Pause menu
-- **F1** — Toggle physics debug (when enabled in config)
-
-## Project Structure
+## Struttura
 
 ```
-public/
-  assets/               # Tilemaps, sprites, backgrounds, UI icons
-    sprites/            # Player spritesheets
-scripts/
-  generate-level.js     # Procedural level generator (outputs JSON)
-  generate-level_2.js
 src/
-  components/           # Data containers like PlayerStats
-  entities/             # Player, enemies, projectiles, base entity
-  scenes/               # Phaser scenes (menu, game, UI, pause, etc.)
-  systems/              # Map, graphics, and wave ability systems
-  shaders/              # Shader-related assets (if used)
-  utils/                # Shared constants and helpers
-  main.ts               # Phaser game bootstrap and scene setup
-  style.css             # Global styles
+  config.ts                  costanti di fisica, combat, colori di zona
+  types.ts                   tipi condivisi (LevelDef, EntitySpec, ...)
+  content/
+    levels/                  un file per capitolo + index.ts (registro)
+    story.ts                 dialoghi, intro, finali, quiz, wavesung, card abilità
+    enemies.ts               archetipi nemici (comportamento, hp, barre, glow)
+    bosses.ts                definizioni boss (fasi, attacchi, cooldown)
+  engine/
+    LevelLoader.ts           griglia ascii -> tilemap, spine, acqua, entità
+    LightingManager.ts       luci 2d (player, torce, nemici)
+    ParallaxManager.ts       strati dipinti + skyline + nebbia frontale
+    DecorationManager.ts     props procedurali dalle superfici della griglia
+    textures.ts              cast procedurale + skyline + nebbia
+    state.ts                 salvataggio (localStorage), run, flag di storia
+    events.ts                bus tipato phaser <-> dom
+    sfx.ts                   synth webaudio (zero file audio)
+  entities/                  Player, Enemy, Boss
+  scenes/                    BootScene (preload), GameScene (tutto il gioco)
+  ui/                        hud, dialoghi, schermate dom
 ```
 
-## Current State
+## Aggiungere un livello
 
-The project is in **pre-alpha**. Core gameplay, movement, combat, and wave abilities are implemented, along with UI, lighting, and map systems. Content, balance, and additional levels are still under active development.
+1. Crea `src/content/levels/level08-nome.ts` esportando un `LevelDef`.
+2. Disegna la griglia ascii (ogni carattere = 1 tile da 32px):
+   - `#` terreno · `^` spine · `~` acqua · `P` spawn · `C` microfono · `X` uscita
+   - qualsiasi altra lettera è un'entità definita nella mappa `entities` del livello: nemico, npc (id = dialogo), frammento, lore, barre, boss.
+3. Registralo in `levels/index.ts` e collegalo con `next` dal livello precedente.
+4. Regole di salto (per non creare passaggi impossibili): salto singolo ≈ 3 tile in alto / 5 in largo; col rimbalzo ≈ 5-6 in alto / 8 in largo; con la scivolata +4 in largo.
+
+Lo stesso vale per la storia: i dialoghi vivono in `story.ts` (`DIALOGUES['mio-id']`) e un npc con `id: 'mio-id'` li recita da solo. La voce: minuscolo, demenziale; pedro glitcha, la riba sbaglia le doppie, piema è l'unico che scrive corretto.
+
+## Aggiungere un nemico o un boss
+
+- Nemico: una texture in `textures.ts`, un archetipo in `enemies.ts` (comportamenti pronti: `walker`, `flyer`, `hopper`, `turret`, `chaser`, `charger`, più `splitsInto` per quelli che si dividono), e una lettera nella legenda del livello.
+- Boss: una entry in `bosses.ts` con gli attacchi per fase (`dive`, `charge`, `radial`, `rain`, `burst`, `teleport`, `lamette`, `summon`) e l'eventuale ricompensa in `GameScene.onBossDefeated`.
+
+## I frammenti della GecoWave
+
+| frammento | da chi | effetto |
+|---|---|---|
+| scivolata | markolino | dash con i-frames (SHIFT/K) |
+| rimbalzo | ivan maggini | doppio salto (SPAZIO ×2) |
+| riflesso distorto | breccio / il santuario | clone esca che attira i nemici (G) |
+| colpo risonante | notino | proiettile caricato perforante (F tieni premuto) |
+| rio merdone | il fiume | rigenerazione passiva, immunità ai malus |
+| analisi 1 | piema | tempesta di teoremi attorno a te (H) |
+
+## Note di design
+
+- Capitoli: la wave perduta → l'invasione dei bus (Guggu è invulnerabile senza Ivan) → il santuario polarizzante (Breccio, poi Lametta: si vince raccogliendo 5 gocce di colore e uscendo dallo specchio nero) → Notino e la tecnokill → il rio merdone (trenbolone, Ticummi/Tommasorveglianza, l'agguato di Notino, Smela) → la Ruhra (miniboss Riba, enigmi di Analisi 1) → Pedro il traditore (seguirlo è un finale sbagliato; dopo averlo battuto si sceglie: consegnare le wave o sfidare gli dei).
+- Dopo un finale buono il salvataggio riparte dal capitolo 1 con tutte le wave: NG+.

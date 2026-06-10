@@ -294,6 +294,7 @@ export class Screens {
     /* ---------- scelte e quiz ---------- */
 
     private choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
+        this.controller.pause();
         const s = this.openOverlay();
         const panel = el('div', 'story-card glass-panel glass-acid-green');
         const t = el('div', 'font-marker choice-title');
@@ -304,6 +305,7 @@ export class Screens {
         options.forEach((opt, i) => {
             stack.append(this.btn(opt.label, i % 2 ? 1.2 : -1.2, () => {
                 this.closeOverlay();
+                this.controller.resume();
                 onPick(i);
             }, opt.danger ? 'glass-acid-red' : 'glass-acid-green'));
         });
