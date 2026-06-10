@@ -155,7 +155,6 @@ export class GameScene extends Phaser.Scene {
         bus.emit('barre-changed', { barre: state.save.barre, gained: false });
         bus.emit('abilities-changed', { abilities: state.save.abilities });
         bus.emit('fragments-changed', { count: state.save.abilities.length, total: TOTAL_FRAGMENTS });
-        sfx.startPad(this.def.ambientNote ?? 110);
 
         this.setupScript();
     }

@@ -1,12 +1,13 @@
 import { state } from './state';
 import { bus } from './events';
 
-const MUSIC_VOLUME_MULT = 0.12;
+const MUSIC_VOLUME_MULT = 0.2;
 
 class MusicManager {
     private currentAudio: HTMLAudioElement | null = null;
     private currentPath: string | null = null;
     private fadeInterval: ReturnType<typeof setInterval> | null = null;
+    private unlockListener: (() => void) | null = null;
 
     init(): void {
         bus.on('boss-hp', (payload) => {
@@ -47,7 +48,7 @@ class MusicManager {
     private getLevelTrack(levelId: string): string {
         switch (levelId) {
             case 'perduta':
-                return 'assets/music/Fragment Time.mp3';
+                return 'assets/music/GECOWAVE.mp3';
             case 'bus':
                 return "assets/music/Ivan Maggini's OST 1.mp3";
             case 'santuario':
@@ -97,9 +98,16 @@ class MusicManager {
             this.fadeInterval = null;
         }
 
+        if (this.unlockListener) {
+            window.removeEventListener('click', this.unlockListener);
+            window.removeEventListener('keydown', this.unlockListener);
+            this.unlockListener = null;
+        }
+
         const oldAudio = this.currentAudio;
+        const encodedPath = encodeURI(path);
         // use html5 audio to stream large files without decoding delay
-        const newAudio = new Audio(path);
+        const newAudio = new Audio(encodedPath);
         newAudio.loop = loop;
         newAudio.volume = 0;
 
@@ -107,13 +115,16 @@ class MusicManager {
         if (playPromise !== undefined) {
             // browser security blocks autoplay before user gestures
             playPromise.catch(() => {
-                const unlock = () => {
+                this.unlockListener = () => {
                     newAudio.play().catch(() => {});
-                    window.removeEventListener('click', unlock);
-                    window.removeEventListener('keydown', unlock);
+                    if (this.unlockListener) {
+                        window.removeEventListener('click', this.unlockListener);
+                        window.removeEventListener('keydown', this.unlockListener);
+                        this.unlockListener = null;
+                    }
                 };
-                window.addEventListener('click', unlock);
-                window.addEventListener('keydown', unlock);
+                window.addEventListener('click', this.unlockListener);
+                window.addEventListener('keydown', this.unlockListener);
             });
         }
 
