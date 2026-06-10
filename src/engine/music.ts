@@ -50,7 +50,7 @@ class MusicManager {
             case 'perduta':
                 return 'assets/music/GECOWAVE.mp3';
             case 'bus':
-                return "assets/music/Ivan Maggini's OST 1.mp3";
+                return "assets/music/Ivan Maggini's OST 2.mp3";
             case 'santuario':
                 return "assets/music/Lametta MC's OST 1.mp3";
             case 'tecnokill':

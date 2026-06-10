@@ -84,6 +84,7 @@ export class GameScene extends Phaser.Scene {
     init(data: SceneData): void {
         this.def = LEVELS[data.levelId];
         if (!this.def) throw new Error(`livello sconosciuto: ${data.levelId}`);
+        music.playLevel(data.levelId);
     }
 
     create(data: SceneData): void {
