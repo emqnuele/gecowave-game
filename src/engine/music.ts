@@ -69,7 +69,7 @@ class MusicManager {
     private getBossTrack(bossName: string): string {
         const name = bossName.toLowerCase();
         if (name.includes('guggu')) {
-            return "assets/music/Ivan Maggini's OST 2.mp3";
+            return "assets/music/Ivan Maggini's OST 1.mp3";
         }
         if (name.includes('breccio') || name.includes('lametta')) {
             return "assets/music/Lametta MC's OST 2.mp3";
