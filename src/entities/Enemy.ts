@@ -1,47 +1,128 @@
 import Phaser from 'phaser';
-import { Entity } from './Entity';
+import { ENEMIES, type EnemyArchetype } from '../content/enemies';
+import type { EnemyKind } from '../types';
 
-export class Enemy extends Entity {
-    private direction: number = 1;
-    private moveSpeed: number = 100;
-    private startX: number;
-    private patrolRange: number = 150;
+export class Enemy extends Phaser.Physics.Arcade.Sprite {
+    readonly arch: EnemyArchetype;
+    hp: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'enemy', 30); // 30 HP
-        this.startX = x;
-        this.setGravityY(1000); // Standard gravity
-        this.setImmovable(false); // Can be pushed? Maybe not for simple enemies. Let's make them normal.
-        // If we want them to push the player, they need mass.
-        // For now, simple patroller.
+    private anchorX: number;
+    private anchorY: number;
+    private t = Math.random() * 1000;
+    private nextActionAt = 0;
+    private facingDir: 1 | -1 = -1;
+
+    constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind) {
+        super(scene, x, y, ENEMIES[kind].texture);
+        this.arch = ENEMIES[kind];
+        this.hp = this.arch.hp;
+        this.anchorX = x;
+        this.anchorY = y;
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
+
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        const airborne = this.arch.behavior === 'flyer' || this.arch.behavior === 'turret';
+        body.setAllowGravity(!airborne);
+        body.setSize(this.width * 0.8, this.height * 0.8);
+        if (!airborne) body.setBounce(0, 0);
     }
 
-    update(_time: number, _delta: number): void {
-        if (this.hp <= 0) return;
+    update(_time: number, delta: number, player: Phaser.GameObjects.Sprite): void {
+        if (!this.active) return;
+        this.t += delta;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        const aggro = dist < this.arch.aggroRange;
+        const now = this.scene.time.now;
 
-        this.setVelocityX(this.moveSpeed * this.direction);
-
-        // Simple patrol based on distance
-        if (this.x > this.startX + this.patrolRange) {
-            this.direction = -1;
-        } else if (this.x < this.startX - this.patrolRange) {
-            this.direction = 1;
+        switch (this.arch.behavior) {
+            case 'flyer': {
+                if (aggro) {
+                    const angle = Math.atan2(dy, dx);
+                    body.setVelocity(Math.cos(angle) * this.arch.speed, Math.sin(angle) * this.arch.speed);
+                } else {
+                    // ronda attorno al punto di spawn
+                    body.setVelocity(
+                        Math.sin(this.t / 900) * 40,
+                        Math.cos(this.t / 700) * 30 + (this.anchorY - this.y) * 0.5
+                    );
+                }
+                this.setFlipX(dx > 0);
+                break;
+            }
+            case 'walker': {
+                if (aggro && Math.abs(dy) < 60 && now >= this.nextActionAt && this.arch.lungeSpeed) {
+                    body.setVelocityX(Math.sign(dx) * this.arch.lungeSpeed);
+                    this.nextActionAt = now + 1400;
+                    this.setFlipX(dx > 0);
+                } else if (now >= this.nextActionAt - 1000) {
+                    if (Math.abs(this.x - this.anchorX) > 90) this.facingDir = this.x > this.anchorX ? -1 : 1;
+                    if (body.blocked.left) this.facingDir = 1;
+                    if (body.blocked.right) this.facingDir = -1;
+                    body.setVelocityX(this.facingDir * this.arch.speed);
+                    this.setFlipX(this.facingDir > 0);
+                }
+                break;
+            }
+            case 'hopper': {
+                if (body.blocked.down && now >= this.nextActionAt) {
+                    const dir = aggro ? Math.sign(dx) || 1 : (Math.random() > 0.5 ? 1 : -1);
+                    body.setVelocity(dir * this.arch.speed, -480);
+                    this.nextActionAt = now + 900 + Math.random() * 600;
+                    this.setFlipX(dir > 0);
+                }
+                if (body.blocked.down) body.setVelocityX(body.velocity.x * 0.85);
+                break;
+            }
+            case 'turret': {
+                this.y = this.anchorY + Math.sin(this.t / 600) * 8;
+                this.setFlipX(dx > 0);
+                if (aggro && now >= this.nextActionAt && this.arch.fireRateMs) {
+                    this.nextActionAt = now + this.arch.fireRateMs;
+                    this.scene.events.emit('enemy-shoot', { x: this.x, y: this.y + 6, tx: player.x, ty: player.y });
+                }
+                break;
+            }
+            case 'chaser': {
+                if (aggro) {
+                    body.setVelocityX(Math.sign(dx) * this.arch.speed);
+                    this.setFlipX(dx > 0);
+                    if ((body.blocked.left || body.blocked.right) && body.blocked.down) {
+                        body.setVelocityY(-520);
+                    }
+                } else {
+                    body.setVelocityX(body.velocity.x * 0.9);
+                }
+                break;
+            }
         }
     }
 
-    protected die(): void {
-        this.scene.tweens.killTweensOf(this); // Ensure flash tween stops
+    takeDamage(amount: number, fromX: number): void {
+        if (!this.active) return;
+        this.hp -= amount;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        body.velocity.x += Math.sign(this.x - fromX) * 240;
+        this.setTintFill(0xffffff);
+        this.scene.time.delayedCall(70, () => this.active && this.clearTint());
+        if (this.hp <= 0) this.die();
+    }
 
-        this.setActive(false);
-        this.setVisible(false);
-
-        if (this.body) {
-            this.body.enable = false;
-            this.body.stop();
-        }
-
-        this.scene.time.delayedCall(1, () => {
-            this.destroy();
+    private die(): void {
+        const [min, max] = this.arch.barre;
+        const amount = Phaser.Math.Between(min, max);
+        this.scene.events.emit('enemy-died', { x: this.x, y: this.y, barre: amount, color: this.arch.glowColor });
+        this.scene.add.particles(this.x, this.y, 'p-spark', {
+            speed: { min: 100, max: 280 },
+            scale: { start: 1, end: 0 },
+            tint: this.arch.glowColor,
+            lifespan: 400,
+            quantity: 14,
+            stopAfter: 14,
         });
+        this.destroy();
     }
 }

@@ -1,36 +1,100 @@
 import Phaser from 'phaser';
 import './style.css';
-import { Preloader } from './scenes/Preloader';
-import { MainMenuScene } from './scenes/MainMenuScene';
-import { SettingsScene } from './scenes/SettingsScene';
+import { PHYSICS } from './config';
+import { FIRST_LEVEL } from './content/levels';
+import { ENDING_CARDS, INTRO_CARDS } from './content/story';
+import { bus } from './engine/events';
+import { sfx } from './engine/sfx';
+import { state } from './engine/state';
+import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
-import { UIScene } from './scenes/UIScene';
-import { GameOverScene } from './scenes/GameOverScene';
-import { PauseScene } from './scenes/PauseScene';
+import { DialogueBox } from './ui/dialogue';
+import { Hud } from './ui/hud';
+import { Screens, type GameController } from './ui/screens';
+import { ui } from './ui/dom';
 
-const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,
-    scale: {
-        mode: Phaser.Scale.RESIZE,
-        width: '100%',
-        height: '100%',
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
-    parent: 'app', // Vite vanilla-ts uses <div id="app"></div>
-    physics: {
-        default: 'arcade',
-        arcade: {
-            // Constants say GRAVITY = 1500. Let's set global Y gravity here just in case,
-            // but Entity classes set their own.
-            // Actually, if we set it here, all dynamic bodies get it.
-            // Let's rely on Entity settings for precision or set a sane default.
-            gravity: { y: 0, x: 0 },
-            debug: true,
-            tileBias: 48, // Increase to prevent tunneling at high gravity
-            fps: 60,       // Ensure stable physics step
+async function boot(): Promise<void> {
+    // i font devono esserci prima che il canvas li usi
+    await document.fonts.ready;
+
+    const screens = new Screens();
+    const hud = new Hud();
+    new DialogueBox();
+    ui().append(hud.root);
+
+    const game = new Phaser.Game({
+        type: Phaser.AUTO,
+        parent: 'game',
+        transparent: true,
+        scale: {
+            mode: Phaser.Scale.RESIZE,
+            width: '100%',
+            height: '100%',
         },
-    },
-    scene: [Preloader, MainMenuScene, SettingsScene, GameScene, UIScene, GameOverScene, PauseScene],
-};
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { x: 0, y: PHYSICS.gravity },
+                tileBias: 24,
+            },
+        },
+        scene: [BootScene, GameScene],
+    });
 
-new Phaser.Game(config);
+    const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
+        sfx.init();
+        state.resetRun();
+        hud.show();
+        const scene = game.scene.getScene('GameScene');
+        if (game.scene.isActive('GameScene') || game.scene.isPaused('GameScene')) {
+            scene.scene.restart({ levelId, checkpointId, showCard });
+            game.scene.resume('GameScene');
+        } else {
+            game.scene.start('GameScene', { levelId, checkpointId, showCard });
+        }
+    };
+
+    const controller: GameController = {
+        newGame() {
+            state.reset();
+            screens.closeOverlay();
+            screens.storySequence(INTRO_CARDS, () => startLevel(FIRST_LEVEL, null));
+        },
+        continueGame() {
+            screens.closeOverlay();
+            startLevel(state.save.levelId, state.save.checkpointId);
+        },
+        retry() {
+            startLevel(state.save.levelId, state.save.checkpointId, false);
+        },
+        pause() {
+            game.scene.pause('GameScene');
+        },
+        resume() {
+            game.scene.resume('GameScene');
+        },
+        quitToMenu() {
+            sfx.stopPad();
+            game.scene.stop('GameScene');
+            hud.hide();
+            screens.showMenu();
+        },
+    };
+    screens.bind(controller);
+
+    bus.on('game-won', () => {
+        hud.hide();
+        game.scene.stop('GameScene');
+        screens.storySequence(ENDING_CARDS, () => {
+            // ng+: si riparte dal vico ma con tutte le wave
+            state.save.levelId = FIRST_LEVEL;
+            state.save.checkpointId = null;
+            state.persist();
+            screens.showMenu();
+        });
+    });
+
+    game.events.once('boot-complete', () => screens.showMenu());
+}
+
+void boot();

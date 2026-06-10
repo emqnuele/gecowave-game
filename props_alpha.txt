@@ -1,6 +1,0 @@
-prop_ceil_0: avg alpha 25.97
-prop_ceil_1: avg alpha 81.67
-prop_ceil_2: avg alpha 28.47
-prop_ceil_3: avg alpha 32.68
-prop_ceil_4: avg alpha 35.88
-prop_ceil_5: avg alpha 26.21

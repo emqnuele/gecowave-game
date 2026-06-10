@@ -1,333 +1,370 @@
 import Phaser from 'phaser';
-import { Entity } from './Entity';
-import { GRAVITY, PLAYER_SPEED, JUMP_STRENGTH, PLAYER_DRAG, PLAYER_ACCELERATION, ATTACK_COOLDOWN, ATTACK_DURATION } from '../utils/constants';
-import { PlayerStats } from '../components/PlayerStats';
-import { WaveManager } from '../systems/waves/WaveManager';
-import { AnalysisWave } from '../systems/waves/AnalysisWave';
-import { DoubleJumpWave } from '../systems/waves/DoubleJumpWave';
+import { COMBAT, PHYSICS } from '../config';
+import { bus } from '../engine/events';
+import { sfx } from '../engine/sfx';
+import { state } from '../engine/state';
 
-export class Player extends Entity {
-    private keys!: {
-        w: Phaser.Input.Keyboard.Key;
-        a: Phaser.Input.Keyboard.Key;
-        s: Phaser.Input.Keyboard.Key;
-        d: Phaser.Input.Keyboard.Key;
-    };
-    private jumpKey!: Phaser.Input.Keyboard.Key;
+export type AttackDir = 'side' | 'up' | 'down';
 
-    private canAttack: boolean = true;
-    private isAttacking: boolean = false;
+export class Player extends Phaser.Physics.Arcade.Sprite {
+    facing: 1 | -1 = 1;
+    dead = false;
+    attackHitbox: Phaser.GameObjects.Zone;
+    attackDir: AttackDir = 'side';
+    attackActive = false;
 
-    // Attack hitbox
-    public attackHitbox: Phaser.GameObjects.Zone;
+    private keys!: Record<'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'dash' | 'dash2' | 'heal' | 'verso', Phaser.Input.Keyboard.Key>;
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
-    // State Flags
-    private wasGrounded: boolean = true;
-    private isLanding: boolean = false;
-
-    // Components
-    public stats: PlayerStats;
-    public waveManager: WaveManager;
+    private coyoteUntil = 0;
+    private jumpBufferedUntil = 0;
+    private airJumpUsed = false;
+    private dashing = false;
+    private dashUntil = 0;
+    private dashCooldownUntil = 0;
+    private attackCooldownUntil = 0;
+    private attackActiveUntil = 0;
+    private invulnUntil = 0;
+    private healHeldMs = 0;
+    private runAnimTimer = 0;
+    private runFrame = 0;
+    private wasGrounded = true;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'player', 100); // 100 HP
-
-        // Physics properties for "heavy" feel
-        this.setGravityY(GRAVITY);
-        this.setDragX(PLAYER_DRAG);
-
-        // Input setup
-        if (scene.input.keyboard) {
-            this.keys = {
-                w: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-                a: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-                s: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-                d: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
-            };
-            this.jumpKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
-            // Mouse Click for Attack
-            scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-                if (pointer.leftButtonDown() && this.canAttack) {
-                    this.attack();
-                }
-            });
-        }
-
-        // Init Attack Hitbox (inactive by default)
-        // This is the "square hitbox in front" the user sees in debug mode. 
-        // It represents the melee range.
-        this.attackHitbox = scene.add.zone(x, y, 60, 60); // Widen range slightly
-        scene.physics.add.existing(this.attackHitbox);
-        (this.attackHitbox.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-        (this.attackHitbox.body as Phaser.Physics.Arcade.Body).moves = false;
-        // Disable it initially
-        (this.attackHitbox.body as Phaser.Physics.Arcade.Body).checkCollision.none = true;
-
-        // Initialize Stats
-        this.stats = new PlayerStats(scene, 100, 100);
-
-        // Initialize Wave Manager
-        this.waveManager = new WaveManager(this, scene, this.stats);
-
-        // Equip default waves
-        this.waveManager.equipWave(0, new DoubleJumpWave());
-        this.waveManager.equipWave(1, new AnalysisWave());
-
-        // Seed storage with extra waves for inventory display
-        this.waveManager.addToStorage(new DoubleJumpWave());
-        this.waveManager.addToStorage(new AnalysisWave());
-
-        // Create Animations
-        const anims = scene.anims;
-        // Idle: Row 0 (0-7) - Slow (Breathing)
-        if (!anims.exists('player-idle')) {
-            anims.create({ key: 'player-idle', frames: anims.generateFrameNumbers('player', { start: 0, end: 7 }), frameRate: 4, repeat: -1 });
-        }
-        // Run: Row 1 (8-15)
-        if (!anims.exists('player-run')) {
-            anims.create({ key: 'player-run', frames: anims.generateFrameNumbers('player', { start: 8, end: 15 }), frameRate: 8, repeat: -1 });
-        }
-        // Jump Up/Fall: Row 2 (16-19)
-        if (!anims.exists('player-jump-up')) {
-            anims.create({ key: 'player-jump-up', frames: anims.generateFrameNumbers('player', { start: 16, end: 19 }), frameRate: 8, repeat: 0 });
-        }
-        // Land: Row 2 (20-23)
-        if (!anims.exists('player-land')) {
-            anims.create({ key: 'player-land', frames: anims.generateFrameNumbers('player', { start: 20, end: 23 }), frameRate: 8, repeat: 0 });
-        }
-        // Attack: Row 3. In 700x350 grid:
-        // Row 0 (0-3), Row 1 (4-7), Row 2 (8-11), Row 3 (12-15).
-        if (!anims.exists('player-attack')) {
-            anims.create({ key: 'player-attack', frames: anims.generateFrameNumbers('player_atk', { start: 12, end: 15 }), frameRate: 8, repeat: 0 });
-        }
-
-        // Fix Hitbox
-        // Hitbox
-        // Frame: 350x350 (standard). Scale 0.35 -> ~122x122 visual main body.
-        // We want a tight hitbox.
-        // Let's settle on Width 50, Height 110. centered.
-        // Hitbox
-        // Frame: 350x350 (standard). Scale 0.35. Visual feet approx at y=345?
-        // User reported "penetrates floor", so we need to raise the visual sprite relative to the body bottom.
-        // Increasing BodyBottom relative to distinct Sprite Top (OffsetY + Height) lifts the sprite.
-        // Previous (OffsetY+Height) = 325.
-        // Let's try 345.
-        // Width: 150 (Larger than before).
-        // Height: 250.
-        // Offset Y: 345 - 250 = 95.
-        // Offset X: 350/2 - 150/2 = 175 - 75 = 100.
-        this.body!.setSize(150, 250);
-        this.body!.setOffset(100, 95);
-
-        // Scale Down for High-Res
-        this.setScale(0.35);
-
-        const pipelineManager = scene.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer
-            ? scene.renderer.pipelines
-            : null;
-        if (pipelineManager && pipelineManager.get('Atmosphere')) {
-            this.setPipeline('Atmosphere');
-        }
-
-        // Start Idle
-        this.play('player-idle');
-    }
-
-    update(time: number, delta: number): void {
-        if (this.hp <= 0) return;
-
-        // Fall Death Check
-        if (this.y > this.scene.physics.world.bounds.height + 100) {
-            console.log("Player fell out of world bounds detected at Y:", this.y);
-            this.hp = 0;
-            this.stats.setHp(0); // Trigger GameScene cleanup
-            this.die();
-        }
-
-        // Update Managers
-        this.stats.update(delta);
-        this.waveManager.update(time, delta);
-
-        // Optional: Stop movement if attacking
-        if (this.isAttacking) {
-            // Allow air movement or not? Let's say yes for fluidity, or no for commitment. 
-        }
+        super(scene, x, y, 'geco-idle');
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
 
         const body = this.body as Phaser.Physics.Arcade.Body;
-        if (!body) return;
+        body.setSize(30, 26);
+        body.setOffset(17, 12);
+        body.setMaxVelocityY(PHYSICS.maxFallSpeed);
 
-        // Horizontal Movement
-        if (this.keys.a.isDown) {
-            body.setAccelerationX(-PLAYER_ACCELERATION);
+        this.attackHitbox = scene.add.zone(x, y, COMBAT.attackRange, 44);
+        scene.physics.add.existing(this.attackHitbox);
+        const hb = this.attackHitbox.body as Phaser.Physics.Arcade.Body;
+        hb.setAllowGravity(false);
+        hb.moves = false;
+
+        const kb = scene.input.keyboard!;
+        this.cursors = kb.createCursorKeys();
+        this.keys = {
+            left: kb.addKey('A'),
+            right: kb.addKey('D'),
+            up: kb.addKey('W'),
+            down: kb.addKey('S'),
+            jump: kb.addKey('SPACE'),
+            attack: kb.addKey('J'),
+            dash: kb.addKey('SHIFT'),
+            dash2: kb.addKey('K'),
+            heal: kb.addKey('Q'),
+            verso: kb.addKey('F'),
+        };
+
+        scene.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+            if (p.leftButtonDown()) this.tryAttack();
+        });
+
+        this.emitVitals(false);
+    }
+
+    get invulnerable(): boolean {
+        return this.dashing || this.scene.time.now < this.invulnUntil;
+    }
+
+    private get grounded(): boolean {
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        return body.blocked.down;
+    }
+
+    private emitVitals(hurt: boolean): void {
+        bus.emit('hp-changed', { hp: state.run.hp, maxHp: COMBAT.maxHp, hurt });
+        bus.emit('flow-changed', { flow: state.run.flow, maxFlow: COMBAT.maxFlow });
+    }
+
+    update(_time: number, delta: number): void {
+        if (this.dead) return;
+        const now = this.scene.time.now;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+
+        const left = this.keys.left.isDown || this.cursors.left.isDown;
+        const right = this.keys.right.isDown || this.cursors.right.isDown;
+        const upHeld = this.keys.up.isDown || this.cursors.up.isDown;
+        const downHeld = this.keys.down.isDown || this.cursors.down.isDown;
+
+        if (this.grounded) {
+            this.coyoteUntil = now + PHYSICS.coyoteMs;
+            this.airJumpUsed = false;
+        }
+
+        // dash in corso: traiettoria bloccata, tutto il resto ignorato
+        if (this.dashing) {
+            if (now >= this.dashUntil) {
+                this.dashing = false;
+                body.setAllowGravity(true);
+                body.setVelocityX(body.velocity.x * 0.4);
+            } else {
+                this.updateHitbox();
+                return;
+            }
+        }
+
+        // movimento orizzontale
+        const accel = this.grounded ? PHYSICS.runAccel : PHYSICS.airAccel;
+        if (left && !right) {
+            body.setAccelerationX(-accel);
+            this.facing = -1;
             this.setFlipX(true);
-        } else if (this.keys.d.isDown) {
-            body.setAccelerationX(PLAYER_ACCELERATION);
+        } else if (right && !left) {
+            body.setAccelerationX(accel);
+            this.facing = 1;
             this.setFlipX(false);
         } else {
             body.setAccelerationX(0);
+            body.setVelocityX(this.grounded ? body.velocity.x * 0.8 : body.velocity.x * 0.96);
         }
+        body.setMaxVelocityX(this.dashing ? PHYSICS.dashSpeed : PHYSICS.runSpeed);
 
-        // Cap velocity
-        body.setMaxVelocity(PLAYER_SPEED, 1000); // High Y terminal velocity
-
-        // Jump
-        // Check if on floor
-        if (this.jumpKey.isDown) {
-            if (Phaser.Input.Keyboard.JustDown(this.jumpKey)) {
-                if (body.blocked.down) {
-                    body.setVelocityY(-JUMP_STRENGTH);
-                } else {
-                    // Air Jump (Double Jump Check)
-                    this.waveManager.triggerJump(time);
-                }
+        // salto: buffer + coyote + doppio
+        if (Phaser.Input.Keyboard.JustDown(this.keys.jump) || Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+            this.jumpBufferedUntil = now + PHYSICS.jumpBufferMs;
+        }
+        if (now < this.jumpBufferedUntil) {
+            if (this.grounded || now < this.coyoteUntil) {
+                body.setVelocityY(-PHYSICS.jumpVelocity);
+                this.jumpBufferedUntil = 0;
+                this.coyoteUntil = 0;
+                sfx.jump();
+                this.squash(0.85, 1.15);
+            } else if (!this.airJumpUsed && state.hasAbility('doubleJump')) {
+                body.setVelocityY(-PHYSICS.doubleJumpVelocity);
+                this.airJumpUsed = true;
+                this.jumpBufferedUntil = 0;
+                sfx.doubleJump();
+                this.burst(0x4ade80, 6);
             }
         }
+        // salto variabile: rilascio = taglio della spinta
+        if (!this.keys.jump.isDown && !this.cursors.up.isDown && body.velocity.y < 0) {
+            body.setVelocityY(body.velocity.y * (1 - (1 - PHYSICS.jumpCutFactor) * (delta / 100)));
+        }
 
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.dash) || Phaser.Input.Keyboard.JustDown(this.keys.dash2))
+            && state.hasAbility('dash') && now >= this.dashCooldownUntil) {
+            this.startDash();
+        }
 
+        if (Phaser.Input.Keyboard.JustDown(this.keys.attack)) {
+            this.tryAttack(upHeld ? 'up' : !this.grounded && downHeld ? 'down' : 'side');
+        }
 
-        // Animation Logic
-        if (this.isAttacking) {
-            // Attack animation is handled in this.attack() event or ensures priority
-            // Ensure Origin is shifted for 700px sprite (Center of left half = 0.25)
-            if (this.originX !== 0.25) {
-                this.setOrigin(0.25, 0.5);
-            }
+        if (Phaser.Input.Keyboard.JustDown(this.keys.verso) && state.hasAbility('verso')) {
+            this.tryVerso();
+        }
 
-            // Only attack if not strictly landing? Or allow attack to cancel landing?
-            // "migliorerebbe tantissimo l'immersione" -> prioritize landing visual.
-            // But usually Attack > Move > Idle.
-            // Let's allow Attack to override Landing (responsiveness).
-            if (this.anims.currentAnim?.key !== 'player-attack') {
-                this.play('player-attack', true);
+        this.updateHeal(delta, downHeld);
+        this.updateAnimation(delta, body);
+        this.updateHitbox();
+
+        if (this.attackActive && now >= this.attackActiveUntil) this.attackActive = false;
+
+        // lampeggio di invulnerabilità
+        this.setAlpha(this.invulnerable && !this.dashing ? (Math.floor(now / 70) % 2 ? 0.35 : 0.9) : 1);
+
+        if (!this.wasGrounded && this.grounded) {
+            this.squash(1.25, 0.75);
+            this.dust(4);
+        }
+        this.wasGrounded = this.grounded;
+    }
+
+    /* ---------- azioni ---------- */
+
+    private startDash(): void {
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        this.dashing = true;
+        this.dashUntil = this.scene.time.now + PHYSICS.dashMs;
+        this.dashCooldownUntil = this.scene.time.now + PHYSICS.dashCooldownMs;
+        body.setAllowGravity(false);
+        body.setVelocity(PHYSICS.dashSpeed * this.facing, 0);
+        body.setAccelerationX(0);
+        sfx.dash();
+        this.setTexture('geco-dash');
+        // scia di afterimage
+        for (let i = 0; i < 4; i++) {
+            this.scene.time.delayedCall(i * 35, () => {
+                if (!this.scene) return;
+                const ghost = this.scene.add.image(this.x, this.y, 'geco-dash')
+                    .setFlipX(this.flipX).setAlpha(0.3).setTint(0x4ade80).setDepth(this.depth - 1);
+                this.scene.tweens.add({ targets: ghost, alpha: 0, duration: 200, onComplete: () => ghost.destroy() });
+            });
+        }
+    }
+
+    private tryAttack(dir: AttackDir = 'side'): void {
+        const now = this.scene.time.now;
+        if (this.dead || this.dashing || now < this.attackCooldownUntil) return;
+        this.attackCooldownUntil = now + COMBAT.attackCooldownMs;
+        this.attackActiveUntil = now + COMBAT.attackActiveMs;
+        this.attackActive = true;
+        this.attackDir = dir;
+        sfx.slash();
+        this.slashVisual(dir);
+    }
+
+    private tryVerso(): void {
+        if (state.run.flow < COMBAT.versoCost) {
+            bus.emit('toast', { text: 'flow insufficiente. colpisci qualcosa.' });
+            return;
+        }
+        state.run.flow -= COMBAT.versoCost;
+        this.emitVitals(false);
+        sfx.shoot();
+        this.scene.events.emit('player-shoot', { x: this.x + this.facing * 20, y: this.y, dir: this.facing });
+    }
+
+    private updateHeal(delta: number, downHeld: boolean): void {
+        const canHeal = this.grounded && !this.attackActive && state.run.flow >= COMBAT.healCost
+            && state.run.hp < COMBAT.maxHp && this.keys.heal.isDown && !downHeld;
+        if (canHeal) {
+            this.healHeldMs += delta;
+            this.setTint(0x4ade80);
+            if (this.healHeldMs >= COMBAT.healHoldMs) {
+                this.healHeldMs = 0;
+                state.run.flow -= COMBAT.healCost;
+                state.run.hp += 1;
+                sfx.heal();
+                this.burst(0x4ade80, 12);
+                this.emitVitals(false);
             }
         } else {
-            // Reset Origin for 350px sprites (Center = 0.5)
-            if (this.originX !== 0.5) {
-                this.setOrigin(0.5, 0.5);
-            }
-
-            const isGrounded = body.blocked.down;
-
-            if (isGrounded) {
-                // Just Landed Check
-                if (!this.wasGrounded) {
-                    this.isLanding = true;
-                    this.play('player-land', true);
-                    this.once('animationcomplete', (anim: Phaser.Animations.Animation) => {
-                        if (anim.key === 'player-land') {
-                            this.isLanding = false;
-                        }
-                    });
-                }
-
-                // Grounded Logic
-                if (this.isLanding) {
-                    // Holding landing animation
-                    // Optional: Allow running to cancel landing? 
-                    // User said: "appena... tocca terra... continua... POI riprende idle". 
-                    // This implies the sequence is desired.
-                    // However, if player moves, it might look like sliding.
-                    // If velocity.x != 0, usually we switch to Run.
-                    // Let's TRY allowing Run to interrupt Landing for responsiveness, 
-                    // BUT if velocity is small, play full landing.
-                    if (Math.abs(body.velocity.x) > 10) {
-                        this.isLanding = false; // Cancel landing if moving fast
-                        this.play('player-run', true);
-                    } else {
-                        // Ensure landing is playing (if not interrupted by attack previously)
-                        if (this.anims.currentAnim?.key !== 'player-land') {
-                            this.play('player-land', true);
-                        }
-                    }
-                } else {
-                    // Standard Ground Movement
-                    if (body.velocity.x !== 0) {
-                        this.play('player-run', true);
-                    } else {
-                        this.play('player-idle', true);
-                    }
-                }
-            } else {
-                // Airborne
-                this.isLanding = false; // Cancel landing state if we fall/jump
-                // Avoid restarting the animation if it's already "player-jump-up".
-                // Even nicely handled by 'true', if it finishes, Phaser might restart it.
-                if (this.anims.currentAnim?.key !== 'player-jump-up') {
-                    this.play('player-jump-up', true);
-                }
-            }
-
-            this.wasGrounded = isGrounded;
-        }
-
-        // Update Hitbox position to follow player
-        // Offset based on direction (adjust for new 160 width)
-        // If flipX, offset might need to be inverted relative to center?
-        // Phaser handles setOffset with FlipX automatically usually, but let's check.
-        // If flipX is true, the texture is flipped around the center.
-        // Our Body is offset (64, 110).
-        // If flipped, the offset remains relative to top-left of the sprite?
-        // Actually, with setOffset, it should work fine if the sprite is centered.
-        // But if manually adjusting position of *Attack Hitbox* (Zone):
-        const offsetX = this.flipX ? -40 : 40;
-        this.attackHitbox.setPosition(this.x + offsetX, this.y);
-    }
-
-    private attack(): void {
-        this.canAttack = false;
-        this.isAttacking = true;
-        // Origin shift handled in update loop for robustness, but set here for instant response
-        this.setOrigin(0.25, 0.5);
-        this.play('player-attack', true);
-
-        // Enable hitbox
-        const body = this.attackHitbox.body as Phaser.Physics.Arcade.Body;
-        body.checkCollision.none = false;
-
-        // Visual debug for attack (white arc/rect)
-        const graphics = this.scene.add.graphics();
-        // graphics.fillStyle(0xffffff, 0.5);
-        // ... debug visuals ...
-
-        // Wait for animation absolute completion for state reset
-        this.once('animationcomplete', (anim: Phaser.Animations.Animation) => {
-            if (anim.key === 'player-attack') {
-                this.isAttacking = false;
-                // Ensure we go back to idle/run immediately
-                this.play('player-idle'); // Fallback, update loop corrects it
-            }
-        });
-
-        // Duration of active hitbox (Matches logic or visual)
-        this.scene.time.delayedCall(ATTACK_DURATION, () => {
-            body.checkCollision.none = true; // Disable hitbox
-            // Note: isAttacking is handled by animation complete now
-            graphics.destroy();
+            this.healHeldMs = 0;
             this.clearTint();
-        });
-
-        // Cooldown
-        this.scene.time.delayedCall(ATTACK_COOLDOWN, () => {
-            this.canAttack = true;
-        });
+        }
     }
 
-    // Override takeDamage to sync stats
-    // Override takeDamage to sync stats
-    public takeDamage(amount: number): void {
-        super.takeDamage(amount);
-        // Sync stats and notify UI
-        this.stats.setHp(this.hp);
-    }
+    /* ---------- reazioni ---------- */
 
-    protected die(): void {
-        this.setActive(false);
-        this.setVisible(false);
+    onAttackHit(): void {
         const body = this.body as Phaser.Physics.Arcade.Body;
-        if (body) body.enable = false;
+        sfx.hit();
+        state.run.flow = Math.min(COMBAT.maxFlow, state.run.flow + COMBAT.flowPerHit);
+        this.emitVitals(false);
+        if (this.attackDir === 'down') {
+            // pogo: rimbalzo sul colpo dal basso
+            body.setVelocityY(-PHYSICS.pogoVelocity);
+            this.airJumpUsed = false;
+        } else if (this.attackDir === 'side') {
+            body.setVelocityX(body.velocity.x - this.facing * 60);
+        }
+    }
 
-        console.log("Player died (Entity method). awaiting GameScene handler.");
-        // Do NOT restart scene here. GameScene handles it.
+    hurt(amount: number, fromX?: number): boolean {
+        if (this.dead || this.invulnerable) return false;
+        state.run.hp = Math.max(0, state.run.hp - amount);
+        this.invulnUntil = this.scene.time.now + COMBAT.invulnMs;
+        sfx.hurt();
+        this.emitVitals(true);
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        const dir = fromX !== undefined ? Math.sign(this.x - fromX) || 1 : -this.facing;
+        body.setVelocity(dir * PHYSICS.knockback, -PHYSICS.knockback * 0.6);
+        this.burst(0xf87171, 8);
+        if (state.run.hp <= 0) {
+            this.dead = true;
+            sfx.die();
+            this.scene.events.emit('player-dead');
+        }
+        return true;
+    }
+
+    /* ---------- visuale ---------- */
+
+    private updateAnimation(delta: number, body: Phaser.Physics.Arcade.Body): void {
+        if (this.dashing) return;
+        if (!this.grounded) {
+            this.setTexture('geco-air');
+            return;
+        }
+        if (Math.abs(body.velocity.x) > 30) {
+            this.runAnimTimer += delta;
+            if (this.runAnimTimer > 90) {
+                this.runAnimTimer = 0;
+                this.runFrame = 1 - this.runFrame;
+                if (this.runFrame === 0) this.dust(1);
+            }
+            this.setTexture(this.runFrame ? 'geco-run1' : 'geco-run2');
+        } else {
+            this.setTexture('geco-idle');
+        }
+    }
+
+    private updateHitbox(): void {
+        const hb = this.attackHitbox.body as Phaser.Physics.Arcade.Body;
+        if (this.attackDir === 'up') {
+            hb.setSize(44, COMBAT.attackRange);
+            this.attackHitbox.setPosition(this.x, this.y - 36);
+        } else if (this.attackDir === 'down') {
+            hb.setSize(44, COMBAT.attackRange);
+            this.attackHitbox.setPosition(this.x, this.y + 36);
+        } else {
+            hb.setSize(COMBAT.attackRange, 44);
+            this.attackHitbox.setPosition(this.x + this.facing * 34, this.y);
+        }
+        hb.position.set(this.attackHitbox.x - hb.width / 2, this.attackHitbox.y - hb.height / 2);
+    }
+
+    private slashVisual(dir: AttackDir): void {
+        const g = this.scene.add.graphics().setDepth(this.depth + 1);
+        const angle = dir === 'up' ? -Math.PI / 2 : dir === 'down' ? Math.PI / 2 : this.facing === 1 ? 0 : Math.PI;
+        g.lineStyle(3, 0xffffff, 0.9);
+        g.beginPath();
+        g.arc(0, 0, 34, angle - 0.9, angle + 0.9);
+        g.strokePath();
+        g.lineStyle(2, 0x4ade80, 0.5);
+        g.beginPath();
+        g.arc(0, 0, 40, angle - 0.7, angle + 0.7);
+        g.strokePath();
+        g.setPosition(this.x, this.y);
+        this.scene.tweens.add({
+            targets: g,
+            alpha: 0,
+            scaleX: 1.25,
+            scaleY: 1.25,
+            duration: 140,
+            onComplete: () => g.destroy(),
+        });
+    }
+
+    private squash(sx: number, sy: number): void {
+        this.scene.tweens.add({
+            targets: this,
+            scaleX: { from: sx, to: 1 },
+            scaleY: { from: sy, to: 1 },
+            duration: 180,
+            ease: 'Quad.easeOut',
+        });
+    }
+
+    private dust(count: number): void {
+        this.scene.add.particles(this.x, this.y + 14, 'p-dot', {
+            speed: { min: 20, max: 70 },
+            angle: { min: 200, max: 340 },
+            scale: { start: 0.5, end: 0 },
+            alpha: { start: 0.4, end: 0 },
+            lifespan: 350,
+            quantity: count,
+            stopAfter: count,
+        });
+    }
+
+    private burst(tint: number, count: number): void {
+        this.scene.add.particles(this.x, this.y, 'p-spark', {
+            speed: { min: 120, max: 260 },
+            scale: { start: 0.9, end: 0 },
+            tint,
+            lifespan: 320,
+            quantity: count,
+            stopAfter: count,
+        });
     }
 }
