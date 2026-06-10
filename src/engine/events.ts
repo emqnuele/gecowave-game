@@ -5,14 +5,18 @@ export interface GameEvents {
     'hp-changed': { hp: number; maxHp: number; hurt: boolean };
     'flow-changed': { flow: number; maxFlow: number };
     'barre-changed': { barre: number; gained: boolean };
+    'fragments-changed': { count: number; total: number };
     'zone-changed': { title: string; accentWord: string; color: ZoneColor; punchline: string; showCard: boolean };
     'abilities-changed': { abilities: AbilityId[] };
     'dialogue-start': { lines: DialogueLine[]; onEnd?: () => void };
     'player-died': { lost: number };
     'toast': { text: string };
+    'wavesung': { sender: string; text: string };
     'ability-unlocked': { ability: AbilityId };
     'boss-hp': { hp: number; maxHp: number; name: string } | null;
-    'game-won': {};
+    'choice-show': { title: string; options: { label: string; danger?: boolean }[]; onPick: (index: number) => void };
+    'quiz-show': { onDone: (errors: number) => void };
+    'ending': { id: 'consegna' | 'dei' | 'pedro' };
     'request-pause': {};
 }
 

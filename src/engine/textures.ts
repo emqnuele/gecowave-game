@@ -2,7 +2,10 @@ import Phaser from 'phaser';
 import { TILE, ZONE_HEX } from '../config';
 import type { ZoneColor } from '../types';
 
-/** rng deterministico: le skyline devono essere uguali a ogni avvio */
+/* il protagonista e il mondo usano gli asset dipinti della legacy;
+   qui si genera il resto del cast: silhouette scure + glow acidi,
+   pensate per stare sotto le luci 2d senza stonare coi dipinti */
+
 function mulberry32(seed: number): () => number {
     let a = seed;
     return () => {
@@ -23,463 +26,685 @@ function glow(g: Phaser.GameObjects.Graphics, x: number, y: number, r: number, c
     g.fillCircle(x, y, r / 2);
 }
 
-const BODY = 0x131b15;
-const BODY_EDGE = 0x24382a;
-
-/* ---------- geco (vista laterale, rivolto a destra) ---------- */
-
-interface GeckoPose {
-    legSwing: number;
-    tailLift: number;
-    stretch: number;
-    crouch: number;
-}
-
-function drawGecko(g: Phaser.GameObjects.Graphics, pose: GeckoPose): void {
-    const { legSwing, tailLift, stretch, crouch } = pose;
-    const cy = 26 - crouch;
-
-    // coda a cerchi decrescenti che si arriccia
-    for (let i = 0; i < 9; i++) {
-        const t = i / 8;
-        const x = 18 - t * 15 * stretch;
-        const y = cy + 1 - Math.sin(t * 2.4) * (4 + tailLift * 4) * t;
-        g.fillStyle(BODY, 1);
-        g.fillCircle(x, y, 4.5 * (1 - t * 0.82));
-    }
-
-    // zampe dietro il corpo
-    g.lineStyle(3, BODY, 1);
-    const legs: [number, number][] = [
-        [22, legSwing],
-        [36, -legSwing],
-    ];
-    for (const [lx, swing] of legs) {
-        const fx = lx + swing * 5;
-        g.beginPath();
-        g.moveTo(lx, cy + 3);
-        g.lineTo(fx, 35);
-        g.strokePath();
-        // polpastrelli: il marchio di fabbrica
-        g.fillStyle(BODY_EDGE, 1);
-        g.fillCircle(fx - 2.5, 35.5, 1.6);
-        g.fillCircle(fx, 34.5, 1.6);
-        g.fillCircle(fx + 2.5, 35.5, 1.6);
-    }
-
-    // corpo
-    g.fillStyle(BODY, 1);
-    g.fillEllipse(29, cy, 26 * stretch, 15 - crouch);
-    g.lineStyle(1, BODY_EDGE, 0.8);
-    g.strokeEllipse(29, cy, 26 * stretch, 15 - crouch);
-
-    // testa e muso
-    g.fillStyle(BODY, 1);
-    g.fillCircle(44, cy - 5, 8.5);
-    g.fillEllipse(50, cy - 3, 11, 8);
-    // narice
-    g.fillStyle(BODY_EDGE, 1);
-    g.fillCircle(54, cy - 4, 0.8);
-
-    // occhio verde acido, enorme: è pur sempre un geco
-    glow(g, 45, cy - 7.5, 4.2, 0x4ade80, 0.5);
-    g.fillStyle(0x052e16, 1);
-    g.fillCircle(45.8, cy - 7.5, 1.3);
-}
-
-function geckoTexture(scene: Phaser.Scene, key: string, pose: GeckoPose): void {
+function make(scene: Phaser.Scene, key: string, w: number, h: number, draw: (g: Phaser.GameObjects.Graphics) => void): void {
     const g = scene.add.graphics();
-    drawGecko(g, pose);
-    g.generateTexture(key, 64, 40);
+    draw(g);
+    g.generateTexture(key, w, h);
     g.destroy();
 }
+
+const INK = 0x12131a;
+const INK_EDGE = 0x2b2d3d;
 
 /* ---------- nemici ---------- */
 
-function zanzarone(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    // ali
-    g.fillStyle(0xffffff, 0.14);
-    g.fillEllipse(14, 8, 18, 7);
-    g.fillEllipse(24, 7, 18, 7);
-    // corpo a segmenti
-    g.fillStyle(BODY, 1);
-    g.fillEllipse(14, 16, 14, 9);
-    g.fillCircle(23, 14, 5.5);
-    // proboscide minacciosa
-    g.lineStyle(2, BODY_EDGE, 1);
-    g.beginPath();
-    g.moveTo(27, 15);
-    g.lineTo(36, 19);
-    g.strokePath();
-    // zampette
-    g.lineStyle(1.5, BODY, 1);
-    for (const [x1, y2] of [[10, 26], [15, 27], [20, 26]] as const) {
+function enemies(scene: Phaser.Scene): void {
+    // glitchetto: scheggia di pedro, cubetto rotto che saltella
+    make(scene, 'enemy-glitchetto', 26, 26, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillRect(4, 6, 18, 16);
+        g.fillRect(8, 2, 10, 6);
+        // angoli mangiati dal glitch
+        g.fillStyle(0x000000, 1);
+        g.fillRect(18, 6, 4, 4);
+        g.fillRect(4, 18, 5, 4);
+        g.lineStyle(1, 0x2a5a66, 1);
+        g.strokeRect(4, 6, 18, 16);
+        glow(g, 13, 12, 3, 0x22d3ee, 0.55);
+    });
+
+    // citelis: il bus dimensionale di guggu, carica a vista
+    make(scene, 'enemy-citelis', 72, 40, (g) => {
+        g.fillStyle(0x141820, 1);
+        g.fillRoundedRect(2, 4, 66, 26, { tl: 10, tr: 4, bl: 2, br: 2 });
+        g.lineStyle(1, 0x3a4252, 1);
+        g.strokeRoundedRect(2, 4, 66, 26, { tl: 10, tr: 4, bl: 2, br: 2 });
+        // finestrini che brillano di rabbia pendolare
+        g.fillStyle(0xfacc15, 0.55);
+        for (let i = 0; i < 4; i++) g.fillRect(12 + i * 13, 9, 9, 7);
+        g.fillStyle(0xfacc15, 0.8);
+        g.fillRect(58, 9, 8, 7);
+        // ruote
+        g.fillStyle(0x05060a, 1);
+        g.fillCircle(16, 32, 7);
+        g.fillCircle(52, 32, 7);
+        g.lineStyle(1.5, 0x3a4252, 1);
+        g.strokeCircle(16, 32, 7);
+        g.strokeCircle(52, 32, 7);
+        glow(g, 64, 20, 2.5, 0xfacc15, 0.4);
+    });
+
+    // pendolare: in loop nel percorso del citelis da anni
+    make(scene, 'enemy-pendolare', 30, 44, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(15, 28, 20, 28);
+        g.fillCircle(17, 9, 7);
+        // testa china sul telefono
+        g.lineStyle(2.5, INK, 1);
         g.beginPath();
-        g.moveTo(x1, 19);
-        g.lineTo(x1 + 2, y2);
+        g.moveTo(20, 18); g.lineTo(25, 23);
         g.strokePath();
-    }
-    glow(g, 24, 12, 2.6, 0xf87171, 0.5);
-    g.generateTexture('enemy-zanzarone', 40, 30);
-    g.destroy();
-}
+        g.fillStyle(0xfacc15, 0.8);
+        g.fillRect(23, 20, 5, 8);
+        // badge aziendale che dondola
+        g.lineStyle(1, 0x3a4252, 1);
+        g.beginPath();
+        g.moveTo(13, 16); g.lineTo(12, 24);
+        g.strokePath();
+        g.fillStyle(0xfacc15, 0.9);
+        g.fillRect(10, 24, 5, 6);
+        glow(g, 18, 8, 1.8, 0xfacc15, 0.35);
+    });
 
-function cultista(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    // tonaca a campana
-    g.fillStyle(0x150d1d, 1);
-    g.beginPath();
-    g.moveTo(16, 4);
-    g.lineTo(29, 42);
-    g.lineTo(3, 42);
-    g.closePath();
-    g.fillPath();
-    g.lineStyle(1, 0x3b2752, 0.9);
-    g.strokePath();
-    // cappuccio
-    g.fillStyle(0x150d1d, 1);
-    g.fillCircle(16, 8, 7.5);
-    // vuoto del volto
-    g.fillStyle(0x05030a, 1);
-    g.fillEllipse(17, 9, 8, 9);
-    glow(g, 17, 9, 2.2, 0xc084fc, 0.55);
-    g.generateTexture('enemy-cultista', 32, 44);
-    g.destroy();
-}
+    // pittura viva: vernice di lametta, si moltiplica se colpita
+    make(scene, 'enemy-pittura', 38, 32, (g) => {
+        g.fillStyle(0x1b1226, 1);
+        g.fillEllipse(19, 18, 32, 22);
+        g.fillCircle(8, 12, 7);
+        g.fillCircle(28, 10, 9);
+        // colature
+        for (const [x, y1, y2] of [[10, 26, 31], [20, 28, 32], [30, 25, 30]] as const) {
+            g.lineStyle(3, 0x1b1226, 1);
+            g.beginPath();
+            g.moveTo(x, y1); g.lineTo(x, y2);
+            g.strokePath();
+        }
+        glow(g, 24, 13, 3, 0xc084fc, 0.5);
+        glow(g, 11, 16, 2, 0xc084fc, 0.35);
+    });
+    make(scene, 'enemy-pittura-mini', 22, 18, (g) => {
+        g.fillStyle(0x1b1226, 1);
+        g.fillEllipse(11, 10, 18, 13);
+        g.fillCircle(15, 6, 5);
+        glow(g, 13, 8, 2, 0xc084fc, 0.5);
+    });
 
-function botto(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    g.fillStyle(0x1c130a, 1);
-    g.fillCircle(16, 16, 13);
-    g.lineStyle(1.5, 0x4a2f15, 1);
-    g.strokeCircle(16, 16, 13);
-    // crepe: è un bot rotto
-    g.lineStyle(1, 0x4a2f15, 0.9);
-    g.beginPath();
-    g.moveTo(8, 10); g.lineTo(13, 15); g.lineTo(10, 20);
-    g.moveTo(24, 8); g.lineTo(20, 13);
-    g.strokePath();
-    // gamba a molla
-    g.lineStyle(2, 0x4a2f15, 1);
-    g.beginPath();
-    g.moveTo(13, 28); g.lineTo(16, 31); g.lineTo(19, 28);
-    g.strokePath();
-    glow(g, 16, 14, 3.4, 0xfb923c, 0.5);
-    g.generateTexture('enemy-botto', 32, 34);
-    g.destroy();
-}
+    // tecnodrone: giocattolo trasformato di notino
+    make(scene, 'enemy-tecnodrone', 38, 28, (g) => {
+        g.lineStyle(2, 0x4a2530, 1);
+        g.beginPath();
+        g.moveTo(4, 4); g.lineTo(34, 4);
+        g.strokePath();
+        g.lineStyle(2, INK, 1);
+        g.beginPath();
+        g.moveTo(19, 4); g.lineTo(19, 9);
+        g.strokePath();
+        g.fillStyle(0x1a1014, 1);
+        g.fillRoundedRect(6, 9, 26, 14, 5);
+        g.lineStyle(1, 0x4a2530, 1);
+        g.strokeRoundedRect(6, 9, 26, 14, 5);
+        // adesivo smile storto: era un giocattolo
+        g.lineStyle(1, 0xf87171, 0.7);
+        g.strokeCircle(13, 16, 3.5);
+        glow(g, 25, 16, 2.8, 0xf87171, 0.55);
+    });
 
-function drone(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    // rotore
-    g.lineStyle(2, 0x274057, 1);
-    g.beginPath();
-    g.moveTo(4, 5); g.lineTo(32, 5);
-    g.strokePath();
-    g.lineStyle(2, 0x16222e, 1);
-    g.beginPath();
-    g.moveTo(18, 5); g.lineTo(18, 9);
-    g.strokePath();
-    // scocca pulita e ordinata, alla pedro
-    g.fillStyle(0x101820, 1);
-    g.fillRoundedRect(6, 9, 24, 14, 4);
-    g.lineStyle(1, 0x274057, 1);
-    g.strokeRoundedRect(6, 9, 24, 14, 4);
-    glow(g, 18, 16, 3, 0x60a5fa, 0.55);
-    g.generateTexture('enemy-drone', 36, 26);
-    g.destroy();
-}
+    // tossico del trenbolone
+    make(scene, 'enemy-tossico', 30, 46, (g) => {
+        g.fillStyle(0x131a12, 1);
+        g.fillEllipse(15, 30, 16, 30);
+        g.fillCircle(15, 10, 7);
+        // braccia lunghe e storte
+        g.lineStyle(2.5, 0x131a12, 1);
+        g.beginPath();
+        g.moveTo(9, 22); g.lineTo(2, 32);
+        g.moveTo(21, 22); g.lineTo(28, 30);
+        g.strokePath();
+        // fiala che brilla
+        g.fillStyle(0xfb923c, 0.9);
+        g.fillRect(26, 28, 4, 8);
+        glow(g, 13, 9, 2.2, 0x84cc16, 0.5);
+        glow(g, 18, 9, 2.2, 0x84cc16, 0.5);
+    });
 
-function hater(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    // gobbo, incollato al telefono
-    g.fillStyle(0x190d0d, 1);
-    g.fillEllipse(18, 26, 24, 26);
-    g.fillCircle(24, 10, 8);
-    g.lineStyle(1, 0x3d1d1d, 0.9);
-    g.strokeEllipse(18, 26, 24, 26);
-    // braccio col telefono
-    g.lineStyle(3, 0x190d0d, 1);
-    g.beginPath();
-    g.moveTo(26, 20); g.lineTo(33, 24);
-    g.strokePath();
-    // lo schermo che illumina il rancore
-    g.fillStyle(0xf87171, 0.9);
-    g.fillRect(31, 20, 6, 9);
-    glow(g, 34, 24, 2, 0xf87171, 0.4);
-    // sopracciglia arrabbiate
-    g.lineStyle(2, 0x3d1d1d, 1);
-    g.beginPath();
-    g.moveTo(20, 7); g.lineTo(25, 9);
-    g.strokePath();
-    g.generateTexture('enemy-hater', 40, 42);
-    g.destroy();
-}
+    // formica fr: il villaggio attacca
+    make(scene, 'enemy-formica', 32, 18, (g) => {
+        g.fillStyle(0x1a0f08, 1);
+        g.fillEllipse(8, 10, 12, 9);
+        g.fillEllipse(17, 9, 9, 7);
+        g.fillCircle(25, 8, 5);
+        // zampe
+        g.lineStyle(1.5, 0x1a0f08, 1);
+        for (const x of [6, 11, 16]) {
+            g.beginPath();
+            g.moveTo(x, 13); g.lineTo(x - 2, 17);
+            g.moveTo(x, 13); g.lineTo(x + 2, 17);
+            g.strokePath();
+        }
+        // antenne
+        g.beginPath();
+        g.moveTo(27, 5); g.lineTo(30, 2);
+        g.moveTo(25, 5); g.lineTo(26, 1);
+        g.strokePath();
+        glow(g, 26, 7, 1.6, 0xfb923c, 0.5);
+    });
 
-/* ---------- boss: l'algoritmo ---------- */
-
-function boss(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    const cx = 60, cy = 60;
-    // rombo esterno
-    g.fillStyle(0x16080a, 1);
-    g.beginPath();
-    g.moveTo(cx, 8); g.lineTo(112, cy); g.lineTo(cx, 112); g.lineTo(8, cy);
-    g.closePath();
-    g.fillPath();
-    g.lineStyle(2, 0x52181d, 1);
-    g.strokePath();
-    // circuiti
-    g.lineStyle(1, 0x52181d, 0.8);
-    for (const [x1, y1, x2, y2] of [
-        [cx, 20, cx, 44], [30, cy, 48, cy], [90, cy, 72, cy],
-        [40, 40, 50, 50], [80, 40, 70, 50], [40, 80, 50, 70], [80, 80, 70, 70],
-    ] as const) {
-        g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.strokePath();
-        g.fillStyle(0x52181d, 1);
-        g.fillCircle(x2, y2, 1.5);
-    }
-    // l'occhio rosso che decide cosa ascolti
-    glow(g, cx, cy, 12, 0xf87171, 0.6);
-    g.fillStyle(0x000000, 1);
-    g.fillCircle(cx, cy, 3.5);
-    g.generateTexture('boss-core', 120, 120);
-    g.destroy();
-
-    const c = scene.add.graphics();
-    c.fillStyle(0x16080a, 1);
-    c.fillRect(2, 2, 20, 20);
-    c.lineStyle(1.5, 0x7a2228, 1);
-    c.strokeRect(2, 2, 20, 20);
-    glow(c, 12, 12, 3, 0xf87171, 0.5);
-    c.generateTexture('boss-cube', 24, 24);
-    c.destroy();
+    // numero impazzito: analisi 1 ha fatto vittime
+    make(scene, 'enemy-numero', 30, 34, (g) => {
+        glow(g, 15, 17, 5, 0x60a5fa, 0.3);
+        g.lineStyle(3, 0x60a5fa, 0.9);
+        // una sigma storta
+        g.beginPath();
+        g.moveTo(22, 7); g.lineTo(8, 7); g.lineTo(17, 17); g.lineTo(8, 27); g.lineTo(22, 27);
+        g.strokePath();
+        g.lineStyle(1, 0x60a5fa, 0.4);
+        g.strokeCircle(15, 17, 13);
+    });
 }
 
 /* ---------- npc ---------- */
 
-function riba(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    // sagoma t-rex tozza
-    g.fillStyle(0x1c1208, 1);
-    g.fillEllipse(20, 30, 22, 20);
-    g.fillCircle(30, 14, 9);
-    g.fillEllipse(36, 16, 12, 8);
-    // coda
-    g.beginPath();
-    g.moveTo(10, 28); g.lineTo(0, 20); g.lineTo(12, 22);
-    g.closePath();
-    g.fillPath();
-    // braccino inutile
-    g.lineStyle(2.5, 0x1c1208, 1);
-    g.beginPath();
-    g.moveTo(28, 24); g.lineTo(33, 27);
-    g.strokePath();
-    // gambe
-    g.lineStyle(4, 0x1c1208, 1);
-    g.beginPath();
-    g.moveTo(16, 38); g.lineTo(15, 46);
-    g.moveTo(25, 38); g.lineTo(26, 46);
-    g.strokePath();
-    // dentini
-    g.fillStyle(0x4a3214, 1);
-    g.fillTriangle(38, 19, 40, 19, 39, 22);
-    g.fillTriangle(34, 19, 36, 19, 35, 22);
-    glow(g, 31, 12, 3, 0xfb923c, 0.55);
-    g.generateTexture('npc-riba', 46, 48);
-    g.destroy();
+function npcs(scene: Phaser.Scene): void {
+    // markolino: l'unico che ha capito cosa sta succedendo
+    make(scene, 'npc-markolino', 32, 48, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(16, 32, 18, 26);
+        g.fillCircle(16, 12, 8);
+        // cappellino storto
+        g.fillStyle(0x14301f, 1);
+        g.fillEllipse(15, 7, 16, 7);
+        g.fillRect(4, 5, 10, 4);
+        g.lineStyle(3, INK, 1);
+        g.beginPath();
+        g.moveTo(10, 38); g.lineTo(9, 46);
+        g.moveTo(22, 38); g.lineTo(23, 46);
+        g.strokePath();
+        glow(g, 13, 13, 1.8, 0x4ade80, 0.5);
+        glow(g, 19, 13, 1.8, 0x4ade80, 0.5);
+    });
+
+    // ivan maggini: la furia che può tagliare guggu
+    make(scene, 'npc-ivan', 44, 56, (g) => {
+        // spadone sulla schiena
+        g.fillStyle(0x232633, 1);
+        g.fillTriangle(34, 2, 40, 2, 37, 34);
+        g.lineStyle(1, 0x3a4252, 1);
+        g.strokeTriangle(34, 2, 40, 2, 37, 34);
+        g.fillStyle(INK, 1);
+        g.fillEllipse(20, 36, 30, 36);
+        g.fillCircle(20, 13, 9);
+        // spalle enormi
+        g.fillEllipse(20, 24, 36, 14);
+        g.lineStyle(4, INK, 1);
+        g.beginPath();
+        g.moveTo(12, 48); g.lineTo(11, 55);
+        g.moveTo(28, 48); g.lineTo(29, 55);
+        g.strokePath();
+        glow(g, 17, 12, 2, 0xfacc15, 0.5);
+        glow(g, 24, 12, 2, 0xfacc15, 0.5);
+    });
+
+    // smela: vende l'acqua della sorgente. non comprarla.
+    make(scene, 'npc-smela', 30, 48, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(14, 32, 14, 30);
+        g.fillCircle(14, 11, 7);
+        // braccio col prodotto in bella vista
+        g.lineStyle(2.5, INK, 1);
+        g.beginPath();
+        g.moveTo(19, 22); g.lineTo(26, 18);
+        g.strokePath();
+        g.fillStyle(0x22d3ee, 0.7);
+        g.fillRoundedRect(24, 10, 6, 11, 2);
+        glow(g, 27, 9, 1.6, 0x22d3ee, 0.4);
+        // sorriso da venditore
+        g.lineStyle(1.5, INK_EDGE, 1);
+        g.beginPath();
+        g.arc(14, 13, 3, 0.2, Math.PI - 0.2);
+        g.strokePath();
+    });
+
+    // piema: dio creatore, attualmente fuso per analisi 1
+    make(scene, 'npc-piema', 34, 52, (g) => {
+        g.fillStyle(0x16161f, 1);
+        g.beginPath();
+        g.moveTo(17, 6);
+        g.lineTo(31, 50);
+        g.lineTo(3, 50);
+        g.closePath();
+        g.fillPath();
+        g.lineStyle(1, 0x3a4252, 0.9);
+        g.strokePath();
+        g.fillStyle(0x16161f, 1);
+        g.fillCircle(17, 10, 8);
+        // occhiali che brillano di teoremi
+        g.lineStyle(1.5, 0xffffff, 0.85);
+        g.strokeCircle(13, 10, 3);
+        g.strokeCircle(21, 10, 3);
+        g.beginPath();
+        g.moveTo(16, 10); g.lineTo(18, 10);
+        g.strokePath();
+        glow(g, 17, 4, 2, 0xc084fc, 0.4);
+    });
+
+    // ticummi sulla sedia volante high tech
+    make(scene, 'npc-ticummi', 46, 52, (g) => {
+        // sedia che fluttua
+        g.fillStyle(0x141820, 1);
+        g.fillRoundedRect(8, 26, 32, 10, 4);
+        g.fillRoundedRect(10, 10, 8, 18, 3);
+        g.lineStyle(1, 0x2a4a68, 1);
+        g.strokeRoundedRect(8, 26, 32, 10, 4);
+        glow(g, 16, 42, 3, 0x60a5fa, 0.45);
+        glow(g, 32, 42, 3, 0x60a5fa, 0.45);
+        // lui, comodo
+        g.fillStyle(INK, 1);
+        g.fillEllipse(26, 20, 18, 18);
+        g.fillCircle(28, 7, 7);
+        // laptop della tommasorveglianza
+        g.fillStyle(0x0b0d12, 1);
+        g.fillRect(22, 22, 14, 8);
+        g.fillStyle(0x60a5fa, 0.6);
+        g.fillRect(23, 23, 12, 6);
+    });
+
+    // lochef85: meglio non chiedere
+    make(scene, 'npc-lochef', 32, 50, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(16, 34, 20, 28);
+        g.fillCircle(16, 14, 8);
+        // cappello da chef
+        g.fillStyle(0x26262e, 1);
+        g.fillRoundedRect(9, 1, 14, 10, 4);
+        g.fillRect(9, 9, 14, 3);
+        glow(g, 13, 14, 1.8, 0xf87171, 0.55);
+        glow(g, 19, 14, 1.8, 0xf87171, 0.55);
+        // sorriso largo. troppo largo.
+        g.lineStyle(1.5, 0x4a2530, 1);
+        g.beginPath();
+        g.arc(16, 16, 4.5, 0.15, Math.PI - 0.15);
+        g.strokePath();
+    });
+
+    // lametta: un dio fatto a lametta, letteralmente
+    make(scene, 'npc-lametta', 54, 84, (g) => {
+        g.fillStyle(0x1a1622, 1);
+        g.fillRoundedRect(9, 8, 36, 64, 8);
+        g.lineStyle(1.5, 0x4a3f63, 1);
+        g.strokeRoundedRect(9, 8, 36, 64, 8);
+        // i fori classici della lametta
+        g.fillStyle(0x05050a, 1);
+        g.fillRoundedRect(24, 14, 6, 14, 3);
+        g.fillRoundedRect(24, 52, 6, 14, 3);
+        g.fillRect(14, 36, 26, 6);
+        // lame laterali
+        g.fillStyle(0x2b2d3d, 1);
+        g.fillTriangle(9, 12, 2, 20, 9, 28);
+        g.fillTriangle(45, 12, 52, 20, 45, 28);
+        g.fillTriangle(9, 52, 2, 60, 9, 68);
+        g.fillTriangle(45, 52, 52, 60, 45, 68);
+        // occhi da dio del disegno
+        glow(g, 21, 24, 2.4, 0xc084fc, 0.6);
+        glow(g, 33, 24, 2.4, 0xc084fc, 0.6);
+        // pennello
+        g.lineStyle(2.5, 0x2b2d3d, 1);
+        g.beginPath();
+        g.moveTo(48, 40); g.lineTo(53, 26);
+        g.strokePath();
+        g.fillStyle(0xc084fc, 0.9);
+        g.fillEllipse(53, 23, 5, 7);
+    });
 }
 
-function pedro(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    // antenna
-    g.lineStyle(2, 0x16222e, 1);
-    g.beginPath();
-    g.moveTo(14, 8); g.lineTo(14, 2);
-    g.strokePath();
-    glow(g, 14, 2, 2, 0x60a5fa, 0.5);
-    // tutto perfettamente dritto, ovviamente
-    g.fillStyle(0x0e161e, 1);
-    g.fillRect(4, 8, 20, 30);
-    g.lineStyle(1, 0x2a4a68, 1);
-    g.strokeRect(4, 8, 20, 30);
-    g.strokeRect(7, 12, 14, 9);
-    // occhi composti
-    g.fillStyle(0x60a5fa, 0.9);
-    g.fillRect(9, 15, 3, 3);
-    g.fillRect(16, 15, 3, 3);
-    // gambe
-    g.fillStyle(0x0e161e, 1);
-    g.fillRect(7, 38, 5, 8);
-    g.fillRect(16, 38, 5, 8);
-    g.generateTexture('npc-pedro', 28, 48);
-    g.destroy();
-}
+/* ---------- boss ---------- */
 
-function elder(scene: Phaser.Scene): void {
-    const g = scene.add.graphics();
-    drawGecko(g, { legSwing: 0, tailLift: 0.2, stretch: 0.95, crouch: 1 });
-    // bastoncino da geco anziano
-    g.lineStyle(2, 0x4a4438, 1);
-    g.beginPath();
-    g.moveTo(56, 12); g.lineTo(56, 36);
-    g.strokePath();
-    g.generateTexture('npc-elder', 64, 40);
-    g.destroy();
+function bosses(scene: Phaser.Scene): void {
+    // guggu, re dei bus dimensionali
+    make(scene, 'boss-guggu', 120, 78, (g) => {
+        // corona
+        g.fillStyle(0x2e2410, 1);
+        g.fillTriangle(34, 12, 40, 0, 46, 12);
+        g.fillTriangle(50, 12, 56, 0, 62, 12);
+        g.fillTriangle(66, 12, 72, 0, 78, 12);
+        g.fillRect(32, 10, 48, 6);
+        // corpo bus
+        g.fillStyle(0x171b24, 1);
+        g.fillRoundedRect(4, 14, 112, 46, { tl: 16, tr: 8, bl: 4, br: 4 });
+        g.lineStyle(1.5, 0x4a4252, 1);
+        g.strokeRoundedRect(4, 14, 112, 46, { tl: 16, tr: 8, bl: 4, br: 4 });
+        // occhi-parabrezza
+        g.fillStyle(0xfacc15, 0.8);
+        g.fillRect(16, 22, 22, 12);
+        g.fillRect(82, 22, 22, 12);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(24, 25, 8, 8);
+        g.fillRect(90, 25, 8, 8);
+        // griglia che ringhia
+        g.lineStyle(2, 0x4a4252, 1);
+        for (let i = 0; i < 5; i++) {
+            g.beginPath();
+            g.moveTo(44 + i * 7, 44); g.lineTo(44 + i * 7, 54);
+            g.strokePath();
+        }
+        // ruote
+        g.fillStyle(0x05060a, 1);
+        g.fillCircle(26, 64, 12);
+        g.fillCircle(94, 64, 12);
+        g.lineStyle(2, 0x4a4252, 1);
+        g.strokeCircle(26, 64, 12);
+        g.strokeCircle(94, 64, 12);
+        glow(g, 60, 38, 4, 0xfacc15, 0.5);
+    });
+
+    // breccio, dio del disegno (minore)
+    make(scene, 'boss-breccio', 64, 76, (g) => {
+        g.fillStyle(0x191223, 1);
+        g.fillEllipse(32, 44, 36, 50);
+        g.fillCircle(32, 16, 12);
+        // tavolozza come scudo
+        g.fillStyle(0x241a33, 1);
+        g.fillEllipse(14, 40, 20, 26);
+        g.fillStyle(0x05050a, 1);
+        g.fillCircle(12, 36, 3);
+        // macchie di colore
+        glow(g, 16, 46, 2, 0xf87171, 0.5);
+        glow(g, 10, 42, 2, 0x4ade80, 0.5);
+        glow(g, 18, 38, 2, 0x60a5fa, 0.5);
+        // pennellone
+        g.lineStyle(3, 0x2b2d3d, 1);
+        g.beginPath();
+        g.moveTo(48, 50); g.lineTo(58, 18);
+        g.strokePath();
+        g.fillStyle(0xc084fc, 0.95);
+        g.fillEllipse(59, 13, 7, 10);
+        glow(g, 28, 14, 2.2, 0xc084fc, 0.55);
+        glow(g, 37, 14, 2.2, 0xc084fc, 0.55);
+    });
+
+    // notino, tecnokid armato
+    make(scene, 'boss-notino', 44, 54, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(18, 36, 18, 26);
+        g.fillCircle(18, 14, 9);
+        // ciuffo
+        g.fillTriangle(12, 6, 16, 1, 19, 7);
+        // occhi accesi dal frammento
+        glow(g, 15, 13, 2.4, 0xc084fc, 0.7);
+        glow(g, 22, 13, 2.4, 0xc084fc, 0.7);
+        // cannone giocattolo più grande di lui
+        g.fillStyle(0x241a33, 1);
+        g.fillRoundedRect(22, 24, 20, 10, 3);
+        g.fillRect(38, 26, 6, 6);
+        g.lineStyle(1, 0x6d28d9, 0.9);
+        g.strokeRoundedRect(22, 24, 20, 10, 3);
+        glow(g, 42, 29, 2.5, 0xa855f7, 0.6);
+        g.lineStyle(3, INK, 1);
+        g.beginPath();
+        g.moveTo(13, 46); g.lineTo(12, 53);
+        g.moveTo(23, 46); g.lineTo(24, 53);
+        g.strokePath();
+    });
+
+    // riba: bot stupido a guardia della ruhra
+    make(scene, 'boss-riba', 56, 58, (g) => {
+        g.fillStyle(0x1c1208, 1);
+        g.fillEllipse(24, 36, 28, 24);
+        g.fillCircle(36, 17, 11);
+        g.fillEllipse(44, 19, 14, 10);
+        g.beginPath();
+        g.moveTo(12, 34); g.lineTo(0, 24); g.lineTo(14, 27);
+        g.closePath();
+        g.fillPath();
+        g.lineStyle(3, 0x1c1208, 1);
+        g.beginPath();
+        g.moveTo(34, 28); g.lineTo(40, 32);
+        g.strokePath();
+        g.lineStyle(5, 0x1c1208, 1);
+        g.beginPath();
+        g.moveTo(19, 46); g.lineTo(18, 56);
+        g.moveTo(30, 46); g.lineTo(31, 56);
+        g.strokePath();
+        g.fillStyle(0x4a3214, 1);
+        g.fillTriangle(46, 22, 49, 22, 47.5, 26);
+        g.fillTriangle(41, 22, 44, 22, 42.5, 26);
+        glow(g, 37, 14, 3.2, 0xfb923c, 0.6);
+    });
+
+    // pedro: l'ia glitchata. deve fare paura.
+    make(scene, 'boss-pedro', 76, 96, (g) => {
+        // torso angolare spezzato
+        g.fillStyle(0x0e1216, 1);
+        g.beginPath();
+        g.moveTo(20, 28); g.lineTo(56, 24); g.lineTo(60, 70); g.lineTo(30, 76); g.lineTo(16, 60);
+        g.closePath();
+        g.fillPath();
+        g.lineStyle(1.5, 0x16414d, 1);
+        g.strokePath();
+        // testa per metà mancante
+        g.fillStyle(0x0e1216, 1);
+        g.fillRect(26, 4, 26, 22);
+        g.fillStyle(0x000000, 1);
+        g.fillTriangle(52, 4, 52, 26, 40, 26);
+        g.lineStyle(1.5, 0x16414d, 1);
+        g.strokeRect(26, 4, 26, 22);
+        // antenna spezzata
+        g.lineStyle(2, 0x16414d, 1);
+        g.beginPath();
+        g.moveTo(30, 4); g.lineTo(26, -2);
+        g.strokePath();
+        // occhio integro ciano, occhio rotto rosso
+        glow(g, 33, 14, 3, 0x22d3ee, 0.7);
+        glow(g, 46, 16, 2.2, 0xf87171, 0.7);
+        // braccia a segmenti staccati: si muove a scatti
+        g.fillStyle(0x0e1216, 1);
+        g.fillRect(6, 32, 10, 16);
+        g.fillRect(2, 52, 8, 12);
+        g.fillRect(62, 30, 10, 14);
+        g.fillRect(66, 50, 8, 14);
+        // crepe di corruzione
+        g.lineStyle(1, 0xf87171, 0.5);
+        g.beginPath();
+        g.moveTo(36, 40); g.lineTo(42, 48); g.lineTo(38, 56);
+        g.moveTo(48, 34); g.lineTo(52, 44);
+        g.strokePath();
+    });
+
+    // piema e lametta insieme: gli dei, se proprio insisti
+    make(scene, 'boss-dei', 120, 110, (g) => {
+        // metà lametta
+        g.fillStyle(0x1a1622, 1);
+        g.fillRoundedRect(12, 16, 44, 80, 8);
+        g.fillStyle(0x05050a, 1);
+        g.fillRoundedRect(30, 26, 8, 16, 4);
+        g.fillRect(20, 52, 28, 7);
+        // metà piema
+        g.fillStyle(0x16161f, 1);
+        g.beginPath();
+        g.moveTo(86, 12); g.lineTo(110, 96); g.lineTo(62, 96);
+        g.closePath();
+        g.fillPath();
+        g.lineStyle(1.5, 0xffffff, 0.5);
+        g.strokeCircle(80, 30, 5);
+        g.strokeCircle(94, 30, 5);
+        // aura condivisa
+        glow(g, 34, 36, 3, 0xc084fc, 0.6);
+        glow(g, 60, 56, 5, 0xffffff, 0.35);
+        glow(g, 87, 30, 2.6, 0x60a5fa, 0.6);
+        // scintille divine
+        g.lineStyle(1, 0xffffff, 0.4);
+        g.beginPath();
+        g.moveTo(58, 10); g.lineTo(62, 22);
+        g.moveTo(54, 100); g.lineTo(60, 88);
+        g.strokePath();
+    });
 }
 
 /* ---------- oggetti ---------- */
 
 function objects(scene: Phaser.Scene): void {
     // microfono checkpoint
-    const m = scene.add.graphics();
-    m.lineStyle(2.5, 0x222228, 1);
-    m.beginPath();
-    m.moveTo(12, 18); m.lineTo(12, 50);
-    m.strokePath();
-    m.lineStyle(2, 0x222228, 1);
-    m.beginPath();
-    m.moveTo(4, 56); m.lineTo(12, 48); m.lineTo(20, 56);
-    m.strokePath();
-    m.fillStyle(0x18181c, 1);
-    m.fillCircle(12, 11, 8);
-    m.lineStyle(1, 0x3a3a42, 1);
-    m.strokeCircle(12, 11, 8);
-    m.beginPath();
-    m.moveTo(6, 8); m.lineTo(18, 8);
-    m.moveTo(5, 11); m.lineTo(19, 11);
-    m.moveTo(6, 14); m.lineTo(18, 14);
-    m.strokePath();
-    m.generateTexture('mic', 24, 58);
-    m.destroy();
+    make(scene, 'mic', 24, 58, (m) => {
+        m.lineStyle(2.5, 0x222228, 1);
+        m.beginPath();
+        m.moveTo(12, 18); m.lineTo(12, 50);
+        m.strokePath();
+        m.lineStyle(2, 0x222228, 1);
+        m.beginPath();
+        m.moveTo(4, 56); m.lineTo(12, 48); m.lineTo(20, 56);
+        m.strokePath();
+        m.fillStyle(0x18181c, 1);
+        m.fillCircle(12, 11, 8);
+        m.lineStyle(1, 0x3a3a42, 1);
+        m.strokeCircle(12, 11, 8);
+        m.beginPath();
+        m.moveTo(6, 8); m.lineTo(18, 8);
+        m.moveTo(5, 11); m.lineTo(19, 11);
+        m.moveTo(6, 14); m.lineTo(18, 14);
+        m.strokePath();
+    });
 
     // barra: nota musicale gialla
-    const n = scene.add.graphics();
-    glow(n, 5, 12, 3.2, 0xfacc15, 0.45);
-    n.lineStyle(1.5, 0xfacc15, 0.95);
-    n.beginPath();
-    n.moveTo(7, 12); n.lineTo(7, 2); n.lineTo(11, 4);
-    n.strokePath();
-    n.generateTexture('barra', 14, 16);
-    n.destroy();
+    make(scene, 'barra', 14, 16, (n) => {
+        glow(n, 5, 12, 3.2, 0xfacc15, 0.45);
+        n.lineStyle(1.5, 0xfacc15, 0.95);
+        n.beginPath();
+        n.moveTo(7, 12); n.lineTo(7, 2); n.lineTo(11, 4);
+        n.strokePath();
+    });
 
-    // pickup abilità: cerchio con onda dentro
-    const w = scene.add.graphics();
-    glow(w, 16, 16, 6, 0x4ade80, 0.35);
-    w.lineStyle(2, 0x4ade80, 0.9);
-    w.strokeCircle(16, 16, 11);
-    w.beginPath();
-    w.moveTo(8, 16);
-    for (let x = 0; x <= 16; x++) {
-        w.lineTo(8 + x, 16 - Math.sin((x / 16) * Math.PI * 2) * 4);
-    }
-    w.strokePath();
-    w.generateTexture('wave-pickup', 32, 32);
-    w.destroy();
+    // frammento della gecowave
+    make(scene, 'fragment', 36, 36, (w) => {
+        glow(w, 18, 18, 7, 0x4ade80, 0.35);
+        w.fillStyle(0x0f1f16, 1);
+        w.beginPath();
+        w.moveTo(18, 3); w.lineTo(30, 14); w.lineTo(25, 32); w.lineTo(11, 32); w.lineTo(6, 14);
+        w.closePath();
+        w.fillPath();
+        w.lineStyle(1.5, 0x4ade80, 0.9);
+        w.strokePath();
+        w.lineStyle(1, 0x4ade80, 0.45);
+        w.beginPath();
+        w.moveTo(18, 3); w.lineTo(18, 32);
+        w.moveTo(6, 14); w.lineTo(25, 32);
+        w.moveTo(30, 14); w.lineTo(11, 32);
+        w.strokePath();
+    });
 
     // stele della lore
-    const l = scene.add.graphics();
-    l.fillStyle(0x140e1c, 1);
-    l.fillRoundedRect(4, 4, 20, 30, { tl: 9, tr: 9, bl: 2, br: 2 });
-    l.lineStyle(1, 0x3b2752, 1);
-    l.strokeRoundedRect(4, 4, 20, 30, { tl: 9, tr: 9, bl: 2, br: 2 });
-    l.lineStyle(1, 0xc084fc, 0.5);
-    l.beginPath();
-    l.moveTo(9, 12); l.lineTo(19, 12);
-    l.moveTo(9, 17); l.lineTo(19, 17);
-    l.moveTo(9, 22); l.lineTo(15, 22);
-    l.strokePath();
-    l.generateTexture('lore-tablet', 28, 38);
-    l.destroy();
+    make(scene, 'lore-tablet', 28, 38, (l) => {
+        l.fillStyle(0x140e1c, 1);
+        l.fillRoundedRect(4, 4, 20, 30, { tl: 9, tr: 9, bl: 2, br: 2 });
+        l.lineStyle(1, 0x3b2752, 1);
+        l.strokeRoundedRect(4, 4, 20, 30, { tl: 9, tr: 9, bl: 2, br: 2 });
+        l.lineStyle(1, 0xc084fc, 0.5);
+        l.beginPath();
+        l.moveTo(9, 12); l.lineTo(19, 12);
+        l.moveTo(9, 17); l.lineTo(19, 17);
+        l.moveTo(9, 22); l.lineTo(15, 22);
+        l.strokePath();
+    });
 
-    // proiettile del verso
-    const p = scene.add.graphics();
-    glow(p, 8, 8, 4, 0x4ade80, 0.5);
-    p.generateTexture('proj-verso', 16, 16);
-    p.destroy();
-
-    const d = scene.add.graphics();
-    glow(d, 6, 6, 3, 0x60a5fa, 0.5);
-    d.generateTexture('proj-drone', 12, 12);
-    d.destroy();
+    // proiettili (tinta a runtime)
+    make(scene, 'proj-ball', 14, 14, (p) => glow(p, 7, 7, 3.4, 0xffffff, 0.55));
+    make(scene, 'proj-risonante', 26, 18, (p) => {
+        glow(p, 13, 9, 5, 0x4ade80, 0.5);
+        p.lineStyle(2, 0x4ade80, 0.9);
+        p.beginPath();
+        p.moveTo(2, 9);
+        for (let x = 0; x <= 22; x++) p.lineTo(2 + x, 9 - Math.sin((x / 22) * Math.PI * 2) * 4);
+        p.strokePath();
+    });
+    // lametta dal suolo
+    make(scene, 'proj-lametta', 18, 40, (p) => {
+        p.fillStyle(0x1a1622, 1);
+        p.fillTriangle(9, 0, 16, 40, 2, 40);
+        p.lineStyle(1, 0xc084fc, 0.7);
+        p.strokeTriangle(9, 0, 16, 40, 2, 40);
+        glow(p, 9, 8, 1.6, 0xc084fc, 0.4);
+    });
 
     // fantasmino delle barre perse
-    const gh = scene.add.graphics();
-    gh.fillStyle(0x4ade80, 0.25);
-    gh.fillEllipse(14, 16, 20, 14);
-    gh.fillCircle(20, 9, 6);
-    glow(gh, 21, 8, 2.5, 0x4ade80, 0.5);
-    gh.generateTexture('drop-ghost', 30, 26);
-    gh.destroy();
+    make(scene, 'drop-ghost', 30, 26, (gh) => {
+        gh.fillStyle(0x4ade80, 0.25);
+        gh.fillEllipse(14, 16, 20, 14);
+        gh.fillCircle(20, 9, 6);
+        glow(gh, 21, 8, 2.5, 0x4ade80, 0.5);
+    });
+
+    // goccia di colore (arena di lametta)
+    make(scene, 'color-drop', 18, 18, (c) => glow(c, 9, 9, 4, 0xffffff, 0.6));
+
+    // lo specchio nero: l'unica uscita
+    make(scene, 'black-mirror', 44, 72, (m) => {
+        m.fillStyle(0x000000, 1);
+        m.fillEllipse(22, 36, 36, 64);
+        m.lineStyle(2, 0xc084fc, 0.8);
+        m.strokeEllipse(22, 36, 36, 64);
+        m.lineStyle(1, 0xc084fc, 0.3);
+        m.strokeEllipse(22, 36, 28, 54);
+    });
+
+    // glifi per la tempesta di analisi 1
+    const glyphs = [
+        (p: Phaser.GameObjects.Graphics) => {
+            // sommatoria
+            p.beginPath();
+            p.moveTo(14, 3); p.lineTo(4, 3); p.lineTo(10, 9); p.lineTo(4, 15); p.lineTo(14, 15);
+            p.strokePath();
+        },
+        (p: Phaser.GameObjects.Graphics) => {
+            // radice
+            p.beginPath();
+            p.moveTo(2, 10); p.lineTo(6, 15); p.lineTo(10, 3); p.lineTo(16, 3);
+            p.strokePath();
+        },
+        (p: Phaser.GameObjects.Graphics) => {
+            // pi greco
+            p.beginPath();
+            p.moveTo(3, 5); p.lineTo(16, 5);
+            p.moveTo(6, 5); p.lineTo(6, 15);
+            p.moveTo(13, 5); p.lineTo(13, 15);
+            p.strokePath();
+        },
+    ];
+    glyphs.forEach((draw, i) => {
+        make(scene, `glyph-${i}`, 18, 18, (p) => {
+            p.lineStyle(2, 0x60a5fa, 0.95);
+            draw(p);
+        });
+    });
 }
 
-/* ---------- particelle ---------- */
+/* ---------- particelle e spine ---------- */
 
 function particles(scene: Phaser.Scene): void {
-    const dot = scene.add.graphics();
-    for (let i = 4; i >= 1; i--) {
-        dot.fillStyle(0xffffff, 0.25 * ((5 - i) / 4));
-        dot.fillCircle(8, 8, i * 2);
-    }
-    dot.generateTexture('p-dot', 16, 16);
-    dot.destroy();
-
-    const spark = scene.add.graphics();
-    spark.fillStyle(0xffffff, 1);
-    spark.fillTriangle(0, 3, 12, 0, 12, 6);
-    spark.generateTexture('p-spark', 12, 6);
-    spark.destroy();
-}
-
-/* ---------- mondo: tile e spine ---------- */
-
-function tiles(scene: Phaser.Scene): void {
-    for (const [zone, hex] of Object.entries(ZONE_HEX)) {
-        const g = scene.add.graphics();
-        g.fillStyle(0x0b0d0f, 1);
-        g.fillRect(0, 0, TILE, TILE);
-        // texture minerale appena percettibile
-        const rnd = mulberry32(hex);
-        g.fillStyle(0x15181c, 1);
-        for (let i = 0; i < 5; i++) {
-            g.fillRect(rnd() * 26, 4 + rnd() * 24, 2 + rnd() * 4, 1.5);
+    make(scene, 'p-dot', 16, 16, (dot) => {
+        for (let i = 4; i >= 1; i--) {
+            dot.fillStyle(0xffffff, 0.25 * ((5 - i) / 4));
+            dot.fillCircle(8, 8, i * 2);
         }
-        // bordo superiore acceso: il muschio acido della zona
-        g.fillStyle(hex, 0.55);
-        g.fillRect(0, 0, TILE, 2);
-        g.fillStyle(hex, 0.14);
-        g.fillRect(0, 2, TILE, 3);
-        g.generateTexture(`tile-${zone}`, TILE, TILE);
-        g.destroy();
-    }
+    });
+    make(scene, 'p-spark', 12, 6, (spark) => {
+        spark.fillStyle(0xffffff, 1);
+        spark.fillTriangle(0, 3, 12, 0, 12, 6);
+    });
 
-    const s = scene.add.graphics();
-    s.fillStyle(0x1a0c0e, 1);
-    for (let i = 0; i < 4; i++) {
-        const x = i * 8;
-        s.fillTriangle(x, TILE, x + 4, TILE - 14, x + 8, TILE);
-    }
-    s.fillStyle(0xf87171, 0.5);
-    for (let i = 0; i < 4; i++) {
-        const x = i * 8;
-        s.fillTriangle(x + 2.5, TILE - 8, x + 4, TILE - 14, x + 5.5, TILE - 8);
-    }
-    s.generateTexture('spikes', TILE, TILE);
-    s.destroy();
+    make(scene, 'spikes', TILE, TILE, (s) => {
+        s.fillStyle(0x16161c, 1);
+        for (let i = 0; i < 4; i++) {
+            const x = i * 8;
+            s.fillTriangle(x, TILE, x + 4, TILE - 14, x + 8, TILE);
+        }
+        s.fillStyle(0xf87171, 0.45);
+        for (let i = 0; i < 4; i++) {
+            const x = i * 8;
+            s.fillTriangle(x + 2.5, TILE - 8, x + 4, TILE - 14, x + 5.5, TILE - 8);
+        }
+    });
 }
 
-/* ---------- sfondi parallasse ---------- */
+/* ---------- skyline procedurali (strati intermedi del parallasse) ---------- */
 
-type Motif = 'rooftops' | 'arches' | 'swamp' | 'towers' | 'stage';
+type Motif = 'rooftops' | 'arches' | 'swamp' | 'towers' | 'stage' | 'depot' | 'wreckage';
 
 const ZONE_MOTIF: Record<ZoneColor, Motif> = {
     green: 'rooftops',
+    yellow: 'depot',
     purple: 'arches',
+    red: 'wreckage',
     orange: 'swamp',
     blue: 'towers',
-    red: 'stage',
-    yellow: 'rooftops',
+    cyan: 'stage',
 };
 
 function mixHex(base: number, tint: number, t: number): string {
@@ -491,20 +716,6 @@ function mixHex(base: number, tint: number, t: number): string {
     return `rgb(${r},${gg},${b})`;
 }
 
-function makeSky(scene: Phaser.Scene, zone: ZoneColor): void {
-    const key = `sky-${zone}`;
-    if (scene.textures.exists(key)) return;
-    const tex = scene.textures.createCanvas(key, 16, 512)!;
-    const ctx = tex.getContext();
-    const grad = ctx.createLinearGradient(0, 0, 0, 512);
-    grad.addColorStop(0, '#030305');
-    grad.addColorStop(0.55, mixHex(0x07080a, ZONE_HEX[zone], 0.08));
-    grad.addColorStop(1, mixHex(0x050506, ZONE_HEX[zone], 0.04));
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 16, 512);
-    tex.refresh();
-}
-
 function drawMotif(ctx: CanvasRenderingContext2D, motif: Motif, rnd: () => number, w: number, h: number, depth: number): void {
     const ground = h;
     if (motif === 'rooftops') {
@@ -513,7 +724,6 @@ function drawMotif(ctx: CanvasRenderingContext2D, motif: Motif, rnd: () => numbe
             const bw = 50 + rnd() * 90;
             const bh = 60 + rnd() * (110 + depth * 60);
             ctx.fillRect(x, ground - bh, bw, bh);
-            // tetto a falde del centro storico
             ctx.beginPath();
             ctx.moveTo(x - 4, ground - bh);
             ctx.lineTo(x + bw / 2, ground - bh - 18 - rnd() * 14);
@@ -542,7 +752,6 @@ function drawMotif(ctx: CanvasRenderingContext2D, motif: Motif, rnd: () => numbe
             ctx.lineWidth = 10 - depth * 3;
             ctx.strokeStyle = ctx.fillStyle as string;
             ctx.stroke();
-            // rami storti
             ctx.beginPath();
             ctx.moveTo(x + lean * 0.7, ground - th * 0.75);
             ctx.lineTo(x + lean * 0.7 + (rnd() - 0.5) * 60, ground - th * 0.75 - rnd() * 36);
@@ -559,14 +768,47 @@ function drawMotif(ctx: CanvasRenderingContext2D, motif: Motif, rnd: () => numbe
             ctx.fillRect(x + bw / 2 - 1.5, ground - bh - 24, 3, 24);
             x += bw + 36;
         }
+    } else if (motif === 'depot') {
+        // pensiline e bus accatastati
+        ctx.fillRect(0, ground - 12, w, 12);
+        let x = 8;
+        while (x < w) {
+            ctx.fillRect(x, ground - 120 - depth * 40, 6, 120 + depth * 40);
+            ctx.fillRect(x - 20, ground - 120 - depth * 40, 56, 6);
+            const stack = 1 + Math.floor(rnd() * 2);
+            for (let s = 0; s < stack; s++) {
+                const bw = 70 + rnd() * 30;
+                ctx.beginPath();
+                ctx.roundRect(x + 24 + rnd() * 30, ground - 30 * (s + 1) - 4 * s, bw, 28, 6);
+                ctx.fill();
+            }
+            x += 170 + rnd() * 70;
+        }
+    } else if (motif === 'wreckage') {
+        // periferia post-tecnokill: tralicci e carcasse
+        let x = 0;
+        while (x < w) {
+            if (rnd() > 0.5) {
+                const th = 90 + rnd() * (70 + depth * 60);
+                ctx.beginPath();
+                ctx.moveTo(x, ground); ctx.lineTo(x + 14, ground - th); ctx.lineTo(x + 28, ground);
+                ctx.fill();
+                ctx.fillRect(x - 8, ground - th + 14, 44, 4);
+            } else {
+                ctx.beginPath();
+                ctx.roundRect(x, ground - 26, 60 + rnd() * 30, 26, 8);
+                ctx.fill();
+                ctx.fillRect(x + 10, ground - 38, 24, 14);
+            }
+            x += 90 + rnd() * 80;
+        }
     } else {
-        // stage: tralicci e casse
+        // stage: tralicci e casse del palco finale
         ctx.fillRect(0, ground - 14, w, 14);
         let x = 20;
         while (x < w) {
             ctx.fillRect(x, ground - 180 - depth * 60, 8, 180 + depth * 60);
             ctx.fillRect(x - 14, ground - 180 - depth * 60, 36, 8);
-            // pila di casse
             const stack = 1 + Math.floor(rnd() * 3);
             for (let s = 0; s < stack; s++) {
                 ctx.fillRect(x + 30 + rnd() * 20, ground - 34 * (s + 1), 40, 30);
@@ -576,48 +818,46 @@ function drawMotif(ctx: CanvasRenderingContext2D, motif: Motif, rnd: () => numbe
     }
 }
 
-function makeSkylines(scene: Phaser.Scene, zone: ZoneColor): void {
+export function generateZoneTextures(scene: Phaser.Scene, zone: ZoneColor): void {
     const motif = ZONE_MOTIF[zone];
-    for (let layer = 0; layer < 3; layer++) {
+    for (let layer = 0; layer < 2; layer++) {
         const key = `bg-${zone}-${layer}`;
         if (scene.textures.exists(key)) continue;
         const w = 1024;
         const h = 400;
         const tex = scene.textures.createCanvas(key, w, h)!;
         const ctx = tex.getContext();
-        const t = 0.05 + layer * 0.035;
-        ctx.fillStyle = mixHex(0x07080a, ZONE_HEX[zone], t);
+        const t = 0.06 + layer * 0.05;
+        ctx.fillStyle = mixHex(0x0a0b10, ZONE_HEX[zone], t);
         ctx.strokeStyle = ctx.fillStyle;
         const rnd = mulberry32(zone.length * 1000 + layer * 77 + motif.length);
         drawMotif(ctx, motif, rnd, w, h, layer);
         tex.refresh();
     }
-}
 
-/* ---------- entry point ---------- */
+    // velo di nebbia tileabile, passa DAVANTI al giocatore
+    if (!scene.textures.exists('fog')) {
+        const tex = scene.textures.createCanvas('fog', 512, 512)!;
+        const ctx = tex.getContext();
+        const rnd = mulberry32(777);
+        for (let i = 0; i < 90; i++) {
+            const x = rnd() * 512;
+            const y = rnd() * 512;
+            const r = 40 + rnd() * 90;
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+            grad.addColorStop(0, 'rgba(170,180,200,0.05)');
+            grad.addColorStop(1, 'rgba(170,180,200,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x - r, y - r, r * 2, r * 2);
+        }
+        tex.refresh();
+    }
+}
 
 export function generateBaseTextures(scene: Phaser.Scene): void {
-    geckoTexture(scene, 'geco-idle', { legSwing: 0, tailLift: 0.3, stretch: 1, crouch: 0 });
-    geckoTexture(scene, 'geco-run1', { legSwing: 1, tailLift: 0.1, stretch: 1.05, crouch: 1 });
-    geckoTexture(scene, 'geco-run2', { legSwing: -1, tailLift: 0.5, stretch: 1.05, crouch: 1 });
-    geckoTexture(scene, 'geco-air', { legSwing: 0.4, tailLift: 0.9, stretch: 1.1, crouch: 2 });
-    geckoTexture(scene, 'geco-dash', { legSwing: 0.2, tailLift: 0, stretch: 1.3, crouch: 3 });
-
-    zanzarone(scene);
-    cultista(scene);
-    botto(scene);
-    drone(scene);
-    hater(scene);
-    boss(scene);
-    riba(scene);
-    pedro(scene);
-    elder(scene);
+    enemies(scene);
+    npcs(scene);
+    bosses(scene);
     objects(scene);
     particles(scene);
-    tiles(scene);
-}
-
-export function generateZoneTextures(scene: Phaser.Scene, zone: ZoneColor): void {
-    makeSky(scene, zone);
-    makeSkylines(scene, zone);
 }

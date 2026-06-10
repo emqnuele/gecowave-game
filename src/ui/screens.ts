@@ -1,5 +1,5 @@
 import { ZONE_CSS } from '../config';
-import { ABILITY_CARDS, DEATH_PUNCHLINES } from '../content/story';
+import { ABILITY_CARDS, DEATH_PUNCHLINES, QUIZ_ANALISI } from '../content/story';
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -17,11 +17,13 @@ export interface GameController {
 
 const CONTROLS: [string, string][] = [
     ['muoviti', 'A / D'],
-    ['salta (e doppio salta)', 'SPAZIO'],
-    ['attacca', 'J / clic'],
+    ['salta (e rimbalzo a mezz\'aria)', 'SPAZIO'],
+    ['attacca — 3 colpi = combo', 'J / clic'],
     ['attacca in alto / in basso', 'W+J / S+J in aria'],
     ['scivolata', 'SHIFT / K'],
-    ['verso a distanza', 'F'],
+    ['colpo risonante (carica)', 'F tieni premuto'],
+    ['riflesso distorto', 'G'],
+    ['analisi 1', 'H'],
     ['cura (tieni premuto)', 'Q'],
     ['interagisci', 'E'],
     ['pausa', 'ESC'],
@@ -51,8 +53,11 @@ export class Screens {
             if (showCard) this.zoneCard(title, accentWord, color, punchline);
         });
         bus.on('toast', ({ text }) => this.toast(text));
+        bus.on('wavesung', ({ sender, text }) => this.wavesung(sender, text));
         bus.on('player-died', ({ lost }) => this.showDeath(lost));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
+        bus.on('choice-show', ({ title, options, onPick }) => this.choice(title, options, onPick));
+        bus.on('quiz-show', ({ onDone }) => this.quiz(onDone));
         bus.on('request-pause', () => this.showPause());
     }
 
@@ -117,31 +122,28 @@ export class Screens {
 
     private kicker(text: string, acid: string, color: string): HTMLElement {
         const k = el('span', `kicker sticker ${acid}`);
-        k.append(
-            el('span', 'dot'),
-            el('span', `label`, ''),
-        );
-        const label = k.querySelector<HTMLElement>('.label')!;
+        const label = el('span', 'label');
         label.textContent = text;
         label.style.color = color;
+        k.append(el('span', 'dot'), label);
         return k;
     }
 
     /* ---------- menu principale ---------- */
 
     showMenu(): void {
-        const s = this.openOverlay('screen opaque');
+        const s = this.openOverlay('screen opaque menu-screen');
         this.setZone('green');
-
-        const mark = el('div', 'watermark', '🦎');
-        mark.style.transform = 'rotate(-14deg)';
-        s.append(mark);
 
         s.append(this.kicker('the flux of cosenza — rec', 'glass-acid-green', ZONE_CSS.green));
 
         const title = el('h1', 'menu-title font-crisis', 'GECO<span class="font-marker" style="color:var(--green);display:inline-block;transform:rotate(-3deg);text-transform:lowercase">wave</span>');
         s.append(title);
-        s.append(el('div', 'menu-sub', state.save.bossDefeated ? 'la wave è tornata. rigioca, se ti va.' : 'qualcuno deve riprendersi la wave.'));
+        const sub = el('div', 'menu-sub');
+        sub.textContent = state.save.endingSeen
+            ? 'la wave è tornata. o sei tu la wave. rigioca pure.'
+            : 'la gecowave è in frammenti. qualcuno deve raccoglierli.';
+        s.append(sub);
 
         const stack = el('div', 'menu-stack');
         stack.append(this.btn('nuova partita', -1.5, () => this.controller.newGame(), 'glass-acid-green'));
@@ -162,7 +164,7 @@ export class Screens {
         this.controller.pause();
         const s = this.openOverlay();
         s.append(el('h2', 'font-crisis', 'PAUSA'));
-        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">il gioco aspetta. l\'algoritmo no.</span>'));
+        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">il gioco aspetta. pedro no.</span>'));
         const stack = el('div', 'menu-stack');
         const resume = () => {
             this.closeOverlay();
@@ -186,7 +188,9 @@ export class Screens {
         s.append(el('h2', 'font-crisis', 'IMPOSTAZIONI'));
 
         const vol = el('div', 'settings-row glass-chip');
-        vol.append(el('span', 'name', 'volume'));
+        const volName = el('span', 'name');
+        volName.textContent = 'volume';
+        vol.append(volName);
         const slider = el('input');
         slider.type = 'range';
         slider.min = '0';
@@ -203,7 +207,9 @@ export class Screens {
         s.append(vol);
 
         const shake = el('div', 'settings-row glass-chip');
-        shake.append(el('span', 'name', 'screen shake'));
+        const shakeName = el('span', 'name');
+        shakeName.textContent = 'screen shake';
+        shake.append(shakeName);
         const toggle = el('button', `toggle sticker ${state.settings.screenShake ? 'on' : ''}`);
         toggle.textContent = state.settings.screenShake ? 'attivo' : 'spento';
         toggle.addEventListener('click', () => {
@@ -217,7 +223,9 @@ export class Screens {
         s.append(shake);
 
         const danger = el('div', 'settings-row glass-chip glass-acid-red');
-        danger.append(el('span', 'name', 'cancella salvataggio'));
+        const dangerName = el('span', 'name');
+        dangerName.textContent = 'cancella salvataggio';
+        danger.append(dangerName);
         const reset = el('button', 'toggle sticker');
         reset.textContent = 'cancella';
         reset.style.color = ZONE_CSS.red;
@@ -283,13 +291,61 @@ export class Screens {
         s.append(stack);
     }
 
-    /* ---------- card di zona, toast, abilità ---------- */
+    /* ---------- scelte e quiz ---------- */
+
+    private choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
+        const s = this.openOverlay();
+        const panel = el('div', 'story-card glass-panel glass-acid-green');
+        const t = el('div', 'font-marker choice-title');
+        t.textContent = title;
+        panel.append(t);
+        s.append(panel);
+        const stack = el('div', 'menu-stack');
+        options.forEach((opt, i) => {
+            stack.append(this.btn(opt.label, i % 2 ? 1.2 : -1.2, () => {
+                this.closeOverlay();
+                onPick(i);
+            }, opt.danger ? 'glass-acid-red' : 'glass-acid-green'));
+        });
+        s.append(stack);
+    }
+
+    private quiz(onDone: (errors: number) => void): void {
+        let index = 0;
+        let errors = 0;
+        const ask = () => {
+            const q = QUIZ_ANALISI[index];
+            const s = this.openOverlay();
+            s.append(this.kicker(`mente di piema — enigma ${index + 1}/${QUIZ_ANALISI.length}`, 'glass-acid-blue', ZONE_CSS.blue));
+            const panel = el('div', 'story-card glass-panel glass-acid-blue');
+            const t = el('p');
+            t.textContent = q.q;
+            panel.append(t);
+            s.append(panel);
+            const stack = el('div', 'menu-stack');
+            q.options.forEach((opt, i) => {
+                stack.append(this.btn(opt, i % 2 ? 1 : -1, () => {
+                    if (i !== q.correct) errors++;
+                    index++;
+                    if (index < QUIZ_ANALISI.length) ask();
+                    else {
+                        this.closeOverlay();
+                        onDone(errors);
+                    }
+                }));
+            });
+            s.append(stack);
+        };
+        ask();
+    }
+
+    /* ---------- card di zona, toast, wavesung, abilità ---------- */
 
     private zoneCard(title: string, accent: string, color: ZoneColor, punchline: string): void {
         document.getElementById('zonecard')?.remove();
         const card = el('div');
         card.id = 'zonecard';
-        const h1 = el('h1', '', '');
+        const h1 = el('h1');
         h1.textContent = title + ' ';
         const span = el('span', 'accent');
         span.textContent = accent;
@@ -312,20 +368,35 @@ export class Screens {
         setTimeout(() => t.remove(), 2700);
     }
 
+    private wavesung(sender: string, text: string): void {
+        document.getElementById('wavesung')?.remove();
+        const w = el('div', 'glass-panel glass-acid-blue');
+        w.id = 'wavesung';
+        const head = el('div', 'wavesung-head font-marker', '');
+        head.textContent = `📱 wavesung — ${sender}`;
+        const body = el('div', 'wavesung-body');
+        body.textContent = text;
+        w.append(head, body);
+        ui().append(w);
+        sfx.pickup();
+        setTimeout(() => w.classList.add('fade-out'), 4600);
+        setTimeout(() => w.remove(), 5100);
+    }
+
     private abilityCard(ability: keyof typeof ABILITY_CARDS): void {
         this.controller.pause();
         const card = ABILITY_CARDS[ability];
         const s = this.openOverlay();
-        s.append(this.kicker('nuova wave — rec', 'glass-acid-green', ZONE_CSS.green));
+        s.append(this.kicker('frammento della gecowave — rec', 'glass-acid-green', ZONE_CSS.green));
         const panel = el('div', 'story-card glass-panel glass-acid-green');
         const name = el('div', 'font-marker');
         name.style.cssText = 'font-size:30px;color:var(--green);transform:rotate(-2deg);margin-bottom:14px';
         name.textContent = card.name;
         const desc = el('p');
         desc.textContent = card.desc;
-        const key = el('div', '', '');
+        const key = el('div');
         key.style.marginTop = '16px';
-        const kbd = el('kbd', '');
+        const kbd = el('kbd');
         kbd.style.cssText = 'font-size:12px;padding:6px 14px;border:1px solid rgba(255,255,255,.25);border-radius:8px';
         kbd.textContent = card.key;
         key.append(kbd);
@@ -357,7 +428,7 @@ export class Screens {
                 panel.append(punch);
             }
             s.append(panel);
-            const hint = el('div', 'label', '');
+            const hint = el('div', 'label');
             hint.textContent = 'clic per continuare';
             hint.style.cssText = 'color:rgba(255,255,255,.4);margin-top:6px;animation:soft-pulse 1.6s ease-in-out infinite';
             s.append(hint);

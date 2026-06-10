@@ -1,6 +1,6 @@
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
 
-const SAVE_KEY = 'gecowave-save-v1';
+const SAVE_KEY = 'gecowave-save-v2';
 const SETTINGS_KEY = 'gecowave-settings-v1';
 
 export interface Settings {
@@ -9,13 +9,14 @@ export interface Settings {
 }
 
 const defaultSave = (): SaveData => ({
-    levelId: 'vico',
+    levelId: 'perduta',
     checkpointId: null,
     barre: 0,
     abilities: [],
     seenDialogues: [],
     collectedLore: [],
-    bossDefeated: false,
+    flags: [],
+    endingSeen: null,
 });
 
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
@@ -24,12 +25,8 @@ class GameState {
     settings: Settings = { volume: 0.7, screenShake: true };
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
-    /** vita e flow della run corrente: non si salvano, si vivono */
-    run = { hp: 5, flow: 0 };
-
-    resetRun(): void {
-        this.run = { hp: 5, flow: 0 };
-    }
+    /** vita, flow e malus della run corrente: non si salvano, si vivono */
+    run = { hp: 5, flow: 0, trenbolone: false, smela: false };
 
     constructor() {
         try {
@@ -46,6 +43,14 @@ class GameState {
         return localStorage.getItem(SAVE_KEY) !== null;
     }
 
+    get damageMult(): number {
+        return this.run.trenbolone ? 2 : 1;
+    }
+
+    resetRun(): void {
+        this.run = { hp: 5, flow: 0, trenbolone: false, smela: false };
+    }
+
     persist(): void {
         localStorage.setItem(SAVE_KEY, JSON.stringify(this.save));
     }
@@ -57,6 +62,7 @@ class GameState {
     reset(): void {
         this.save = defaultSave();
         this.dropped = null;
+        this.resetRun();
         localStorage.removeItem(SAVE_KEY);
     }
 
@@ -67,6 +73,17 @@ class GameState {
     unlockAbility(a: AbilityId): void {
         if (!this.hasAbility(a)) {
             this.save.abilities.push(a);
+            this.persist();
+        }
+    }
+
+    hasFlag(f: string): boolean {
+        return this.save.flags.includes(f);
+    }
+
+    setFlag(f: string): void {
+        if (!this.hasFlag(f)) {
+            this.save.flags.push(f);
             this.persist();
         }
     }

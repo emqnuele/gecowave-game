@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL } from './content/levels';
-import { ENDING_CARDS, INTRO_CARDS } from './content/story';
+import { ENDING_CONSEGNA, ENDING_DEI, ENDING_PEDRO, INTRO_CARDS } from './content/story';
 import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
 import { state } from './engine/state';
@@ -31,11 +31,15 @@ async function boot(): Promise<void> {
             width: '100%',
             height: '100%',
         },
+        render: {
+            maxLights: 24,
+        },
         physics: {
             default: 'arcade',
             arcade: {
                 gravity: { x: 0, y: PHYSICS.gravity },
-                tileBias: 24,
+                // tile da 160px scalate 0.2: serve un bias alto contro il tunneling
+                tileBias: 48,
             },
         },
         scene: [BootScene, GameScene],
@@ -82,11 +86,19 @@ async function boot(): Promise<void> {
     };
     screens.bind(controller);
 
-    bus.on('game-won', () => {
+    bus.on('ending', ({ id }) => {
+        sfx.stopPad();
+        if (id === 'pedro') {
+            // finale sbagliato: gli dei ti oneshottano, si riprova dalla scelta
+            screens.storySequence(ENDING_PEDRO, () => controller.retry());
+            return;
+        }
+        const cards = id === 'consegna' ? ENDING_CONSEGNA : ENDING_DEI;
         hud.hide();
         game.scene.stop('GameScene');
-        screens.storySequence(ENDING_CARDS, () => {
-            // ng+: si riparte dal vico ma con tutte le wave
+        screens.storySequence(cards, () => {
+            state.save.endingSeen = id;
+            // ng+: si riparte dall'inizio ma con tutte le wave addosso
             state.save.levelId = FIRST_LEVEL;
             state.save.checkpointId = null;
             state.persist();

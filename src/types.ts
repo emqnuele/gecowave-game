@@ -1,8 +1,27 @@
-export type ZoneColor = 'green' | 'purple' | 'orange' | 'blue' | 'red' | 'yellow';
+export type ZoneColor = 'green' | 'purple' | 'orange' | 'blue' | 'red' | 'yellow' | 'cyan';
 
-export type AbilityId = 'doubleJump' | 'dash' | 'verso';
+/* le wave sono frammenti della gecowave: 2 di movimento,
+   3 attive (il massimo equipaggiabile, per regola del realm), 1 passiva */
+export type AbilityId =
+    | 'scivolata'
+    | 'rimbalzo'
+    | 'riflesso'
+    | 'risonante'
+    | 'rigenerazione'
+    | 'analisi';
 
-export type EnemyKind = 'zanzarone' | 'cultista' | 'botto' | 'drone' | 'hater';
+export type EnemyKind =
+    | 'glitchetto'
+    | 'citelis'
+    | 'pendolare'
+    | 'pittura'
+    | 'pittura-mini'
+    | 'tecnodrone'
+    | 'tossico'
+    | 'formica'
+    | 'numero';
+
+export type BossKind = 'guggu' | 'breccio' | 'notino' | 'riba' | 'pedro' | 'dei';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }
@@ -10,7 +29,10 @@ export type EntitySpec =
     | { type: 'ability'; ability: AbilityId }
     | { type: 'lore'; id: string }
     | { type: 'barre'; amount: number }
-    | { type: 'boss' };
+    | { type: 'boss'; kind: BossKind };
+
+/** script speciali di livello gestiti dalla GameScene */
+export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'ruhra' | 'pedro';
 
 export interface LevelDef {
     id: string;
@@ -21,7 +43,7 @@ export interface LevelDef {
     color: ZoneColor;
     /** battuta mostrata sotto la title card */
     punchline: string;
-    /** griglia ascii: vedi legenda in LevelLoader */
+    /** griglia ascii: # terreno, ^ spine, ~ acqua, P spawn, C microfono, X uscita */
     grid: string[];
     /** mappa lettera -> entità */
     entities: Record<string, EntitySpec>;
@@ -29,6 +51,8 @@ export interface LevelDef {
     next?: string;
     /** dialogo lanciato al primo ingresso */
     introDialogue?: string;
+    /** logica speciale del capitolo */
+    script?: LevelScript;
     /** frequenza base del pad ambientale */
     ambientNote?: number;
 }
@@ -46,7 +70,9 @@ export interface SaveData {
     abilities: AbilityId[];
     seenDialogues: string[];
     collectedLore: string[];
-    bossDefeated: boolean;
+    /** flag di storia: ivan, tommasorveglianza, dispositivo, smela... */
+    flags: string[];
+    endingSeen: string | null;
 }
 
 export interface DroppedBarre {

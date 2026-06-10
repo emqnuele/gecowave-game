@@ -4,13 +4,18 @@ import { bus } from '../engine/events';
 import type { AbilityId } from '../types';
 import { el } from './dom';
 
-const ABILITY_ORDER: AbilityId[] = ['doubleJump', 'dash', 'verso'];
+const ACTIVE_ORDER: { id: AbilityId; key: string }[] = [
+    { id: 'risonante', key: 'F' },
+    { id: 'riflesso', key: 'G' },
+    { id: 'analisi', key: 'H' },
+];
 
 export class Hud {
     readonly root: HTMLElement;
     private hpRow: HTMLElement;
     private flowBar: HTMLElement;
     private barre: HTMLElement;
+    private fragments: HTMLElement;
     private zone: HTMLElement;
     private waves: HTMLElement;
     private bossBar: HTMLElement | null = null;
@@ -28,10 +33,11 @@ export class Hud {
         topleft.append(this.hpRow, flowWrap);
 
         this.barre = el('div', 'hud-barre sticker glass-acid-yellow', '♪ 0 barre');
+        this.fragments = el('div', 'hud-fragments sticker glass-acid-green', '');
         this.zone = el('div', 'hud-zone sticker', '');
         this.waves = el('div', 'hud-waves');
 
-        this.root.append(topleft, this.barre, this.zone, this.waves);
+        this.root.append(topleft, this.barre, this.fragments, this.zone, this.waves);
 
         for (let i = 0; i < COMBAT.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -46,6 +52,9 @@ export class Hud {
                 void this.barre.offsetWidth;
                 this.barre.classList.add('bump');
             }
+        });
+        bus.on('fragments-changed', ({ count, total }) => {
+            this.fragments.textContent = `✦ wave ${count}/${total}`;
         });
         bus.on('zone-changed', ({ title, accentWord, color }) => {
             this.zone.textContent = `${title.toLowerCase()} ${accentWord}`;
@@ -75,11 +84,15 @@ export class Hud {
 
     private setAbilities(abilities: AbilityId[]): void {
         this.waves.replaceChildren();
-        for (const id of ABILITY_ORDER) {
+        for (const { id, key } of ACTIVE_ORDER) {
             if (!abilities.includes(id)) continue;
             const card = ABILITY_CARDS[id];
             const chip = el('div', 'wave-chip glass-chip');
-            chip.append(el('kbd', '', card.key), el('span', 'wave-name', card.name.replace('wave del ', '').replace('wave della ', '')));
+            const kbd = el('kbd');
+            kbd.textContent = key;
+            const name = el('span', 'wave-name');
+            name.textContent = card.name.replace('frammento del ', '').replace('frammento della ', '');
+            chip.append(kbd, name);
             this.waves.append(chip);
         }
     }
@@ -93,10 +106,9 @@ export class Hud {
         if (!this.bossBar) {
             this.bossBar = el('div', 'glass-panel glass-acid-red');
             this.bossBar.id = 'bossbar';
-            this.bossBar.append(
-                el('div', 'boss-name', payload.name),
-                el('div', 'boss-track', '<div class="boss-fill" style="width:100%"></div>')
-            );
+            const name = el('div', 'boss-name');
+            name.textContent = payload.name;
+            this.bossBar.append(name, el('div', 'boss-track', '<div class="boss-fill" style="width:100%"></div>'));
             this.root.append(this.bossBar);
         }
         const fill = this.bossBar.querySelector<HTMLElement>('.boss-fill')!;
