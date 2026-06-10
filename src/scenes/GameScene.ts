@@ -9,6 +9,7 @@ import { loadLevel, type LoadedLevel } from '../engine/LevelLoader';
 import { ParallaxManager } from '../engine/ParallaxManager';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
+import { music } from '../engine/music';
 import { generateZoneTextures } from '../engine/textures';
 import { Boss } from '../entities/Boss';
 import { Enemy } from '../entities/Enemy';
@@ -70,6 +71,11 @@ export class GameScene extends Phaser.Scene {
     // rio
     private ambushDone = false;
     private pedroChoiceShown = false;
+    // ivan maggini nello scontro con guggu
+    private ivanSprite: Phaser.GameObjects.Sprite | null = null;
+    private ivanInArena = false;
+    private ivanBusy = false;
+    private nextIvanStrikeAt = 0;
 
     constructor() {
         super('GameScene');
@@ -94,6 +100,9 @@ export class GameScene extends Phaser.Scene {
         this.bossIntroShown = false;
         this.pedroChoiceShown = false;
         this.ambushDone = state.hasFlag('agguato-fatto');
+        this.ivanSprite = null;
+        this.ivanInArena = false;
+        this.ivanBusy = false;
 
         generateZoneTextures(this, this.def.color);
 
@@ -212,6 +221,11 @@ export class GameScene extends Phaser.Scene {
                     this.spawnBarrePickup(x, y, spec.amount);
                     break;
                 case 'boss': {
+                    // i boss sconfitti restano sconfitti, regola souls
+                    if (state.hasFlag(`boss-down-${spec.kind}`)) {
+                        this.recoverBossReward(spec.kind, x, y);
+                        break;
+                    }
                     this.boss = new Boss(this, x, y, spec.kind);
                     // in ng+ ivan è già dei nostri: guggu si taglia subito
                     if (spec.kind === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;
@@ -220,6 +234,18 @@ export class GameScene extends Phaser.Scene {
                 }
             }
         }
+    }
+
+    /** se sei morto tra la vittoria e la ricompensa, la ricompensa ti aspetta */
+    private recoverBossReward(kind: BossKind, x: number, y: number): void {
+        const fragmentByBoss: Partial<Record<BossKind, AbilityId>> = {
+            guggu: 'rimbalzo',
+            breccio: 'riflesso',
+            notino: 'risonante',
+        };
+        const ability = fragmentByBoss[kind];
+        if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability);
+        if (kind === 'riba' && !state.hasFlag('dispositivo')) state.setFlag('dispositivo');
     }
 
     private spawnEnemy(kind: EnemyKind, x: number, y: number): Enemy {
@@ -250,12 +276,17 @@ export class GameScene extends Phaser.Scene {
             this.lamettaCenter = { x, y };
             return;
         }
+        if (id === 'ivan-incontro') this.ivanSprite = npc;
         this.interactables.push({ x, y, range: 70, onInteract: () => this.interactNpc(id) });
     }
 
     private interactNpc(id: string): void {
         switch (id) {
             case 'ivan-incontro':
+                if (state.hasFlag('boss-down-guggu')) {
+                    bus.emit('toast', { text: 'ivan non risponde più. il loop è finito davvero.' });
+                    return;
+                }
                 this.startDialogue(id, () => {
                     if (!state.hasFlag('ivan')) {
                         state.setFlag('ivan');
@@ -304,6 +335,10 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'piema-mente':
                 this.interactPiema();
+                break;
+            case 'lochef-cameo':
+                music.playCustom("assets/music/lochef85's OST 1.mp3");
+                this.startDialogue(id);
                 break;
             default:
                 this.startDialogue(id);
@@ -598,6 +633,87 @@ export class GameScene extends Phaser.Scene {
         this.updateLamettaArena(time);
         this.updateWaterCure();
         this.updateAmbush();
+        this.updateIvan(time);
+    }
+
+    /* ---------- ivan maggini contro guggu ---------- */
+
+    private updateIvan(time: number): void {
+        if (this.def.script !== 'bus' || !this.ivanSprite?.active) return;
+        const boss = this.boss;
+        if (!boss?.active || !boss.engaged || !state.hasFlag('ivan')) return;
+
+        if (!this.ivanInArena) {
+            // ivan corre in arena: l'unico che può viaggiare nel caos di guggu
+            this.ivanInArena = true;
+            this.ivanSprite.setFlipX(false);
+            this.tweens.killTweensOf(this.ivanSprite);
+            this.tweens.add({
+                targets: this.ivanSprite,
+                x: boss.x - 330,
+                duration: 1000,
+                ease: 'Quad.easeInOut',
+            });
+            this.nextIvanStrikeAt = time + 2600;
+            bus.emit('toast', { text: 'ivan maggini entra nel caos. la furia è carica.' });
+            return;
+        }
+        if (!this.ivanBusy && time >= this.nextIvanStrikeAt) {
+            this.ivanStrike(boss);
+        }
+    }
+
+    private ivanStrike(boss: Boss): void {
+        const ivan = this.ivanSprite!;
+        this.ivanBusy = true;
+        const homeX = ivan.x;
+        const homeY = ivan.y;
+        const dir = Math.sign(boss.x - ivan.x) || 1;
+        ivan.setFlipX(dir < 0);
+        // telegrafo giallo, poi lo squarcio
+        ivan.setTintFill(0xfacc15);
+        this.time.delayedCall(350, () => {
+            if (!ivan.active) return;
+            ivan.clearTint();
+            sfx.dash();
+            this.tweens.add({
+                targets: ivan,
+                x: boss.active ? boss.x + dir * 130 : homeX,
+                y: boss.active ? boss.y + 30 : ivan.y,
+                duration: 260,
+                ease: 'Quad.easeIn',
+                onComplete: () => {
+                    if (boss.active) {
+                        const g = this.add.graphics().setDepth(6);
+                        g.lineStyle(5, 0xfacc15, 0.95);
+                        g.beginPath();
+                        g.moveTo(boss.x - 75, boss.y + 55);
+                        g.lineTo(boss.x + 75, boss.y - 55);
+                        g.strokePath();
+                        this.tweens.add({ targets: g, alpha: 0, scaleX: 1.2, scaleY: 1.2, duration: 280, onComplete: () => g.destroy() });
+                        sfx.hit();
+                        this.shake(130, 0.006);
+                        boss.takeDamage(4, ivan.x);
+                    }
+                    this.time.delayedCall(450, () => {
+                        if (!ivan.active) return;
+                        ivan.setFlipX(true);
+                        this.tweens.add({
+                            targets: ivan,
+                            x: homeX,
+                            y: homeY,
+                            duration: 650,
+                            ease: 'Quad.easeOut',
+                            onComplete: () => {
+                                ivan.setFlipX(false);
+                                this.ivanBusy = false;
+                                this.nextIvanStrikeAt = this.time.now + 4200;
+                            },
+                        });
+                    });
+                },
+            });
+        });
     }
 
     private trackSafePosition(delta: number): void {
@@ -837,6 +953,7 @@ export class GameScene extends Phaser.Scene {
         if (!this.lamettaActive) {
             if (Math.abs(this.player.x - c.x) < 380 && !this.player.dead) {
                 this.lamettaActive = true;
+                music.playBoss('lametta-arena');
                 this.startDialogue('lametta-incontro', () => {
                     this.nextLametteAt = this.time.now + 1500;
                     this.nextPitturaAt = this.time.now + 4000;
@@ -1028,8 +1145,18 @@ export class GameScene extends Phaser.Scene {
 
     private onBossDefeated({ kind, x, y }: { kind: BossKind; x: number; y: number }): void {
         this.boss = null;
+        if (kind === 'guggu' || kind === 'breccio' || kind === 'notino' || kind === 'riba') {
+            state.setFlag(`boss-down-${kind}`);
+        }
         switch (kind) {
             case 'guggu':
+                // l'esplosione del taglio si porta via anche ivan
+                if (this.ivanSprite?.active) {
+                    const ivan = this.ivanSprite;
+                    this.tweens.killTweensOf(ivan);
+                    ivan.setTint(0xf87171);
+                    this.tweens.add({ targets: ivan, x: x - 200, y: y + 130, angle: 80, alpha: 0.3, duration: 900, ease: 'Quad.easeOut' });
+                }
                 this.startDialogue('ivan-sacrificio', () => {
                     this.spawnFragment(x, y + 60, 'rimbalzo');
                 });

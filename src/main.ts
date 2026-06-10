@@ -6,6 +6,7 @@ import { ENDING_CONSEGNA, ENDING_DEI, ENDING_PEDRO, INTRO_CARDS } from './conten
 import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
 import { state } from './engine/state';
+import { music } from './engine/music';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { DialogueBox } from './ui/dialogue';
@@ -47,6 +48,7 @@ async function boot(): Promise<void> {
 
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
         sfx.init();
+        music.playLevel(levelId);
         state.resetRun();
         hud.show();
         const scene = game.scene.getScene('GameScene');
@@ -82,6 +84,7 @@ async function boot(): Promise<void> {
             game.scene.stop('GameScene');
             hud.hide();
             screens.showMenu();
+            music.playMenu();
         },
     };
     screens.bind(controller);
@@ -93,20 +96,26 @@ async function boot(): Promise<void> {
             screens.storySequence(ENDING_PEDRO, () => controller.retry());
             return;
         }
+        music.playEnding();
         const cards = id === 'consegna' ? ENDING_CONSEGNA : ENDING_DEI;
         hud.hide();
         game.scene.stop('GameScene');
         screens.storySequence(cards, () => {
             state.save.endingSeen = id;
-            // ng+: si riparte dall'inizio ma con tutte le wave addosso
+            // ng+: si riparte dall'inizio con tutte le wave, ma i boss tornano
             state.save.levelId = FIRST_LEVEL;
             state.save.checkpointId = null;
+            state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-'));
             state.persist();
             screens.showMenu();
         });
     });
 
-    game.events.once('boot-complete', () => screens.showMenu());
+    game.events.once('boot-complete', () => {
+        music.init();
+        music.playMenu();
+        screens.showMenu();
+    });
 }
 
 void boot();

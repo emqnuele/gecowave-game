@@ -3,6 +3,7 @@ import { ABILITY_CARDS, DEATH_PUNCHLINES, QUIZ_ANALISI } from '../content/story'
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
+import { music } from '../engine/music';
 import type { ZoneColor } from '../types';
 import { el, ui } from './dom';
 
@@ -201,6 +202,7 @@ export class Screens {
             state.settings.volume = Number(slider.value);
             state.persistSettings();
             sfx.setVolume(state.settings.volume);
+            music.setVolume(state.settings.volume);
             sfx.ui();
         });
         vol.append(slider);
