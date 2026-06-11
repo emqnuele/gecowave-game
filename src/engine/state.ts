@@ -76,6 +76,7 @@ class GameState {
     resetRun(): void {
         this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false };
         this.run.hp = this.maxHp;
+        this.run.trenbolone = this.hasFlag('trenbolone-attivo');
     }
 
     persist(): void {
@@ -111,6 +112,14 @@ class GameState {
     setFlag(f: string): void {
         if (!this.hasFlag(f)) {
             this.save.flags.push(f);
+            this.persist();
+        }
+    }
+
+    removeFlag(f: string): void {
+        const idx = this.save.flags.indexOf(f);
+        if (idx !== -1) {
+            this.save.flags.splice(idx, 1);
             this.persist();
         }
     }

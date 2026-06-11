@@ -453,6 +453,7 @@ export class GameScene extends Phaser.Scene {
                         onPick: (i) => {
                             if (i === 0) {
                                 state.run.trenbolone = true;
+                                state.setFlag('trenbolone-attivo');
                                 bus.emit('toast', { text: 'ti sei fatto di trenbolone. ti senti una bestia ma lo schermo gira.' });
                                 sfx.pickup();
                                 bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
@@ -924,6 +925,7 @@ export class GameScene extends Phaser.Scene {
                 this.time.delayedCall(900, () => {
                     bus.emit('wavesung', WAVESUNG.trenboloneAd);
                     state.run.trenbolone = true;
+                    state.setFlag('trenbolone-attivo');
                     bus.emit('toast', { text: TOASTS.trenbolone });
                 });
             }
@@ -1597,6 +1599,7 @@ export class GameScene extends Phaser.Scene {
         if (!inWater) return;
         state.run.trenbolone = false;
         state.run.smela = false;
+        state.removeFlag('trenbolone-attivo');
         sfx.heal();
         this.cameras.main.flash(200, 74, 222, 128);
         // refresh hud when player gets cured in the river
