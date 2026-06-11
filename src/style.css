@@ -557,7 +557,7 @@ body {
   position: absolute;
   bottom: 26px;
   font-family: var(--font-marker);
-  font-size: 13px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.45);
   transform: rotate(-1deg);
 }

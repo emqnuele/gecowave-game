@@ -47,6 +47,8 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
 
 export const TOTAL_MASCHERE = 10;
 
+const FALL_DEATH_MARGIN = 3000;
+
 /* gli agguati di notino: senza tommasorveglianza spawna e combatte,
    con l'abbonamento viene respinto. le gag succedono comunque. */
 interface AmbushDef {
@@ -963,6 +965,11 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number): void {
         if (!this.player) return;
         this.player.update(time, delta);
+
+        if (!this.player.dead && this.player.y > this.level.heightPx + FALL_DEATH_MARGIN) {
+            this.player.kill();
+        }
+
         const target = this.clone && this.clone.active ? (this.clone as Phaser.GameObjects.Sprite) : this.player;
         this.enemies.getChildren().forEach((e) => (e as Enemy).update(time, delta, target));
         this.boss?.update(time, delta, target);

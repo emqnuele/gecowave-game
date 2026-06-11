@@ -49,6 +49,7 @@ src/
 2. Disegna la griglia ascii (ogni carattere = 1 tile da 32px):
    - `#` terreno · `^` spine · `~` acqua · `P` spawn · `C` microfono · `X` uscita
    - qualsiasi altra lettera è un'entità definita nella mappa `entities` del livello: nemico, npc (id = dialogo), frammento, lore, barre, boss.
+   - il player per muoversi, camminare ecc.. occupa 2 tile (2x2)
 3. Registralo in `levels/index.ts` e collegalo con `next` dal livello precedente.
 4. Regole di salto (per non creare passaggi impossibili): salto singolo ≈ 3 tile in alto / 5 in largo; col rimbalzo ≈ 5-6 in alto / 8 in largo; con la scivolata +4 in largo.
 
@@ -77,7 +78,7 @@ Sparsi per il realm (e in mano a chi non dovrebbe averli) ci sono **6 cuori** ch
 
 ## La tommasorveglianza è una scelta che pesa
 
-Comprarla (9 barre, da ticummi nel rio) cambia il gioco:
+Comprarla (133 barre, da ticummi nel rio) cambia il gioco:
 
 - **con l'abbonamento**: notino viene respinto a ogni agguato, ma la tommasorveglianza ti **guarda** — l'ombra del capitolo 8 è addestrata su 41.077 secondi di te (boss potenziato), e in cantina ticummi attiva la *clausola 12*: i tuoi dati diventano armi (evoca echi di te in battaglia).
 - **senza**: notino ti tende agguati veri in rio (×2), ruhra (×2) e cantina (×1, in coppia) — spawna, saltella, spara e "si ritira strategicamente" lasciando barre. In compenso l'ombra è un clone sottoaddestrato su footage pubblico (boss indebolito) e ticummi non sa niente di te.

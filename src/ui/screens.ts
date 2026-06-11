@@ -148,9 +148,6 @@ export class Screens {
         const title = el('h1', 'menu-title font-crisis', 'GECO<span class="font-marker" style="color:#dfb15b;display:inline-block;transform:rotate(-3deg);text-transform:lowercase">wave</span>');
         s.append(title);
         const sub = el('div', 'menu-sub');
-        sub.textContent = state.save.endingSeen
-            ? 'la wave è tornata. o sei tu la wave. rigioca pure.'
-            : 'la gecowave è in frammenti. qualcuno deve raccoglierli.';
         s.append(sub);
 
         const stack = el('div', 'menu-stack');
@@ -163,7 +160,7 @@ export class Screens {
         stack.append(this.btn('impostazioni', 1.4, () => this.showSettings(() => this.showMenu())));
         s.append(stack);
 
-        s.append(el('div', 'menu-foot', 'si va a destra finché non torna la wave.'));
+        s.append(el('div', 'menu-foot', 'developed by emqnuele - music by gecowave'));
     }
 
     /* ---------- viaggio tra i capitoli ---------- */
@@ -314,7 +311,7 @@ export class Screens {
     private showDeath(lost: number): void {
         const s = this.openOverlay();
         const punch = DEATH_PUNCHLINES[Math.floor(Math.random() * DEATH_PUNCHLINES.length)];
-        s.append(el('h1', 'death-title', 'FLOPPATO'));
+        s.append(el('h1', 'death-title', 'SEI MORTO'));
         const p = el('div', 'death-punch');
         p.textContent = punch;
         s.append(p);
