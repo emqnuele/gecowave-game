@@ -26,7 +26,7 @@ export class Hud {
         this.root.id = 'hud';
         this.root.style.display = 'none';
 
-        const topleft = el('div', 'hud-topleft glass-chip glass-acid-green');
+        const topleft = el('div', 'hud-topleft glass-chip glass-acid-orange');
         this.hpRow = el('div', 'hp-row');
         const flowWrap = el('div', 'flow-wrap');
         this.flowBar = el('div', 'flow-bar');

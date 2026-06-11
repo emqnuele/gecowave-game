@@ -243,25 +243,24 @@ body {
 }
 
 .hp-tick {
-  width: 18px;
+  width: 22px;
   height: 22px;
-  border-radius: 6px;
-  background: var(--green);
-  box-shadow: 0 0 10px rgba(74, 222, 128, 0.7);
-  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  background: url('/assets/heart.png') no-repeat center / contain;
+  filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.85));
+  transition: opacity 0.2s, filter 0.2s, transform 0.2s;
 }
 
 .hp-tick:nth-child(odd) {
-  transform: rotate(-4deg);
+  transform: rotate(-5deg);
 }
 
 .hp-tick:nth-child(even) {
-  transform: rotate(3deg);
+  transform: rotate(4deg);
 }
 
 .hp-tick.lost {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: none;
+  opacity: 0.15;
+  filter: grayscale(1) contrast(0.5);
 }
 
 .hp-tick.hurt {
@@ -279,8 +278,8 @@ body {
 .flow-bar {
   height: 100%;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--green), var(--cyan));
-  box-shadow: 0 0 12px rgba(74, 222, 128, 0.6);
+  background: linear-gradient(90deg, var(--orange), var(--yellow));
+  box-shadow: 0 0 12px rgba(251, 146, 60, 0.6);
   transition: width 0.25s ease;
 }
 
