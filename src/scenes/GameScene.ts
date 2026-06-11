@@ -456,6 +456,29 @@ export class GameScene extends Phaser.Scene {
                                 bus.emit('toast', { text: 'ti sei fatto di trenbolone. ti senti una bestia ma lo schermo gira.' });
                                 sfx.pickup();
                                 bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
+                                
+                                const boss = this.boss;
+                                const bossIsAlive = boss && boss.active && boss.def.kind === 'flauto';
+                                if (bossIsAlive) {
+                                    // teleport the boss to the player for surprise attack
+                                    boss.x = this.player.x + 220;
+                                    boss.y = this.player.y - 100;
+                                    (boss as any).anchorX = this.player.x + 220;
+                                    (boss as any).anchorY = this.player.y - 100;
+                                    
+                                    this.bossIntroShown = true;
+                                    this.startDialogue('flauto-fatto-rabbia', () => {
+                                        boss.engage();
+                                    });
+                                } else {
+                                    // fall asleep since boss is already defeated
+                                    this.time.delayedCall(1000, () => {
+                                        this.player.stun(999999);
+                                        this.startDialogue('trenbo-addormentato', () => {
+                                            this.gotoLevel('rio');
+                                        });
+                                    });
+                                }
                             } else {
                                 bus.emit('toast', { text: 'spaccino: "come vuoi, torna quando hai fegato."' });
                             }
@@ -1952,7 +1975,17 @@ export class GameScene extends Phaser.Scene {
                 });
                 break;
             case 'flauto':
-                this.startDialogue('flauto-sconfitto');
+                this.startDialogue('flauto-sconfitto', () => {
+                    if (state.run.trenbolone) {
+                        // fall asleep after battle if drug is active
+                        this.time.delayedCall(1000, () => {
+                            this.player.stun(999999);
+                            this.startDialogue('trenbo-addormentato', () => {
+                                this.gotoLevel('rio');
+                            });
+                        });
+                    }
+                });
                 break;
             case 'pedro':
                 this.startDialogue('pedro-sconfitto', () => {
