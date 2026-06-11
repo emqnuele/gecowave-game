@@ -240,8 +240,20 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'flauto speroindio', color: 'orange', text: 'nessuno passa di qui senza aver affrontato il potere della birra calda!' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco che sente solo odore di luppolo scaduto*' },
     ],
+    'flauto-fatto-rabbia': [
+        { speaker: 'flauto speroindio', color: 'orange', text: 'CHI OSA VENDERE IL TRENBOLONE SENZA IL MIO PERMESSO?!' },
+        { speaker: 'flauto speroindio', color: 'orange', text: 'E tu, piccolo geco insignificante... ti fai di roba mia alle mie spalle?! SEI NEI GUAI SERI!!!' },
+    ],
+    'flauto-sveglio-rabbia': [
+        { speaker: 'flauto speroindio', color: 'orange', text: '*RUTTO CLAMOROSO* Chi ha osato svegliarmi dal mio sonno alcolico?!' },
+        { speaker: 'flauto speroindio', color: 'orange', text: 'E non ti sei nemmeno fatto di trenbolone per rendere omaggio al mio risveglio?! PAGHERAI CON LA VITA!!!' },
+    ],
     'flauto-sconfitto': [
         { speaker: 'flauto speroindio', color: 'orange', text: 'glug... glug... la mia riserva... è finita... vai pure, geco, ma attento al rio...' },
+    ],
+    'trenbo-addormentato': [
+        { speaker: 'la tua coscienza', color: 'green', text: '*Il trenbolone pulsa violento nelle tue vene. I muscoli crescono, ma le forze ti abbandonano...*' },
+        { speaker: 'la tua coscienza', color: 'green', text: '*La vista si appanna completamente. Sprofondi in un sonno profondo...*' },
     ],
     'tommaso-blocca': [
         { speaker: 'notino', color: 'red', text: 'ehehehe... ti ho preso!' },

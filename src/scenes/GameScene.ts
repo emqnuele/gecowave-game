@@ -455,8 +455,30 @@ export class GameScene extends Phaser.Scene {
                                 state.run.trenbolone = true;
                                 bus.emit('toast', { text: 'ti sei fatto di trenbolone. ti senti una bestia ma lo schermo gira.' });
                                 sfx.pickup();
-                                // force HUD update via vitals event
                                 bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
+                                
+                                if (state.hasFlag('boss-down-flauto')) {
+                                    // fall asleep since boss is already defeated
+                                    this.time.delayedCall(1000, () => {
+                                        this.player.stun(999999);
+                                        this.startDialogue('trenbo-addormentato', () => {
+                                            this.gotoLevel('rio');
+                                        });
+                                    });
+                                } else {
+                                    // teleport the boss to the player for surprise attack
+                                    if (this.boss && this.boss.def.kind === 'flauto') {
+                                        this.boss.x = this.player.x + 220;
+                                        this.boss.y = this.player.y - 100;
+                                        (this.boss as any).anchorX = this.player.x + 220;
+                                        (this.boss as any).anchorY = this.player.y - 100;
+                                        
+                                        this.bossIntroShown = true;
+                                        this.startDialogue('flauto-fatto-rabbia', () => {
+                                            this.boss?.engage();
+                                        });
+                                    }
+                                }
                             } else {
                                 bus.emit('toast', { text: 'spaccino: "come vuoi, torna quando hai fegato."' });
                             }
@@ -1150,8 +1172,10 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         if (this.def.id === 'trenbolone' && !state.run.trenbolone) {
-            this.gotoLevel('trenbolone');
-            bus.emit('toast', { text: 'ti senti perso... tutto sembra ripetersi...' });
+            if (this.time.now > this.exitLockToastAt) {
+                this.exitLockToastAt = this.time.now + 3000;
+                bus.emit('toast', { text: 'La via per il rio merdone è sbarrata. Ti serve il trenbolone.' });
+            }
             return;
         }
         this.gotoLevel(this.def.next);
@@ -1207,7 +1231,10 @@ export class GameScene extends Phaser.Scene {
         }
 
         let introId = BOSS_INTRO[this.boss.def.kind];
-        // il clone cambia faccia a seconda di quanto footage ha su di te
+        // choose flauto dialogue depending on drug state
+        if (this.boss.def.kind === 'flauto') {
+            introId = state.run.trenbolone ? 'flauto-fatto-rabbia' : 'flauto-sveglio-rabbia';
+        }
         if (this.boss.def.kind === 'ombra' && !state.hasFlag('tommasorveglianza')) introId = 'ombra-intro-scarsa';
         if (this.boss.def.kind === 'ticummi' && state.hasFlag('tommasorveglianza')) introId = 'ticummi-intro-cliente';
         if (introId && !this.bossIntroShown) {
@@ -1948,7 +1975,17 @@ export class GameScene extends Phaser.Scene {
                 });
                 break;
             case 'flauto':
-                this.startDialogue('flauto-sconfitto');
+                this.startDialogue('flauto-sconfitto', () => {
+                    if (state.run.trenbolone) {
+                        // fall asleep after battle if drug is active
+                        this.time.delayedCall(1000, () => {
+                            this.player.stun(999999);
+                            this.startDialogue('trenbo-addormentato', () => {
+                                this.gotoLevel('rio');
+                            });
+                        });
+                    }
+                });
                 break;
             case 'pedro':
                 this.startDialogue('pedro-sconfitto', () => {

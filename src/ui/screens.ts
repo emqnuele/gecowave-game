@@ -174,9 +174,17 @@ export class Screens {
         s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">torna dove sei già stato: maschere, cuori e conti in sospeso.</span>'));
 
         const reachedIdx = Math.max(0, LEVEL_ORDER.indexOf(state.save.levelId));
+        let maxVisitedIdx = -1;
+        LEVEL_ORDER.forEach((id, idx) => {
+            if (state.hasFlag(`visto-${id}`)) {
+                maxVisitedIdx = Math.max(maxVisitedIdx, idx);
+            }
+        });
+        const maxUnlockedIdx = Math.max(reachedIdx, maxVisitedIdx);
+
         const stack = el('div', 'menu-stack');
         LEVEL_ORDER.forEach((id, i) => {
-            const unlocked = state.save.endingSeen !== null || i <= reachedIdx || state.hasFlag(`visto-${id}`);
+            const unlocked = state.save.endingSeen !== null || i <= maxUnlockedIdx;
             if (!unlocked) return;
             const def = LEVELS[id];
             const label = `${i + 1}. ${def.title.toLowerCase()} ${def.accentWord}`;
