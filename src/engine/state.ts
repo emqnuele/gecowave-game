@@ -30,6 +30,7 @@ const defaultSave = (): SaveData => ({
 class GameState {
     save: SaveData = defaultSave();
     settings: Settings = { volume: 0.7, screenShake: true };
+    godMode = false;
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
     /** vita, flow e malus della run corrente: non si salvano, si vivono */

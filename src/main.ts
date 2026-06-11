@@ -121,6 +121,19 @@ async function boot(): Promise<void> {
         music.playMenu();
         screens.showMenu();
     });
+
+    Object.defineProperty(window, 'toggleGecoMode', {
+        value: (code: string) => {
+            if (code === 'gecowave-flux-resonance-992173') {
+                state.godMode = !state.godMode;
+                console.log(`%c[GECOWAVE] invincibility: ${state.godMode ? 'ENABLED' : 'DISABLED'}`, 'color: #4ade80; font-weight: bold;');
+                return state.godMode ? 'godmode on' : 'godmode off';
+            }
+            return 'access denied';
+        },
+        writable: false,
+        configurable: false
+    });
 }
 
 void boot();

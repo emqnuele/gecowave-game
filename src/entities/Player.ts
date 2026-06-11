@@ -109,7 +109,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     get invulnerable(): boolean {
-        return this.dashing || this.scene.time.now < this.invulnUntil;
+        return state.godMode || this.dashing || this.scene.time.now < this.invulnUntil;
     }
 
     private get grounded(): boolean {
