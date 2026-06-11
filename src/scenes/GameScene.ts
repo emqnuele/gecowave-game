@@ -38,7 +38,12 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     ombra: 'ombra-intro',
     ticummi: 'ticummi-intro',
     formicona: 'formicona-intro',
+    furgone: 'furgone-intro',
+    limite: 'limite-intro',
+    pedrino: 'pedrino-intro',
 };
+
+export const TOTAL_MASCHERE = 10;
 
 /* gli agguati di notino: senza tommasorveglianza spawna e combatte,
    con l'abbonamento viene respinto. le gag succedono comunque. */
@@ -52,12 +57,14 @@ interface AmbushDef {
 const AMBUSHES: Record<string, AmbushDef[]> = {
     rio: [
         { x: 95 * 32, type: 'fight', intro: 'notino-agguato-1' },
-        { x: 245 * 32, type: 'fight', intro: 'notino-agguato-2' },
+        { x: 520 * 32, type: 'fight', intro: 'notino-agguato-2' },
     ],
+    stabilimento: [{ x: 220 * 32, type: 'fight', intro: 'notino-agguato-6' }],
     ruhra: [
         { x: 100 * 32, type: 'fight', intro: 'notino-agguato-3' },
-        { x: 260 * 32, type: 'fight', intro: 'notino-agguato-4' },
+        { x: 430 * 32, type: 'fight', intro: 'notino-agguato-4' },
     ],
+    caso: [{ x: 250 * 32, type: 'gag', intro: 'notino-caso' }],
     tana: [{ x: 60 * 32, type: 'gag', intro: 'notino-tana' }],
     sorveglianza: [{ x: 100 * 32, type: 'gag', intro: 'notino-sorveglianza' }],
     cantina: [{ x: 120 * 32, type: 'fight', intro: 'notino-agguato-5', count: 2 }],
@@ -106,11 +113,12 @@ export class GameScene extends Phaser.Scene {
     // tommasoscudo
     private scudoUntil = 0;
     private scudoGfx: Phaser.GameObjects.Graphics | null = null;
-    // inseguimento nella tana
+    // inseguimenti nella tana: lochef ci prova più di una volta
     private chaseSprite: Phaser.GameObjects.Sprite | null = null;
-    private chaseStartX = -1;
-    private chaseEndX = -1;
-    private chaseOver = false;
+    private chaseStarts: number[] = [];
+    private chaseEnds: number[] = [];
+    private chaseZoneIdx = -1;
+    private chaseDone: boolean[] = [];
     // ivan maggini nello scontro con guggu
     private ivanSprite: Phaser.GameObjects.Sprite | null = null;
     private ivanInArena = false;
@@ -146,9 +154,10 @@ export class GameScene extends Phaser.Scene {
         this.scudoUntil = 0;
         this.scudoGfx = null;
         this.chaseSprite = null;
-        this.chaseStartX = -1;
-        this.chaseEndX = -1;
-        this.chaseOver = false;
+        this.chaseStarts = [];
+        this.chaseEnds = [];
+        this.chaseZoneIdx = -1;
+        this.chaseDone = [];
         this.ivanSprite = null;
         this.ivanInArena = false;
         this.ivanBusy = false;
@@ -278,6 +287,9 @@ export class GameScene extends Phaser.Scene {
                 case 'cuore':
                     this.spawnCuore(x, y, `cuore-${this.def.id}-${Math.round(x)}-${Math.round(y)}`);
                     break;
+                case 'maschera':
+                    this.spawnMaschera(x, y, `maschera-${this.def.id}`);
+                    break;
                 case 'boss': {
                     // i boss sconfitti restano sconfitti, regola souls
                     if (state.hasFlag(`boss-down-${spec.kind}`)) {
@@ -289,6 +301,8 @@ export class GameScene extends Phaser.Scene {
                     this.boss = new Boss(this, x, y, spec.kind, hpOverride);
                     // in ng+ ivan è già dei nostri: guggu si taglia subito
                     if (spec.kind === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;
+                    // il limite si arresta solo con tutti e tre gli indizi
+                    if (spec.kind === 'limite' && this.indiziRaccolti() >= 3) this.boss.invulnerable = false;
                     // da cliente premium ticummi ha i tuoi dati: evoca echi di te
                     if (spec.kind === 'ticummi' && state.hasFlag('tommasorveglianza')) this.boss.summonOverride = 'eco';
                     this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
@@ -311,6 +325,12 @@ export class GameScene extends Phaser.Scene {
         if (kind === 'riba' && !state.hasFlag('dispositivo')) state.setFlag('dispositivo');
         if (kind === 'lochef') this.spawnCuore(x, y + 50, 'cuore-lochef');
         if (kind === 'formicona') this.spawnCuore(x, y + 50, 'cuore-formicona');
+        if (kind === 'limite') {
+            state.setFlag('caso-risolto');
+            this.spawnCuore(x, y + 50, 'cuore-limite');
+        }
+        if (kind === 'furgone') state.setFlag('stabilimento-chiuso');
+        if (kind === 'pedrino') state.setFlag('ricordi-visti');
     }
 
     private spawnEnemy(kind: EnemyKind, x: number, y: number): Enemy {
@@ -333,17 +353,21 @@ export class GameScene extends Phaser.Scene {
         if (id.startsWith('studente') || id.startsWith('professore') || id.startsWith('bimbo')) return 'npc-studente';
         if (id.startsWith('romero')) return 'npc-romero';
         if (id.startsWith('vavleeh')) return 'npc-vavleeh';
+        if (id.startsWith('indizio')) return 'lore-tablet';
         return 'npc-markolino';
     }
 
     private spawnNpc(id: string, x: number, y: number): void {
-        // marker invisibili dell'inseguimento nella tana
+        // marker invisibili degli inseguimenti nella tana
         if (id === 'caccia-inizio') {
-            this.chaseStartX = x;
+            this.chaseStarts.push(x);
+            this.chaseStarts.sort((a, b) => a - b);
+            this.chaseDone = this.chaseStarts.map(() => false);
             return;
         }
         if (id === 'caccia-fine') {
-            this.chaseEndX = x;
+            this.chaseEnds.push(x);
+            this.chaseEnds.sort((a, b) => a - b);
             return;
         }
 
@@ -422,6 +446,11 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'samatt-loop':
                 this.startDialogue(state.hasFlag('boss-down-guggu') ? 'samatt-libero' : id);
+                break;
+            case 'indizio-1':
+            case 'indizio-2':
+            case 'indizio-3':
+                this.interactIndizio(id);
                 break;
             case 'lametta-cantina':
                 if (state.hasFlag('boss-down-ticummi')) {
@@ -570,6 +599,62 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
+    /* ---------- le maschere del realm ---------- */
+
+    private maschereCount(): number {
+        return state.save.collectedLore.filter((k) => k.startsWith('maschera-')).length;
+    }
+
+    private spawnMaschera(x: number, y: number, persistKey: string): void {
+        if (state.save.collectedLore.includes(persistKey)) return;
+        const mask = this.physics.add.sprite(x, y, 'maschera').setDepth(5);
+        (mask.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+        this.lighting.follow(mask, 0x4ade80, 170, 0.9);
+        this.tweens.add({ targets: mask, y: y - 8, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.tweens.add({ targets: mask, angle: { from: -6, to: 6 }, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.physics.add.overlap(this.player, mask, () => {
+            mask.destroy();
+            state.save.collectedLore.push(persistKey);
+            state.save.barre += 25;
+            state.persist();
+            sfx.unlock();
+            bus.emit('barre-changed', { barre: state.save.barre, gained: true });
+            const n = this.maschereCount();
+            bus.emit('toast', { text: `una maschera della tua stessa faccia (${n}/${TOTAL_MASCHERE}). +25 barre.` });
+            if (n === 5 && !state.hasFlag('maschere-5')) {
+                state.setFlag('maschere-5');
+                state.save.stats.forza += 1;
+                state.persist();
+                bus.emit('wavesung', WAVESUNG.markolinoMaschere5);
+            }
+            if (n >= TOTAL_MASCHERE && !state.hasFlag('maschera-completa')) {
+                state.setFlag('maschera-completa');
+                bus.emit('wavesung', WAVESUNG.markolinoMaschere10);
+                bus.emit('toast', { text: TOASTS.mascheraCompleta });
+            }
+        });
+    }
+
+    /* ---------- il caso analisi 1 ---------- */
+
+    private indiziRaccolti(): number {
+        return ['indizio-1', 'indizio-2', 'indizio-3'].filter((f) => state.hasFlag(f)).length;
+    }
+
+    private interactIndizio(id: string): void {
+        this.startDialogue(id, () => {
+            if (!state.hasFlag(id)) {
+                state.setFlag(id);
+                const n = this.indiziRaccolti();
+                bus.emit('toast', { text: `indizio acquisito al fascicolo (${n}/3).` });
+                if (n >= 3) {
+                    if (this.boss?.def.kind === 'limite') this.boss.invulnerable = false;
+                    this.startDialogue('caso-completo');
+                }
+            }
+        });
+    }
+
     /* ---------- colliders ed eventi ---------- */
 
     private setupColliders(): void {
@@ -664,6 +749,8 @@ export class GameScene extends Phaser.Scene {
                     this.hitstop();
                 } else if (this.boss.def.kind === 'guggu') {
                     bus.emit('toast', { text: TOASTS.gugguDoor });
+                } else if (this.boss.def.kind === 'limite') {
+                    bus.emit('toast', { text: TOASTS.limiteScudo });
                 }
             });
             this.physics.add.overlap(this.player, this.boss, () => {
@@ -1016,7 +1103,9 @@ export class GameScene extends Phaser.Scene {
 
         if (this.def.script === 'pedro' && !this.pedroChoiceShown) {
             this.pedroChoiceShown = true;
-            this.startDialogue('pedro-incontro', () => {
+            // se hai camminato nei suoi ricordi, pedro lo sa. e gli pesa.
+            const incontro = state.hasFlag('ricordi-visti') ? 'pedro-incontro-ricordi' : 'pedro-incontro';
+            this.startDialogue(incontro, () => {
                 bus.emit('choice-show', {
                     title: 'pedro aspetta una risposta.',
                     options: [{ label: 'seguilo: stats raddoppiate', danger: true }, { label: 'contrastalo' }],
@@ -1226,14 +1315,26 @@ export class GameScene extends Phaser.Scene {
         this.time.delayedCall(2600, () => back.active && this.popProjectile(back));
     }
 
-    /* ---------- inseguimento nella tana ---------- */
+    /* ---------- inseguimenti nella tana ---------- */
+
+    /** dialoghi per zona di caccia: la prima volta e la ricaduta */
+    private static readonly CHASE_LINES = [
+        { start: 'lochef-benvenuto', end: 'lochef-perso' },
+        { start: 'lochef-ritorno', end: 'lochef-perso-2' },
+    ];
 
     private updateChase(delta: number): void {
-        if (this.def.script !== 'tana' || this.chaseStartX < 0 || this.player.dead || this.exiting) return;
+        if (this.def.script !== 'tana' || this.chaseStarts.length === 0 || this.player.dead || this.exiting) return;
 
-        const insideChaseZone = this.player.x >= this.chaseStartX
-            && (this.chaseEndX <= 0 || this.player.x < this.chaseEndX);
-        if (!this.chaseSprite && !this.chaseOver && insideChaseZone) {
+        if (!this.chaseSprite) {
+            // c'è una zona di caccia non ancora completata sotto i piedi?
+            const idx = this.chaseStarts.findIndex((sx, i) => {
+                const ex = this.chaseEnds[i] ?? Infinity;
+                return !this.chaseDone[i] && this.player.x >= sx && this.player.x < ex;
+            });
+            if (idx < 0) return;
+            this.chaseZoneIdx = idx;
+            const lines = GameScene.CHASE_LINES[Math.min(idx, GameScene.CHASE_LINES.length - 1)];
             const spawn = () => {
                 const chef = this.add.sprite(this.player.x - 420, this.player.y - 60, 'boss-lochef')
                     .setDepth(5)
@@ -1243,10 +1344,10 @@ export class GameScene extends Phaser.Scene {
                 music.playCustom("assets/music/lochef85's OST 2.mp3");
                 bus.emit('toast', { text: TOASTS.inseguimento });
             };
-            if (!state.save.seenDialogues.includes('lochef-benvenuto')) {
-                state.save.seenDialogues.push('lochef-benvenuto');
+            if (!state.save.seenDialogues.includes(lines.start)) {
+                state.save.seenDialogues.push(lines.start);
                 state.persist();
-                this.startDialogue('lochef-benvenuto', spawn);
+                this.startDialogue(lines.start, spawn);
             } else {
                 spawn();
             }
@@ -1256,9 +1357,10 @@ export class GameScene extends Phaser.Scene {
         const chef = this.chaseSprite;
         if (!chef?.active) return;
 
-        // fine corsa: lochef ti perde di vista e va ad aspettarti all'uscita
-        if (this.player.x >= this.chaseEndX && this.chaseEndX > 0) {
-            this.chaseOver = true;
+        // fine corsa: lochef ti perde di vista. per ora.
+        const endX = this.chaseEnds[this.chaseZoneIdx] ?? Infinity;
+        if (this.player.x >= endX) {
+            this.chaseDone[this.chaseZoneIdx] = true;
             this.chaseSprite = null;
             this.tweens.add({
                 targets: chef,
@@ -1270,10 +1372,11 @@ export class GameScene extends Phaser.Scene {
             });
             music.playLevel(this.def.id);
             bus.emit('toast', { text: TOASTS.inseguimentoFine });
-            if (!state.save.seenDialogues.includes('lochef-perso')) {
-                state.save.seenDialogues.push('lochef-perso');
+            const lines = GameScene.CHASE_LINES[Math.min(this.chaseZoneIdx, GameScene.CHASE_LINES.length - 1)];
+            if (!state.save.seenDialogues.includes(lines.end)) {
+                state.save.seenDialogues.push(lines.end);
                 state.persist();
-                this.startDialogue('lochef-perso');
+                this.startDialogue(lines.end);
             }
             return;
         }
@@ -1618,6 +1721,23 @@ export class GameScene extends Phaser.Scene {
             case 'formicona':
                 this.startDialogue('formicona-sconfitta', () => {
                     this.spawnCuore(x, y + 40, 'cuore-formicona');
+                });
+                break;
+            case 'furgone':
+                this.startDialogue('furgone-sconfitto', () => {
+                    state.setFlag('stabilimento-chiuso');
+                    this.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.smelaRecensione));
+                });
+                break;
+            case 'limite':
+                this.startDialogue('romero-verdetto', () => {
+                    state.setFlag('caso-risolto');
+                    this.spawnCuore(x, y + 40, 'cuore-limite');
+                });
+                break;
+            case 'pedrino':
+                this.startDialogue('pedrino-fine', () => {
+                    state.setFlag('ricordi-visti');
                 });
                 break;
             case 'ombra':

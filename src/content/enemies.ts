@@ -178,4 +178,26 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         barre: [1, 3],
         glowColor: 0x22d3ee,
     },
+    // bottiglia premium dello stabilimento: rimbalza e schizza
+    bottiglia: {
+        kind: 'bottiglia',
+        texture: 'enemy-bottiglia',
+        behavior: 'hopper',
+        hp: 2,
+        speed: 250,
+        aggroRange: 330,
+        barre: [6, 10],
+        glowColor: 0x22d3ee,
+    },
+    // ricordo di pedro: fluttua, sbiadito, non vuole essere dimenticato
+    ricordo: {
+        kind: 'ricordo',
+        texture: 'enemy-ricordo',
+        behavior: 'flyer',
+        hp: 2,
+        speed: 120,
+        aggroRange: 340,
+        barre: [8, 12],
+        glowColor: 0x94a3b8,
+    },
 };

@@ -57,8 +57,14 @@ class MusicManager {
                 return 'assets/music/Fragment Time.mp3';
             case 'rio':
                 return 'assets/music/Tommasorveglianza.mp3';
+            case 'stabilimento':
+                return "assets/music/Ivan Maggini's OST 2.mp3";
             case 'ruhra':
                 return "assets/music/Piema's OST 1.mp3";
+            case 'caso':
+                return "assets/music/Piema's OST 2.mp3";
+            case 'ricordi':
+                return 'assets/music/Frammenti Infranti.mp3';
             case 'tana':
                 return "assets/music/lochef85's OST 1.mp3";
             case 'sorveglianza':
@@ -93,8 +99,14 @@ class MusicManager {
         if (name.includes('lochef')) {
             return "assets/music/lochef85's OST 2.mp3";
         }
-        if (name.includes('ombra') || name.includes('formicona')) {
+        if (name.includes('ombra') || name.includes('formicona') || name.includes('limite')) {
             return 'assets/music/Fragment Time.mp3';
+        }
+        if (name.includes('furgone')) {
+            return "assets/music/Ivan Maggini's OST 1.mp3";
+        }
+        if (name.includes('ricordo')) {
+            return 'assets/music/Frammenti Infranti.mp3';
         }
         if (name.includes('ticummi')) {
             return 'assets/music/Frammenti Infranti.mp3';

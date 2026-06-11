@@ -327,7 +327,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private tryAttack(dir: AttackDir): void {
         const now = this.scene.time.now;
         if (this.dead || this.dashing || this.stunned || this.charging || now < this.attackCooldownUntil) return;
-        this.attackCooldownUntil = now + COMBAT.attackCooldownMs;
+        // tutte le maschere: il ritmo perfetto, si mena più veloce
+        const cooldown = state.hasFlag('maschera-completa') ? COMBAT.attackCooldownMs * 0.7 : COMBAT.attackCooldownMs;
+        this.attackCooldownUntil = now + cooldown;
         this.attackActiveUntil = now + COMBAT.attackActiveMs;
         this.attackActive = true;
         this.attackDir = dir;

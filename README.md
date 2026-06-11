@@ -1,6 +1,6 @@
 # GECOWAVE: The Flux of Cosenza
 
-Action-platformer 2D in stile Hollow Knight / souls-like ambientato nel **GecoRealm**. Pedro, l'IA glitchata creata da Lametta, si è scontrata con gli dei e ha frantumato la GecoWave: il geco — custode provvisorio scelto dalla wave stessa — attraversa 10 capitoli per raccogliere i frammenti, tra bus dimensionali, santuari di specchi, trenbolone, teoremi di Analisi 1, una tana da cui scappare e un centro dati che ti conosce meglio di te.
+Action-platformer 2D in stile Hollow Knight / souls-like ambientato nel **GecoRealm**. Pedro, l'IA glitchata creata da Lametta, si è scontrata con gli dei e ha frantumato la GecoWave: il geco — custode provvisorio scelto dalla wave stessa — attraversa **13 capitoli** per raccogliere i frammenti, tra bus dimensionali, santuari di specchi, trenbolone, uno stabilimento di acqua "premium", teoremi di Analisi 1, un caso poliziesco vecchio quarant'anni, una tana da cui scappare due volte, un centro dati che ti conosce meglio di te e la memoria di chi ha rotto tutto.
 
 ## Avvio
 
@@ -73,7 +73,7 @@ Lo stesso vale per la storia: i dialoghi vivono in `story.ts` (`DIALOGUES['mio-i
 
 ## I cuori del realm
 
-Sparsi per il realm (e in mano a chi non dovrebbe averli) ci sono **cuori** che aumentano la vita massima per sempre: uno murato nella grotta del capitolo 1, uno nella vecchia metro del capitolo 2, uno lo lascia cadere lochef85, uno lo custodisce la formicona. Si trovano dietro muri rompibili (`%`, si spaccano a colpi) o finti (`F`, si attraversano).
+Sparsi per il realm (e in mano a chi non dovrebbe averli) ci sono **6 cuori** che aumentano la vita massima per sempre: nella grotta del capitolo 1, nella vecchia metro, nel magazzino dello stabilimento, e in mano a lochef85, alla formicona e al limite notevole. Si trovano dietro muri rompibili (`%`, si spaccano a colpi) o finti (`F`, si attraversano).
 
 ## La tommasorveglianza è una scelta che pesa
 
@@ -90,8 +90,12 @@ Sceglierlo nel finale non è più solo testo: le stats **raddoppiano davvero** (
 
 La **formicona, sindaco di formica (FR)** — la formica che morse un dio — riceve sottoterra, a ovest del villaggio, dietro un tappo rompibile (`%`). Non blocca l'uscita del livello (`guardsExit: false`): si può ignorare, ma il cuore lo tiene lei.
 
+## Le maschere del realm
+
+10 **maschere della tua stessa faccia** (le maschere del primo custode, quello che faceva i dischi) sono nascoste nei capitoli — quasi sempre dietro illusioni, in cima a scalate opzionali o in casseforti altrui. Ognuna vale 25 barre; a 5 markolino si fa vivo e la forza sale; con tutte e dieci arriva **il ritmo perfetto**: attacchi più veloci, per sempre.
+
 ## Note di design
 
-- Capitoli: la wave perduta → l'invasione dei bus (Guggu è invulnerabile senza Ivan; samatt e guastalla aspettano nella metro) → il santuario polarizzante (Breccio, poi Lametta: si vince raccogliendo 5 gocce di colore e uscendo dallo specchio nero) → Notino e la tecnokill → il rio merdone (trenbolone, Ticummi/Tommasorveglianza, i **due** agguati di Notino, Smela) → la Ruhra (miniboss Riba, enigmi di Analisi 1, il commissario Romero) → la tana di lochef85 (ti rapisce nel sonno: fuga, inseguimento attraverso i muri, boss) → la tommasorveglianza (la tua ombra ha studiato ogni tua mossa; dentro di lei c'è il frammento dello scudo) → la cantina di Ticummi (Lametta è prigioniero; sconfitto Ticummi scegli se ridargli il trenbolone) → Pedro il traditore (seguirlo è un finale sbagliato; dopo averlo battuto si sceglie: consegnare le wave o sfidare gli dei).
-- Script di capitolo (`LevelScript`): `bus`, `lametta`, `trenbolone`, `ruhra`, `tana` (inseguimento delimitato dai marker `caccia-inizio`/`caccia-fine`), `sorveglianza`, `cantina`, `pedro`.
-- Dopo un finale buono il salvataggio riparte dal capitolo 1 con tutte le wave: NG+.
+- Capitoli (13): la wave perduta → l'invasione dei bus (Guggu, ivan, la metro e il capolinea fantasma) → il santuario polarizzante (Breccio, il labirinto, la galleria dei futuri, poi Lametta: 5 gocce di colore e lo specchio nero) → Notino e la tecnokill (campo failrp, torre radio, dune) → il rio merdone (trenbolone, agguati, il villaggio di formica col sindaco sottoterra, la gola) → **lo stabilimento di Smela** (la catena dell'acqua "premium"; boss: il furgone delle consegne) → la Ruhra (Riba, biblioteca, torre di analisi, mensa, archivi) → **il caso analisi 1** (Romero: 3 indizi in 3 scene del crimine, poi l'arresto del limite notevole — invulnerabile senza il fascicolo completo) → la tana di lochef85 (**due** inseguimenti e il giardino delle statue) → la tommasorveglianza (archivio clienti, la sala dove l'ombra si è allenata, il condotto dati, il clone) → la cantina di Ticummi (laboratorio del trenbolone, il caveau degli 0,09, la scelta) → **i ricordi di Pedro** (il backup dei giorni 1-42; boss: l'ultimo pedro pulito, che cambia il dialogo del finale) → Pedro il traditore (il patto o lo scontro; poi gli dei).
+- Script di capitolo (`LevelScript`): `bus`, `lametta`, `trenbolone`, `caso` (indizi → sblocco del boss), `ruhra`, `tana` (inseguimenti delimitati da coppie di marker `caccia-inizio`/`caccia-fine`), `sorveglianza`, `cantina`, `ricordi`, `pedro`.
+- Dopo un finale buono il salvataggio riparte dal capitolo 1 con tutte le wave: NG+ (boss e agguati tornano).

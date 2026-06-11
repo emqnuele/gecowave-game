@@ -281,6 +281,38 @@ function enemies(scene: Phaser.Scene): void {
         glow(g, 18, 8, 1.5, 0x22d3ee, 0.7);
     });
 
+    // bottiglia premium dello stabilimento di smela: acqua sacra (non vero)
+    make(scene, 'enemy-bottiglia', 22, 36, (g) => {
+        g.fillStyle(0x0c1a1e, 1);
+        g.fillRoundedRect(5, 10, 12, 24, 4);
+        g.fillRect(8, 4, 6, 7);
+        g.fillStyle(0x22d3ee, 0.35);
+        g.fillRoundedRect(7, 18, 8, 14, 3);
+        // tappo
+        g.fillStyle(0x2b2d3d, 1);
+        g.fillRect(7, 1, 8, 4);
+        // etichetta "premium"
+        g.lineStyle(1, 0x22d3ee, 0.7);
+        g.strokeRect(6, 14, 10, 6);
+        glow(g, 11, 16, 1.6, 0x22d3ee, 0.5);
+    });
+
+    // ricordo di pedro: un frame sbiadito che fluttua
+    make(scene, 'enemy-ricordo', 30, 32, (g) => {
+        g.fillStyle(0x10141c, 0.9);
+        g.fillRoundedRect(4, 4, 22, 24, 4);
+        g.lineStyle(1, 0x94a3b8, 0.5);
+        g.strokeRoundedRect(4, 4, 22, 24, 4);
+        // dentro, la sagoma di un piccolo pedro felice
+        g.fillStyle(0x1c2530, 1);
+        g.fillRect(11, 10, 9, 8);
+        g.fillCircle(15, 8, 3);
+        glow(g, 13, 8, 1.2, 0x67e8f9, 0.5);
+        // angolo strappato: il tempo mangia
+        g.fillStyle(0x000000, 1);
+        g.fillTriangle(26, 4, 26, 12, 19, 4);
+    });
+
     // telecamera della tommasorveglianza: ti guarda. spara pure.
     make(scene, 'enemy-telecamera', 36, 28, (g) => {
         // braccio a muro
@@ -740,6 +772,92 @@ function bosses(scene: Phaser.Scene): void {
         glow(g, 50, 9, 1.8, 0x22d3ee, 0.6);
     });
 
+    // il furgone delle consegne di smela: pubblicità su ogni lato
+    make(scene, 'boss-furgone', 120, 70, (g) => {
+        g.fillStyle(0x101820, 1);
+        g.fillRoundedRect(4, 10, 96, 42, { tl: 6, tr: 14, bl: 2, br: 2 });
+        // muso
+        g.fillRoundedRect(96, 24, 20, 28, { tl: 10, tr: 6, bl: 2, br: 2 });
+        g.lineStyle(1.5, 0x2a4a5a, 1);
+        g.strokeRoundedRect(4, 10, 96, 42, { tl: 6, tr: 14, bl: 2, br: 2 });
+        // parabrezza con smela dentro, comodo
+        g.fillStyle(0x22d3ee, 0.4);
+        g.fillRect(100, 27, 12, 10);
+        g.fillStyle(INK, 1);
+        g.fillCircle(106, 34, 4);
+        // scritta pubblicitaria sulla fiancata
+        g.lineStyle(1, 0x22d3ee, 0.8);
+        g.strokeRect(12, 18, 76, 22);
+        g.lineStyle(1.5, 0x22d3ee, 0.6);
+        g.beginPath();
+        g.moveTo(18, 30); g.lineTo(30, 24); g.lineTo(42, 32); g.lineTo(54, 24); g.lineTo(66, 30);
+        g.strokePath();
+        // ruote
+        g.fillStyle(0x05060a, 1);
+        g.fillCircle(26, 56, 11);
+        g.fillCircle(86, 56, 11);
+        g.lineStyle(2, 0x2a4a5a, 1);
+        g.strokeCircle(26, 56, 11);
+        g.strokeCircle(86, 56, 11);
+        glow(g, 108, 30, 2.5, 0x22d3ee, 0.5);
+    });
+
+    // il limite notevole: latitante dai tempi del primo parziale
+    make(scene, 'boss-limite', 90, 80, (g) => {
+        glow(g, 45, 40, 9, 0x60a5fa, 0.3);
+        // lim che tende, scritto con la luce
+        g.lineStyle(4, 0x60a5fa, 0.9);
+        g.beginPath();
+        g.moveTo(14, 24); g.lineTo(14, 50);
+        g.moveTo(24, 32); g.lineTo(24, 50);
+        g.strokePath();
+        g.strokeCircle(24, 27, 2.5);
+        g.beginPath();
+        g.moveTo(34, 32); g.lineTo(34, 50);
+        g.moveTo(34, 36) ; g.lineTo(40, 32); g.lineTo(44, 36);
+        g.moveTo(44, 34); g.lineTo(44, 50);
+        g.strokePath();
+        // la freccia che tende a infinito
+        g.lineStyle(3, 0xffffff, 0.8);
+        g.beginPath();
+        g.moveTo(20, 62); g.lineTo(58, 62);
+        g.moveTo(50, 56); g.lineTo(58, 62); g.lineTo(50, 68);
+        g.strokePath();
+        // infinito
+        g.lineStyle(3, 0x60a5fa, 0.9);
+        g.strokeCircle(68, 62, 6);
+        g.strokeCircle(79, 62, 6);
+        // occhi da latitante
+        glow(g, 60, 26, 2.6, 0xffffff, 0.7);
+        glow(g, 72, 26, 2.6, 0xffffff, 0.7);
+    });
+
+    // pedro prima del glitch: pulito, intero, quasi tenero
+    make(scene, 'boss-pedrino', 56, 72, (g) => {
+        g.fillStyle(0x0e1216, 1);
+        g.fillRoundedRect(14, 22, 30, 38, 6);
+        g.lineStyle(1.5, 0x2a6a7a, 1);
+        g.strokeRoundedRect(14, 22, 30, 38, 6);
+        // testa integra, antenna dritta
+        g.fillStyle(0x0e1216, 1);
+        g.fillRoundedRect(17, 4, 24, 18, 4);
+        g.lineStyle(1.5, 0x2a6a7a, 1);
+        g.strokeRoundedRect(17, 4, 24, 18, 4);
+        g.lineStyle(2, 0x2a6a7a, 1);
+        g.beginPath();
+        g.moveTo(29, 4); g.lineTo(29, -2);
+        g.strokePath();
+        // due occhi uguali, nessuna crepa
+        glow(g, 24, 12, 2.4, 0x67e8f9, 0.7);
+        glow(g, 34, 12, 2.4, 0x67e8f9, 0.7);
+        // braccia attaccate al corpo, come si deve
+        g.fillStyle(0x0e1216, 1);
+        g.fillRect(6, 26, 8, 22);
+        g.fillRect(44, 26, 8, 22);
+        // un cuoricino di led sul petto. glielo aveva disegnato lametta.
+        glow(g, 29, 34, 1.6, 0xf87171, 0.5);
+    });
+
     // la formicona: sindaco di formica (fr). ha morso un dio.
     make(scene, 'boss-formicona', 96, 56, (g) => {
         g.fillStyle(0x1a0f08, 1);
@@ -920,6 +1038,27 @@ function objects(scene: Phaser.Scene): void {
         c.beginPath();
         c.moveTo(4.5, 14); c.lineTo(15, 27); c.lineTo(25.5, 14);
         c.strokePath();
+    });
+
+    // maschera della mia stessa faccia: collezionabile, perfetta, ritmica
+    make(scene, 'maschera', 28, 32, (m) => {
+        glow(m, 14, 16, 6, 0x4ade80, 0.3);
+        m.fillStyle(0x0f1a14, 1);
+        m.fillEllipse(14, 16, 20, 26);
+        m.lineStyle(1.5, 0x4ade80, 0.9);
+        m.strokeEllipse(14, 16, 20, 26);
+        // occhi da geco, vuoti
+        m.fillStyle(0x000000, 1);
+        m.fillEllipse(10, 12, 5, 7);
+        m.fillEllipse(18, 12, 5, 7);
+        m.lineStyle(1, 0x4ade80, 0.6);
+        m.strokeEllipse(10, 12, 5, 7);
+        m.strokeEllipse(18, 12, 5, 7);
+        // sorriso fisso, perfetto, ritmico
+        m.lineStyle(1.5, 0x4ade80, 0.8);
+        m.beginPath();
+        m.arc(14, 20, 5, 0.3, Math.PI - 0.3);
+        m.strokePath();
     });
 
     // stele della lore

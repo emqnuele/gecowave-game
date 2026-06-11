@@ -4,16 +4,22 @@ import { bus } from './level02-bus';
 import { santuario } from './level03-santuario';
 import { tecnokill } from './level04-tecnokill';
 import { rio } from './level05-rio';
-import { ruhra } from './level06-ruhra';
-import { tana } from './level07-tana';
-import { sorveglianza } from './level08-sorveglianza';
-import { cantina } from './level09-cantina';
-import { nucleo } from './level10-nucleo';
+import { stabilimento } from './level06-stabilimento';
+import { ruhra } from './level07-ruhra';
+import { caso } from './level08-caso';
+import { tana } from './level09-tana';
+import { sorveglianza } from './level10-sorveglianza';
+import { cantina } from './level11-cantina';
+import { ricordi } from './level12-ricordi';
+import { nucleo } from './level13-nucleo';
 
 /* per aggiungere un capitolo: crea un file qui accanto, importalo
    e aggiungilo alla lista. collega le zone col campo `next`. */
 
-const all: LevelDef[] = [perduta, bus, santuario, tecnokill, rio, ruhra, tana, sorveglianza, cantina, nucleo];
+const all: LevelDef[] = [
+    perduta, bus, santuario, tecnokill, rio, stabilimento,
+    ruhra, caso, tana, sorveglianza, cantina, ricordi, nucleo,
+];
 
 export const LEVELS: Record<string, LevelDef> = Object.fromEntries(all.map((l) => [l.id, l]));
 

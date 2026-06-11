@@ -26,9 +26,13 @@ export type EnemyKind =
     | 'ammiratore'
     | 'telecamera'
     | 'notino-mini'
-    | 'eco';
+    | 'eco'
+    | 'bottiglia'
+    | 'ricordo';
 
-export type BossKind = 'guggu' | 'breccio' | 'notino' | 'riba' | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'pedro' | 'dei';
+export type BossKind =
+    | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
+    | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'pedrino' | 'pedro' | 'dei';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }
@@ -37,10 +41,11 @@ export type EntitySpec =
     | { type: 'lore'; id: string }
     | { type: 'barre'; amount: number }
     | { type: 'cuore' }
+    | { type: 'maschera' }
     | { type: 'boss'; kind: BossKind };
 
 /** script speciali di livello gestiti dalla GameScene */
-export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'ruhra' | 'tana' | 'sorveglianza' | 'cantina' | 'pedro';
+export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'caso' | 'ruhra' | 'tana' | 'sorveglianza' | 'cantina' | 'ricordi' | 'pedro';
 
 export interface LevelDef {
     id: string;

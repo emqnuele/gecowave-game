@@ -80,6 +80,37 @@ export const BOSSES: Record<BossKind, BossDef> = {
         cooldownMs: { 1: 2300, 2: 1900, 3: 1500 },
         contactDamage: 1,
     },
+    furgone: {
+        kind: 'furgone',
+        name: 'il furgone delle consegne (guida smela)',
+        texture: 'boss-furgone',
+        hp: 50,
+        glowColor: 0x22d3ee,
+        attacks: {
+            1: ['charge', 'rain'],
+            2: ['charge', 'rain', 'summon'],
+            3: ['charge', 'charge', 'rain', 'summon'],
+        },
+        cooldownMs: { 1: 2500, 2: 2000, 3: 1500 },
+        summonKind: 'bottiglia',
+        contactDamage: 1,
+    },
+    limite: {
+        kind: 'limite',
+        name: 'il limite notevole (latitante)',
+        texture: 'boss-limite',
+        hp: 45,
+        glowColor: 0x60a5fa,
+        attacks: {
+            1: ['radial', 'rain'],
+            2: ['radial', 'rain', 'teleport'],
+            3: ['teleport', 'radial', 'rain', 'burst'],
+        },
+        cooldownMs: { 1: 2400, 2: 1900, 3: 1400 },
+        // non si arresta un limite senza prove: servono i 3 indizi
+        startsInvulnerable: true,
+        contactDamage: 1,
+    },
     lochef: {
         kind: 'lochef',
         name: 'lochef85, il perverso',
@@ -142,6 +173,20 @@ export const BOSSES: Record<BossKind, BossDef> = {
         cooldownMs: { 1: 2200, 2: 1800, 3: 1400 },
         summonKind: 'formica',
         guardsExit: false,
+        contactDamage: 1,
+    },
+    pedrino: {
+        kind: 'pedrino',
+        name: 'pedro, prima del glitch (un ricordo)',
+        texture: 'boss-pedrino',
+        hp: 40,
+        glowColor: 0x67e8f9,
+        attacks: {
+            1: ['burst', 'dive'],
+            2: ['burst', 'dive', 'teleport'],
+            3: ['teleport', 'burst', 'radial', 'dive'],
+        },
+        cooldownMs: { 1: 2300, 2: 1800, 3: 1400 },
         contactDamage: 1,
     },
     pedro: {
