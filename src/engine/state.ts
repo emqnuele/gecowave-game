@@ -38,7 +38,12 @@ class GameState {
     constructor() {
         try {
             const raw = localStorage.getItem(SAVE_KEY);
-            if (raw) this.save = { ...defaultSave(), ...JSON.parse(raw) };
+            if (raw) {
+                this.save = { ...defaultSave(), ...JSON.parse(raw) };
+                if (typeof this.save.barre !== 'number' || isNaN(this.save.barre)) {
+                    this.save.barre = 0;
+                }
+            }
             const s = localStorage.getItem(SETTINGS_KEY);
             if (s) this.settings = { ...this.settings, ...JSON.parse(s) };
         } catch {

@@ -781,8 +781,9 @@ export class GameScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.player, this.barreGroup, (_p, obj) => {
             const note = obj as Phaser.Physics.Arcade.Sprite;
+            const value = note.getData('value') as number;
             note.destroy();
-            state.save.barre += note.getData('value') as number;
+            state.save.barre += value;
             state.persist();
             sfx.barra();
             bus.emit('barre-changed', { barre: state.save.barre, gained: true });
