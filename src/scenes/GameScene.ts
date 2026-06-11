@@ -204,6 +204,8 @@ export class GameScene extends Phaser.Scene {
         this.parallax.resize();
         this.buildPrompt();
 
+        state.setFlag(`visto-${this.def.id}`);
+
         bus.emit('zone-changed', {
             title: this.def.title,
             accentWord: this.def.accentWord,
@@ -297,7 +299,7 @@ export class GameScene extends Phaser.Scene {
                         break;
                     }
                     // l'ombra senza abbonamento è addestrata su poco footage
-                    const hpOverride = spec.kind === 'ombra' && !state.hasFlag('tommasorveglianza') ? 28 : undefined;
+                    const hpOverride = spec.kind === 'ombra' && !state.hasFlag('tommasorveglianza') ? 34 : undefined;
                     this.boss = new Boss(this, x, y, spec.kind, hpOverride);
                     // in ng+ ivan è già dei nostri: guggu si taglia subito
                     if (spec.kind === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;

@@ -1,4 +1,5 @@
 import { ZONE_CSS } from '../config';
+import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { ABILITY_CARDS, DEATH_PUNCHLINES, QUIZ_ANALISI } from '../content/story';
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
@@ -14,6 +15,8 @@ export interface GameController {
     pause(): void;
     resume(): void;
     quitToMenu(): void;
+    /** viaggia a un capitolo già visitato (per segreti e maschere persi) */
+    travel(levelId: string): void;
 }
 
 const CONTROLS: [string, string][] = [
@@ -155,12 +158,39 @@ export class Screens {
         stack.append(this.btn('nuova partita', -1.5, () => this.controller.newGame(), 'glass-acid-gold'));
         if (state.hasSave) {
             stack.append(this.btn('continua', 1.2, () => this.controller.continueGame()));
+            stack.append(this.btn('capitoli', -1.2, () => this.showChapters(() => this.showMenu())));
         }
         stack.append(this.btn('comandi', -1, () => this.showControls(() => this.showMenu())));
         stack.append(this.btn('impostazioni', 1.4, () => this.showSettings(() => this.showMenu())));
         s.append(stack);
 
         s.append(el('div', 'menu-foot', 'si va a destra finché non torna la wave.'));
+    }
+
+    /* ---------- viaggio tra i capitoli ---------- */
+
+    private showChapters(back: () => void): void {
+        const s = this.openOverlay('screen opaque');
+        s.append(el('h2', 'font-crisis', 'CAPITOLI'));
+        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">torna dove sei già stato: maschere, cuori e conti in sospeso.</span>'));
+
+        const reachedIdx = Math.max(0, LEVEL_ORDER.indexOf(state.save.levelId));
+        const stack = el('div', 'menu-stack');
+        LEVEL_ORDER.forEach((id, i) => {
+            const unlocked = state.save.endingSeen !== null || i <= reachedIdx || state.hasFlag(`visto-${id}`);
+            if (!unlocked) return;
+            const def = LEVELS[id];
+            const label = `${i + 1}. ${def.title.toLowerCase()} ${def.accentWord}`;
+            stack.append(this.btn(label, i % 2 ? 1 : -1, () => {
+                state.save.levelId = id;
+                state.save.checkpointId = null;
+                state.persist();
+                this.controller.travel(id);
+            }));
+        });
+        s.append(stack);
+        stack.append(this.btn('indietro', 0, back));
+        this.onEsc(back);
     }
 
     /* ---------- pausa ---------- */

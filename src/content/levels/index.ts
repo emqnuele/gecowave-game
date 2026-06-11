@@ -23,6 +23,9 @@ const all: LevelDef[] = [
 
 export const LEVELS: Record<string, LevelDef> = Object.fromEntries(all.map((l) => [l.id, l]));
 
+/** ordine canonico dei capitoli, per la schermata di viaggio */
+export const LEVEL_ORDER: string[] = all.map((l) => l.id);
+
 export const FIRST_LEVEL = perduta.id;
 
 export const TOTAL_FRAGMENTS = 7;

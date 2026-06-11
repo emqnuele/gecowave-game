@@ -87,6 +87,10 @@ async function boot(): Promise<void> {
             screens.showMenu();
             music.playMenu();
         },
+        travel(levelId: string) {
+            screens.closeOverlay();
+            startLevel(levelId, null);
+        },
     };
     screens.bind(controller);
 

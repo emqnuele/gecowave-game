@@ -27,7 +27,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'guggu',
         name: 'guggu, re dei bus',
         texture: 'boss-guggu',
-        hp: 45,
+        hp: 60,
         glowColor: 0xfacc15,
         attacks: {
             1: ['charge', 'rain'],
@@ -42,7 +42,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'breccio',
         name: 'breccio, dio del disegno',
         texture: 'boss-breccio',
-        hp: 18,
+        hp: 26,
         glowColor: 0xc084fc,
         attacks: {
             1: ['radial', 'lamette'],
@@ -56,7 +56,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'notino',
         name: 'notino, custode della tecnokill',
         texture: 'boss-notino',
-        hp: 50,
+        hp: 65,
         glowColor: 0xa855f7,
         attacks: {
             1: ['burst', 'dive'],
@@ -70,7 +70,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'riba',
         name: 'la riba (bot confuso)',
         texture: 'boss-riba',
-        hp: 28,
+        hp: 38,
         glowColor: 0xfb923c,
         attacks: {
             1: ['dive', 'burst'],
@@ -84,7 +84,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'furgone',
         name: 'il furgone delle consegne (guida smela)',
         texture: 'boss-furgone',
-        hp: 50,
+        hp: 60,
         glowColor: 0x22d3ee,
         attacks: {
             1: ['charge', 'rain'],
@@ -99,7 +99,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'limite',
         name: 'il limite notevole (latitante)',
         texture: 'boss-limite',
-        hp: 45,
+        hp: 55,
         glowColor: 0x60a5fa,
         attacks: {
             1: ['radial', 'rain'],
@@ -115,7 +115,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'lochef',
         name: 'lochef85, il perverso',
         texture: 'boss-lochef',
-        hp: 55,
+        hp: 70,
         glowColor: 0xf87171,
         attacks: {
             1: ['dive', 'burst'],
@@ -131,8 +131,8 @@ export const BOSSES: Record<BossKind, BossDef> = {
         name: 'la tua ombra (ha studiato)',
         texture: 'boss-ombra',
         /* hp da cliente premium: con l'abbonamento il clone ha mesi di footage.
-           senza, la scena lo declassa a 28: dataset incompleto */
-        hp: 50,
+           senza, la scena lo declassa a 34: dataset incompleto */
+        hp: 60,
         glowColor: 0x22d3ee,
         attacks: {
             1: ['charge', 'dive'],
@@ -148,7 +148,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'ticummi',
         name: 'ticummi, scienziato in sedia volante',
         texture: 'boss-ticummi',
-        hp: 60,
+        hp: 75,
         glowColor: 0x22d3ee,
         attacks: {
             1: ['radial', 'rain'],
@@ -163,7 +163,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'formicona',
         name: 'la formicona, sindaco di formica (FR)',
         texture: 'boss-formicona',
-        hp: 32,
+        hp: 40,
         glowColor: 0xfb923c,
         attacks: {
             1: ['charge', 'dive'],
@@ -179,7 +179,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'pedrino',
         name: 'pedro, prima del glitch (un ricordo)',
         texture: 'boss-pedrino',
-        hp: 40,
+        hp: 50,
         glowColor: 0x67e8f9,
         attacks: {
             1: ['burst', 'dive'],
@@ -193,7 +193,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'pedro',
         name: 'pedro, il traditore',
         texture: 'boss-pedro',
-        hp: 75,
+        hp: 100,
         glowColor: 0x22d3ee,
         attacks: {
             1: ['teleport', 'burst', 'dive'],
@@ -209,7 +209,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'dei',
         name: 'piema & lametta',
         texture: 'boss-dei',
-        hp: 90,
+        hp: 120,
         glowColor: 0xffffff,
         attacks: {
             1: ['lamette', 'radial', 'dive'],
