@@ -232,14 +232,17 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'ticummi', color: 'blue', text: 'per soli 133 barre ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
     ],
     'tommaso-blocca': [
+        { speaker: 'notino', color: 'red', text: 'ehehehe... ti ho preso!' },
         { speaker: 'tommasorveglianza', color: 'blue', text: 'MINACCIA RILEVATA: bambino armato in avvicinamento. respinto. la tommasorveglianza la ringrazia per la fiducia. 🫶' },
         { speaker: 'notino', color: 'red', text: 'EHI! FAILRP! QUESTO È METAGAMING! me ne vado ma NON è una sconfitta!!' },
     ],
     'tommaso-blocca-2': [
+        { speaker: 'notino', color: 'red', text: 'ehehehe... stavolta non ti sfuggo!' },
         { speaker: 'tommasorveglianza', color: 'blue', text: 'MINACCIA RICORRENTE RILEVATA: sempre lui. respinto di nuovo. abbiamo aperto una pratica. la pratica si chiama "notino". 👍' },
         { speaker: 'notino', color: 'red', text: 'MA COME FA A VEDERMI SEMPRE?? ho pure la skin mimetica!! NON VALE!!' },
     ],
     'tommaso-blocca-3': [
+        { speaker: 'notino', color: 'red', text: 'ehehehe... la terza è quella buona!' },
         { speaker: 'tommasorveglianza', color: 'blue', text: 'minaccia respinta in automatico. non l\'abbiamo nemmeno guardata. il sistema ormai lo riconosce dal rumore dei passi. 🫶' },
         { speaker: 'notino', color: 'red', text: '...ok. ok!! mi arrendo con l\'abbonato!! ma tu, tommasorveglianza, sappi che è FAIL RP ANCHE IL TUO!!' },
     ],

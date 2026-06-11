@@ -1566,7 +1566,7 @@ export class GameScene extends Phaser.Scene {
             this.player.stun(999999);
             spawned.forEach((e) => e.stun(999999));
 
-            this.time.delayedCall(800, () => {
+            this.time.delayedCall(2000, () => {
                 const dialogueId = state.hasFlag('tommasorveglianza')
                     ? TOMMASO_BLOCCA[i % TOMMASO_BLOCCA.length]
                     : a.intro;
