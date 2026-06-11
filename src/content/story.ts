@@ -338,14 +338,42 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'riba-sconfitta': [
         { speaker: 'la riba', color: 'orange', text: 'ok ok mi aredo!! tieni sto coso, il dispositivo per entrare nela testa di piema. me l\'avevano dato per sorvegliarlo ma non so manco acenderlo.' },
     ],
-    'piema-folle': [
-        { speaker: 'piema', color: 'blue', text: 'CHI DISTURBA — ah. il custode. perdonami. sto cercando di riunire la wave con il calcolo infinitesimale e... la mia testa non è più un posto sicuro. Analisi 1 mi ha consumato.' },
-        { speaker: 'piema', color: 'blue', text: 'se hai il dispositivo della riba, usalo. dentro la mia mente c\'è il caos: rimetti in ordine i teoremi, e forse torno io.' },
+    'piema-senza-dispositivo': [
+        { speaker: 'piema', color: 'blue', text: 'CHI VA LÀ. fermo. FERMO. dichiara le tue ipotesi. nessuna?? allora sei INDECIDIBILE. e io agli indecidibili applico analisi 1. a bruciapelo.' },
+        { speaker: 'piema', color: 'blue', text: 'shh. shhh. lo senti? il teorema. è ancora APERTO. undici giorni che lo dimostro e adesso è lui che dimostra ME. la mia testa non è più un posto: è un intorno. e tu non ci entri.' },
+        { speaker: 'piema', color: 'blue', text: 'ci si entra solo col dispositivo. quello della RIBA. mi sorvegliava con quel coso, credeva non me ne accorgessi. vai a prenderglielo. o resta lì e TENDI A ZERO, per me è uguale.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che non era preparato per questo parziale*' },
     ],
-    'piema-grazie': [
-        { speaker: 'piema', color: 'blue', text: 'ordine. finalmente ordine. ti devo molto, custode. vieni, in disparte: mi sono accorto di questa. galleggiava tra i miei pensieri sbagliati.' },
-        { speaker: 'piema', color: 'blue', text: 'è il frammento del calcolo. la affido a te: le leggi matematiche come arma. usala meglio di come l\'ho usata io.' },
-        { speaker: 'piema', color: 'blue', text: 'ora vado. devo trovare lametta. e tu... occhio a pedro. non è più solo glitch, ormai. ha dei piani.' },
+    'piema-folle': [
+        { speaker: 'piema', color: 'blue', text: 'il custode! o un\'allucinazione con la coda. POCO IMPORTA: tutto converge dove dico io. no. NO. non converge niente, è questo il problema. NESSUNO CONVERGE PIÙ.' },
+        { speaker: 'piema', color: 'blue', text: 'cos\'hai in mano. il... il dispositivo della riba. allora puoi ENTRARE. dentro c\'è il caos: porte che interrogano, pensieri che mordono, e LUI. il teorema che non chiudo da undici giorni.' },
+        { speaker: 'piema', color: 'blue', text: 'rimetti in ordine, custode. chiudi il teorema. e ATTENTO: nella mia testa chi sbaglia una risposta non viene corretto. viene CANCELLATO. ah. AH AH. scusa. entra.' },
+    ],
+    // piema's mind dialogues
+    'mente-ingresso': [
+        { speaker: 'il dispositivo della riba', color: 'orange', text: '*bip. «colegamento stabilito: PIEMA — stato: insuficiente». il mondo si piega in assi cartesiani. sei dentro la sua testa.*' },
+        { speaker: 'piema (ovunque)', color: 'blue', text: 'BENVENUTO NEL MIO ERRORE. le porte fanno domande a trabocchetto, i pensieri mordono, e in fondo c\'è il teorema. sbagli una risposta e la mia testa ti cancella. senza appello. senza cfu.' },
+    ],
+    'pensiero-aperto': [
+        { speaker: 'pensiero che galleggia', color: 'blue', text: '«giorno undici. il teorema è ancora aperto. forse sono io a essere chiuso. nota: comprare il latte. nota alla nota: il latte non esiste nel realm. CHI HA SCRITTO QUESTA NOTA.»' },
+    ],
+    'pensiero-convinzioni': [
+        { speaker: 'pensiero portante', color: 'blue', text: '«certi muri di questa testa sono solo convinzioni. le convinzioni sembrano solide finché qualcuno non ci cammina attraverso. — p., a se stesso, senza ascoltarsi»' },
+    ],
+    'pensiero-fragile': [
+        { speaker: 'pensiero incrinato', color: 'blue', text: '«i dubbi si spaccano col terzo colpo, come tutto il resto. sotto certi dubbi c\'è il vuoto. dentro certi vuoti, roba mia. non toccare. o tocca: sono un pensiero, non un vigile.»' },
+    ],
+    'pensiero-chiuso': [
+        { speaker: 'ultimo pensiero lucido', color: 'blue', text: '«se leggi questo sei arrivato in fondo. il teorema è oltre. digli che mi dispiace: volevo solo dimostrarlo, non dargli una personalità. — p.»' },
+    ],
+    'teorema-intro': [
+        { speaker: 'il teorema incompiuto', color: 'blue', text: 'TU. undici giorni che piema mi gira intorno, e adesso manda UN GECO? io sono l\'enunciato che non si chiude. ogni volta che mi dimostra, io DIVERGO.' },
+        { speaker: 'il teorema incompiuto', color: 'blue', text: 'questa testa ormai è MIA. dimostrami, se ci riesci. q.e.d. — quod erat DEMOLENDUM.' },
+    ],
+    'mente-ordine': [
+        { speaker: 'piema (ovunque)', color: 'blue', text: 'si è... chiuso. IL TEOREMA SI È CHIUSO. sento i pensieri rimettersi in fila per indice analitico. ordine. finalmente ORDINE.' },
+        { speaker: 'piema (ovunque)', color: 'blue', text: 'custode, prendi: il frammento del calcolo. galleggiava tra i miei pensieri sbagliati. le leggi matematiche come arma. usale meglio di come le ho usate io.' },
+        { speaker: 'piema (ovunque)', color: 'blue', text: 'ti apro l\'uscita. io vado a cercare lametta. e... occhio a pedro: l\'ho visto dai miei pensieri rotti. non è più solo glitch, ormai. ha dei piani.' },
     ],
     'lore-romero': [
         { speaker: 'targa della ruhra', color: 'blue', text: '«aula intitolata al commissario romero, che indagò per anni sul caso analisi 1. il caso è ancora aperto. il commissario pure, dicono.»' },
@@ -713,26 +741,27 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
     },
 };
 
-export const QUIZ_ANALISI: { q: string; options: string[]; correct: number }[] = [
-    {
-        q: 'il limite per x che tende a infinito della pazienza di piema vale:',
-        options: ['zero, da destra e da sinistra', 'più infinito', 'non esiste, oscilla come lui'],
-        correct: 0,
-    },
-    {
-        q: 'una funzione si dice continua quando:',
-        options: ['non si ferma mai, tipo i citelis', 'la puoi disegnare senza staccare il pennello di lametta', 'risponde ai messaggi sul wavesung'],
+// mind door riddles
+export const TRABOCCHETTI: Record<string, { q: string; options: string[]; correct: number }> = {
+    'porta-teorema-1': {
+        q: 'la porta chiede: «0,999 periodico, con TUTTI quei 9 fino in fondo, è:»',
+        options: ['quasi 1, ma proprio quasi', 'esattamente 1', 'un numero che si crede furbo'],
         correct: 1,
     },
-    {
-        q: 'la derivata della gecowave rispetto al tempo è:',
-        options: ['il flow', 'il trenbolone', 'sempre positiva, finché c\'è il custode'],
+    'porta-teorema-2': {
+        q: 'la porta chiede: «per attraversarmi devi prima fare metà strada, poi metà della metà, poi metà della... quante tappe ti servono?»',
+        options: ['infinite, quindi resti lì per sempre', 'boh, tipo venti', 'infinite, e infatti passo lo stesso'],
         correct: 2,
     },
-];
+    'porta-teorema-3': {
+        q: 'la porta chiede: «il citelis delle 7:40 parte in orario e viaggia a velocità infinita. quando arriva alla fermata?»',
+        options: ['mai: il citelis non arriva, il citelis È', 'immediatamente', 'alle 7:40 spaccate'],
+        correct: 0,
+    },
+};
 
 export const TOASTS = {
-    checkpoint: 'il microfono ti riconosce. tutto salvato.',
+    checkpoint: 'il microfono ti riconosce. tutto salvato. canta una volta sola.',
     barreRecovered: 'barre recuperate. non perderle più.',
     noFlow: 'flow insufficiente. colpisci qualcosa.',
     fragment: 'frammento della gecowave recuperato.',
@@ -744,7 +773,8 @@ export const TOASTS = {
     trenboloneDrain: 'il trenbolone ti mangia da dentro.',
     smela: 'effetto smela III attivo. ogni tanto ti fermerai. non chiedere.',
     dispositivo: 'dispositivo della riba ottenuto: ora puoi entrare nella mente di piema.',
-    quizErrore: 'teorema sbagliato. la mente di piema ti respinge.',
+    quizErrore: 'risposta sbagliata. la mente di piema ti cancella.',
+    portaAperta: 'risposta esatta. il teorema cede, la porta si dissolve.',
     scudo: 'tommasoscudo attivo: i proiettili tornano al mittente.',
     cuore: 'un cuore del realm. la vita massima aumenta per sempre.',
     inseguimento: 'LOCHEF85 TI HA VISTO. CORRI.',

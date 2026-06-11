@@ -832,6 +832,37 @@ function bosses(scene: Phaser.Scene): void {
         glow(g, 72, 26, 2.6, 0xffffff, 0.7);
     });
 
+    // il teorema incompiuto: un integrale aperto che ha preso coscienza
+    make(scene, 'boss-teorema', 70, 84, (g) => {
+        glow(g, 35, 42, 8, 0x60a5fa, 0.3);
+        // il segno di integrale, storto e mai chiuso
+        g.lineStyle(5, 0x60a5fa, 0.9);
+        g.beginPath();
+        g.arc(42, 16, 9, Math.PI, Math.PI * 1.9);
+        g.strokePath();
+        g.beginPath();
+        g.moveTo(33, 16); g.lineTo(33, 64);
+        g.strokePath();
+        g.beginPath();
+        g.arc(24, 64, 9, 0, Math.PI * 0.9);
+        g.strokePath();
+        // estremi di integrazione strappati via
+        g.lineStyle(2.5, 0xffffff, 0.7);
+        g.beginPath();
+        g.moveTo(48, 8); g.lineTo(56, 4);
+        g.moveTo(10, 76); g.lineTo(18, 80);
+        g.strokePath();
+        // dx che non arriva mai
+        g.lineStyle(3, 0x60a5fa, 0.7);
+        g.beginPath();
+        g.moveTo(48, 50); g.lineTo(56, 62);
+        g.moveTo(56, 50); g.lineTo(48, 62);
+        g.strokePath();
+        // occhi da enunciato ostile
+        glow(g, 28, 34, 2.6, 0xffffff, 0.7);
+        glow(g, 40, 34, 2.6, 0xffffff, 0.7);
+    });
+
     // pedro prima del glitch: pulito, intero, quasi tenero
     make(scene, 'boss-pedrino', 56, 72, (g) => {
         g.fillStyle(0x0e1216, 1);
@@ -992,6 +1023,30 @@ function objects(scene: Phaser.Scene): void {
         m.moveTo(5, 11); m.lineTo(19, 11);
         m.moveTo(6, 14); m.lineTo(18, 14);
         m.strokePath();
+    });
+
+    // porta-teorema: lastra di enunciato che blocca i corridoi della mente
+    make(scene, 'porta-teorema', 36, 128, (p) => {
+        p.fillStyle(0x0c1322, 0.92);
+        p.fillRoundedRect(4, 0, 28, 128, 5);
+        p.lineStyle(2, 0x60a5fa, 0.85);
+        p.strokeRoundedRect(4, 0, 28, 128, 5);
+        // righe di dimostrazione illeggibili
+        p.lineStyle(1.5, 0x60a5fa, 0.45);
+        for (let i = 0; i < 7; i++) {
+            p.beginPath();
+            p.moveTo(9, 12 + i * 16); p.lineTo(9 + 8 + (i % 3) * 6, 12 + i * 16);
+            p.strokePath();
+        }
+        // il punto di domanda al centro
+        p.lineStyle(3, 0xffffff, 0.85);
+        p.beginPath();
+        p.arc(18, 56, 7, Math.PI * 0.8, Math.PI * 2.2);
+        p.strokePath();
+        p.beginPath();
+        p.moveTo(18, 63); p.lineTo(18, 70);
+        p.strokePath();
+        glow(p, 18, 78, 2, 0xffffff, 0.6);
     });
 
     // barra: nota musicale gialla

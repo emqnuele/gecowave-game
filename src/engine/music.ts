@@ -61,6 +61,8 @@ class MusicManager {
                 return "assets/music/Ivan Maggini's OST 2.mp3";
             case 'ruhra':
                 return "assets/music/Piema's OST 1.mp3";
+            case 'mente':
+                return "assets/music/Piema's OST 2.mp3";
             case 'caso':
                 return "assets/music/Piema's OST 2.mp3";
             case 'ricordi':
@@ -99,7 +101,7 @@ class MusicManager {
         if (name.includes('lochef')) {
             return "assets/music/lochef85's OST 2.mp3";
         }
-        if (name.includes('ombra') || name.includes('formicona') || name.includes('limite')) {
+        if (name.includes('ombra') || name.includes('formicona') || name.includes('limite') || name.includes('teorema')) {
             return 'assets/music/Fragment Time.mp3';
         }
         if (name.includes('furgone')) {

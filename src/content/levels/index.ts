@@ -6,6 +6,7 @@ import { tecnokill } from './level04-tecnokill';
 import { rio } from './level05-rio';
 import { stabilimento } from './level06-stabilimento';
 import { ruhra } from './level07-ruhra';
+import { mente } from './level07b-mente';
 import { caso } from './level08-caso';
 import { tana } from './level09-tana';
 import { sorveglianza } from './level10-sorveglianza';
@@ -18,7 +19,7 @@ import { nucleo } from './level13-nucleo';
 
 const all: LevelDef[] = [
     perduta, bus, santuario, tecnokill, rio, stabilimento,
-    ruhra, caso, tana, sorveglianza, cantina, ricordi, nucleo,
+    ruhra, mente, caso, tana, sorveglianza, cantina, ricordi, nucleo,
 ];
 
 export const LEVELS: Record<string, LevelDef> = Object.fromEntries(all.map((l) => [l.id, l]));

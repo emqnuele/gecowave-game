@@ -32,7 +32,7 @@ export type EnemyKind =
 
 export type BossKind =
     | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
-    | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'pedrino' | 'pedro' | 'dei';
+    | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }

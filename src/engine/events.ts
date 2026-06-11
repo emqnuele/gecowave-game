@@ -15,7 +15,6 @@ export interface GameEvents {
     'ability-unlocked': { ability: AbilityId };
     'boss-hp': { hp: number; maxHp: number; name: string } | null;
     'choice-show': { title: string; options: { label: string; danger?: boolean }[]; onPick: (index: number) => void };
-    'quiz-show': { onDone: (errors: number) => void };
     'ending': { id: 'consegna' | 'dei' | 'pedro' };
     'request-pause': {};
 }

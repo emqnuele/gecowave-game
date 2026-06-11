@@ -175,6 +175,21 @@ export const BOSSES: Record<BossKind, BossDef> = {
         guardsExit: false,
         contactDamage: 1,
     },
+    teorema: {
+        kind: 'teorema',
+        name: 'il teorema incompiuto',
+        texture: 'boss-teorema',
+        hp: 45,
+        glowColor: 0x60a5fa,
+        attacks: {
+            1: ['radial', 'rain'],
+            2: ['radial', 'rain', 'teleport'],
+            3: ['teleport', 'radial', 'burst', 'summon'],
+        },
+        cooldownMs: { 1: 2400, 2: 1900, 3: 1500 },
+        summonKind: 'numero',
+        contactDamage: 1,
+    },
     pedrino: {
         kind: 'pedrino',
         name: 'pedro, prima del glitch (un ricordo)',

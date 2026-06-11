@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COMBAT, ZONE_HEX } from '../config';
-import { DIALOGUES, NOTINO_FUGHE, TOASTS, WAVESUNG } from '../content/story';
+import { DIALOGUES, NOTINO_FUGHE, TOASTS, TRABOCCHETTI, WAVESUNG } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../engine/events';
 import { DecorationManager } from '../engine/DecorationManager';
@@ -38,6 +38,7 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     ombra: 'ombra-intro',
     ticummi: 'ticummi-intro',
     formicona: 'formicona-intro',
+    teorema: 'teorema-intro',
     furgone: 'furgone-intro',
     limite: 'limite-intro',
     pedrino: 'pedrino-intro',
@@ -82,6 +83,7 @@ export class GameScene extends Phaser.Scene {
     private enemyProjectiles!: Phaser.Physics.Arcade.Group;
     private lametteGroup!: Phaser.Physics.Arcade.Group;
     private barreGroup!: Phaser.Physics.Arcade.Group;
+    private doorGroup!: Phaser.Physics.Arcade.StaticGroup;
     private interactables: Interactable[] = [];
     private prompt!: Phaser.GameObjects.Container;
     private lastSafe!: { x: number; y: number };
@@ -193,6 +195,7 @@ export class GameScene extends Phaser.Scene {
         this.enemyProjectiles = this.physics.add.group({ allowGravity: false });
         this.lametteGroup = this.physics.add.group({ allowGravity: false });
         this.barreGroup = this.physics.add.group();
+        this.doorGroup = this.physics.add.staticGroup();
 
         this.spawnEntities();
         this.spawnCheckpoints();
@@ -321,6 +324,7 @@ export class GameScene extends Phaser.Scene {
             breccio: 'riflesso',
             notino: 'risonante',
             ombra: 'scudo',
+            teorema: 'analisi',
         };
         const ability = fragmentByBoss[kind];
         if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability);
@@ -370,6 +374,18 @@ export class GameScene extends Phaser.Scene {
         if (id === 'caccia-fine') {
             this.chaseEnds.push(x);
             this.chaseEnds.sort((a, b) => a - b);
+            return;
+        }
+
+        // teorema mind doors
+        if (id.startsWith('porta-teorema')) {
+            if (state.hasFlag(`aperta-${id}`)) return;
+            const door = this.doorGroup.create(x, y - 48, 'porta-teorema') as Phaser.Physics.Arcade.Sprite;
+            door.setDepth(3).setPipeline('Light2D');
+            (door.body as Phaser.Physics.Arcade.StaticBody).setSize(28, 128);
+            this.lighting.follow(door, 0x60a5fa, 150, 0.7);
+            const entry: Interactable = { x, y, range: 70, onInteract: () => this.interactPorta(id, door, entry) };
+            this.interactables.push(entry);
             return;
         }
 
@@ -476,25 +492,43 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         if (!state.hasFlag('dispositivo')) {
-            bus.emit('toast', { text: 'serve il dispositivo della riba per entrare nella sua mente.' });
+            this.startDialogue('piema-senza-dispositivo');
             return;
         }
         this.startDialogue('piema-folle', () => {
-            this.scene.pause();
-            bus.emit('quiz-show', {
-                onDone: (errors) => {
-                    this.scene.resume();
-                    if (errors > 0) {
-                        this.player.hurt(Math.min(errors, 2));
-                        bus.emit('toast', { text: TOASTS.quizErrore });
-                    }
-                    if (state.run.hp > 0) {
-                        this.startDialogue('piema-grazie', () => {
-                            this.spawnFragment(this.player.x, this.player.y - 40, 'analisi');
-                        });
-                    }
-                },
-            });
+            this.cameras.main.flash(500, 96, 165, 250);
+            this.gotoLevel('mente');
+        });
+    }
+
+    // mind door interactive
+    private interactPorta(id: string, door: Phaser.Physics.Arcade.Sprite, entry: Interactable): void {
+        const t = TRABOCCHETTI[id];
+        if (!t) return;
+        bus.emit('choice-show', {
+            title: t.q,
+            options: t.options.map((label) => ({ label })),
+            onPick: (i) => {
+                if (i !== t.correct) {
+                    bus.emit('toast', { text: TOASTS.quizErrore });
+                    this.cameras.main.flash(240, 248, 113, 113);
+                    this.player.kill();
+                    return;
+                }
+                state.setFlag(`aperta-${id}`);
+                this.interactables = this.interactables.filter((it) => it !== entry);
+                sfx.unlock();
+                this.add.particles(door.x, door.y, 'p-spark', {
+                    speed: { min: 40, max: 160 },
+                    scale: { start: 0.7, end: 0 },
+                    tint: 0x60a5fa,
+                    lifespan: 500,
+                    quantity: 20,
+                    stopAfter: 20,
+                });
+                door.destroy();
+                bus.emit('toast', { text: TOASTS.portaAperta });
+            },
         });
     }
 
@@ -530,18 +564,28 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
+    private micKey(cpId: string): string {
+        return `mic-${this.def.id}-${cpId}`;
+    }
+
     private spawnCheckpoints(): void {
         for (const cp of this.level.checkpoints) {
             const mic = this.add.sprite(cp.x, cp.y - 12, 'mic').setDepth(4).setPipeline('Light2D');
             this.checkpointSprites.set(cp.id, mic);
+            const used = state.save.collectedLore.includes(this.micKey(cp.id));
             if (state.save.checkpointId === cp.id) {
                 mic.setTint(0x4ade80);
                 this.lighting.static(cp.x, cp.y - 20, 0x4ade80, 160, 0.8);
+            } else if (used) {
+                mic.setTint(0x64748b).setAlpha(0.55);
             }
-            this.interactables.push({
+            // checkpoints are one-time use
+            if (used) continue;
+            const entry: Interactable = {
                 x: cp.x, y: cp.y, range: 60,
-                onInteract: () => this.activateCheckpoint(cp.id, mic),
-            });
+                onInteract: () => this.activateCheckpoint(cp.id, mic, entry),
+            };
+            this.interactables.push(entry);
         }
     }
 
@@ -666,6 +710,9 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.barreGroup, layer);
         this.physics.add.collider(this.playerProjectiles, layer, (proj) => this.popProjectile(proj as Phaser.Physics.Arcade.Sprite));
         this.physics.add.collider(this.enemyProjectiles, layer, (proj) => this.popProjectile(proj as Phaser.Physics.Arcade.Sprite));
+
+        this.physics.add.collider(this.player, this.doorGroup);
+        this.physics.add.collider(this.enemies, this.doorGroup);
 
         this.physics.add.collider(this.player, this.level.breakableWalls);
         this.physics.add.collider(this.enemies, this.level.breakableWalls);
@@ -1737,6 +1784,11 @@ export class GameScene extends Phaser.Scene {
                     this.spawnCuore(x, y + 40, 'cuore-limite');
                 });
                 break;
+            case 'teorema':
+                this.startDialogue('mente-ordine', () => {
+                    this.spawnFragment(x, y + 40, 'analisi');
+                });
+                break;
             case 'pedrino':
                 this.startDialogue('pedrino-fine', () => {
                     state.setFlag('ricordi-visti');
@@ -1842,13 +1894,22 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    private activateCheckpoint(id: string, mic: Phaser.GameObjects.Sprite): void {
+    private activateCheckpoint(id: string, mic: Phaser.GameObjects.Sprite, entry: Interactable): void {
+        state.save.collectedLore.push(this.micKey(id));
         state.save.levelId = this.def.id;
         state.save.checkpointId = id;
         state.persist();
         state.run.hp = state.maxHp;
         sfx.checkpoint();
-        this.checkpointSprites.forEach((m) => m.clearTint());
+        this.interactables = this.interactables.filter((it) => it !== entry);
+        this.checkpointSprites.forEach((m, mid) => {
+            if (mid === id) return;
+            if (state.save.collectedLore.includes(this.micKey(mid))) {
+                m.setTint(0x64748b).setAlpha(0.55);
+            } else {
+                m.clearTint();
+            }
+        });
         mic.setTint(0x4ade80);
         bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
         bus.emit('toast', { text: TOASTS.checkpoint });

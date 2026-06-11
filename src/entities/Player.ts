@@ -444,6 +444,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         return true;
     }
 
+    // instant death
+    kill(): void {
+        if (this.dead) return;
+        state.run.hp = 0;
+        this.emitVitals(true);
+        this.burst(0xf87171, 14);
+        this.dead = true;
+        this.chargeEmitter?.destroy();
+        sfx.die();
+        this.scene.events.emit('player-dead');
+    }
+
     /* ---------- visuale ---------- */
 
     private updateAnimation(body: Phaser.Physics.Arcade.Body): void {

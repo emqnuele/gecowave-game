@@ -1,6 +1,6 @@
 import { ZONE_CSS } from '../config';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
-import { ABILITY_CARDS, DEATH_PUNCHLINES, QUIZ_ANALISI } from '../content/story';
+import { ABILITY_CARDS, DEATH_PUNCHLINES } from '../content/story';
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -62,7 +62,6 @@ export class Screens {
         bus.on('player-died', ({ lost }) => this.showDeath(lost));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('choice-show', ({ title, options, onPick }) => this.choice(title, options, onPick));
-        bus.on('quiz-show', ({ onDone }) => this.quiz(onDone));
         bus.on('request-pause', () => this.showPause());
     }
 
@@ -328,7 +327,7 @@ export class Screens {
         s.append(stack);
     }
 
-    /* ---------- scelte e quiz ---------- */
+    /* ---------- scelte ---------- */
 
     private choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
         this.controller.pause();
@@ -347,35 +346,6 @@ export class Screens {
             }, opt.danger ? 'glass-acid-red' : 'glass-acid-green'));
         });
         s.append(stack);
-    }
-
-    private quiz(onDone: (errors: number) => void): void {
-        let index = 0;
-        let errors = 0;
-        const ask = () => {
-            const q = QUIZ_ANALISI[index];
-            const s = this.openOverlay();
-            s.append(this.kicker(`mente di piema — enigma ${index + 1}/${QUIZ_ANALISI.length}`, 'glass-acid-blue', ZONE_CSS.blue));
-            const panel = el('div', 'story-card glass-panel glass-acid-blue');
-            const t = el('p');
-            t.textContent = q.q;
-            panel.append(t);
-            s.append(panel);
-            const stack = el('div', 'menu-stack');
-            q.options.forEach((opt, i) => {
-                stack.append(this.btn(opt, i % 2 ? 1 : -1, () => {
-                    if (i !== q.correct) errors++;
-                    index++;
-                    if (index < QUIZ_ANALISI.length) ask();
-                    else {
-                        this.closeOverlay();
-                        onDone(errors);
-                    }
-                }));
-            });
-            s.append(stack);
-        };
-        ask();
     }
 
     /* ---------- card di zona, toast, wavesung, abilità ---------- */
