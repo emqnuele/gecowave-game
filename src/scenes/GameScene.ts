@@ -465,6 +465,25 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.playerProjectiles, layer, (proj) => this.popProjectile(proj as Phaser.Physics.Arcade.Sprite));
         this.physics.add.collider(this.enemyProjectiles, layer, (proj) => this.popProjectile(proj as Phaser.Physics.Arcade.Sprite));
 
+        this.physics.add.collider(this.player, this.level.breakableWalls);
+        this.physics.add.collider(this.enemies, this.level.breakableWalls);
+        this.physics.add.collider(this.barreGroup, this.level.breakableWalls);
+        this.physics.add.collider(this.playerProjectiles, this.level.breakableWalls, (proj) => {
+            this.popProjectile(proj as Phaser.Physics.Arcade.Sprite);
+            this.destroyBreakableWall(proj as Phaser.Physics.Arcade.Sprite);
+        });
+        this.physics.add.overlap(this.player.attackHitbox, this.level.breakableWalls, (_hb, obj) => {
+            if (!this.player.attackActive) return;
+            this.player.attackActive = false;
+            this.player.onAttackHit();
+            this.hitstop();
+            this.destroyBreakableWall(obj as Phaser.Physics.Arcade.Sprite);
+        });
+        this.physics.add.overlap(this.player, this.level.fakeWalls, (_p, obj) => {
+            const wall = obj as Phaser.Physics.Arcade.Sprite;
+            wall.alpha = 0.1;
+        });
+
         this.physics.add.overlap(this.player.attackHitbox, this.enemies, (_hb, obj) => {
             if (!this.player.attackActive) return;
             const enemy = obj as Enemy;
@@ -634,6 +653,30 @@ export class GameScene extends Phaser.Scene {
         this.updateWaterCure();
         this.updateAmbush();
         this.updateIvan(time);
+        this.updateFakeWalls();
+    }
+
+    private updateFakeWalls(): void {
+        if (!this.level?.fakeWalls) return;
+        this.level.fakeWalls.getChildren().forEach((obj) => {
+            const wall = obj as Phaser.Physics.Arcade.Sprite;
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, wall.x, wall.y);
+            if (dist > 48) wall.alpha = 1;
+        });
+    }
+
+    private destroyBreakableWall(wall: Phaser.Physics.Arcade.Sprite): void {
+        sfx.hit();
+        this.cameras.main.shake(80, 0.005);
+        this.add.particles(wall.x, wall.y, 'p-spark', {
+            speed: { min: 60, max: 200 },
+            scale: { start: 0.8, end: 0 },
+            tint: 0xcccccc,
+            lifespan: 400,
+            quantity: 12,
+            stopAfter: 12,
+        });
+        wall.destroy();
     }
 
     /* ---------- ivan maggini contro guggu ---------- */

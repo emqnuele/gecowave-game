@@ -7,7 +7,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     preload(): void {
-        this.load.image('tileset_main', 'assets/tileset_main.png');
+        this.load.spritesheet('tileset_main', 'assets/tileset_main.png', { frameWidth: 160, frameHeight: 160 });
         this.load.image('background', 'assets/background.png');
         this.load.image('background2', 'assets/background2.png');
         this.load.image('ruins_columns', 'assets/ruins_columns.png');

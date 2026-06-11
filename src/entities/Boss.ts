@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { BOSSES, type BossAttack, type BossDef } from '../content/bosses';
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
+import { state } from '../engine/state';
 import type { BossKind } from '../types';
 
 type Phase = 1 | 2 | 3;
@@ -11,6 +12,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     hp: number;
     engaged = false;
     invulnerable: boolean;
+    private shieldGraphics?: Phaser.GameObjects.Graphics;
 
     private anchorX: number;
     private anchorY: number;
@@ -33,6 +35,11 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         body.setAllowGravity(false);
         body.setSize(this.width * (this.def.bodyScale ?? 0.75), this.height * (this.def.bodyScale ?? 0.75));
         this.setDepth(5);
+
+        if (kind === 'guggu' && !state.hasFlag('ivan')) {
+            this.shieldGraphics = scene.add.graphics();
+            this.shieldGraphics.setDepth(6);
+        }
     }
 
     get phase(): Phase {
@@ -54,6 +61,17 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         this.t += delta;
         const body = this.body as Phaser.Physics.Arcade.Body;
         const now = this.scene.time.now;
+
+        if (this.shieldGraphics && this.active) {
+            this.shieldGraphics.clear();
+            if (this.engaged) {
+                const pulse = 95 + Math.sin(this.t / 150) * 10;
+                this.shieldGraphics.lineStyle(3, 0xfacc15, 0.85);
+                this.shieldGraphics.fillStyle(0xfacc15, 0.12);
+                this.shieldGraphics.strokeCircle(this.x, this.y, pulse);
+                this.shieldGraphics.fillCircle(this.x, this.y, pulse);
+            }
+        }
 
         if (this.def.glitchy) {
             // scatti, tremori, niente movimenti morbidi: deve fare paura
@@ -81,7 +99,11 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
 
         if (now < this.nextAttackAt) return;
         const phase = this.phase;
-        this.nextAttackAt = now + this.def.cooldownMs[phase];
+        let cd = this.def.cooldownMs[phase];
+        if (this.def.kind === 'guggu' && !state.hasFlag('ivan')) {
+            cd *= 0.6;
+        }
+        this.nextAttackAt = now + cd;
 
         // evocazione una tantum a inizio fase
         if (this.def.summonKind && phase >= 2 && this.summonedAtPhase < phase) {
@@ -256,6 +278,10 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             });
             return false;
         }
+        if (this.def.kind === 'guggu' && !state.hasFlag('ivan')) {
+            amount = Math.max(1, Math.round(amount * 0.2));
+            bus.emit('toast', { text: 'lo scudo attenua il colpo!' });
+        }
         this.engage();
         this.hp -= amount;
         this.setTintFill(0xffffff);
@@ -268,6 +294,9 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     private die(): void {
+        if (this.shieldGraphics) {
+            this.shieldGraphics.destroy();
+        }
         bus.emit('boss-hp', null);
         const { x, y } = this;
         const scene = this.scene;

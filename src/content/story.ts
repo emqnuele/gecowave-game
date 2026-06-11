@@ -260,7 +260,7 @@ export const TOASTS = {
     barreRecovered: 'barre recuperate. non perderle più.',
     noFlow: 'flow insufficiente. colpisci qualcosa.',
     fragment: 'frammento della gecowave recuperato.',
-    gugguDoor: 'guggu è oltre. senza ivan non lo scalfisci nemmeno.',
+    gugguDoor: 'guggu è scudato. senza ivan lo scalfisci appena.',
     lamettaAssorbe: 'lametta assorbe il colpo come colore. te l\'aveva detto.',
     colorDrop: 'goccia di colore raccolta.',
     mirrorOpen: 'lo specchio nero si è aperto. il nulla ti aspetta.',

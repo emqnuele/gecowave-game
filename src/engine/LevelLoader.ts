@@ -16,6 +16,8 @@ export interface LoadedLevel {
     checkpoints: { id: string; x: number; y: number }[];
     exits: Phaser.Geom.Rectangle[];
     entities: PlacedEntity[];
+    fakeWalls: Phaser.Physics.Arcade.StaticGroup;
+    breakableWalls: Phaser.Physics.Arcade.StaticGroup;
     widthPx: number;
     heightPx: number;
 }
@@ -42,7 +44,8 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
     const width = Math.max(...rows.map((r) => r.length));
     const rnd = mulberry32(def.id.length * 31337);
 
-    const solid = (c: number, r: number): boolean => (rows[r]?.[c] ?? '.') === '#';
+    const isWall = (ch: string): boolean => ch === '#' || ch === 'F' || ch === '%';
+    const solid = (c: number, r: number): boolean => isWall(rows[r]?.[c] ?? '.');
 
     const data: number[][] = [];
     const spikes = scene.physics.add.staticGroup();
@@ -50,6 +53,8 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
     const checkpoints: LoadedLevel['checkpoints'] = [];
     const exits: Phaser.Geom.Rectangle[] = [];
     const entities: PlacedEntity[] = [];
+    const fakeWalls = scene.physics.add.staticGroup();
+    const breakableWalls = scene.physics.add.staticGroup();
     let spawn: { x: number; y: number } | null = null;
 
     for (let r = 0; r < rows.length; r++) {
@@ -64,6 +69,29 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
                 const exposed = !solid(c, r - 1);
                 const pool = float ? WOOD_TILES : exposed ? TOP_TILES : FILL_TILES;
                 dataRow.push(pool[Math.floor(rnd() * pool.length)]);
+                continue;
+            }
+            if (ch === 'F') {
+                dataRow.push(-1);
+                const float = !solid(c, r - 1) && !solid(c, r + 1);
+                const exposed = !solid(c, r - 1);
+                const pool = float ? WOOD_TILES : exposed ? TOP_TILES : FILL_TILES;
+                const frame = pool[Math.floor(rnd() * pool.length)];
+                const s = fakeWalls.create(cx, cy, 'tileset_main', frame) as Phaser.Physics.Arcade.Sprite;
+                s.setScale(ART_SCALE);
+                s.setPipeline('Light2D');
+                continue;
+            }
+            if (ch === '%') {
+                dataRow.push(-1);
+                const float = !solid(c, r - 1) && !solid(c, r + 1);
+                const exposed = !solid(c, r - 1);
+                const pool = float ? WOOD_TILES : exposed ? TOP_TILES : FILL_TILES;
+                const frame = pool[Math.floor(rnd() * pool.length)];
+                const s = breakableWalls.create(cx, cy, 'tileset_main', frame) as Phaser.Physics.Arcade.Sprite;
+                s.setScale(ART_SCALE);
+                s.setPipeline('Light2D');
+                (s.body as Phaser.Physics.Arcade.StaticBody).setSize(TILE, TILE);
                 continue;
             }
             dataRow.push(-1);
@@ -108,6 +136,8 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
         checkpoints,
         exits,
         entities,
+        fakeWalls,
+        breakableWalls,
         widthPx: width * TILE,
         heightPx: rows.length * TILE,
     };

@@ -34,7 +34,6 @@ export const BOSSES: Record<BossKind, BossDef> = {
         },
         cooldownMs: { 1: 2600, 2: 2200, 3: 1700 },
         summonKind: 'pendolare',
-        startsInvulnerable: true,
         contactDamage: 1,
     },
     breccio: {
