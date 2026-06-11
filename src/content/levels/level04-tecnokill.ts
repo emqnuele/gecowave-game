@@ -9,7 +9,7 @@ export const tecnokill: LevelDef = {
     accentWord: 'tecnokill',
     color: 'red',
     punchline: 'questo è il suo gioco sparacchino. tu sei il bersaglio.',
-    next: 'rio',
+    next: 'trenbolone',
     ambientNote: 73,
     entities: {
         2: { type: 'npc', id: 'bimbo-rp-2' },

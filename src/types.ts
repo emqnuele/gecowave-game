@@ -19,6 +19,7 @@ export type EnemyKind =
     | 'pittura-mini'
     | 'tecnodrone'
     | 'tossico'
+    | 'tossico-trenbo'
     | 'formica'
     | 'numero'
     | 'specchietto'
@@ -32,7 +33,7 @@ export type EnemyKind =
 
 export type BossKind =
     | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
-    | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei';
+    | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }

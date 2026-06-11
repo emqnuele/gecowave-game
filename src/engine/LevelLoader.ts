@@ -26,7 +26,7 @@ export interface LoadedLevel {
    mattoni per le superfici, legno per le passerelle sospese */
 const TOP_TILES = [8, 9, 10, 11];
 const FILL_TILES = [0, 1, 2, 3, 4, 5, 6, 7];
-const WOOD_TILES = [12, 13, 14, 15];
+const WOOD_TILES = [12];
 
 function mulberry32(seed: number): () => number {
     let a = seed;

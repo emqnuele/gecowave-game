@@ -42,6 +42,7 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     furgone: 'furgone-intro',
     limite: 'limite-intro',
     pedrino: 'pedrino-intro',
+    flauto: 'flauto-intro',
 };
 
 export const TOTAL_MASCHERE = 10;
@@ -437,6 +438,29 @@ export class GameScene extends Phaser.Scene {
                                 bus.emit('toast', { text: 'non hai 133 barre. ticummi ti guarda con pietà.' });
                             }
                         },
+                    });
+                });
+                break;
+            case 'spaccino':
+                if (state.run.trenbolone) {
+                    bus.emit('toast', { text: 'spaccino: "amico sei già a posto, inutile sprecare roba."' });
+                    return;
+                }
+                this.startDialogue('spaccino-offerta', () => {
+                    bus.emit('choice-show', {
+                        title: 'comprare una dose di trenbolone? (costa 0 barre, è un omaggio)',
+                        options: [{ label: 'accetta (fatti di trenbolone)' }, { label: 'no grazie' }],
+                        onPick: (i) => {
+                            if (i === 0) {
+                                state.run.trenbolone = true;
+                                bus.emit('toast', { text: 'ti sei fatto di trenbolone. ti senti una bestia ma lo schermo gira.' });
+                                sfx.pickup();
+                                // force HUD update via vitals event
+                                bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
+                            } else {
+                                bus.emit('toast', { text: 'spaccino: "come vuoi, torna quando hai fegato."' });
+                            }
+                        }
                     });
                 });
                 break;
@@ -936,6 +960,10 @@ export class GameScene extends Phaser.Scene {
         this.updatePatto(time);
         this.updateIvan(time);
         this.updateFakeWalls();
+
+        if (state.run.trenbolone && Math.random() < 0.2) {
+            this.shake(60, 0.0006);
+        }
     }
 
     private updateFakeWalls(): void {
@@ -1119,6 +1147,11 @@ export class GameScene extends Phaser.Scene {
                 this.exitLockToastAt = this.time.now + 3000;
                 bus.emit('toast', { text: 'piema ha ancora bisogno di te. la porta non si apre.' });
             }
+            return;
+        }
+        if (this.def.id === 'trenbolone' && !state.run.trenbolone) {
+            this.gotoLevel('trenbolone');
+            bus.emit('toast', { text: 'ti senti perso... tutto sembra ripetersi...' });
             return;
         }
         this.gotoLevel(this.def.next);
@@ -1539,6 +1572,8 @@ export class GameScene extends Phaser.Scene {
         state.run.smela = false;
         sfx.heal();
         this.cameras.main.flash(200, 74, 222, 128);
+        // refresh hud when player gets cured in the river
+        bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
         if (!state.hasFlag('rio-curato')) {
             state.setFlag('rio-curato');
             this.startDialogue('rio-cura', () => {
@@ -1911,6 +1946,9 @@ export class GameScene extends Phaser.Scene {
                         },
                     });
                 });
+                break;
+            case 'flauto':
+                this.startDialogue('flauto-sconfitto');
                 break;
             case 'pedro':
                 this.startDialogue('pedro-sconfitto', () => {

@@ -21,6 +21,7 @@ export class Hud {
     private zone: HTMLElement;
     private waves: HTMLElement;
     private tommaso: HTMLElement;
+    private trenboBorder: HTMLElement;
     private bossBar: HTMLElement | null = null;
 
     constructor() {
@@ -38,16 +39,21 @@ export class Hud {
         this.barre = el('div', 'hud-barre sticker glass-acid-yellow', '♪ 0 barre');
         this.fragments = el('div', 'hud-fragments sticker glass-acid-green', '');
         this.tommaso = el('div', 'hud-tommaso sticker glass-acid-blue', '🛡️ protetto da tommasorveglianza 👍');
+        this.trenboBorder = el('div', 'trenbo-border');
         this.zone = el('div', 'hud-zone sticker', '');
         this.waves = el('div', 'hud-waves');
 
-        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves);
+        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.trenboBorder);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
-        bus.on('hp-changed', ({ hp, maxHp, hurt }) => this.setHp(hp, maxHp, hurt));
+        bus.on('hp-changed', ({ hp, maxHp, hurt }) => {
+            this.setHp(hp, maxHp, hurt);
+            this.updateTrenbo();
+        });
         bus.on('flow-changed', ({ flow, maxFlow }) => {
             this.flowBar.style.width = `${(flow / maxFlow) * 100}%`;
+            this.updateTrenbo();
         });
         bus.on('barre-changed', ({ barre, gained }) => {
             this.barre.textContent = `♪ ${barre} barre`;
@@ -72,6 +78,7 @@ export class Hud {
     show(): void {
         this.root.style.display = '';
         this.updateTommaso();
+        this.updateTrenbo();
     }
     hide(): void {
         this.root.style.display = 'none';
@@ -80,6 +87,10 @@ export class Hud {
 
     private updateTommaso(): void {
         this.tommaso.style.display = state.hasFlag('tommasorveglianza') ? '' : 'none';
+    }
+
+    private updateTrenbo(): void {
+        this.trenboBorder.style.display = state.run.trenbolone ? 'block' : 'none';
     }
 
     private setHp(hp: number, maxHp: number, hurt: boolean): void {

@@ -157,6 +157,27 @@ function enemies(scene: Phaser.Scene): void {
         glow(g, 18, 9, 2.2, 0x84cc16, 0.5);
     });
 
+    // green/lime bulky mutant to show muscle growth from trenbo drug
+    make(scene, 'enemy-tossico-trenbo', 36, 50, (g) => {
+        g.fillStyle(0x1e3514, 1);
+        g.fillEllipse(18, 32, 22, 32);
+        g.fillCircle(18, 12, 8);
+        g.lineStyle(4, 0x1e3514, 1);
+        g.beginPath();
+        g.moveTo(10, 20); g.lineTo(1, 32);
+        g.moveTo(26, 20); g.lineTo(35, 30);
+        g.strokePath();
+        g.fillStyle(0x84cc16, 1);
+        g.fillRect(32, 28, 4, 10);
+        g.lineStyle(1, 0xffffff, 0.8);
+        g.strokeRect(32, 28, 4, 10);
+        g.fillStyle(0xef4444, 1);
+        g.fillCircle(15, 11, 1.8);
+        g.fillCircle(21, 11, 1.8);
+        glow(g, 15, 11, 1.5, 0xef4444, 0.7);
+        glow(g, 21, 11, 1.5, 0xef4444, 0.7);
+    });
+
     // formica fr: il villaggio attacca
     make(scene, 'enemy-formica', 32, 18, (g) => {
         g.fillStyle(0x1a0f08, 1);
@@ -998,6 +1019,40 @@ function bosses(scene: Phaser.Scene): void {
         g.moveTo(58, 10); g.lineTo(62, 22);
         g.moveTo(54, 100); g.lineTo(60, 88);
         g.strokePath();
+    });
+
+    // beer bottle design to fit flauto speroindio lore
+    make(scene, 'boss-flauto', 92, 96, (g) => {
+        g.fillStyle(0x0f511c, 1);
+        g.fillRoundedRect(36, 16, 20, 56, { tl: 8, tr: 8, bl: 4, br: 4 });
+        g.fillStyle(0xd97706, 1);
+        g.fillRect(43, 10, 6, 6);
+        g.fillStyle(0xfef08a, 1);
+        g.fillRect(38, 36, 16, 20);
+        g.fillStyle(0x134e1a, 1);
+        g.fillRoundedRect(12, 32, 16, 48, { tl: 6, tr: 6, bl: 3, br: 3 });
+        g.fillStyle(0xd97706, 1);
+        g.fillRect(17, 26, 6, 6);
+        g.fillStyle(0xfef08a, 1);
+        g.fillRect(14, 48, 12, 16);
+        g.fillStyle(0x134e1a, 1);
+        g.fillRoundedRect(64, 32, 16, 48, { tl: 6, tr: 6, bl: 3, br: 3 });
+        g.fillStyle(0xd97706, 1);
+        g.fillRect(69, 26, 6, 6);
+        g.fillStyle(0xfef08a, 1);
+        g.fillRect(66, 48, 12, 16);
+        g.fillStyle(0xdc2626, 1);
+        g.fillCircle(41, 24, 4);
+        g.fillCircle(51, 24, 4);
+        glow(g, 41, 24, 2, 0xef4444, 0.85);
+        glow(g, 51, 24, 2, 0xef4444, 0.85);
+        g.fillStyle(0x84cc16, 0.85);
+        g.fillRect(44, 56, 4, 16);
+        g.fillCircle(46, 72, 3);
+        g.fillRect(20, 80, 4, 8);
+        g.fillCircle(22, 88, 3);
+        g.fillRect(72, 80, 4, 8);
+        g.fillCircle(74, 88, 3);
     });
 }
 

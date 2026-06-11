@@ -200,4 +200,14 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         barre: [1, 3],
         glowColor: 0x94a3b8,
     },
+    'tossico-trenbo': {
+        kind: 'tossico-trenbo',
+        texture: 'enemy-tossico-trenbo',
+        behavior: 'chaser',
+        hp: 2,
+        speed: 245,
+        aggroRange: 350,
+        barre: [1, 3],
+        glowColor: 0x84cc16,
+    },
 };

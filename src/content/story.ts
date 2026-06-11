@@ -231,6 +231,18 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'ticummi', color: 'blue', text: 'psst. ehi. tu. quello col trenbolone in circolo. ho visto tutto, io vedo sempre tutto. notino ti sta cercando per rubarti i frammenti.' },
         { speaker: 'ticummi', color: 'blue', text: 'per soli 133 barre ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
     ],
+    'spaccino-offerta': [
+        { speaker: 'spaccino del rio', color: 'orange', text: 'ehi, geco. ti vedo smunto. ti serve la spinta. la forza vera.' },
+        { speaker: 'spaccino del rio', color: 'orange', text: 'questa roba si chiama trenbolone. prima dose gratis. ti fa spaccare tutto. letteralmente. provola.' },
+    ],
+    'flauto-intro': [
+        { speaker: 'flauto speroindio', color: 'orange', text: 'CHI VA LÀ?! *rutto* sono flauto speroindio, il guardiano delle bottiglie!' },
+        { speaker: 'flauto speroindio', color: 'orange', text: 'nessuno passa di qui senza aver affrontato il potere della birra calda!' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che sente solo odore di luppolo scaduto*' },
+    ],
+    'flauto-sconfitto': [
+        { speaker: 'flauto speroindio', color: 'orange', text: 'glug... glug... la mia riserva... è finita... vai pure, geco, ma attento al rio...' },
+    ],
     'tommaso-blocca': [
         { speaker: 'notino', color: 'red', text: 'ehehehe... ti ho preso!' },
         { speaker: 'tommasorveglianza', color: 'blue', text: 'MINACCIA RILEVATA: bambino armato in avvicinamento. respinto. la tommasorveglianza la ringrazia per la fiducia. 🫶' },

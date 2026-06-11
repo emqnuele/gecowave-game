@@ -3,6 +3,7 @@ import { perduta } from './level01-perduta';
 import { bus } from './level02-bus';
 import { santuario } from './level03-santuario';
 import { tecnokill } from './level04-tecnokill';
+import { trenbolone } from './level04b-trenbolone';
 import { rio } from './level05-rio';
 import { stabilimento } from './level06-stabilimento';
 import { ruhra } from './level07-ruhra';
@@ -18,7 +19,7 @@ import { nucleo } from './level13-nucleo';
    e aggiungilo alla lista. collega le zone col campo `next`. */
 
 const all: LevelDef[] = [
-    perduta, bus, santuario, tecnokill, rio, stabilimento,
+    perduta, bus, santuario, tecnokill, trenbolone, rio, stabilimento,
     ruhra, mente, caso, tana, sorveglianza, cantina, ricordi, nucleo,
 ];
 

@@ -234,4 +234,19 @@ export const BOSSES: Record<BossKind, BossDef> = {
         cooldownMs: { 1: 1900, 2: 1500, 3: 1100 },
         contactDamage: 2,
     },
+    flauto: {
+        kind: 'flauto',
+        name: 'flauto speroindio',
+        texture: 'boss-flauto',
+        hp: 45,
+        glowColor: 0x84cc16,
+        attacks: {
+            1: ['charge', 'burst'],
+            2: ['charge', 'burst', 'summon'],
+            3: ['charge', 'burst', 'summon', 'radial'],
+        },
+        cooldownMs: { 1: 2400, 2: 2000, 3: 1600 },
+        summonKind: 'bottiglia',
+        contactDamage: 1,
+    },
 };

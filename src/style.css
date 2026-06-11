@@ -139,6 +139,22 @@ body {
   animation: ambient-drift 18s ease-in-out infinite alternate;
 }
 
+.trenbo-border {
+  position: fixed;
+  inset: 0;
+  border: 10px solid rgba(132, 204, 22, 0.4);
+  box-shadow: inset 0 0 24px rgba(132, 204, 22, 0.55);
+  pointer-events: none;
+  z-index: 998;
+  display: none;
+  animation: pulse-trenbo 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-trenbo {
+  0% { opacity: 0.65; }
+  100% { opacity: 1; }
+}
+
 /* ---------- tipografia ---------- */
 
 .font-crisis {
