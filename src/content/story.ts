@@ -182,9 +182,9 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'breccio', color: 'purple', text: '...no. no no no. la crepa... è ASIMMETRICA...' },
     ],
     'lametta-incontro': [
-        { speaker: 'lametta', color: 'purple', text: 'oh. il custode. benvenuto nel mio santuario. ti piacciono gli specchi? mostrano i tuoi possibili futuri. quasi tutti imbarazzanti, ho controllato.' },
-        { speaker: 'lametta', color: 'purple', text: 'non provare a colpirmi: assorbo tutto come colore nei pennelli. io non difendo la wave, piccolo. io la DISEGNO.' },
-        { speaker: 'lametta', color: 'purple', text: 'raccogli pure le mie gocce di colore, se riesci a schivare. solo lo specchio nero mostra il nulla. ed è dal nulla che si esce. ma tu... tu sei la tela.' },
+        { speaker: 'lametta', color: 'purple', text: 'oh. il custode. sei arrivato fin nel mio santuario per il frammento. che coraggio. che POSA. ferma così, è perfetta.' },
+        { speaker: 'lametta', color: 'purple', text: 'lo sai come finisce, vero? mi vieni addosso, meni, esulti. è il copione. fanno tutti così. fai pure: vediamo quanto reggi sotto i miei pennelli.' },
+        { speaker: 'lametta', color: 'purple', text: 'avanti, piccolo. dimostrami che vali il frammento. COLPISCImi. il dio del disegno aspetta.' },
     ],
     'lametta-uscita': [
         { speaker: 'lametta', color: 'purple', text: 'mh. sei uscito dal disegno. interessante. nessuna tela l\'aveva mai fatto. ci rivediamo alla fine, custode. porta colori.' },
@@ -282,9 +282,33 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     /* ---------- lo stabilimento di smela ---------- */
     'smela-tour': [
-        { speaker: 'smela', color: 'cyan', text: 'amico! AMICO! benvenuto allo stabilimento smela springs srl. tour aziendale gratuito, oggi e solo oggi. regola unica: non bere niente. nemmeno per sbaglio. SOPRATTUTTO per sbaglio.' },
-        { speaker: 'smela', color: 'cyan', text: 'qui imbottigliamo la magia del rio merdone. "imbottigliamo" nel senso che la trasformiamo in qualcosa di legalmente distinguibile dall\'acqua. il marketing fa il resto. io faccio il marketing.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che legge gli ingredienti e non li capisce*' },
+        { speaker: 'smela', color: 'cyan', text: 'amico! AMICO! ma sei tu, quello del rio! che bello rivederti. vieni, vieni: ti porto a casa mia. è anche lo stabilimento, sai, vivo dove lavoro. è una scelta di vita.' },
+        { speaker: 'smela', color: 'cyan', text: 'ti vedo ancora provato. acqua? offre la casa. la prima è gratis. la seconda pure. anzi: bevi e basta, dai. una sola sorsata. per me. che ti costa.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che annusa la bottiglia e fa un passo indietro*' },
+        { speaker: 'smela', color: 'cyan', text: 'no?? va bene, va bene. nessuna pressione. cammina pure verso casa, intanto. troverai dei miei ragazzi lungo la strada. magari a loro la compri, l\'acqua. INSISTI tu, eh.' },
+    ],
+    'venditore-acqua': [
+        { speaker: 'venditore di smela', color: 'cyan', text: 'acqua di smela! acqua premium! una sorsata e ti cambia la giornata, garantito al limone (non c\'è il limone). la bevi? dai che la bevi. smela sarebbe così felice.' },
+    ],
+    'danjilo-intro': [
+        { speaker: 'danjilo', color: 'cyan', text: 'ferma lì, lucertola. io sono danjilo. il fidanzato di smela. quello vero, non quelli che dice lei. e mi ha detto che giri per casa nostra senza bere la sua acqua.' },
+        { speaker: 'danjilo', color: 'cyan', text: 'sai cosa significa rifiutare l\'acqua della mia donna? è una MANCANZA DI RISPETTO. ora o bevi, o ti faccio bere io. dalla damigiana. tutta.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che non berrà un bel niente*' },
+    ],
+    'danjilo-sconfitto': [
+        { speaker: 'danjilo', color: 'cyan', text: 'ahio... la damigiana... si è rotta... oh no, si è bagnata tutta la moquette di casa... smela mi ammazza...' },
+        { speaker: 'danjilo', color: 'cyan', text: 'vai pure dentro, va. tanto da lei non esci. lei non si arrende mai. con me ci ha messo tre anni. e io avevo detto subito di sì.' },
+    ],
+    'smela-boss': [
+        { speaker: 'smela', color: 'cyan', text: 'hai picchiato il mio danjilo. hai attraversato tutta casa mia. e ANCORA. ancora non hai bevuto. UNA. SORSATA.' },
+        { speaker: 'smela', color: 'cyan', text: 'PERCHÉ NON VUOI BERE LA MIA ACQUA?? eh?? è BUONA! è SANA! fa benissimo! ti giuro che dopo stai... stai una FAVOLA. fidati di smela. apri la bocca e BEVI.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha capito benissimo cosa succede se beve*' },
+        { speaker: 'smela', color: 'cyan', text: 'e va bene. se non bevi con le buone... te la verso in gola con le cattive. SALUTE, amico.' },
+    ],
+    'smela-sconfitta': [
+        { speaker: 'smela', color: 'cyan', text: 'no... no... ho perso... e tu... non hai bevuto NEANCHE UNA GOCCIA. dopo tutto quello che ho fatto per offrirtela...' },
+        { speaker: 'smela', color: 'cyan', text: 'va bene. hai vinto. ti meriti la verità: quell\'acqua... non doveva curarti. doveva fermarti per sempre. ma adesso la wave la mette in mano a TE. versala pure a terra, contro di loro. che sappiano cosa si prova.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che per la prima volta accetta un bicchiere da smela*' },
     ],
     'lore-stabilimento': [
         { speaker: 'targa aziendale', color: 'cyan', text: '«smela springs srl — "dona una nuova sete alla tua sete". fondata con 15 barre di capitale, tutte di un cliente che voleva il rimborso. certificazioni: nessuna. ambizioni: illimitate.»' },
@@ -765,6 +789,11 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
         name: 'tommasoscudo',
         desc: 'premi R per una bolla che rimanda i proiettili al mittente. il frammento che alimentava la tommasorveglianza, riconvertito. assolutamente sicuro. 👍',
         key: 'r',
+    },
+    acquatossica: {
+        name: 'acqua tossica',
+        desc: 'premi V per versare a terra una pozza dell\'acqua di smela: i nemici che ci passano si avvelenano e rallentano. tu sei immune. la sua arma, rivolta contro di lei.',
+        key: 'v',
     },
 };
 

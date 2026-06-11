@@ -40,6 +40,8 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     formicona: 'formicona-intro',
     teorema: 'teorema-intro',
     furgone: 'furgone-intro',
+    danjilo: 'danjilo-intro',
+    smela: 'smela-boss',
     limite: 'limite-intro',
     pedrino: 'pedrino-intro',
     flauto: 'flauto-intro',
@@ -105,6 +107,9 @@ export class GameScene extends Phaser.Scene {
     // arena di lametta
     private lamettaCenter: { x: number; y: number } | null = null;
     private lamettaActive = false;
+    private lamettaFloorY = 0;
+    private smelaArena: { x: number; y: number } | null = null;
+    private acquaPuddles: { gfx: Phaser.GameObjects.Graphics; x: number; y: number; until: number; nextTick: number }[] = [];
     private nextLametteAt = 0;
     private nextPitturaAt = 0;
     private colorDropsTaken = 0;
@@ -151,6 +156,9 @@ export class GameScene extends Phaser.Scene {
         this.checkpointSprites.clear();
         this.lamettaCenter = null;
         this.lamettaActive = false;
+        this.smelaArena = null;
+        this.acquaPuddles.forEach((p) => p.gfx.destroy());
+        this.acquaPuddles = [];
         this.colorDropsTaken = 0;
         this.bossIntroShown = false;
         this.pedroChoiceShown = false;
@@ -206,7 +214,7 @@ export class GameScene extends Phaser.Scene {
         this.setupColliders();
         this.setupEvents();
         this.setupCamera();
-        this.parallax.build(this.def.color);
+        this.parallax.build(this.def.color, this.def.id);
         this.parallax.resize();
         this.buildPrompt();
 
@@ -328,6 +336,7 @@ export class GameScene extends Phaser.Scene {
             notino: 'risonante',
             ombra: 'scudo',
             teorema: 'analisi',
+            smela: 'acquatossica',
         };
         const ability = fragmentByBoss[kind];
         if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability);
@@ -338,7 +347,7 @@ export class GameScene extends Phaser.Scene {
             state.setFlag('caso-risolto');
             this.spawnCuore(x, y + 50, 'cuore-limite');
         }
-        if (kind === 'furgone') state.setFlag('stabilimento-chiuso');
+        if (kind === 'furgone' || kind === 'smela') state.setFlag('stabilimento-chiuso');
         if (kind === 'pedrino') state.setFlag('ricordi-visti');
     }
 
@@ -353,7 +362,7 @@ export class GameScene extends Phaser.Scene {
     private npcTexture(id: string): string {
         if (id.startsWith('ivan')) return 'npc-ivan';
         if (id.startsWith('ticummi')) return 'npc-ticummi';
-        if (id.startsWith('smela')) return 'npc-smela';
+        if (id.startsWith('smela') || id.startsWith('venditore')) return 'npc-smela';
         if (id.startsWith('piema')) return 'npc-piema';
         if (id.startsWith('lochef')) return 'npc-lochef';
         if (id.startsWith('lametta')) return 'npc-lametta';
@@ -377,6 +386,12 @@ export class GameScene extends Phaser.Scene {
         if (id === 'caccia-fine') {
             this.chaseEnds.push(x);
             this.chaseEnds.sort((a, b) => a - b);
+            return;
+        }
+
+        // marker invisibile: qui smela si rivela come boss finale
+        if (id === 'smela-arena') {
+            this.smelaArena = { x, y };
             return;
         }
 
@@ -486,6 +501,25 @@ export class GameScene extends Phaser.Scene {
                                 bus.emit('toast', { text: 'spaccino: "come vuoi, torna quando hai fegato."' });
                             }
                         }
+                    });
+                });
+                break;
+            case 'venditore-acqua':
+                this.startDialogue(id, () => {
+                    if (state.run.smela) {
+                        bus.emit('toast', { text: 'ne hai già bevuta. l\'effetto smela III è già al lavoro.' });
+                        return;
+                    }
+                    bus.emit('choice-show', {
+                        title: 'acqua di smela, gratis. una sorsata?',
+                        options: [{ label: 'bevi', danger: true }, { label: 'no, grazie' }],
+                        onPick: (i) => {
+                            if (i === 0) {
+                                state.run.smela = true;
+                                this.startDialogue('smela-truffa', () => this.playSmelaPoisonEffect());
+                                bus.emit('toast', { text: TOASTS.smela });
+                            }
+                        },
                     });
                 });
                 break;
@@ -877,6 +911,7 @@ export class GameScene extends Phaser.Scene {
         on('player-riflesso', this.onRiflesso as never);
         on('player-analisi', this.onAnalisi as never);
         on('player-scudo', this.onScudo as never);
+        on('player-acqua', this.onAcquaTossica as never);
         on('enemy-shoot', this.onEnemyShoot as never);
         on('enemy-died', this.onEnemyDied as never);
         on('player-dead', this.onPlayerDead as never);
@@ -984,7 +1019,9 @@ export class GameScene extends Phaser.Scene {
         this.updateClone();
         this.updateAnalisi(time);
         this.updateScudo(time);
+        this.updateAcquaTossica(time);
         this.updateLamettaArena(time);
+        this.updateSmelaArena();
         this.updateWaterCure();
         this.updateAmbush();
         this.updateChase(delta);
@@ -1418,6 +1455,53 @@ export class GameScene extends Phaser.Scene {
         this.scudoGfx.fillCircle(this.player.x, this.player.y, r);
     }
 
+    /** acqua tossica: versa una pozza che rallenta e avvelena chi ci passa */
+    private onAcquaTossica({ x, y }: { x: number; y: number }): void {
+        const gfx = this.add.graphics().setDepth(3);
+        this.acquaPuddles.push({ gfx, x, y: y + 16, until: this.time.now + COMBAT.acquaDurationMs, nextTick: 0 });
+        sfx.slash();
+        this.cameras.main.flash(60, 34, 211, 238);
+    }
+
+    private updateAcquaTossica(time: number): void {
+        const r = COMBAT.acquaRadius;
+        for (let i = this.acquaPuddles.length - 1; i >= 0; i--) {
+            const p = this.acquaPuddles[i];
+            if (time >= p.until) {
+                p.gfx.destroy();
+                this.acquaPuddles.splice(i, 1);
+                continue;
+            }
+            const left = (p.until - time) / COMBAT.acquaDurationMs;
+            const rr = r + Math.sin(time / 140) * 4;
+            p.gfx.clear();
+            p.gfx.fillStyle(0x22d3ee, 0.10 + left * 0.10);
+            p.gfx.fillEllipse(p.x, p.y, rr * 2, rr * 0.7);
+            p.gfx.lineStyle(2, 0x22d3ee, 0.25 + left * 0.3);
+            p.gfx.strokeEllipse(p.x, p.y, rr * 2, rr * 0.7);
+
+            const tick = time >= p.nextTick;
+            if (tick) p.nextTick = time + COMBAT.acquaTickMs;
+            this.enemies.getChildren().forEach((obj) => {
+                const e = obj as Enemy;
+                if (!e.active) return;
+                const dx = Math.abs(e.x - p.x);
+                const dy = Math.abs(e.y - p.y);
+                if (dx > r || dy > r * 0.7) return;
+                // rallentamento: smorza la velocità orizzontale finché è nella pozza
+                const body = e.body as Phaser.Physics.Arcade.Body;
+                body.velocity.x *= 0.45;
+                if (tick) {
+                    e.takeDamage(COMBAT.acquaDamage, e.x);
+                    this.add.particles(e.x, e.y, 'p-dot', {
+                        speed: { min: 10, max: 30 }, angle: { min: 240, max: 300 },
+                        scale: { start: 0.4, end: 0 }, tint: 0x22d3ee, lifespan: 400, quantity: 3, stopAfter: 3,
+                    });
+                }
+            });
+        }
+    }
+
     /** il proiettile torna indietro, tinto di ciano e dei nostri */
     private reflectProjectile(proj: Phaser.Physics.Arcade.Sprite): void {
         if (!proj.active) return;
@@ -1429,7 +1513,8 @@ export class GameScene extends Phaser.Scene {
         const back = this.playerProjectiles.create(this.player.x, this.player.y - 6, 'proj-ball') as Phaser.Physics.Arcade.Sprite;
         back.setDepth(5);
         back.setTint(0x22d3ee);
-        back.setData('dmg', 1);
+        // scudo nerfato: il rimando fa solo il 40% del danno nemico (1 -> 0.4)
+        back.setData('dmg', 0.4);
         const speed = Math.max(360, Math.hypot(vx, vy));
         const angle = Math.atan2(-vy, -vx);
         back.setVelocity(Math.cos(angle) * speed * 1.15, Math.sin(angle) * speed * 1.15);
@@ -1530,6 +1615,8 @@ export class GameScene extends Phaser.Scene {
         if (!this.lamettaActive) {
             if (Math.abs(this.player.x - c.x) < 380 && !this.player.dead) {
                 this.lamettaActive = true;
+                // pavimento catturato col player a terra: le gocce successive nascono in aria
+                this.lamettaFloorY = this.player.y;
                 music.playBoss('lametta-arena');
                 this.startDialogue('lametta-incontro', () => {
                     this.nextLametteAt = this.time.now + 1500;
@@ -1552,13 +1639,29 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    /** smela si rivela boss finale quando arrivi in fondo (danjilo già fatto fuori) */
+    private updateSmelaArena(): void {
+        if (!this.smelaArena || this.boss || this.exiting || this.player.dead) return;
+        if (state.hasFlag('boss-down-smela')) { this.smelaArena = null; return; }
+        // smela si rivela solo dopo che hai sistemato danjilo a metà livello
+        if (!state.hasFlag('boss-down-danjilo')) return;
+        if (Math.abs(this.player.x - this.smelaArena.x) > 360) return;
+        const a = this.smelaArena;
+        this.smelaArena = null;
+        this.boss = new Boss(this, a.x, a.y, 'smela');
+        this.bossIntroShown = false;
+        this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
+        this.setupBossColliders();
+    }
+
     private spawnColorDrop(): void {
         if (!this.lamettaCenter) return;
         const c = this.lamettaCenter;
         const colors = [0xf87171, 0x4ade80, 0x60a5fa, 0xfacc15, 0xc084fc];
         const color = colors[this.colorDropsTaken % colors.length];
-        const x = c.x + (Math.random() - 0.5) * 480;
-        const y = c.y - 30 - Math.random() * 90;
+        const x = c.x + (Math.random() - 0.5) * 620;
+        // tetto a ~90px (sotto la soglia col double jump), ma fascia ampia: da quasi-terra in su
+        const y = this.lamettaFloorY - 8 - Math.random() * 82;
         const drop = this.physics.add.sprite(x, y, 'color-drop').setTint(color).setDepth(5);
         (drop.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.lighting.follow(drop, color, 140, 0.9);
@@ -1943,6 +2046,16 @@ export class GameScene extends Phaser.Scene {
             case 'furgone':
                 this.startDialogue('furgone-sconfitto', () => {
                     state.setFlag('stabilimento-chiuso');
+                    this.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.smelaRecensione));
+                });
+                break;
+            case 'danjilo':
+                this.startDialogue('danjilo-sconfitto');
+                break;
+            case 'smela':
+                this.startDialogue('smela-sconfitta', () => {
+                    state.setFlag('stabilimento-chiuso');
+                    this.spawnFragment(x, y + 40, 'acquatossica');
                     this.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.smelaRecensione));
                 });
                 break;

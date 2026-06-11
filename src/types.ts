@@ -9,7 +9,8 @@ export type AbilityId =
     | 'risonante'
     | 'rigenerazione'
     | 'analisi'
-    | 'scudo';
+    | 'scudo'
+    | 'acquatossica';
 
 export type EnemyKind =
     | 'glitchetto'
@@ -33,7 +34,8 @@ export type EnemyKind =
 
 export type BossKind =
     | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
-    | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto';
+    | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto'
+    | 'danjilo' | 'smela';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }

@@ -42,7 +42,7 @@ export const COMBAT = {
     risonanteCost: 30,
     risonanteChargeMs: 650,
     risonanteSpeed: 720,
-    risonanteDamage: 3,
+    risonanteDamage: 0.5,
     /** riflesso distorto: clone esca */
     riflessoCost: 25,
     riflessoDurationMs: 3200,
@@ -57,6 +57,13 @@ export const COMBAT = {
     scudoCost: 20,
     scudoDurationMs: 2200,
     scudoCooldownMs: 6500,
+    /** acqua tossica: pozza che rallenta e avvelena i nemici */
+    acquaCost: 30,
+    acquaCooldownMs: 7000,
+    acquaDurationMs: 4500,
+    acquaTickMs: 600,
+    acquaRadius: 90,
+    acquaDamage: 1,
     /** rigenerazione del rio merdone */
     regenIdleMs: 5000,
     regenTickMs: 6000,

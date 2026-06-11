@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { generateBaseTextures } from '../engine/textures';
+import { LEVEL_ORDER } from '../content/levels';
 
 export class BootScene extends Phaser.Scene {
     constructor() {
@@ -12,6 +13,14 @@ export class BootScene extends Phaser.Scene {
         this.load.image('background2', 'assets/background2.png');
         this.load.image('ruins_columns', 'assets/ruins_columns.png');
         this.load.image('props_atlas', 'assets/props.png');
+
+        // sfondi dipinti per livello (perduta tenuto a mano, escluso).
+        // file mancanti vengono ignorati: il parallax ricade sul fondale legacy
+        this.load.on('loaderror', () => {});
+        for (const id of LEVEL_ORDER) {
+            if (id === 'perduta') continue;
+            this.load.image(`bg-painted-${id}`, `assets/backgrounds/${id}.png`);
+        }
 
         // sheet 2828x1403: righe 0-2 da 8 frame 350x350, riga 3 attacco a 700x350
         this.load.spritesheet('player', 'assets/sprites/player_sheet.png', { frameWidth: 350, frameHeight: 350 });

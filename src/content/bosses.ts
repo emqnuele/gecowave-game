@@ -95,6 +95,37 @@ export const BOSSES: Record<BossKind, BossDef> = {
         summonKind: 'bottiglia',
         contactDamage: 1,
     },
+    danjilo: {
+        kind: 'danjilo',
+        name: 'danjilo, il fidanzato di smela',
+        texture: 'boss-danjilo',
+        hp: 48,
+        glowColor: 0x22d3ee,
+        attacks: {
+            1: ['charge', 'dive'],
+            2: ['charge', 'dive', 'burst'],
+            3: ['charge', 'charge', 'dive', 'burst'],
+        },
+        cooldownMs: { 1: 2400, 2: 2000, 3: 1600 },
+        // miniboss di metà livello: non blocca l'uscita se lo schivi
+        guardsExit: false,
+        contactDamage: 1,
+    },
+    smela: {
+        kind: 'smela',
+        name: 'smela, in persona',
+        texture: 'boss-smela',
+        hp: 70,
+        glowColor: 0x22d3ee,
+        attacks: {
+            1: ['rain', 'burst'],
+            2: ['rain', 'burst', 'summon'],
+            3: ['rain', 'rain', 'burst', 'summon'],
+        },
+        cooldownMs: { 1: 2300, 2: 1900, 3: 1500 },
+        summonKind: 'bottiglia',
+        contactDamage: 1,
+    },
     limite: {
         kind: 'limite',
         name: 'il limite notevole (latitante)',

@@ -4,6 +4,8 @@ import type { ZoneColor } from '../types';
 
 interface LayerConfig {
     key: string;
+    /** usato se `key` non esiste (sfondo custom non ancora aggiunto) */
+    fallbackKey?: string;
     speed: number;
     speedY?: number;
     depth: number;
@@ -18,10 +20,13 @@ interface LayerConfig {
 
 /* la regola della legacy: sfondo dipinto lontano, strati che scorrono
    a velocità diverse, e la nebbia che passa DAVANTI al giocatore */
-function themeFor(zone: ZoneColor): LayerConfig[] {
-    const painted = zone === 'red' || zone === 'orange' || zone === 'cyan' ? 'background2' : 'background';
+function themeFor(zone: ZoneColor, levelId: string): LayerConfig[] {
+    const legacy = zone === 'red' || zone === 'orange' || zone === 'cyan' ? 'background2' : 'background';
+    // perduta resta sul fondale fatto a mano; gli altri usano il dipinto custom
+    const custom = levelId !== 'perduta';
+    const painted = custom ? `bg-painted-${levelId}` : legacy;
     const layers: LayerConfig[] = [
-        { key: painted, speed: 0.03, depth: -20, fitHeight: true, tint: true, tintStrength: 0.4 },
+        { key: painted, fallbackKey: legacy, speed: 0.03, depth: -20, fitHeight: true, tint: true, tintStrength: custom ? 0.18 : 0.4 },
         { key: `bg-${zone}-0`, speed: 0.16, depth: -16, opacity: 0.95 },
         { key: `bg-${zone}-1`, speed: 0.32, depth: -14, opacity: 0.95 },
     ];
@@ -41,10 +46,16 @@ export class ParallaxManager {
         this.scene = scene;
     }
 
-    build(zone: ZoneColor): void {
+    build(zone: ZoneColor, levelId: string): void {
         const tint = Phaser.Display.Color.IntegerToColor(ZONE_HEX[zone]);
-        for (const cfg of themeFor(zone)) {
-            if (!this.scene.textures.exists(cfg.key)) continue;
+        for (const cfg of themeFor(zone, levelId)) {
+            if (!this.scene.textures.exists(cfg.key)) {
+                if (cfg.fallbackKey && this.scene.textures.exists(cfg.fallbackKey)) {
+                    cfg.key = cfg.fallbackKey;
+                } else {
+                    continue;
+                }
+            }
             const sprite = this.scene.add.tileSprite(0, 0, 16, 16, cfg.key);
             sprite.setOrigin(0.5, 0.5);
             sprite.setScrollFactor(0);

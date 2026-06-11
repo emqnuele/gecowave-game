@@ -823,6 +823,60 @@ function bosses(scene: Phaser.Scene): void {
         glow(g, 108, 30, 2.5, 0x22d3ee, 0.5);
     });
 
+    // danjilo: il fidanzato di smela, bestione con la damigiana d'acqua
+    make(scene, 'boss-danjilo', 70, 84, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(30, 50, 44, 56);
+        g.fillCircle(30, 16, 12);
+        // spalle larghe da guardia del corpo
+        g.fillRoundedRect(6, 28, 48, 18, 6);
+        // occhi gelosi
+        glow(g, 25, 15, 2.4, 0x22d3ee, 0.7);
+        glow(g, 35, 15, 2.4, 0x22d3ee, 0.7);
+        // sopracciglio unico, minaccioso
+        g.lineStyle(2.5, INK_EDGE, 1);
+        g.beginPath();
+        g.moveTo(21, 10); g.lineTo(39, 10);
+        g.strokePath();
+        // damigiana d'acqua di smela come arma
+        g.fillStyle(0x22d3ee, 0.45);
+        g.fillRoundedRect(48, 40, 20, 26, 6);
+        g.fillStyle(INK, 1);
+        g.fillRect(54, 34, 8, 8);
+        g.lineStyle(2, 0x22d3ee, 0.8);
+        g.strokeRoundedRect(48, 40, 20, 26, 6);
+        glow(g, 58, 52, 3, 0x22d3ee, 0.5);
+        // gambe tozze
+        g.lineStyle(5, INK, 1);
+        g.beginPath();
+        g.moveTo(22, 74); g.lineTo(20, 84);
+        g.moveTo(38, 74); g.lineTo(40, 84);
+        g.strokePath();
+    });
+
+    // smela boss: lo stesso venditore, ma furioso che tu non beva
+    make(scene, 'boss-smela', 48, 70, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(22, 46, 22, 44);
+        g.fillCircle(22, 16, 11);
+        // braccio teso che ti porge la bottiglia, insistente
+        g.lineStyle(3, INK, 1);
+        g.beginPath();
+        g.moveTo(30, 32); g.lineTo(44, 24);
+        g.strokePath();
+        g.fillStyle(0x22d3ee, 0.7);
+        g.fillRoundedRect(40, 14, 9, 16, 3);
+        glow(g, 44, 12, 2.2, 0x22d3ee, 0.6);
+        // occhi spiritati
+        glow(g, 18, 16, 2.2, 0x22d3ee, 0.8);
+        glow(g, 26, 16, 2.2, 0x22d3ee, 0.8);
+        // sorriso forzato, troppo largo
+        g.lineStyle(2, INK_EDGE, 1);
+        g.beginPath();
+        g.arc(22, 19, 5, 0.15, Math.PI - 0.15);
+        g.strokePath();
+    });
+
     // il limite notevole: latitante dai tempi del primo parziale
     make(scene, 'boss-limite', 90, 80, (g) => {
         glow(g, 45, 40, 9, 0x60a5fa, 0.3);
