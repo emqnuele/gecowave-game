@@ -63,13 +63,18 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         const now = this.scene.time.now;
 
         if (this.shieldGraphics && this.active) {
-            this.shieldGraphics.clear();
-            if (this.engaged) {
-                const pulse = 95 + Math.sin(this.t / 150) * 10;
-                this.shieldGraphics.lineStyle(3, 0xfacc15, 0.85);
-                this.shieldGraphics.fillStyle(0xfacc15, 0.12);
-                this.shieldGraphics.strokeCircle(this.x, this.y, pulse);
-                this.shieldGraphics.fillCircle(this.x, this.y, pulse);
+            if (state.hasFlag('ivan')) {
+                this.shieldGraphics.destroy();
+                this.shieldGraphics = undefined;
+            } else {
+                this.shieldGraphics.clear();
+                if (this.engaged) {
+                    const pulse = 95 + Math.sin(this.t / 150) * 10;
+                    this.shieldGraphics.lineStyle(3, 0xfacc15, 0.85);
+                    this.shieldGraphics.fillStyle(0xfacc15, 0.12);
+                    this.shieldGraphics.strokeCircle(this.x, this.y, pulse);
+                    this.shieldGraphics.fillCircle(this.x, this.y, pulse);
+                }
             }
         }
 

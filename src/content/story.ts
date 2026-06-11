@@ -63,9 +63,10 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'guggu', color: 'yellow', text: 'AH. AH. AH. le tue armi non mi fanno niente: sono PIENO. torna con qualcuno che sappia tagliare, se lo trovi. BIP.' },
     ],
     'ivan-sacrificio': [
-        { speaker: 'ivan maggini', color: 'yellow', text: 'visto? ti ho detto che lo tagliavo... ahh. l\'esplosione... mi sa che questa corsa la finisco qui, custode.' },
-        { speaker: 'ivan maggini', color: 'yellow', text: 'guarda tra le lamiere: c\'è un frammento. la wave manifesta il desiderio... e io desideravo solo che i bus tornassero in orario. che spreco, eh?' },
-        { speaker: 'ivan maggini', color: 'yellow', text: 'salva il realm. e di\' a samatt che il loop è finito.' },
+        { speaker: 'ivan maggini', color: 'yellow', text: '...cazzo, custode... è troppo pieno. mi ha travolto...' },
+        { speaker: 'ivan maggini', color: 'yellow', text: 'la mia corsa finisce qui. ma la sua barriera... la sua barriera è andata. lo scudo è infranto.' },
+        { speaker: 'ivan maggini', color: 'yellow', text: 'tocca a te. finisci questa corsa, batti guggu e prendi il frammento.' },
+        { speaker: 'ivan maggini', color: 'yellow', text: 'salva il realm. e di\' a samatt che il loop... prima o poi finisce.' },
     ],
     'lore-loop': [
         { speaker: 'avviso alla fermata', color: 'yellow', text: '«samatt e guastalla sono passati di qui 847 volte. guastalla ha smesso di contare alla 300. samatt no. samatt conta ancora.»' },
