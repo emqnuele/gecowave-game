@@ -466,95 +466,210 @@ export class Screens {
         this.setZone('yellow');
 
         const panel = el('div', 'glass-panel glass-acid-gold char-sheet-panel');
-        panel.append(el('h2', 'font-crisis char-title', 'CREAZIONE GECO'));
+        s.append(panel);
 
-        const sub = el('div', 'char-subtitle font-marker');
-        sub.textContent = 'scegli il nome del geco e alloca i punti';
-        panel.append(sub);
+        // --- STEP 1: NOME ---
+        const step1 = el('div', 'char-step active');
+        step1.append(el('h2', 'font-crisis char-step-title', 'COME TI CHIAMI?'));
+
+        const sub1 = el('div', 'char-subtitle font-marker');
+        sub1.textContent = 'scrivi il tuo nome nella memoria del flusso';
+        step1.append(sub1);
 
         const nameRow = el('div', 'char-name-row glass-chip');
-        const nameLabel = el('span', 'label');
-        nameLabel.textContent = 'nome';
-        nameRow.append(nameLabel);
-
         const input = el('input', 'char-name-input') as HTMLInputElement;
         input.type = 'text';
         input.value = 'Geco';
         input.maxLength = 12;
         input.placeholder = 'Geco';
         nameRow.append(input);
-        panel.append(nameRow);
+        step1.append(nameRow);
 
+        const nextBtn = this.btn('continua', -1.2, () => goToStep2(), 'glass-acid-gold');
+        step1.append(nextBtn);
+        panel.append(step1);
+
+        input.addEventListener('keydown', (e) => {
+            if (e.code === 'Enter') {
+                goToStep2();
+            }
+        });
+
+        // --- STEP 2: PUNTI ---
+        const step2 = el('div', 'char-step');
+        panel.append(step2);
+
+        let finalName = 'Geco';
         let availablePoints = 10;
-        const pointsEl = el('div', 'char-points-counter sticker glass-acid-yellow', `punti da assegnare: ${availablePoints}`);
-        panel.append(pointsEl);
-
         const stats = {
             forza: 0,
             costituzione: 0,
             flusso: 0,
         };
 
-        const createRow = (key: 'forza' | 'costituzione' | 'flusso', label: string, desc: string) => {
-            const row = el('div', 'char-stat-row glass-chip');
-            const info = el('div', 'char-stat-info');
+        const goToStep2 = () => {
+            finalName = input.value.trim() || 'Geco';
+            sfx.ui();
 
+            step1.classList.remove('active');
+            setTimeout(() => {
+                step1.style.display = 'none';
+                step2.style.display = 'flex';
+                step2.classList.add('active');
+
+                title2.innerHTML = `CREAZIONE ${finalName.toUpperCase()}`;
+                updateAll();
+            }, 200);
+        };
+
+        const title2 = el('h2', 'font-crisis char-title', 'CREAZIONE GECO');
+        const sub2 = el('div', 'char-subtitle font-marker', 'alloca i 10 punti per plasmare il tuo geco');
+        step2.append(title2, sub2);
+
+        const layout = el('div', 'char-layout-container');
+        step2.append(layout);
+
+        const leftCol = el('div', 'char-left-col');
+        const rightCol = el('div', 'char-right-col');
+        layout.append(leftCol, rightCol);
+
+        const pointsEl = el('div', 'char-points-counter sticker glass-acid-yellow', `punti da assegnare: ${availablePoints}`);
+        leftCol.append(pointsEl);
+
+        // radar chart svg
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 220 220');
+        svg.classList.add('char-radar-chart');
+        rightCol.append(svg);
+
+        const cx = 110, cy = 110;
+        const getPoint = (d: number, index: number) => {
+            const angle = -Math.PI / 2 + (index * 2 * Math.PI) / 3;
+            return {
+                x: cx + d * Math.cos(angle),
+                y: cy + d * Math.sin(angle)
+            };
+        };
+
+        const drawGridTriangle = (d: number) => {
+            const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const p0 = getPoint(d, 0);
+            const p1 = getPoint(d, 1);
+            const p2 = getPoint(d, 2);
+            poly.setAttribute('points', `${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
+            poly.setAttribute('class', 'radar-grid');
+            svg.appendChild(poly);
+        };
+        drawGridTriangle(20);
+        drawGridTriangle(50);
+        drawGridTriangle(80);
+
+        for (let i = 0; i < 3; i++) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            const pOuter = getPoint(80, i);
+            line.setAttribute('x1', String(cx));
+            line.setAttribute('y1', String(cy));
+            line.setAttribute('x2', String(pOuter.x));
+            line.setAttribute('y2', String(pOuter.y));
+            line.setAttribute('class', 'radar-axis');
+            svg.appendChild(line);
+        }
+
+        const statPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        statPoly.setAttribute('class', 'radar-value');
+        svg.appendChild(statPoly);
+
+        const createRadarLabel = (index: number, text: string, textAnchor: string, dy: number, dx = 0) => {
+            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            const p = getPoint(95, index);
+            label.setAttribute('x', String(p.x + dx));
+            label.setAttribute('y', String(p.y + dy));
+            label.setAttribute('text-anchor', textAnchor);
+            label.setAttribute('class', 'radar-label font-marker');
+            label.textContent = text;
+            svg.appendChild(label);
+            return label;
+        };
+
+        const labelForza = createRadarLabel(0, 'FORZA', 'middle', -5);
+        const labelCost = createRadarLabel(1, 'COSTITUZIONE', 'start', 8, 5);
+        const labelFlus = createRadarLabel(2, 'FLUSSO', 'end', 8, -5);
+
+        const createStatSelector = (key: 'forza' | 'costituzione' | 'flusso', label: string, desc: string) => {
+            const container = el('div', 'char-stat-selector glass-chip');
+
+            const info = el('div', 'char-stat-info');
             const nameEl = el('span', 'char-stat-name font-marker', label);
             const descEl = el('span', 'char-stat-desc', desc);
             info.append(nameEl, descEl);
+            container.append(info);
 
-            const controls = el('div', 'char-stat-controls');
-            const btnMinus = el('button', 'char-stat-btn sticker', '-');
-            const valEl = el('span', 'char-stat-value font-martian', '0');
-            const btnPlus = el('button', 'char-stat-btn sticker', '+');
+            const segmentsWrap = el('div', 'char-stat-segments');
+            const segments: HTMLElement[] = [];
+            for (let i = 1; i <= 10; i++) {
+                const seg = el('div', 'char-segment');
+                seg.dataset.val = String(i);
+                segmentsWrap.append(seg);
+                segments.push(seg);
 
-            const update = () => {
-                valEl.textContent = String(stats[key]);
-                btnMinus.classList.toggle('disabled', stats[key] === 0);
-                btnPlus.classList.toggle('disabled', availablePoints === 0 || stats[key] === 10);
+                seg.addEventListener('click', () => {
+                    const targetVal = i;
+                    const curVal = stats[key];
+                    const valToSet = (targetVal === 1 && curVal === 1) ? 0 : targetVal;
+                    const diff = valToSet - curVal;
+
+                    if (diff > 0) {
+                        const alloc = Math.min(diff, availablePoints);
+                        if (alloc > 0) {
+                            stats[key] += alloc;
+                            availablePoints -= alloc;
+                            sfx.ui();
+                            updateAll();
+                        }
+                    } else if (diff < 0) {
+                        stats[key] += diff;
+                        availablePoints -= diff;
+                        sfx.ui();
+                        updateAll();
+                    }
+                });
+            }
+            container.append(segmentsWrap);
+            leftCol.append(container);
+
+            return () => {
+                segments.forEach((seg, idx) => {
+                    seg.classList.toggle('filled', idx < stats[key]);
+                });
             };
-
-            btnMinus.addEventListener('click', () => {
-                if (stats[key] > 0) {
-                    stats[key]--;
-                    availablePoints++;
-                    pointsEl.textContent = `punti da assegnare: ${availablePoints}`;
-                    sfx.ui();
-                    updateAll();
-                }
-            });
-
-            btnPlus.addEventListener('click', () => {
-                if (availablePoints > 0 && stats[key] < 10) {
-                    stats[key]++;
-                    availablePoints--;
-                    pointsEl.textContent = `punti da assegnare: ${availablePoints}`;
-                    sfx.ui();
-                    updateAll();
-                }
-            });
-
-            controls.append(btnMinus, valEl, btnPlus);
-            row.append(info, controls);
-            panel.append(row);
-
-            return update;
         };
 
-        const updForza = createRow('forza', 'forza', 'danno fisico +10% a punto');
-        const updCost = createRow('costituzione', 'costituzione', 'punti vita massimi +1 a punto');
-        const updFlus = createRow('flusso', 'flusso', 'flusso max +10 e danno risonante +10% a punto');
+        const updSelForza = createStatSelector('forza', 'forza', 'danno fisico +10% a punto');
+        const updSelCost = createStatSelector('costituzione', 'costituzione', 'punti vita massimi +1 a punto');
+        const updSelFlus = createStatSelector('flusso', 'flusso', 'flusso max +10 e risonante +10% a punto');
 
         const updateAll = () => {
-            updForza();
-            updCost();
-            updFlus();
+            updSelForza();
+            updSelCost();
+            updSelFlus();
+
+            pointsEl.textContent = `punti da assegnare: ${availablePoints}`;
+
+            const dForza = 20 + (stats.forza / 10) * 60;
+            const dCost = 20 + (stats.costituzione / 10) * 60;
+            const dFlus = 20 + (stats.flusso / 10) * 60;
+
+            const p0 = getPoint(dForza, 0);
+            const p1 = getPoint(dCost, 1);
+            const p2 = getPoint(dFlus, 2);
+            statPoly.setAttribute('points', `${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
+
+            labelForza.textContent = `FORZA (${stats.forza})`;
+            labelCost.textContent = `COSTITUZIONE (${stats.costituzione})`;
+            labelFlus.textContent = `FLUSSO (${stats.flusso})`;
         };
 
-        updateAll();
-
-        const btnConfirm = this.btn('conferma', -1.2, () => {
-            const finalName = input.value.trim() || 'Geco';
+        const confirmBtn = this.btn('inizia la run', -1.2, () => {
             state.save.playerName = finalName;
             state.save.stats.forza = stats.forza;
             state.save.stats.costituzione = stats.costituzione;
@@ -563,9 +678,8 @@ export class Screens {
             state.resetRun();
             this.closeOverlay();
             onConfirm();
-        }, 'glass-acid-gold');
+        }, 'glass-acid-yellow');
 
-        panel.append(btnConfirm);
-        s.append(panel);
+        step2.append(confirmBtn);
     }
 }
