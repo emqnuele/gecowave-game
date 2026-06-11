@@ -15,7 +15,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     /** colpo della combo in corso: 0,1,2 — il terzo spacca */
     comboStep = 0;
 
-    private keys!: Record<'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'dash' | 'dash2' | 'heal' | 'risonante' | 'riflesso' | 'analisi', Phaser.Input.Keyboard.Key>;
+    private keys!: Record<'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'dash' | 'dash2' | 'heal' | 'risonante' | 'riflesso' | 'analisi' | 'scudo', Phaser.Input.Keyboard.Key>;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
     private coyoteUntil = 0;
@@ -36,6 +36,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private chargeEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
     private riflessoReadyAt = 0;
     private analisiReadyAt = 0;
+    private scudoReadyAt = 0;
     private stunnedUntil = 0;
     private nextSmelaStun = 0;
     private nextTrenDrain = 0;
@@ -78,6 +79,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             risonante: kb.addKey('F'),
             riflesso: kb.addKey('G'),
             analisi: kb.addKey('H'),
+            scudo: kb.addKey('R'),
         };
 
         scene.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -220,6 +222,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-analisi', {});
+            }
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.keys.scudo) && state.hasAbility('scudo') && now >= this.scudoReadyAt) {
+            if (this.spendFlow(COMBAT.scudoCost)) {
+                this.scudoReadyAt = now + COMBAT.scudoCooldownMs;
+                sfx.unlock();
+                this.scene.events.emit('player-scudo', {});
             }
         }
 

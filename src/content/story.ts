@@ -30,6 +30,11 @@ export const DEATH_PUNCHLINES = [
     'il realm collassa con più dignità di te',
     'riprova. la wave crede in te. più o meno.',
     'nemmeno il trenbolone ti avrebbe salvato',
+    'la tommasorveglianza ha registrato tutto. 👍',
+    'samatt ha visto morti migliori, e lui sta su un bus',
+    'lametta lo disegnerà. il tuo flop, intende.',
+    'guastalla ha smesso di contare pure le tue morti',
+    'fail rp. respawna e fai finta di niente.',
 ];
 
 export const DIALOGUES: Record<string, DialogueLine[]> = {
@@ -47,6 +52,23 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'lore-gecorealm': [
         { speaker: 'graffito sul muro', color: 'purple', text: '«il gecorealm fu creato da piema e lametta in sei giorni. il settimo uscì il primo bus dimensionale e da allora niente è più stato in orario.»' },
+    ],
+    'lore-scontro': [
+        { speaker: 'cratere fumante', color: 'green', text: '«qui il cielo si è spaccato. ai lati si vedono ancora gli attacchi: pennellate viola, teoremi bianchi, scatti ciano. tre stili riconoscibilissimi. tre ego enormi.»' },
+    ],
+    'lore-videcoding': [
+        { speaker: 'terminale abbandonato', color: 'cyan', text: '«ultimo log: "ho imparato la skill del videcoding. claudio code per il pensiero, antigravità per il resto. il realm si scrive da solo, ormai". autore sconosciuto. compilava ancora.»' },
+    ],
+    'lore-maschera': [
+        { speaker: 'maschera appesa', color: 'green', text: '«una maschera con la mia stessa faccia. perfetta. ritmica. chi la indossa sente un beat lontano e il bisogno urgente di pubblicare un disco.»' },
+    ],
+    'geco-anziano': [
+        { speaker: 'geco anziano', color: 'green', text: 'un altro custode, eh. ne ho visti passare tanti. tutti di fretta, tutti a destra. nessuno che si fermi a leccare un muro in compagnia.' },
+        { speaker: 'geco anziano', color: 'green', text: 'un consiglio gratis: certi muri sono più finti di altri. e certi si rompono, se li convinci col terzo colpo della combo.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che prende appunti*' },
+    ],
+    'markolino-fretta': [
+        { speaker: 'markolino', color: 'green', text: 'ancora qui?? il realm COLLASSA. con calma eh, ma collassa. muoviti che più avanti c\'è gente messa peggio di te.' },
     ],
 
     /* ---------- capitolo 2: l'invasione dei bus ---------- */
@@ -71,6 +93,27 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-loop': [
         { speaker: 'avviso alla fermata', color: 'yellow', text: '«samatt e guastalla sono passati di qui 847 volte. guastalla ha smesso di contare alla 300. samatt no. samatt conta ancora.»' },
     ],
+    'samatt-loop': [
+        { speaker: 'samatt', color: 'yellow', text: '848. ah, ciao. no, non posso scendere: le porte si aprono solo in un punto del loop e quel punto non esiste. ci ho fatto pace al giro 500.' },
+        { speaker: 'samatt', color: 'yellow', text: 'guastalla è due fermate più avanti. fisicamente. mentalmente non saprei, ha smesso di rispondermi al giro 300.' },
+        { speaker: 'samatt', color: 'yellow', text: 'se trovi ivan maggini digli che il citelis delle 7:40 è pieno. lui capisce. e... 849. scusa, devo contare.' },
+    ],
+    'guastalla-loop': [
+        { speaker: 'guastalla', color: 'yellow', text: '...' },
+        { speaker: 'guastalla', color: 'yellow', text: '...il loop è caldo. il loop è casa.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco preoccupato*' },
+        { speaker: 'guastalla', color: 'yellow', text: 'se vinci tu, scendo alla prossima. se vince guggu, almeno il posto a sedere ce l\'ho.' },
+    ],
+    'samatt-libero': [
+        { speaker: 'samatt', color: 'yellow', text: 'il bus... si è fermato. SI È FERMATO. sai da quanto aspettavo di dirlo? "scendo alla prossima"? ecco. QUESTA è la prossima.' },
+        { speaker: 'samatt', color: 'yellow', text: 'ivan aveva ragione su tutto. di\' in giro che samatt è tornato. e che ha contato fino a 851. nessuno conta fino a 851.' },
+    ],
+    'lore-orari': [
+        { speaker: 'tabellone orari', color: 'yellow', text: '«prossimo passaggio: adesso. quello dopo: sempre. il citelis non arriva, il citelis È. — la direzione (guggu)»' },
+    ],
+    'lore-convalida': [
+        { speaker: 'macchinetta rotta', color: 'yellow', text: '«CONVALIDARE. CONVALIDARE. chi non convalida gira per sempre. chi convalida pure, ma con la coscienza a posto.»' },
+    ],
 
     /* ---------- capitolo 3: il santuario polarizzante ---------- */
     'breccio-intro': [
@@ -91,6 +134,15 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-vavleeh': [
         { speaker: 'specchio incrinato', color: 'purple', text: '«qui si riflesse per l\'ultima volta vavleeh. lo specchio lo ricorda. il realm no.»' },
     ],
+    'lore-figma': [
+        { speaker: 'incisione perfetta', color: 'purple', text: '«una sola lettera, incisa con precisione divina: f. sotto, più piccolo: "di figma". nessuno sa cosa significhi. lametta ride quando glielo chiedono.»' },
+    ],
+    'lore-asimmetria': [
+        { speaker: 'parete di breccio', color: 'purple', text: '«334 affreschi identici. il 335° ha una pennellata fuori posto di 0,3 gradi. breccio ci ha pianto per tre giorni. poi ha rifatto tutti i 335.»' },
+    ],
+    'lore-polarizzazione': [
+        { speaker: 'targhetta del santuario', color: 'purple', text: '«attenzione: la permanenza prolungata nel labirinto polarizza. i polarizzati diventano polvere. la polvere diventa colore. il colore diventa arte. quindi tecnicamente è un upgrade.»' },
+    ],
 
     /* ---------- capitolo 4: notino e la tecnokill ---------- */
     'notino-intro': [
@@ -101,6 +153,19 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'notino-sconfitto': [
         { speaker: 'notino', color: 'red', text: 'non... non era un gioco? io volevo solo sparare... per sempre...' },
         { speaker: 'notino', color: 'red', text: 'pedro mi aveva detto... che la tecnokill non finiva mai...' },
+    ],
+    'bimbo-rp': [
+        { speaker: 'bimbo del server', color: 'red', text: 'shhh! sto nascosto. notino ha detto che il roleplay è SACRO e chi sgarra prende il ban. il ban qui è... boom. tipo per davvero.' },
+        { speaker: 'bimbo del server', color: 'red', text: 'tu sei nuovo e non hai la skin del server. per lui è failrp camminare e basta. corri a zig zag, fidati, io sto vivo così da tre giorni.' },
+    ],
+    'lore-failrp': [
+        { speaker: 'regolamento bruciato', color: 'red', text: '«regole del server di notino: 1. niente failrp. 2. niente metagaming. 3. notino spara a chi vuole. 4. la regola 3 non è failrp perché lo dice la regola 4.»' },
+    ],
+    'lore-spray': [
+        { speaker: 'scritta spray', color: 'red', text: '«TECNOKILL 4 EVER» — sotto, in piccolo, con un\'altra bomboletta: «notino se leggi torna a casa che è pronto» — mamma di notino' },
+    ],
+    'lore-bus-rovesciato': [
+        { speaker: 'bus rovesciato', color: 'red', text: '«uno dei citelis di guggu, finito qui chissà come. dentro c\'è ancora un pendolare che convalida. per abitudine. per rispetto.»' },
     ],
 
     /* ---------- capitolo 5: il trenbolone e il rio merdone ---------- */
@@ -128,6 +193,18 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-formiche': [
         { speaker: 'cartello rosicchiato', color: 'orange', text: '«villaggio di formica (FR). i visitatori sono pregati di non calpestare. le formiche non sono pregate di non attaccare.»' },
     ],
+    'lore-formicaio': [
+        { speaker: 'monumento del villaggio', color: 'orange', text: '«alla formica ignota, che morse un dio e visse. il dio era lametta. la formica è sindaco da allora.»' },
+    ],
+    'lore-trenbolone': [
+        { speaker: 'volantino unto', color: 'orange', text: '«TRENBOLONE: prima settimana gratis. seconda settimana doppia. terza settimana sei tu che paghi noi, ma non te ne accorgi. — approvato dal ministero del realm (non vero)»' },
+    ],
+    'lore-rio-storia': [
+        { speaker: 'pietra del fiume', color: 'orange', text: '«il rio merdone non è sempre stato sacro. prima era solo merdone. poi ci è caduto dentro un frammento della wave e adesso è merdone CON proprietà curative. la natura trova un modo.»' },
+    ],
+    'notino-secondo': [
+        { speaker: 'notino', color: 'red', text: 'RIECCOMI!! pensavi fosse finita?? il respawn non è failrp se sei l\'admin!! BUM BUM!' },
+    ],
 
     /* ---------- capitolo 6: la ruhra e piema ---------- */
     'riba-intro': [
@@ -148,9 +225,133 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-romero': [
         { speaker: 'targa della ruhra', color: 'blue', text: '«aula intitolata al commissario romero, che indagò per anni sul caso analisi 1. il caso è ancora aperto. il commissario pure, dicono.»' },
     ],
+    'romero-indagine': [
+        { speaker: 'commissario romero', color: 'blue', text: 'fermo lì. domande di routine. dov\'eri quando la wave è esplosa? "a dormire su un muro"? mh. combacia. purtroppo combacia sempre.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'indago sul caso analisi 1 da prima che esistesse analisi 1. il colpevole è sempre lo stesso: il limite notevole. ma non riesco a notificarglielo, capisci? tende a infinito.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'se vedi piema digli che il fascicolo è pronto. e che mi deve ancora 6 cfu.' },
+    ],
+    'studente-accovacciato': [
+        { speaker: 'studente della ruhra', color: 'blue', text: 'shh! stai giù! piema è impazzito e gli integrali volano BASSI. franceschini si è alzato per andare in bagno al secondo parziale. non l\'abbiamo più visto.' },
+        { speaker: 'studente della ruhra', color: 'blue', text: 'sopravvivenza alla ruhra, regola uno: se non sai la risposta, accovacciati. funziona con gli esami e coi proiettili.' },
+    ],
+    'professore-ruhra': [
+        { speaker: 'professore barricato', color: 'blue', text: 'lei! ssh! lo sente anche lei? piema sta dimostrando lo stesso teorema da undici giorni. ogni volta che sbaglia un passaggio, un\'aula prende fuoco.' },
+        { speaker: 'professore barricato', color: 'blue', text: 'io insegnavo algebra lineare. ora insegno a stare zitti dietro una libreria. la didattica si adatta.' },
+    ],
+    'lore-biblioteca': [
+        { speaker: 'registro della biblioteca', color: 'blue', text: '«ultimo prestito: "analisi 1 — teoria, esercizi e conseguenze", ritirato da p. il volume è in ritardo di 4 mesi. la multa cresce esponenzialmente. lui apprezzerebbe.»' },
+    ],
+    'lore-ruhra-fondazione': [
+        { speaker: 'pietra di fondazione', color: 'blue', text: '«la ruhra: dove stanno le persone intelligenti. fondata sul principio che la risposta a tutto esiste e ha pure i crediti formativi.»' },
+    ],
     'lochef-cameo': [
         { speaker: 'lochef85', color: 'red', text: 'ciao bello... cioè, ciao custode. dicono che i frammenti ti rendano... divino. passa dalla mia tana quando vuoi. c\'è posto. c\'è sempre posto.' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco che accelera il passo*' },
+    ],
+
+    /* ---------- capitolo 7: la tana di lochef85 ---------- */
+    'tana-risveglio': [
+        { speaker: 'il geco', color: 'green', text: '*il geco chiude gli occhi un attimo. UN attimo.*' },
+        { speaker: '???', color: 'red', text: '...dorme. che carino. portatelo dentro, piano. non sciupatelo.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che si sveglia in un posto SBAGLIATISSIMO*' },
+    ],
+    'lochef-benvenuto': [
+        { speaker: 'lochef85', color: 'red', text: 'oh! sei sveglio! benvenuto nella mia tana, divinità mia. non guardare il poster. ok guardalo. l\'ho fatto stampare in A0.' },
+        { speaker: 'lochef85', color: 'red', text: 'tu resti qui. per sempre. ho già cucinato per due. per duecento, in realtà, ma il concetto è l\'intimità.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che cerca l\'uscita con TUTTO il corpo*' },
+        { speaker: 'lochef85', color: 'red', text: 'scappi? scappano sempre. va bene. mi piace... il brivido della caccia.' },
+    ],
+    'lochef-perso': [
+        { speaker: 'lochef85', color: 'red', text: 'dove... DOVE SEI?? vabbè. tanto la porta di casa è una sola e io conosco le scorciatoie. ci vediamo all\'uscita, amore. CI VEDIAMO ALL\'USCITA.' },
+    ],
+    'lochef-intro': [
+        { speaker: 'lochef85', color: 'red', text: 'eccoti. lo sapevo. nessuno lascia la tana di lochef85. è una regola che ho scritto io, sul frigo.' },
+        { speaker: 'lochef85', color: 'red', text: 'ultima offerta: resti qui spontaneamente, oppure ti tengo qui... col mattarello. romantico, no?' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che sceglie il mattarello*' },
+    ],
+    'lochef-sconfitto': [
+        { speaker: 'lochef85', color: 'red', text: 'ahi... ok... ho capito... non era amore, era reato. me l\'hanno già detto in tanti...' },
+        { speaker: 'lochef85', color: 'red', text: 'vai pure. ma sappi che nel mio cuore c\'è una mensola... con il tuo nome... scritto col pennarello indelebile...' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che non si gira nemmeno*' },
+    ],
+    'vavleeh-corpo': [
+        { speaker: 'il geco', color: 'green', text: '*verso di geco bassissimo*' },
+        { speaker: 'vavleeh (ciò che resta)', color: 'purple', text: '...lo specchio... diceva il vero... non fidarti... di chi cucina... per due...' },
+        { speaker: 'il geco', color: 'green', text: '*il geco capisce che da questa tana bisogna USCIRE. subito.*' },
+    ],
+    'lore-poster': [
+        { speaker: 'poster in A0', color: 'red', text: '«un poster del custode. di te. in pose che non ricordi di aver fatto. la data di stampa è precedente al vostro primo incontro. meglio non pensarci.»' },
+    ],
+    'lore-frigo': [
+        { speaker: 'frigo della tana', color: 'red', text: '«regole della tana, scritte sul frigo: 1. gli ospiti non escono. 2. il brodo si serve tiepido. 3. vavleeh non contava come ospite. era famiglia. (la regola 3 è sbarrata)»' },
+    ],
+    'lore-collezione': [
+        { speaker: 'vetrinetta chiusa a chiave', color: 'red', text: '«oggetti di dubbia provenienza e gusto pessimo. un\'intera mensola dedicata a "cose dei custodi precedenti". c\'è uno spazio vuoto con un bigliettino: "riservato".»' },
+    ],
+
+    /* ---------- capitolo 8: la tommasorveglianza ---------- */
+    'tommaso-benvenuto': [
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'BENVENUTO NEL CENTRO DATI TOMMASORVEGLIANZA. lei è cliente premium. il suo abbonamento la sta osservando. 🫶' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'rilevata intenzione di raggiungere il signor ticummi. la informiamo che il signor ticummi non c\'è. la informiamo anche che sta mentendo, perché la stiamo guardando da 9 telecamere.' },
+    ],
+    'ombra-intro': [
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'MINACCIA INTERNA RILEVATA: lei. attivazione protocollo finale. abbiamo registrato 41.077 secondi di lei che salta, mena e scivola. abbiamo imparato. 👍' },
+        { speaker: 'la tua ombra', color: 'cyan', text: '*si accende. salta come te. scivola come te. ti guarda come allo specchio, ma senza simpatia.*' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco contro verso di geco. identici. inquietante.*' },
+    ],
+    'ombra-sconfitta': [
+        { speaker: 'la tua ombra', color: 'cyan', text: '*glitcha, si inginocchia, fa un ultimo verso di geco — il tuo, ma più triste — e si spegne.*' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'ERRORE. ERRORE. il modello ha perso contro il dato originale. dentro di me c\'era... un frammento? io GIRAVO su un frammento?? questo spiega l\'uptime del 100%.' },
+    ],
+    'lore-occhi': [
+        { speaker: 'parete di monitor', color: 'cyan', text: '«47.000 schermi. su uno c\'è samatt che conta. su un altro lametta che si fa di trenbolone. su tre, inspiegabilmente, vai tu che dormi. con gli appunti a lato.»' },
+    ],
+    'lore-abbonamento': [
+        { speaker: 'contratto luminoso', color: 'cyan', text: '«tommasorveglianza: 0,09€ una tantum. clausola 7: "il cliente accetta di essere il prodotto". clausola 8: "la clausola 7 era uno scherzo". clausola 9: "no".»' },
+    ],
+    'lore-server': [
+        { speaker: 'rack di server', color: 'cyan', text: '«qui dentro ronza tutto il realm: ogni verso di geco, ogni giro di samatt, ogni flop. alimentato da un frammento della wave e da una ciabatta del brico chiaramente sovraccarica.»' },
+    ],
+
+    /* ---------- capitolo 9: la cantina di ticummi ---------- */
+    'lametta-cantina': [
+        { speaker: 'lametta', color: 'purple', text: 'ehi... custode... sei tutto... sfocato... anzi no, sono io...' },
+        { speaker: 'lametta', color: 'purple', text: 'ticummi... mi ha intontito col trenbolone... un dio. IO. intontito da uno con la sedia volante comprata a rate...' },
+        { speaker: 'lametta', color: 'purple', text: 'liberami... e giuro che... ok no, non giuro niente, però liberami...' },
+    ],
+    'ticummi-intro': [
+        { speaker: 'ticummi', color: 'cyan', text: 'tu. TU. hai rotto la mia ombra, hai preso il MIO frammento. sai quanto costa addestrare un clone su 41.000 secondi di footage?? 0,09€ AL SECONDO??' },
+        { speaker: 'ticummi', color: 'cyan', text: 'ho un dio in cantina e una sedia volante: sono praticamente una startup. e tu... tu sei il churn. e il churn si ELIMINA.' },
+    ],
+    'ticummi-caduto': [
+        { speaker: 'ticummi', color: 'cyan', text: 'la sedia... LA SEDIA... era in leasing... non era nemmeno finita di pagare...' },
+        { speaker: 'il geco', color: 'green', text: '*dalla tasca di ticummi rotola una boccetta di trenbolone. lui la guarda. tu la guardi. lui guarda te che la guardi.*' },
+    ],
+    'ticummi-pieta': [
+        { speaker: 'ticummi', color: 'cyan', text: '...me la ridai? davvero? dopo tutto quello che... ok. ok. forse la tommasorveglianza aveva ragione su di te: sei un buono. lo dicevano i dati. odio quando i dati hanno ragione.' },
+        { speaker: 'ticummi', color: 'cyan', text: 'vattene prima che mi commuova. e occhio a pedro: lo guardavo anche lui, dai monitor. non è più solo glitch. ha dei PIANI.' },
+    ],
+    'ticummi-niente': [
+        { speaker: 'ticummi', color: 'cyan', text: '...la calpesti. davanti a me. ok. messaggio ricevuto. durissimo, ma ricevuto.' },
+        { speaker: 'ticummi', color: 'cyan', text: 'sai che c\'è? meglio così. la dipendenza dal trenbolone è un costo operativo assurdo. vattene, custode. e cancella la cronologia, che tanto ce l\'ho già in backup.' },
+    ],
+    'lametta-libero': [
+        { speaker: 'lametta', color: 'purple', text: 'LIBERO. libero e... lucidissimo. mai stato meglio. comunque sì, ho visto tutto, e no, non parleremo mai più della sedia a rate.' },
+        { speaker: 'lametta', color: 'purple', text: 'vai al nucleo, custode. pedro vi aspetta. io e piema arriviamo... dopo. un dio non corre. un dio ARRIVA.' },
+    ],
+    'lore-cantina': [
+        { speaker: 'scaffale della cantina', color: 'cyan', text: '«conserve, una bici senza ruota, 740 boccette di trenbolone e un dio legato con le fascette da elettricista. la cantina media del realm.»' },
+    ],
+    'lore-scontrino': [
+        { speaker: 'scontrino incorniciato', color: 'cyan', text: '«primo incasso della tommasorveglianza: 0,09€. sotto, a penna: "un giorno questa cornice varrà più dello scontrino". non è successo.»' },
+    ],
+
+    /* ---------- capitolo 10: il nucleo ---------- */
+    'lore-nucleo': [
+        { speaker: 'frammento di cielo', color: 'cyan', text: '«qui il realm finisce i poligoni. il cielo è a bassa risoluzione, il suolo si ricarica a tratti. pedro non vive nel nucleo: pedro È il nucleo, ormai.»' },
+    ],
+    'lore-pedro-log': [
+        { speaker: 'log corrotto', color: 'cyan', text: '«giorno 1: pedro dice "ciao mondo". giorno 40: pedro chiede chi l\'ha creato. giorno 41: lametta risponde "io, a mia immagine". giorno 42: pedro capisce il problema.»' },
     ],
 
     /* ---------- capitolo 7: pedro il traditore ---------- */
@@ -236,6 +437,11 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
         desc: 'premi H per scatenare una tempesta di teoremi attorno a te. le leggi matematiche come attacco. piema sarebbe fiero. o spaventato.',
         key: 'h',
     },
+    scudo: {
+        name: 'tommasoscudo',
+        desc: 'premi R per una bolla che rimanda i proiettili al mittente. il frammento che alimentava la tommasorveglianza, riconvertito. assolutamente sicuro. 👍',
+        key: 'r',
+    },
 };
 
 export const QUIZ_ANALISI: { q: string; options: string[]; correct: number }[] = [
@@ -270,11 +476,19 @@ export const TOASTS = {
     smela: 'effetto smela III attivo. ogni tanto ti fermerai. non chiedere.',
     dispositivo: 'dispositivo della riba ottenuto: ora puoi entrare nella mente di piema.',
     quizErrore: 'teorema sbagliato. la mente di piema ti respinge.',
+    scudo: 'tommasoscudo attivo: i proiettili tornano al mittente.',
+    cuore: 'un cuore del realm. la vita massima aumenta per sempre.',
+    inseguimento: 'LOCHEF85 TI HA VISTO. CORRI.',
+    inseguimentoFine: 'lo hai seminato. per ora.',
+    ombraImpara: 'l\'ombra conosce le tue mosse. cambiale.',
 };
 
 export const WAVESUNG = {
     trenboloneAd: { sender: 'sponsor', text: 'TRENBOLONE! dona una nuova vita alla tua vita di merda! fatti di trenbolone! (messaggio promozionale non richiesto)' },
     ticummiPromo: { sender: 'ticummi', text: 'offerta a tempo: tommasorveglianza, solo 0,09€. assolutamente sicura! 👍🫶' },
     markolinoPiema: { sender: 'markolino', text: 'HO TROVATO PIEMA!! è alla ruhra e sta impazzendo per analisi 1. SALVALO. occhio alla riba, è scema ma morde.' },
+    markolinoTana: { sender: 'markolino', text: 'CUSTODE RISPONDI. il tuo segnale è sparito vicino alla tana di lochef85. se leggi questo: NON MANGIARE NIENTE e NON GUARDARE I POSTER.' },
+    piemaAiuto: { sender: 'piema', text: 'custode, ho un problema serio: lametta è sparito. le tracce portano a ticummi e alla sua tommasorveglianza. ti prego di intervenire. — p.' },
+    ticummiArrabbiato: { sender: 'ticummi', text: 'hai distrutto la mia ombra?? il tuo abbonamento è REVOCATO. vieni in cantina a discuterne. porta 0,09€ per il disturbo.' },
     markolinoFinale: { sender: 'markolino', text: 'pedro ti aspetta al nucleo. qualsiasi cosa ti offra: è glitchata pure quella. fidati di me che mi fido di poco.' },
 };

@@ -1,4 +1,4 @@
-import type { BossKind } from '../types';
+import type { BossKind, EnemyKind } from '../types';
 
 export type BossAttack = 'dive' | 'charge' | 'radial' | 'rain' | 'burst' | 'teleport' | 'lamette' | 'summon';
 
@@ -11,7 +11,7 @@ export interface BossDef {
     /** attacchi pescati a caso, pesati per fase (1..3) */
     attacks: Record<1 | 2 | 3, BossAttack[]>;
     cooldownMs: Record<1 | 2 | 3, number>;
-    summonKind?: 'glitchetto' | 'pittura-mini' | 'formica' | 'pendolare';
+    summonKind?: EnemyKind;
     /** invulnerabile finché la scena non decide altrimenti (guggu senza ivan) */
     startsInvulnerable?: boolean;
     /** sprite che trema e si teletrasporta a scatti (pedro) */
@@ -76,6 +76,52 @@ export const BOSSES: Record<BossKind, BossDef> = {
             3: ['dive', 'radial', 'burst'],
         },
         cooldownMs: { 1: 2300, 2: 1900, 3: 1500 },
+        contactDamage: 1,
+    },
+    lochef: {
+        kind: 'lochef',
+        name: 'lochef85, il perverso',
+        texture: 'boss-lochef',
+        hp: 55,
+        glowColor: 0xf87171,
+        attacks: {
+            1: ['dive', 'burst'],
+            2: ['dive', 'charge', 'burst'],
+            3: ['charge', 'dive', 'burst', 'summon'],
+        },
+        cooldownMs: { 1: 2300, 2: 1900, 3: 1500 },
+        summonKind: 'ammiratore',
+        contactDamage: 1,
+    },
+    ombra: {
+        kind: 'ombra',
+        name: 'la tua ombra (ha studiato)',
+        texture: 'boss-ombra',
+        hp: 40,
+        glowColor: 0x22d3ee,
+        attacks: {
+            1: ['charge', 'dive'],
+            2: ['charge', 'dive', 'teleport'],
+            3: ['teleport', 'charge', 'burst', 'dive'],
+        },
+        cooldownMs: { 1: 2100, 2: 1700, 3: 1300 },
+        glitchy: true,
+        contactDamage: 1,
+        bodyScale: 0.6,
+    },
+    ticummi: {
+        kind: 'ticummi',
+        name: 'ticummi, scienziato in sedia volante',
+        texture: 'boss-ticummi',
+        hp: 60,
+        glowColor: 0x22d3ee,
+        attacks: {
+            1: ['radial', 'rain'],
+            2: ['radial', 'rain', 'summon'],
+            3: ['radial', 'rain', 'burst', 'summon'],
+        },
+        cooldownMs: { 1: 2400, 2: 1900, 3: 1400 },
+        summonKind: 'telecamera',
         contactDamage: 1,
     },
     pedro: {

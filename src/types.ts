@@ -1,14 +1,15 @@
 export type ZoneColor = 'green' | 'purple' | 'orange' | 'blue' | 'red' | 'yellow' | 'cyan';
 
 /* le wave sono frammenti della gecowave: 2 di movimento,
-   3 attive (il massimo equipaggiabile, per regola del realm), 1 passiva */
+   4 attive, 1 passiva */
 export type AbilityId =
     | 'scivolata'
     | 'rimbalzo'
     | 'riflesso'
     | 'risonante'
     | 'rigenerazione'
-    | 'analisi';
+    | 'analisi'
+    | 'scudo';
 
 export type EnemyKind =
     | 'glitchetto'
@@ -19,9 +20,13 @@ export type EnemyKind =
     | 'tecnodrone'
     | 'tossico'
     | 'formica'
-    | 'numero';
+    | 'numero'
+    | 'specchietto'
+    | 'padella'
+    | 'ammiratore'
+    | 'telecamera';
 
-export type BossKind = 'guggu' | 'breccio' | 'notino' | 'riba' | 'pedro' | 'dei';
+export type BossKind = 'guggu' | 'breccio' | 'notino' | 'riba' | 'lochef' | 'ombra' | 'ticummi' | 'pedro' | 'dei';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }
@@ -29,10 +34,11 @@ export type EntitySpec =
     | { type: 'ability'; ability: AbilityId }
     | { type: 'lore'; id: string }
     | { type: 'barre'; amount: number }
+    | { type: 'cuore' }
     | { type: 'boss'; kind: BossKind };
 
 /** script speciali di livello gestiti dalla GameScene */
-export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'ruhra' | 'pedro';
+export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'ruhra' | 'tana' | 'sorveglianza' | 'cantina' | 'pedro';
 
 export interface LevelDef {
     id: string;

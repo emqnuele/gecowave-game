@@ -1,6 +1,6 @@
 # GECOWAVE: The Flux of Cosenza
 
-Action-platformer 2D in stile Hollow Knight / souls-like ambientato nel **GecoRealm**. Pedro, l'IA glitchata creata da Lametta, si è scontrata con gli dei e ha frantumato la GecoWave: il geco — custode provvisorio scelto dalla wave stessa — attraversa 7 capitoli per raccogliere i frammenti, tra bus dimensionali, santuari di specchi, trenbolone e teoremi di Analisi 1.
+Action-platformer 2D in stile Hollow Knight / souls-like ambientato nel **GecoRealm**. Pedro, l'IA glitchata creata da Lametta, si è scontrata con gli dei e ha frantumato la GecoWave: il geco — custode provvisorio scelto dalla wave stessa — attraversa 10 capitoli per raccogliere i frammenti, tra bus dimensionali, santuari di specchi, trenbolone, teoremi di Analisi 1, una tana da cui scappare e un centro dati che ti conosce meglio di te.
 
 ## Avvio
 
@@ -69,8 +69,14 @@ Lo stesso vale per la storia: i dialoghi vivono in `story.ts` (`DIALOGUES['mio-i
 | colpo risonante | notino | proiettile caricato perforante (F tieni premuto) |
 | rio merdone | il fiume | rigenerazione passiva, immunità ai malus |
 | analisi 1 | piema | tempesta di teoremi attorno a te (H) |
+| tommasoscudo | l'ombra / la tommasorveglianza | bolla che riflette i proiettili (R) |
+
+## I cuori del realm
+
+Sparsi per il realm (e in mano a chi non dovrebbe averli) ci sono **cuori** che aumentano la vita massima per sempre: uno murato nella grotta del capitolo 1, uno nella vecchia metro del capitolo 2, uno lo lascia cadere lochef85. Si trovano dietro muri rompibili (`%`, si spaccano a colpi) o finti (`F`, si attraversano).
 
 ## Note di design
 
-- Capitoli: la wave perduta → l'invasione dei bus (Guggu è invulnerabile senza Ivan) → il santuario polarizzante (Breccio, poi Lametta: si vince raccogliendo 5 gocce di colore e uscendo dallo specchio nero) → Notino e la tecnokill → il rio merdone (trenbolone, Ticummi/Tommasorveglianza, l'agguato di Notino, Smela) → la Ruhra (miniboss Riba, enigmi di Analisi 1) → Pedro il traditore (seguirlo è un finale sbagliato; dopo averlo battuto si sceglie: consegnare le wave o sfidare gli dei).
+- Capitoli: la wave perduta → l'invasione dei bus (Guggu è invulnerabile senza Ivan; samatt e guastalla aspettano nella metro) → il santuario polarizzante (Breccio, poi Lametta: si vince raccogliendo 5 gocce di colore e uscendo dallo specchio nero) → Notino e la tecnokill → il rio merdone (trenbolone, Ticummi/Tommasorveglianza, i **due** agguati di Notino, Smela) → la Ruhra (miniboss Riba, enigmi di Analisi 1, il commissario Romero) → la tana di lochef85 (ti rapisce nel sonno: fuga, inseguimento attraverso i muri, boss) → la tommasorveglianza (la tua ombra ha studiato ogni tua mossa; dentro di lei c'è il frammento dello scudo) → la cantina di Ticummi (Lametta è prigioniero; sconfitto Ticummi scegli se ridargli il trenbolone) → Pedro il traditore (seguirlo è un finale sbagliato; dopo averlo battuto si sceglie: consegnare le wave o sfidare gli dei).
+- Script di capitolo (`LevelScript`): `bus`, `lametta`, `trenbolone`, `ruhra`, `tana` (inseguimento delimitato dai marker `caccia-inizio`/`caccia-fine`), `sorveglianza`, `cantina`, `pedro`.
 - Dopo un finale buono il salvataggio riparte dal capitolo 1 con tutte le wave: NG+.

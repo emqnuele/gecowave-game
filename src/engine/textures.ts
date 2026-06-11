@@ -190,6 +190,72 @@ function enemies(scene: Phaser.Scene): void {
         g.lineStyle(1, 0x60a5fa, 0.4);
         g.strokeCircle(15, 17, 13);
     });
+
+    // specchietto: scheggia di specchio del santuario, riflette male
+    make(scene, 'enemy-specchietto', 28, 34, (g) => {
+        g.fillStyle(0x0a0812, 1);
+        g.fillTriangle(14, 2, 26, 24, 2, 24);
+        g.lineStyle(1.5, 0xc084fc, 0.8);
+        g.strokeTriangle(14, 2, 26, 24, 2, 24);
+        // riflesso storto dentro
+        g.lineStyle(1, 0xe9d5ff, 0.5);
+        g.beginPath();
+        g.moveTo(10, 20); g.lineTo(14, 9); g.lineTo(17, 20);
+        g.strokePath();
+        glow(g, 14, 28, 2, 0xc084fc, 0.45);
+    });
+
+    // padella senziente della tana: sputa olio bollente
+    make(scene, 'enemy-padella', 40, 26, (g) => {
+        g.fillStyle(0x14100e, 1);
+        g.fillEllipse(16, 14, 26, 14);
+        g.lineStyle(1.5, 0x3d2f24, 1);
+        g.strokeEllipse(16, 14, 26, 14);
+        // manico
+        g.lineStyle(3, 0x14100e, 1);
+        g.beginPath();
+        g.moveTo(28, 12); g.lineTo(38, 8);
+        g.strokePath();
+        // schizzo d'olio che ribolle
+        glow(g, 12, 8, 2, 0xf87171, 0.55);
+        glow(g, 19, 6, 1.6, 0xfb923c, 0.5);
+    });
+
+    // ammiratore: fan sfegatato di lochef85, abbraccia troppo forte
+    make(scene, 'enemy-ammiratore', 32, 46, (g) => {
+        g.fillStyle(0x1c1014, 1);
+        g.fillEllipse(16, 30, 18, 28);
+        g.fillCircle(16, 10, 7);
+        // braccia spalancate per l'abbraccio
+        g.lineStyle(2.5, 0x1c1014, 1);
+        g.beginPath();
+        g.moveTo(8, 20); g.lineTo(0, 14);
+        g.moveTo(24, 20); g.lineTo(32, 14);
+        g.strokePath();
+        // cuoricino sulla maglietta. inquietante.
+        glow(g, 16, 26, 2, 0xf87171, 0.6);
+        glow(g, 13, 9, 1.6, 0xf87171, 0.5);
+        glow(g, 19, 9, 1.6, 0xf87171, 0.5);
+    });
+
+    // telecamera della tommasorveglianza: ti guarda. spara pure.
+    make(scene, 'enemy-telecamera', 36, 28, (g) => {
+        // braccio a muro
+        g.lineStyle(2, 0x1a2630, 1);
+        g.beginPath();
+        g.moveTo(4, 2); g.lineTo(10, 10);
+        g.strokePath();
+        g.fillStyle(0x10161c, 1);
+        g.fillRoundedRect(8, 8, 22, 14, 4);
+        g.lineStyle(1, 0x2a4a5a, 1);
+        g.strokeRoundedRect(8, 8, 22, 14, 4);
+        // obiettivo
+        g.fillStyle(0x05060a, 1);
+        g.fillCircle(26, 15, 5);
+        glow(g, 26, 15, 2.4, 0x22d3ee, 0.7);
+        // led rec, sempre acceso
+        glow(g, 12, 11, 1.2, 0xf87171, 0.8);
+    });
 }
 
 /* ---------- npc ---------- */
@@ -314,6 +380,96 @@ function npcs(scene: Phaser.Scene): void {
         g.beginPath();
         g.arc(16, 16, 4.5, 0.15, Math.PI - 0.15);
         g.strokePath();
+    });
+
+    // samatt: conta ancora i giri del citelis
+    make(scene, 'npc-samatt', 30, 46, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(15, 31, 16, 26);
+        g.fillCircle(15, 11, 7);
+        // seduto composto, mani sulle ginocchia: routine da loop
+        g.lineStyle(2.5, INK, 1);
+        g.beginPath();
+        g.moveTo(9, 24); g.lineTo(6, 34);
+        g.moveTo(21, 24); g.lineTo(24, 34);
+        g.strokePath();
+        // tacche dei giri contati sul muro... no, sul braccio
+        g.lineStyle(1, 0xfacc15, 0.6);
+        for (let i = 0; i < 4; i++) {
+            g.beginPath();
+            g.moveTo(23 + i * 1.5, 28); g.lineTo(23 + i * 1.5, 32);
+            g.strokePath();
+        }
+        glow(g, 12, 10, 1.6, 0xfacc15, 0.4);
+        glow(g, 18, 10, 1.6, 0xfacc15, 0.4);
+    });
+
+    // guastalla: ha smesso di contare al giro 300
+    make(scene, 'npc-guastalla', 32, 44, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(16, 30, 20, 24);
+        // testa reclinata: si è arreso al loop
+        g.fillCircle(22, 12, 7);
+        g.lineStyle(2.5, INK, 1);
+        g.beginPath();
+        g.moveTo(10, 38); g.lineTo(8, 43);
+        g.moveTo(22, 38); g.lineTo(24, 43);
+        g.strokePath();
+        // occhi spenti
+        g.fillStyle(0x3a4252, 1);
+        g.fillCircle(20, 11, 1.5);
+        g.fillCircle(25, 11, 1.5);
+        glow(g, 16, 24, 1.8, 0xfacc15, 0.25);
+    });
+
+    // studente della ruhra: accovacciato, sopravvive ad analisi 1
+    make(scene, 'npc-studente', 30, 36, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(15, 24, 20, 20);
+        g.fillCircle(15, 10, 7);
+        // libro come scudo
+        g.fillStyle(0x16202e, 1);
+        g.fillRect(6, 16, 18, 12);
+        g.lineStyle(1, 0x60a5fa, 0.6);
+        g.strokeRect(6, 16, 18, 12);
+        g.beginPath();
+        g.moveTo(15, 16); g.lineTo(15, 28);
+        g.strokePath();
+        glow(g, 12, 9, 1.5, 0x60a5fa, 0.4);
+        glow(g, 18, 9, 1.5, 0x60a5fa, 0.4);
+    });
+
+    // commissario romero: il caso analisi 1 è ancora aperto
+    make(scene, 'npc-romero', 32, 50, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(16, 33, 20, 28);
+        g.fillCircle(16, 13, 8);
+        // cappello da commissario
+        g.fillStyle(0x1a2230, 1);
+        g.fillEllipse(16, 8, 20, 5);
+        g.fillRoundedRect(10, 1, 12, 8, 3);
+        // taccuino degli indizi
+        g.fillStyle(0xe5e7eb, 0.7);
+        g.fillRect(24, 24, 6, 9);
+        g.lineStyle(2.5, INK, 1);
+        g.beginPath();
+        g.moveTo(10, 40); g.lineTo(9, 48);
+        g.moveTo(22, 40); g.lineTo(23, 48);
+        g.strokePath();
+        glow(g, 13, 13, 1.6, 0x60a5fa, 0.45);
+        glow(g, 19, 13, 1.6, 0x60a5fa, 0.45);
+    });
+
+    // vavleeh: trovato nella tana. il realm lo ricorda così
+    make(scene, 'npc-vavleeh', 44, 22, (g) => {
+        // sagoma a terra, contorno da scena del crimine
+        g.lineStyle(1.5, 0xe5e7eb, 0.5);
+        g.strokeEllipse(22, 14, 38, 12);
+        g.fillStyle(0x0c0c12, 1);
+        g.fillEllipse(22, 14, 34, 9);
+        g.fillCircle(36, 11, 5);
+        // un glow flebile: qualcosa di lui brilla ancora
+        glow(g, 36, 10, 1.5, 0xc084fc, 0.3);
     });
 
     // lametta: un dio fatto a lametta, letteralmente
@@ -460,6 +616,87 @@ function bosses(scene: Phaser.Scene): void {
         glow(g, 37, 14, 3.2, 0xfb923c, 0.6);
     });
 
+    // lochef85 in versione caccia: grembiule, mattarello, intenzioni pessime
+    make(scene, 'boss-lochef', 64, 80, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(30, 50, 40, 52);
+        g.fillCircle(30, 18, 12);
+        // cappello da chef gigante
+        g.fillStyle(0x26262e, 1);
+        g.fillRoundedRect(18, 0, 24, 16, 6);
+        g.fillRect(18, 13, 24, 4);
+        // grembiule macchiato
+        g.fillStyle(0x1f1218, 1);
+        g.fillRoundedRect(18, 38, 24, 30, 4);
+        glow(g, 24, 48, 1.6, 0xf87171, 0.4);
+        glow(g, 34, 58, 1.4, 0xf87171, 0.35);
+        // mattarello brandito
+        g.lineStyle(4, 0x2b2417, 1);
+        g.beginPath();
+        g.moveTo(50, 52); g.lineTo(62, 22);
+        g.strokePath();
+        // occhi a cuore. il problema è proprio quello.
+        glow(g, 25, 18, 2.6, 0xf87171, 0.75);
+        glow(g, 35, 18, 2.6, 0xf87171, 0.75);
+        // sorriso larghissimo
+        g.lineStyle(2, 0x4a2530, 1);
+        g.beginPath();
+        g.arc(30, 21, 6, 0.1, Math.PI - 0.1);
+        g.strokePath();
+    });
+
+    // l'ombra: il geco visto dalla tommasorveglianza. ha studiato ogni tua mossa
+    make(scene, 'boss-ombra', 48, 56, (g) => {
+        // silhouette di geco, ma sbagliata
+        g.fillStyle(0x05080c, 1);
+        g.fillEllipse(24, 34, 30, 26);
+        g.fillCircle(24, 14, 10);
+        // coda da geco
+        g.lineStyle(4, 0x05080c, 1);
+        g.beginPath();
+        g.moveTo(10, 40); g.lineTo(2, 50);
+        g.strokePath();
+        // scanlines: è fatta di registrazioni
+        g.lineStyle(1, 0x22d3ee, 0.25);
+        for (let y = 8; y < 50; y += 5) {
+            g.beginPath();
+            g.moveTo(6, y); g.lineTo(42, y);
+            g.strokePath();
+        }
+        // occhi rec
+        glow(g, 20, 13, 2.2, 0x22d3ee, 0.8);
+        glow(g, 28, 13, 2.2, 0x22d3ee, 0.8);
+        g.lineStyle(1, 0x22d3ee, 0.6);
+        g.strokeEllipse(24, 34, 30, 26);
+    });
+
+    // ticummi in modalità combattimento: la sedia volante fa sul serio
+    make(scene, 'boss-ticummi', 84, 72, (g) => {
+        // propulsori della sedia
+        glow(g, 22, 64, 4, 0x60a5fa, 0.55);
+        glow(g, 58, 64, 4, 0x60a5fa, 0.55);
+        // sedia high tech
+        g.fillStyle(0x141820, 1);
+        g.fillRoundedRect(10, 38, 62, 16, 6);
+        g.fillRoundedRect(12, 8, 14, 32, 4);
+        g.lineStyle(1.5, 0x2a4a68, 1);
+        g.strokeRoundedRect(10, 38, 62, 16, 6);
+        // lui, sempre comodo, circondato di schermi
+        g.fillStyle(INK, 1);
+        g.fillEllipse(44, 28, 24, 24);
+        g.fillCircle(47, 10, 8);
+        // tre monitor della tommasorveglianza
+        for (const [x, y] of [[60, 4], [68, 18], [62, 32]] as const) {
+            g.fillStyle(0x0b0d12, 1);
+            g.fillRect(x, y, 13, 9);
+            g.fillStyle(0x22d3ee, 0.55);
+            g.fillRect(x + 1, y + 1, 11, 7);
+        }
+        // occhiali che riflettono i grafici
+        glow(g, 44, 9, 1.8, 0x22d3ee, 0.6);
+        glow(g, 50, 9, 1.8, 0x22d3ee, 0.6);
+    });
+
     // pedro: l'ia glitchata. deve fare paura.
     make(scene, 'boss-pedro', 76, 96, (g) => {
         // torso angolare spezzato
@@ -578,6 +815,25 @@ function objects(scene: Phaser.Scene): void {
         w.moveTo(6, 14); w.lineTo(25, 32);
         w.moveTo(30, 14); w.lineTo(11, 32);
         w.strokePath();
+    });
+
+    // cuore del realm: +1 tacca di vita per sempre
+    make(scene, 'cuore', 30, 30, (c) => {
+        glow(c, 15, 15, 6, 0xf87171, 0.35);
+        c.fillStyle(0x2a0f14, 1);
+        c.fillCircle(10, 11, 6);
+        c.fillCircle(20, 11, 6);
+        c.fillTriangle(4.5, 14, 25.5, 14, 15, 27);
+        c.lineStyle(1.5, 0xf87171, 0.9);
+        c.beginPath();
+        c.arc(10, 11, 6, Math.PI * 0.8, Math.PI * 1.95);
+        c.strokePath();
+        c.beginPath();
+        c.arc(20, 11, 6, Math.PI * 1.05, Math.PI * 2.2);
+        c.strokePath();
+        c.beginPath();
+        c.moveTo(4.5, 14); c.lineTo(15, 27); c.lineTo(25.5, 14);
+        c.strokePath();
     });
 
     // stele della lore

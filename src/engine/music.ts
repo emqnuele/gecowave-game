@@ -59,6 +59,12 @@ class MusicManager {
                 return 'assets/music/Tommasorveglianza.mp3';
             case 'ruhra':
                 return "assets/music/Piema's OST 1.mp3";
+            case 'tana':
+                return "assets/music/lochef85's OST 1.mp3";
+            case 'sorveglianza':
+                return 'assets/music/Tommasorveglianza.mp3';
+            case 'cantina':
+                return "assets/music/Lametta MC's OST 2.mp3";
             case 'nucleo':
                 return "assets/music/Until Here's OST.mp3";
             default:
@@ -71,6 +77,10 @@ class MusicManager {
         if (name.includes('guggu')) {
             return "assets/music/Ivan Maggini's OST 1.mp3";
         }
+        // prima degli altri check: il boss finale si chiama 'piema & lametta'
+        if (name.includes('piema') || name.includes('dei')) {
+            return 'assets/music/Destornillador-2.mp3';
+        }
         if (name.includes('breccio') || name.includes('lametta')) {
             return "assets/music/Lametta MC's OST 2.mp3";
         }
@@ -80,11 +90,17 @@ class MusicManager {
         if (name.includes('riba')) {
             return "assets/music/Piema's OST 2.mp3";
         }
-        if (name.includes('pedro')) {
+        if (name.includes('lochef')) {
+            return "assets/music/lochef85's OST 2.mp3";
+        }
+        if (name.includes('ombra')) {
+            return 'assets/music/Fragment Time.mp3';
+        }
+        if (name.includes('ticummi')) {
             return 'assets/music/Frammenti Infranti.mp3';
         }
-        if (name.includes('piema') || name.includes('dei')) {
-            return 'assets/music/Destornillador-2.mp3';
+        if (name.includes('pedro')) {
+            return 'assets/music/Frammenti Infranti.mp3';
         }
         return 'assets/music/GECOWAVE.mp3';
     }

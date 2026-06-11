@@ -53,6 +53,10 @@ export const COMBAT = {
     analisiTickMs: 320,
     analisiRadius: 120,
     analisiCooldownMs: 8000,
+    /** tommasoscudo: bolla che riflette i proiettili */
+    scudoCost: 20,
+    scudoDurationMs: 2200,
+    scudoCooldownMs: 6500,
     /** rigenerazione del rio merdone */
     regenIdleMs: 5000,
     regenTickMs: 6000,

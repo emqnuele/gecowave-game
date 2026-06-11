@@ -25,6 +25,7 @@ const CONTROLS: [string, string][] = [
     ['colpo risonante (carica)', 'F tieni premuto'],
     ['riflesso distorto', 'G'],
     ['analisi 1', 'H'],
+    ['tommasoscudo', 'R'],
     ['cura (tieni premuto)', 'Q'],
     ['interagisci', 'E'],
     ['pausa', 'ESC'],

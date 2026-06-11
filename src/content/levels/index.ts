@@ -5,15 +5,18 @@ import { santuario } from './level03-santuario';
 import { tecnokill } from './level04-tecnokill';
 import { rio } from './level05-rio';
 import { ruhra } from './level06-ruhra';
-import { nucleo } from './level07-nucleo';
+import { tana } from './level07-tana';
+import { sorveglianza } from './level08-sorveglianza';
+import { cantina } from './level09-cantina';
+import { nucleo } from './level10-nucleo';
 
 /* per aggiungere un capitolo: crea un file qui accanto, importalo
    e aggiungilo alla lista. collega le zone col campo `next`. */
 
-const all: LevelDef[] = [perduta, bus, santuario, tecnokill, rio, ruhra, nucleo];
+const all: LevelDef[] = [perduta, bus, santuario, tecnokill, rio, ruhra, tana, sorveglianza, cantina, nucleo];
 
 export const LEVELS: Record<string, LevelDef> = Object.fromEntries(all.map((l) => [l.id, l]));
 
 export const FIRST_LEVEL = perduta.id;
 
-export const TOTAL_FRAGMENTS = 6;
+export const TOTAL_FRAGMENTS = 7;
