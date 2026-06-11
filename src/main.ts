@@ -63,8 +63,9 @@ async function boot(): Promise<void> {
     const controller: GameController = {
         newGame() {
             state.reset();
-            screens.closeOverlay();
-            screens.storySequence(INTRO_CARDS, () => startLevel(FIRST_LEVEL, null));
+            screens.showCharacterCreation(() => {
+                screens.storySequence(INTRO_CARDS, () => startLevel(FIRST_LEVEL, null));
+            });
         },
         continueGame() {
             screens.closeOverlay();

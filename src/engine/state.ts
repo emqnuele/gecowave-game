@@ -1,3 +1,4 @@
+import { COMBAT } from '../config';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
 
 const SAVE_KEY = 'gecowave-save-v2';
@@ -17,6 +18,12 @@ const defaultSave = (): SaveData => ({
     collectedLore: [],
     flags: [],
     endingSeen: null,
+    playerName: 'Geco',
+    stats: {
+        forza: 0,
+        costituzione: 0,
+        flusso: 0,
+    },
 });
 
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
@@ -37,10 +44,23 @@ class GameState {
         } catch {
             // storage corrotto o bloccato: si riparte da zero
         }
+        this.resetRun();
     }
 
     get hasSave(): boolean {
         return localStorage.getItem(SAVE_KEY) !== null;
+    }
+
+    get maxHp(): number {
+        return 5 + this.save.stats.costituzione;
+    }
+
+    get maxFlow(): number {
+        return 99 + this.save.stats.flusso * 10;
+    }
+
+    get risonanteDamage(): number {
+        return COMBAT.risonanteDamage * (1 + this.save.stats.flusso * 0.1);
     }
 
     get damageMult(): number {
@@ -48,7 +68,7 @@ class GameState {
     }
 
     resetRun(): void {
-        this.run = { hp: 5, flow: 0, trenbolone: false, smela: false };
+        this.run = { hp: this.maxHp, flow: 0, trenbolone: false, smela: false };
     }
 
     persist(): void {

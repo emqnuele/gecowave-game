@@ -73,6 +73,12 @@ export interface SaveData {
     /** flag di storia: ivan, tommasorveglianza, dispositivo, smela... */
     flags: string[];
     endingSeen: string | null;
+    playerName: string;
+    stats: {
+        forza: number;
+        costituzione: number;
+        flusso: number;
+    };
 }
 
 export interface DroppedBarre {

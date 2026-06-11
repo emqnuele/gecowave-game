@@ -460,4 +460,112 @@ export class Screens {
         };
         showCard();
     }
+
+    showCharacterCreation(onConfirm: () => void): void {
+        const s = this.openOverlay('screen opaque char-creation-screen');
+        this.setZone('yellow');
+
+        const panel = el('div', 'glass-panel glass-acid-gold char-sheet-panel');
+        panel.append(el('h2', 'font-crisis char-title', 'CREAZIONE GECO'));
+
+        const sub = el('div', 'char-subtitle font-marker');
+        sub.textContent = 'scegli il nome del geco e alloca i punti';
+        panel.append(sub);
+
+        const nameRow = el('div', 'char-name-row glass-chip');
+        const nameLabel = el('span', 'label');
+        nameLabel.textContent = 'nome';
+        nameRow.append(nameLabel);
+
+        const input = el('input', 'char-name-input') as HTMLInputElement;
+        input.type = 'text';
+        input.value = 'Geco';
+        input.maxLength = 12;
+        input.placeholder = 'Geco';
+        nameRow.append(input);
+        panel.append(nameRow);
+
+        let availablePoints = 10;
+        const pointsEl = el('div', 'char-points-counter sticker glass-acid-yellow', `punti da assegnare: ${availablePoints}`);
+        panel.append(pointsEl);
+
+        const stats = {
+            forza: 0,
+            costituzione: 0,
+            flusso: 0,
+        };
+
+        const createRow = (key: 'forza' | 'costituzione' | 'flusso', label: string, desc: string) => {
+            const row = el('div', 'char-stat-row glass-chip');
+            const info = el('div', 'char-stat-info');
+
+            const nameEl = el('span', 'char-stat-name font-marker', label);
+            const descEl = el('span', 'char-stat-desc', desc);
+            info.append(nameEl, descEl);
+
+            const controls = el('div', 'char-stat-controls');
+            const btnMinus = el('button', 'char-stat-btn sticker', '-');
+            const valEl = el('span', 'char-stat-value font-martian', '0');
+            const btnPlus = el('button', 'char-stat-btn sticker', '+');
+
+            const update = () => {
+                valEl.textContent = String(stats[key]);
+                btnMinus.classList.toggle('disabled', stats[key] === 0);
+                btnPlus.classList.toggle('disabled', availablePoints === 0 || stats[key] === 10);
+            };
+
+            btnMinus.addEventListener('click', () => {
+                if (stats[key] > 0) {
+                    stats[key]--;
+                    availablePoints++;
+                    pointsEl.textContent = `punti da assegnare: ${availablePoints}`;
+                    sfx.ui();
+                    updateAll();
+                }
+            });
+
+            btnPlus.addEventListener('click', () => {
+                if (availablePoints > 0 && stats[key] < 10) {
+                    stats[key]++;
+                    availablePoints--;
+                    pointsEl.textContent = `punti da assegnare: ${availablePoints}`;
+                    sfx.ui();
+                    updateAll();
+                }
+            });
+
+            controls.append(btnMinus, valEl, btnPlus);
+            row.append(info, controls);
+            panel.append(row);
+
+            return update;
+        };
+
+        const updForza = createRow('forza', 'forza', 'danno fisico +10% a punto');
+        const updCost = createRow('costituzione', 'costituzione', 'punti vita massimi +1 a punto');
+        const updFlus = createRow('flusso', 'flusso', 'flusso max +10 e danno risonante +10% a punto');
+
+        const updateAll = () => {
+            updForza();
+            updCost();
+            updFlus();
+        };
+
+        updateAll();
+
+        const btnConfirm = this.btn('conferma', -1.2, () => {
+            const finalName = input.value.trim() || 'Geco';
+            state.save.playerName = finalName;
+            state.save.stats.forza = stats.forza;
+            state.save.stats.costituzione = stats.costituzione;
+            state.save.stats.flusso = stats.flusso;
+            state.persist();
+            state.resetRun();
+            this.closeOverlay();
+            onConfirm();
+        }, 'glass-acid-gold');
+
+        panel.append(btnConfirm);
+        s.append(panel);
+    }
 }

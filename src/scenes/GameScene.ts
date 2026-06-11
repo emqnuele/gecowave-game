@@ -488,7 +488,7 @@ export class GameScene extends Phaser.Scene {
             if (hitSet.has(enemy)) return;
             hitSet.add(enemy);
             bullet.setData('hit', hitSet);
-            enemy.takeDamage(COMBAT.risonanteDamage * state.damageMult, bullet.x);
+            enemy.takeDamage(state.risonanteDamage * state.damageMult, bullet.x);
             this.player.onAttackHit();
         });
 
@@ -533,7 +533,7 @@ export class GameScene extends Phaser.Scene {
             this.physics.add.overlap(this.playerProjectiles, this.boss, (obj, proj) => {
                 const bullet = (obj === this.boss ? proj : obj) as Phaser.Physics.Arcade.Sprite;
                 if (!this.boss || !bullet.active) return;
-                if (this.boss.takeDamage(COMBAT.risonanteDamage * state.damageMult, bullet.x)) {
+                if (this.boss.takeDamage(state.risonanteDamage * state.damageMult, bullet.x)) {
                     this.player.onAttackHit();
                 }
             });
@@ -1227,7 +1227,7 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.playerProjectiles, this.boss, (obj, proj) => {
             const bullet = (obj === this.boss ? proj : obj) as Phaser.Physics.Arcade.Sprite;
             if (!this.boss || !bullet.active) return;
-            if (this.boss.takeDamage(COMBAT.risonanteDamage * state.damageMult, bullet.x)) {
+            if (this.boss.takeDamage(state.risonanteDamage * state.damageMult, bullet.x)) {
                 this.player.onAttackHit();
             }
         });
@@ -1253,11 +1253,11 @@ export class GameScene extends Phaser.Scene {
         state.save.levelId = this.def.id;
         state.save.checkpointId = id;
         state.persist();
-        state.run.hp = COMBAT.maxHp;
+        state.run.hp = state.maxHp;
         sfx.checkpoint();
         this.checkpointSprites.forEach((m) => m.clearTint());
         mic.setTint(0x4ade80);
-        bus.emit('hp-changed', { hp: state.run.hp, maxHp: COMBAT.maxHp, hurt: false });
+        bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
         bus.emit('toast', { text: TOASTS.checkpoint });
         this.add.particles(mic.x, mic.y - 10, 'p-spark', {
             speed: { min: 60, max: 180 },

@@ -119,8 +119,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     private emitVitals(hurt: boolean): void {
-        bus.emit('hp-changed', { hp: state.run.hp, maxHp: COMBAT.maxHp, hurt });
-        bus.emit('flow-changed', { flow: state.run.flow, maxFlow: COMBAT.maxFlow });
+        bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt });
+        bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
     }
 
     update(_time: number, delta: number): void {
@@ -276,7 +276,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        if (immune && state.run.hp < COMBAT.maxHp && now - this.lastDamageAt > COMBAT.regenIdleMs) {
+        if (immune && state.run.hp < state.maxHp && now - this.lastDamageAt > COMBAT.regenIdleMs) {
             if (this.nextRegenAt === 0) this.nextRegenAt = now + COMBAT.regenTickMs;
             if (now >= this.nextRegenAt) {
                 this.nextRegenAt = now + COMBAT.regenTickMs;
@@ -334,7 +334,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     /** danno del colpo corrente: il terzo della combo spacca */
     get attackDamage(): number {
         const base = this.comboStep === 0 ? 2 : 1;
-        return base * state.damageMult;
+        return base * state.damageMult * (1 + state.save.stats.forza * 0.1);
     }
 
     private updateRisonante(now: number): void {
@@ -378,7 +378,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     private updateHeal(delta: number, downHeld: boolean): void {
         const canHeal = this.grounded && !this.attackActive && !this.charging && state.run.flow >= COMBAT.healCost
-            && state.run.hp < COMBAT.maxHp && this.keys.heal.isDown && !downHeld;
+            && state.run.hp < state.maxHp && this.keys.heal.isDown && !downHeld;
         if (canHeal) {
             this.healHeldMs += delta;
             this.setTint(0x4ade80);
@@ -401,7 +401,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     onAttackHit(): void {
         const body = this.body as Phaser.Physics.Arcade.Body;
         sfx.hit();
-        state.run.flow = Math.min(COMBAT.maxFlow, state.run.flow + COMBAT.flowPerHit);
+        state.run.flow = Math.min(state.maxFlow, state.run.flow + COMBAT.flowPerHit);
         this.emitVitals(false);
         if (this.attackDir === 'down') {
             // pogo: rimbalzo sul colpo dal basso

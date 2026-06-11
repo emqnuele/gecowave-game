@@ -1,6 +1,7 @@
-import { COMBAT, ZONE_CSS } from '../config';
+import { ZONE_CSS } from '../config';
 import { ABILITY_CARDS } from '../content/story';
 import { bus } from '../engine/events';
+import { state } from '../engine/state';
 import type { AbilityId } from '../types';
 import { el } from './dom';
 
@@ -39,9 +40,9 @@ export class Hud {
 
         this.root.append(topleft, this.barre, this.fragments, this.zone, this.waves);
 
-        for (let i = 0; i < COMBAT.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
+        for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
-        bus.on('hp-changed', ({ hp, hurt }) => this.setHp(hp, hurt));
+        bus.on('hp-changed', ({ hp, maxHp, hurt }) => this.setHp(hp, maxHp, hurt));
         bus.on('flow-changed', ({ flow, maxFlow }) => {
             this.flowBar.style.width = `${(flow / maxFlow) * 100}%`;
         });
@@ -70,7 +71,13 @@ export class Hud {
         this.setBoss(null);
     }
 
-    private setHp(hp: number, hurt: boolean): void {
+    private setHp(hp: number, maxHp: number, hurt: boolean): void {
+        if (this.hpRow.children.length !== maxHp) {
+            this.hpRow.replaceChildren();
+            for (let i = 0; i < maxHp; i++) {
+                this.hpRow.append(el('div', 'hp-tick'));
+            }
+        }
         const ticks = Array.from(this.hpRow.children) as HTMLElement[];
         ticks.forEach((t, i) => {
             const lost = i >= hp;
