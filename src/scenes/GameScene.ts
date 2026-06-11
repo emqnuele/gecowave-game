@@ -425,16 +425,16 @@ export class GameScene extends Phaser.Scene {
                 this.startDialogue(id, () => {
                     if (state.hasFlag('tommasorveglianza')) return;
                     bus.emit('choice-show', {
-                        title: 'tommasorveglianza: 9 barre. assolutamente sicura. 👍',
-                        options: [{ label: 'compra (9 barre)' }, { label: 'rifiuta l\'affare' }],
+                        title: 'tommasorveglianza: 133 barre. assolutamente sicura. 👍',
+                        options: [{ label: 'compra (133 barre)' }, { label: 'rifiuta l\'affare' }],
                         onPick: (i) => {
-                            if (i === 0 && state.save.barre >= 9) {
-                                state.save.barre -= 9;
+                            if (i === 0 && state.save.barre >= 133) {
+                                state.save.barre -= 133;
                                 state.setFlag('tommasorveglianza');
                                 bus.emit('barre-changed', { barre: state.save.barre, gained: false });
                                 bus.emit('toast', { text: 'tommasorveglianza attiva. ti senti osservato, ma protetto.' });
                             } else if (i === 0) {
-                                bus.emit('toast', { text: 'non hai 9 barre. ticummi ti guarda con pietà.' });
+                                bus.emit('toast', { text: 'non hai 133 barre. ticummi ti guarda con pietà.' });
                             }
                         },
                     });
@@ -1559,25 +1559,60 @@ export class GameScene extends Phaser.Scene {
                 this.startDialogue(a.intro);
                 return;
             }
-            if (state.hasFlag('tommasorveglianza')) {
-                this.startDialogue(TOMMASO_BLOCCA[i % TOMMASO_BLOCCA.length]);
-                return;
-            }
-            this.startDialogue(a.intro, () => this.spawnNotinoAmbush(a.count ?? 1));
+
+            const count = a.count ?? 1;
+            const spawned = this.spawnNotinoAmbush(count);
+
+            this.player.stun(999999);
+            spawned.forEach((e) => e.stun(999999));
+
+            this.time.delayedCall(800, () => {
+                const dialogueId = state.hasFlag('tommasorveglianza')
+                    ? TOMMASO_BLOCCA[i % TOMMASO_BLOCCA.length]
+                    : a.intro;
+
+                this.startDialogue(dialogueId, () => {
+                    if (state.hasFlag('tommasorveglianza')) {
+                        spawned.forEach((e, idx) => {
+                            (e.body as Phaser.Physics.Arcade.Body).enable = false;
+                            e.setFlipX(false);
+                            this.tweens.add({
+                                targets: e,
+                                x: e.x - 800,
+                                y: e.y - 40,
+                                duration: 1500,
+                                ease: 'Sine.easeInOut',
+                                onComplete: () => {
+                                    e.destroy();
+                                    if (idx === spawned.length - 1) {
+                                        this.player.stun(0);
+                                    }
+                                },
+                            });
+                        });
+                    } else {
+                        this.player.stun(0);
+                        spawned.forEach((e) => e.stun(0));
+                    }
+                });
+            });
             return;
         }
     }
 
     /** notino senza wave: piomba dall'alto, saltella, spara, e poi "non perde" */
-    private spawnNotinoAmbush(count: number): void {
+    private spawnNotinoAmbush(count: number): Enemy[] {
         this.cameras.main.flash(120, 168, 85, 247);
         this.shake(180, 0.006);
         sfx.bossRoar();
+        const spawned: Enemy[] = [];
         for (let i = 0; i < count; i++) {
             const dir = i % 2 === 0 ? 1 : -1;
             const e = this.spawnEnemy('notino-mini', this.player.x + dir * (300 + i * 60), this.player.y - 140);
             this.physics.add.collider(e, this.level.layer);
+            spawned.push(e);
         }
+        return spawned;
     }
 
     /* ---------- il patto con pedro ---------- */

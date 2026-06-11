@@ -176,4 +176,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         });
         this.destroy();
     }
+
+    stun(duration: number): void {
+        this.stunnedUntil = this.scene.time.now + duration;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        body.setVelocity(0, 0);
+    }
 }

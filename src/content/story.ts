@@ -229,7 +229,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     /* ---------- capitolo 5: il trenbolone e il rio merdone ---------- */
     'ticummi-offerta': [
         { speaker: 'ticummi', color: 'blue', text: 'psst. ehi. tu. quello col trenbolone in circolo. ho visto tutto, io vedo sempre tutto. notino ti sta cercando per rubarti i frammenti.' },
-        { speaker: 'ticummi', color: 'blue', text: 'per soli 9 barre ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
+        { speaker: 'ticummi', color: 'blue', text: 'per soli 133 barre ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
     ],
     'tommaso-blocca': [
         { speaker: 'tommasorveglianza', color: 'blue', text: 'MINACCIA RILEVATA: bambino armato in avvicinamento. respinto. la tommasorveglianza la ringrazia per la fiducia. 🫶' },

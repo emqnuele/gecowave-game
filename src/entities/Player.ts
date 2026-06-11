@@ -456,6 +456,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.scene.events.emit('player-dead');
     }
 
+    stun(duration: number): void {
+        this.stunnedUntil = this.scene.time.now + duration;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        body.setAccelerationX(0);
+        body.setVelocity(0, 0);
+    }
+
     /* ---------- visuale ---------- */
 
     private updateAnimation(body: Phaser.Physics.Arcade.Body): void {
