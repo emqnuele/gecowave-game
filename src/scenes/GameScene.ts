@@ -450,7 +450,9 @@ export class GameScene extends Phaser.Scene {
                                 state.save.barre -= 15;
                                 bus.emit('barre-changed', { barre: state.save.barre, gained: false });
                                 state.run.smela = true;
-                                this.startDialogue('smela-truffa');
+                                this.startDialogue('smela-truffa', () => {
+                                    this.playSmelaPoisonEffect();
+                                });
                                 bus.emit('toast', { text: TOASTS.smela });
                             } else if (i === 0) {
                                 bus.emit('toast', { text: 'non hai 15 barre. smela perde interesse immediatamente.' });
@@ -1545,6 +1547,64 @@ export class GameScene extends Phaser.Scene {
         } else {
             bus.emit('toast', { text: 'il fiume ti ripulisce. di nuovo. senza giudicare. quasi.' });
         }
+    }
+
+    private playSmelaPoisonEffect(): void {
+        this.player.stun(999999);
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x000000, 1);
+        overlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
+        overlay.setScrollFactor(0);
+        overlay.setDepth(999);
+        overlay.setAlpha(0);
+
+        this.tweens.add({
+            targets: overlay,
+            alpha: { from: 0, to: 0.9 },
+            duration: 5000,
+            ease: 'Quad.easeIn',
+        });
+
+        const zoomTween = this.tweens.add({
+            targets: this.cameras.main,
+            zoom: 1.25,
+            duration: 1200,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+        });
+
+        const rotationTween = this.tweens.add({
+            targets: this.cameras.main,
+            rotation: 0.08,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+        });
+
+        let shakeIntensity = 0.002;
+        const shakeTimer = this.time.addEvent({
+            delay: 150,
+            callback: () => {
+                shakeIntensity += 0.0012;
+                this.shake(120, shakeIntensity);
+            },
+            repeat: 30,
+        });
+
+        this.time.delayedCall(5000, () => {
+            zoomTween.remove();
+            rotationTween.remove();
+            shakeTimer.destroy();
+            overlay.destroy();
+
+            this.cameras.main.setZoom(1);
+            this.cameras.main.setRotation(0);
+
+            this.player.stun(0);
+            this.onPlayerDead();
+        });
     }
 
     private updateAmbush(): void {
