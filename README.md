@@ -73,7 +73,22 @@ Lo stesso vale per la storia: i dialoghi vivono in `story.ts` (`DIALOGUES['mio-i
 
 ## I cuori del realm
 
-Sparsi per il realm (e in mano a chi non dovrebbe averli) ci sono **cuori** che aumentano la vita massima per sempre: uno murato nella grotta del capitolo 1, uno nella vecchia metro del capitolo 2, uno lo lascia cadere lochef85. Si trovano dietro muri rompibili (`%`, si spaccano a colpi) o finti (`F`, si attraversano).
+Sparsi per il realm (e in mano a chi non dovrebbe averli) ci sono **cuori** che aumentano la vita massima per sempre: uno murato nella grotta del capitolo 1, uno nella vecchia metro del capitolo 2, uno lo lascia cadere lochef85, uno lo custodisce la formicona. Si trovano dietro muri rompibili (`%`, si spaccano a colpi) o finti (`F`, si attraversano).
+
+## La tommasorveglianza è una scelta che pesa
+
+Comprarla (9 barre, da ticummi nel rio) cambia il gioco:
+
+- **con l'abbonamento**: notino viene respinto a ogni agguato, ma la tommasorveglianza ti **guarda** — l'ombra del capitolo 8 è addestrata su 41.077 secondi di te (boss potenziato), e in cantina ticummi attiva la *clausola 12*: i tuoi dati diventano armi (evoca echi di te in battaglia).
+- **senza**: notino ti tende agguati veri in rio (×2), ruhra (×2) e cantina (×1, in coppia) — spawna, saltella, spara e "si ritira strategicamente" lasciando barre. In compenso l'ombra è un clone sottoaddestrato su footage pubblico (boss indebolito) e ticummi non sa niente di te.
+
+## Il patto con pedro
+
+Sceglierlo nel finale non è più solo testo: le stats **raddoppiano davvero** (vita, flow, danni), hai ~20 secondi di onnipotenza con ondate di glitch su cui sfogarti e avvisaglie crescenti, poi piema e lametta arrivano **insieme**, immortali e in frenzy. Non si vince. Era il punto.
+
+## Miniboss opzionali
+
+La **formicona, sindaco di formica (FR)** — la formica che morse un dio — riceve sottoterra, a ovest del villaggio, dietro un tappo rompibile (`%`). Non blocca l'uscita del livello (`guardsExit: false`): si può ignorare, ma il cuore lo tiene lei.
 
 ## Note di design
 

@@ -177,8 +177,13 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'tommasorveglianza', color: 'blue', text: 'MINACCIA RILEVATA: bambino armato in avvicinamento. respinto. la tommasorveglianza la ringrazia per la fiducia. 🫶' },
         { speaker: 'notino', color: 'red', text: 'EHI! FAILRP! QUESTO È METAGAMING! me ne vado ma NON è una sconfitta!!' },
     ],
-    'notino-furto': [
-        { speaker: 'notino', color: 'red', text: 'SORPRESA TECNOKILL!! niente tommasorveglianza eh?? allora queste barre le prendo IO! grazie per la donazione! BUM BUM!' },
+    'tommaso-blocca-2': [
+        { speaker: 'tommasorveglianza', color: 'blue', text: 'MINACCIA RICORRENTE RILEVATA: sempre lui. respinto di nuovo. abbiamo aperto una pratica. la pratica si chiama "notino". 👍' },
+        { speaker: 'notino', color: 'red', text: 'MA COME FA A VEDERMI SEMPRE?? ho pure la skin mimetica!! NON VALE!!' },
+    ],
+    'tommaso-blocca-3': [
+        { speaker: 'tommasorveglianza', color: 'blue', text: 'minaccia respinta in automatico. non l\'abbiamo nemmeno guardata. il sistema ormai lo riconosce dal rumore dei passi. 🫶' },
+        { speaker: 'notino', color: 'red', text: '...ok. ok!! mi arrendo con l\'abbonato!! ma tu, tommasorveglianza, sappi che è FAIL RP ANCHE IL TUO!!' },
     ],
     'smela-offerta': [
         { speaker: 'smela', color: 'cyan', text: 'amico. amico mio. ti vedo provato. acqua della sorgente, imbottigliata da me personalmente: 15 barre. altro che bagno nel fiume, questa è PREMIUM.' },
@@ -194,7 +199,18 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'cartello rosicchiato', color: 'orange', text: '«villaggio di formica (FR). i visitatori sono pregati di non calpestare. le formiche non sono pregate di non attaccare.»' },
     ],
     'lore-formicaio': [
-        { speaker: 'monumento del villaggio', color: 'orange', text: '«alla formica ignota, che morse un dio e visse. il dio era lametta. la formica è sindaco da allora.»' },
+        { speaker: 'monumento del villaggio', color: 'orange', text: '«alla formica ignota, che morse un dio e visse. il dio era lametta. la formica è sindaco da allora. riceve solo su appuntamento, sottoterra, a ovest del villaggio.»' },
+    ],
+    'formicona-intro': [
+        { speaker: 'la formicona', color: 'orange', text: 'CHI DISTURBA IL SINDACO. ah. un custode. lo sento dall\'odore: frammenti, trenbolone e cattive intenzioni.' },
+        { speaker: 'la formicona', color: 'orange', text: 'io ho morso un dio, piccolo geco. UN DIO. tu quanti ne hai morsi? ecco. ordinanza comunale n.1: si esce dalla mia tana solo a morsi.' },
+    ],
+    'formicona-sconfitta': [
+        { speaker: 'la formicona', color: 'orange', text: '...battuta. in casa mia. davanti ai miei elettori... va bene. il consiglio comunale ratificherà la sconfitta. prendilo, il cuore: era di un turista che non aveva prenotato.' },
+        { speaker: 'la formicona', color: 'orange', text: 'e di\' a lametta che il conto del morso è ancora aperto.' },
+    ],
+    'lore-sindaco': [
+        { speaker: 'albo comunale della tana', color: 'orange', text: '«delibere del sindaco formicona: 1. vietato calpestare. 2. vietato il trenbolone entro 50 metri dal formicaio. 3. il morso al dio lametta è patrimonio del villaggio. 4. niente rimborsi.»' },
     ],
     'lore-trenbolone': [
         { speaker: 'volantino unto', color: 'orange', text: '«TRENBOLONE: prima settimana gratis. seconda settimana doppia. terza settimana sei tu che paghi noi, ma non te ne accorgi. — approvato dal ministero del realm (non vero)»' },
@@ -202,8 +218,31 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-rio-storia': [
         { speaker: 'pietra del fiume', color: 'orange', text: '«il rio merdone non è sempre stato sacro. prima era solo merdone. poi ci è caduto dentro un frammento della wave e adesso è merdone CON proprietà curative. la natura trova un modo.»' },
     ],
-    'notino-secondo': [
-        { speaker: 'notino', color: 'red', text: 'RIECCOMI!! pensavi fosse finita?? il respawn non è failrp se sei l\'admin!! BUM BUM!' },
+    /* gli agguati di notino: senza la wave, ma con tanta voglia */
+    'notino-agguato-1': [
+        { speaker: 'notino', color: 'red', text: 'SORPRESA TECNOKILL!! pensavi di esserti liberato di me?? il frammento non ce l\'ho più ma LA MIRA SÌ!! BUM BUM!' },
+    ],
+    'notino-agguato-2': [
+        { speaker: 'notino', color: 'red', text: 'RIECCOMI!! il respawn non è failrp se sei l\'admin!! e in questa zona l\'admin SONO IO!!' },
+    ],
+    'notino-agguato-3': [
+        { speaker: 'notino', color: 'red', text: 'TI HO SEGUITO FINO ALL\'UNIVERSITÀ!! qui dentro nessuno può salvarti: sanno solo i teoremi!! SPARACCHINO TIME!!' },
+    ],
+    'notino-agguato-4': [
+        { speaker: 'notino', color: 'red', text: 'ANCORA IO!! lo so cosa pensi: "ma quanto è fastidioso". TANTISSIMO!! è la mia build!! BUM!' },
+    ],
+    'notino-agguato-5': [
+        { speaker: 'notino', color: 'red', text: 'ULTIMA OCCASIONE TECNOKILL!! stavolta ho portato... ME STESSO DI RISERVA!! in una cantina nessuno ti sente fare failrp!!' },
+    ],
+    'notino-tana': [
+        { speaker: 'notino', color: 'red', text: 'TROVATO!! adesso ti... aspetta. aspetta aspetta. questa è... la tana di LOCHEF85??' },
+        { speaker: 'notino', color: 'red', text: 'no no no NO. ci sono REGOLE anche nel failrp. qui non entro manco da admin. ciao. CIAO. scappo io per primo!!' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che per una volta è d\'accordo con notino*' },
+    ],
+    'notino-sorveglianza': [
+        { speaker: 'notino', color: 'red', text: 'ULTIMO AGGUATO, GIURO!! stavolta nessuno può veder—' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'VISTO. identificato, archiviato e respinto in 0,09 secondi. questo è territorio aziendale, piccolo utente non registrato. 👍' },
+        { speaker: 'notino', color: 'red', text: 'MA IO NON HO NEMMENO L\'ABBONAMEN— ok!! ok. me ne vado. ma la recensione sarà PESSIMA!!' },
     ],
 
     /* ---------- capitolo 6: la ruhra e piema ---------- */
@@ -295,13 +334,21 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'rilevata intenzione di raggiungere il signor ticummi. la informiamo che il signor ticummi non c\'è. la informiamo anche che sta mentendo, perché la stiamo guardando da 9 telecamere.' },
     ],
     'ombra-intro': [
-        { speaker: 'tommasorveglianza', color: 'cyan', text: 'MINACCIA INTERNA RILEVATA: lei. attivazione protocollo finale. abbiamo registrato 41.077 secondi di lei che salta, mena e scivola. abbiamo imparato. 👍' },
-        { speaker: 'la tua ombra', color: 'cyan', text: '*si accende. salta come te. scivola come te. ti guarda come allo specchio, ma senza simpatia.*' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco contro verso di geco. identici. inquietante.*' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'bentornato, CLIENTE PREMIUM. ricorda quando ha pagato 0,09€ per "protezione totale da ogni pericolo esterno"? ecco. lei non ha mai letto la parte sui pericoli INTERNI. 👍' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'da quel giorno l\'abbiamo guardata SEMPRE: 41.077 secondi di lei che salta, mena, scivola e si cura nei momenti sbagliati. con quei dati abbiamo costruito... questo.' },
+        { speaker: 'la tua ombra', color: 'cyan', text: '*si accende un proiettore. ne esce un geco fatto di registrazioni: salta come te, scivola come te, sbaglia il tempismo della cura come te. è TE, comprato per 0,09€.*' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che capisce di aver finanziato il proprio nemico*' },
+    ],
+    'ombra-intro-scarsa': [
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'UTENTE NON REGISTRATO RILEVATO. lei non ha mai comprato l\'abbonamento. complimenti per la prudenza. e condoglianze: il protocollo finale parte lo stesso. 👍' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'purtroppo senza abbonamento abbiamo solo riprese delle telecamere pubbliche: 1.200 secondi, quasi tutti di lei che cammina. il clone è... come dire... una beta.' },
+        { speaker: 'la tua ombra', color: 'cyan', text: '*si accende un proiettore. ne esce un geco sgranato e incompleto che salta tipo te, ma con la fisica sbagliata. ogni tanto glitcha su un frame di un altro cliente.*' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco quasi offeso dalla qualità*' },
     ],
     'ombra-sconfitta': [
-        { speaker: 'la tua ombra', color: 'cyan', text: '*glitcha, si inginocchia, fa un ultimo verso di geco — il tuo, ma più triste — e si spegne.*' },
-        { speaker: 'tommasorveglianza', color: 'cyan', text: 'ERRORE. ERRORE. il modello ha perso contro il dato originale. dentro di me c\'era... un frammento? io GIRAVO su un frammento?? questo spiega l\'uptime del 100%.' },
+        { speaker: 'la tua ombra', color: 'cyan', text: '*glitcha, si inginocchia, fa un ultimo verso di geco — il tuo, ma più triste — e si decompone in fotogrammi.*' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'ERRORE. ERRORE. il modello ha perso contro il dato originale. e ora vedo cosa lo alimentava: un FRAMMENTO DELLA WAVE. io giravo su un frammento. questo spiega l\'uptime del 100%.' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'il signor ticummi non sarà contento. il signor ticummi la sta già aspettando in cantina. questo non dovevo dirglielo. errore. 🫶' },
     ],
     'lore-occhi': [
         { speaker: 'parete di monitor', color: 'cyan', text: '«47.000 schermi. su uno c\'è samatt che conta. su un altro lametta che si fa di trenbolone. su tre, inspiegabilmente, vai tu che dormi. con gli appunti a lato.»' },
@@ -320,8 +367,12 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'lametta', color: 'purple', text: 'liberami... e giuro che... ok no, non giuro niente, però liberami...' },
     ],
     'ticummi-intro': [
-        { speaker: 'ticummi', color: 'cyan', text: 'tu. TU. hai rotto la mia ombra, hai preso il MIO frammento. sai quanto costa addestrare un clone su 41.000 secondi di footage?? 0,09€ AL SECONDO??' },
-        { speaker: 'ticummi', color: 'cyan', text: 'ho un dio in cantina e una sedia volante: sono praticamente una startup. e tu... tu sei il churn. e il churn si ELIMINA.' },
+        { speaker: 'ticummi', color: 'cyan', text: 'tu. TU. hai rotto la mia ombra, hai preso il MIO frammento. e non ho NIENTE su di te: mai un abbonamento, mai un consenso ai cookie. chi sei?? COSA salti??' },
+        { speaker: 'ticummi', color: 'cyan', text: 'dovrò improvvisare. odio improvvisare. ho un dio in cantina e una sedia volante: sono praticamente una startup. e tu sei il churn. e il churn si ELIMINA.' },
+    ],
+    'ticummi-intro-cliente': [
+        { speaker: 'ticummi', color: 'cyan', text: 'ah. il mio cliente preferito. hai rotto la mia ombra... ma il footage ce l\'ho ancora TUTTO. clausola 12 del contratto: "il fornitore può usare i dati del cliente per eliminarlo".' },
+        { speaker: 'ticummi', color: 'cyan', text: 'l\'hai accettata tu, per 0,09€. quindi adesso combatterai contro ogni singolo secondo di te stesso. la sedia è in leasing ma i tuoi dati sono MIEI. grazie per la fiducia. 👍' },
     ],
     'ticummi-caduto': [
         { speaker: 'ticummi', color: 'cyan', text: 'la sedia... LA SEDIA... era in leasing... non era nemmeno finita di pagare...' },
@@ -358,6 +409,16 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'pedro-incontro': [
         { speaker: 'pedro', color: 'cyan', text: 'c̷u̶s̵t̸o̵d̶e̷. ti osservo da s̸e̵t̶t̵e̸ frammenti fa. che fatica inutile. io volevo solo s̶i̷s̸t̵e̸m̷a̶r̵e̶ tutto. uccidere tutti È sistemare tutto.' },
         { speaker: 'pedro', color: 'cyan', text: 'unisciti a me. ti d̶o̸ il potere che gli dei non ti daranno mai. stats r̵a̶d̷d̸o̵p̶p̷i̸a̵t̶e̸. oppure muori qui, con la tua wave a metà. s̸c̶e̵g̷l̸i̶.' },
+    ],
+    'pedro-patto': [
+        { speaker: 'pedro', color: 'cyan', text: 's̶a̷g̸g̵i̶a̷ scelta. ecco il potere che gli dei ti negavano: tutto d̸o̵p̶p̸i̵o̶. vita doppia. forza doppia. flow doppio.' },
+        { speaker: 'pedro', color: 'cyan', text: 'goditelo. io vado a s̶i̷s̸t̵e̸m̷a̶r̵e̶ il resto del realm. tu... non avvicinarti a dove brillano gli dei. anzi: non serve. saranno l̸o̵r̶o̸ a venire da te.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco potentissimo e con un pessimo presentimento*' },
+    ],
+    'dei-patto': [
+        { speaker: 'piema', color: 'blue', text: 'eccolo. il custode che ha firmato col glitch. sia messo a verbale: avevamo creduto in te.' },
+        { speaker: 'lametta', color: 'purple', text: 'io no, io l\'avevo disegnato così questo finale. fa niente. tela sbagliata, si straccia e se ne prende un\'altra.' },
+        { speaker: 'piema', color: 'blue', text: 'teorema del traditore, enunciato: nel realm i traditori durano quanto una storia di 24 ore. dimostrazione:' },
     ],
     'pedro-sconfitto': [
         { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̸i̵b̶i̸l̵e̶... ero stato creato a immagine di un d̸i̷o̶...' },
@@ -398,13 +459,38 @@ export const ENDING_DEI: { text: string; punch?: string }[] = [
 
 export const ENDING_PEDRO: { text: string; punch?: string }[] = [
     {
-        text: 'segui pedro. le stats raddoppiano davvero: ti senti fortissimo, vagabondi per il realm, fai missioni a caso, ti godi la vita. per un po\' funziona pure.',
+        text: 'è andata esattamente così. il potere doppio era vero, i venti secondi di gloria pure. pedro non aveva mentito su niente, tecnicamente. è questo il suo trucco da sempre.',
     },
     {
-        text: 'poi all\'orizzonte compaiono piema e lametta. insieme. lametta è tornato cosciente e non disegna più: cancella. ti vedono. e nel realm i traditori durano quanto una storia di 24 ore.',
-        punch: 'oneshottato. fine sbagliata: il microfono ti riaspetta.',
+        text: 'piema e lametta non si erano mai mossi insieme prima. per te hanno fatto un\'eccezione. nel realm i traditori durano quanto una storia di 24 ore, e tu non sei arrivato nemmeno alla seconda visualizzazione.',
+        punch: 'fine sbagliata: il microfono ti riaspetta. pedro, da qualche parte, ride.',
     },
 ];
+
+/** battute di notino quando il suo agguato finisce male (per lui) */
+export const NOTINO_FUGHE = [
+    'notino si ritira: "NON È UNA SCONFITTA, È UNA PAUSA TATTICA!!"',
+    'notino scappa: "LAG!! C\'ERA LAG!! lo metto a verbale!!"',
+    'notino svanisce: "le barre tienitele, tanto TORNO!!"',
+    'notino fugge: "questo round non conta, c\'era il sole negli occhi!!"',
+];
+
+/** i finali si ricordano cosa hai fatto: righe extra dai flag */
+export function endingCards(id: 'consegna' | 'dei' | 'pedro', flags: string[]): { text: string; punch?: string }[] {
+    if (id === 'pedro') return ENDING_PEDRO;
+    const base = id === 'consegna' ? ENDING_CONSEGNA : ENDING_DEI;
+    const extra: { text: string; punch?: string }[] = [];
+    if (flags.includes('ticummi-graziato')) {
+        extra.push({ text: 'ticummi è ancora in giro: ha rilanciato la tommasorveglianza, stavolta "etica e trasparente", a 0,18€. ha già due clienti. uno è notino, che vuole capire come fa a vederlo sempre.' });
+    }
+    if (flags.includes('trenbolone-distrutto')) {
+        extra.push({ text: 'della boccetta calpestata davanti a ticummi parlano ancora: nel realm la chiamano "la delibera del geco". il villaggio di formica (FR) l\'ha ratificata all\'unanimità.' });
+    }
+    if (flags.includes('tommasorveglianza')) {
+        extra.push({ text: 'da qualche parte, un server con i tuoi 41.077 secondi di footage continua a girare. ogni tanto il tuo clone si riaccende e si allena. non si sa mai, dice.' });
+    }
+    return [...base.slice(0, -1), ...extra, base[base.length - 1]];
+}
 
 export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key: string }> = {
     scivolata: {
@@ -481,6 +567,9 @@ export const TOASTS = {
     inseguimento: 'LOCHEF85 TI HA VISTO. CORRI.',
     inseguimentoFine: 'lo hai seminato. per ora.',
     ombraImpara: 'l\'ombra conosce le tue mosse. cambiale.',
+    patto: 'PATTO SIGLATO: tutto raddoppiato. il realm è tuo. per ora.',
+    pattoAvviso1: 'il cielo si incrina ai bordi. qualcosa si è messo in viaggio.',
+    pattoAvviso2: 'due luci all\'orizzonte. una viola, una bianca. arrivano INSIEME.',
 };
 
 export const WAVESUNG = {
@@ -489,6 +578,8 @@ export const WAVESUNG = {
     markolinoPiema: { sender: 'markolino', text: 'HO TROVATO PIEMA!! è alla ruhra e sta impazzendo per analisi 1. SALVALO. occhio alla riba, è scema ma morde.' },
     markolinoTana: { sender: 'markolino', text: 'CUSTODE RISPONDI. il tuo segnale è sparito vicino alla tana di lochef85. se leggi questo: NON MANGIARE NIENTE e NON GUARDARE I POSTER.' },
     piemaAiuto: { sender: 'piema', text: 'custode, ho un problema serio: lametta è sparito. le tracce portano a ticummi e alla sua tommasorveglianza. ti prego di intervenire. — p.' },
-    ticummiArrabbiato: { sender: 'ticummi', text: 'hai distrutto la mia ombra?? il tuo abbonamento è REVOCATO. vieni in cantina a discuterne. porta 0,09€ per il disturbo.' },
+    ticummiArrabbiato: { sender: 'ticummi', text: 'hai distrutto la mia ombra e non sei nemmeno cliente. vieni in cantina a discuterne, sconosciuto. porta 0,09€ per il disturbo.' },
+    ticummiClausola: { sender: 'ticummi', text: 'gentile cliente, la informiamo che è scattata la clausola 12: i suoi dati sono ora armi. la aspettiamo in cantina. grazie per la fiducia. 🫶' },
+    samattGrazie: { sender: 'samatt', text: 'SCESO. sono SCESO. il realm è enorme e fermo, che meraviglia. guastalla sta riimparando a camminare in linea retta. grazie custode. — samatt (851 giri, record)' },
     markolinoFinale: { sender: 'markolino', text: 'pedro ti aspetta al nucleo. qualsiasi cosa ti offra: è glitchata pure quella. fidati di me che mi fido di poco.' },
 };

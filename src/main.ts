@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL } from './content/levels';
-import { ENDING_CONSEGNA, ENDING_DEI, ENDING_PEDRO, INTRO_CARDS } from './content/story';
+import { endingCards, INTRO_CARDS } from './content/story';
 import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
 import { state } from './engine/state';
@@ -92,21 +92,21 @@ async function boot(): Promise<void> {
 
     bus.on('ending', ({ id }) => {
         sfx.stopPad();
+        const cards = endingCards(id, state.save.flags);
         if (id === 'pedro') {
-            // finale sbagliato: gli dei ti oneshottano, si riprova dalla scelta
-            screens.storySequence(ENDING_PEDRO, () => controller.retry());
+            // finale sbagliato: gli dei ti hanno raggiunto, si riprova dalla scelta
+            screens.storySequence(cards, () => controller.retry());
             return;
         }
         music.playEnding();
-        const cards = id === 'consegna' ? ENDING_CONSEGNA : ENDING_DEI;
         hud.hide();
         game.scene.stop('GameScene');
         screens.storySequence(cards, () => {
             state.save.endingSeen = id;
-            // ng+: si riparte dall'inizio con tutte le wave, ma i boss tornano
+            // ng+: si riparte dall'inizio con tutte le wave, ma boss e agguati tornano
             state.save.levelId = FIRST_LEVEL;
             state.save.checkpointId = null;
-            state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-'));
+            state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-') && !f.startsWith('agguato-'));
             state.persist();
             screens.showMenu();
         });

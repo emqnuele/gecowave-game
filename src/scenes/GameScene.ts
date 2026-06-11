@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COMBAT, ZONE_HEX } from '../config';
-import { DIALOGUES, TOASTS, WAVESUNG } from '../content/story';
+import { DIALOGUES, NOTINO_FUGHE, TOASTS, WAVESUNG } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../engine/events';
 import { DecorationManager } from '../engine/DecorationManager';
@@ -37,7 +37,33 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     lochef: 'lochef-intro',
     ombra: 'ombra-intro',
     ticummi: 'ticummi-intro',
+    formicona: 'formicona-intro',
 };
+
+/* gli agguati di notino: senza tommasorveglianza spawna e combatte,
+   con l'abbonamento viene respinto. le gag succedono comunque. */
+interface AmbushDef {
+    x: number;
+    type: 'fight' | 'gag';
+    intro: string;
+    count?: number;
+}
+
+const AMBUSHES: Record<string, AmbushDef[]> = {
+    rio: [
+        { x: 95 * 32, type: 'fight', intro: 'notino-agguato-1' },
+        { x: 245 * 32, type: 'fight', intro: 'notino-agguato-2' },
+    ],
+    ruhra: [
+        { x: 100 * 32, type: 'fight', intro: 'notino-agguato-3' },
+        { x: 260 * 32, type: 'fight', intro: 'notino-agguato-4' },
+    ],
+    tana: [{ x: 60 * 32, type: 'gag', intro: 'notino-tana' }],
+    sorveglianza: [{ x: 100 * 32, type: 'gag', intro: 'notino-sorveglianza' }],
+    cantina: [{ x: 120 * 32, type: 'fight', intro: 'notino-agguato-5', count: 2 }],
+};
+
+const TOMMASO_BLOCCA = ['tommaso-blocca', 'tommaso-blocca-2', 'tommaso-blocca-3'];
 
 export class GameScene extends Phaser.Scene {
     private def!: LevelDef;
@@ -71,9 +97,12 @@ export class GameScene extends Phaser.Scene {
     private nextPitturaAt = 0;
     private colorDropsTaken = 0;
     private mirror: Phaser.GameObjects.Sprite | null = null;
-    // rio: notino tende due agguati lungo la strada
-    private ambushes: { flag: string; x: number; dialogueSafe: string; dialogueTheft: string }[] = [];
     private pedroChoiceShown = false;
+    // il patto con pedro: potere vero, poi arrivano gli dei
+    private pattoActive = false;
+    private pattoDeiAt = 0;
+    private pattoNextSpawnAt = 0;
+    private pattoWarned = 0;
     // tommasoscudo
     private scudoUntil = 0;
     private scudoGfx: Phaser.GameObjects.Graphics | null = null;
@@ -112,7 +141,8 @@ export class GameScene extends Phaser.Scene {
         this.colorDropsTaken = 0;
         this.bossIntroShown = false;
         this.pedroChoiceShown = false;
-        this.ambushes = [];
+        this.pattoActive = false;
+        this.pattoWarned = 0;
         this.scudoUntil = 0;
         this.scudoGfx = null;
         this.chaseSprite = null;
@@ -254,9 +284,13 @@ export class GameScene extends Phaser.Scene {
                         this.recoverBossReward(spec.kind, x, y);
                         break;
                     }
-                    this.boss = new Boss(this, x, y, spec.kind);
+                    // l'ombra senza abbonamento è addestrata su poco footage
+                    const hpOverride = spec.kind === 'ombra' && !state.hasFlag('tommasorveglianza') ? 28 : undefined;
+                    this.boss = new Boss(this, x, y, spec.kind, hpOverride);
                     // in ng+ ivan è già dei nostri: guggu si taglia subito
                     if (spec.kind === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;
+                    // da cliente premium ticummi ha i tuoi dati: evoca echi di te
+                    if (spec.kind === 'ticummi' && state.hasFlag('tommasorveglianza')) this.boss.summonOverride = 'eco';
                     this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
                     break;
                 }
@@ -276,6 +310,7 @@ export class GameScene extends Phaser.Scene {
         if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability);
         if (kind === 'riba' && !state.hasFlag('dispositivo')) state.setFlag('dispositivo');
         if (kind === 'lochef') this.spawnCuore(x, y + 50, 'cuore-lochef');
+        if (kind === 'formicona') this.spawnCuore(x, y + 50, 'cuore-formicona');
     }
 
     private spawnEnemy(kind: EnemyKind, x: number, y: number): Enemy {
@@ -707,11 +742,11 @@ export class GameScene extends Phaser.Scene {
                     bus.emit('toast', { text: TOASTS.trenbolone });
                 });
             }
-            // notino prova due volte: la terza non c'è perché il rio è vicino
-            this.ambushes = [
-                { flag: 'agguato-fatto', x: 95 * 32, dialogueSafe: 'tommaso-blocca', dialogueTheft: 'notino-furto' },
-                { flag: 'agguato-2', x: 245 * 32, dialogueSafe: 'tommaso-blocca', dialogueTheft: 'notino-secondo' },
-            ];
+        }
+        // samatt ha un telefono e una gratitudine infinita
+        if (this.def.id === 'santuario' && state.hasFlag('boss-down-guggu') && !state.hasFlag('wavesung-samatt')) {
+            state.setFlag('wavesung-samatt');
+            this.time.delayedCall(2000, () => bus.emit('wavesung', WAVESUNG.samattGrazie));
         }
         if (this.def.script === 'ruhra' && !state.hasFlag('wavesung-piema')) {
             state.setFlag('wavesung-piema');
@@ -727,7 +762,8 @@ export class GameScene extends Phaser.Scene {
         }
         if (this.def.script === 'cantina' && !state.hasFlag('wavesung-cantina')) {
             state.setFlag('wavesung-cantina');
-            this.time.delayedCall(1200, () => bus.emit('wavesung', WAVESUNG.ticummiArrabbiato));
+            const msg = state.hasFlag('tommasorveglianza') ? WAVESUNG.ticummiClausola : WAVESUNG.ticummiArrabbiato;
+            this.time.delayedCall(1200, () => bus.emit('wavesung', msg));
         }
         if (this.def.script === 'pedro' && !state.hasFlag('wavesung-finale')) {
             state.setFlag('wavesung-finale');
@@ -758,6 +794,7 @@ export class GameScene extends Phaser.Scene {
         this.updateWaterCure();
         this.updateAmbush();
         this.updateChase(delta);
+        this.updatePatto(time);
         this.updateIvan(time);
         this.updateFakeWalls();
     }
@@ -930,8 +967,8 @@ export class GameScene extends Phaser.Scene {
         if (this.exiting || !this.def.next || this.player.dead) return;
         const hit = this.level.exits.some((r) => r.contains(this.player.x, this.player.y));
         if (!hit) return;
-        // i boss non si superano scappando
-        if (this.boss?.active) {
+        // i boss non si superano scappando (quelli opzionali sì)
+        if (this.boss?.active && this.boss.def.guardsExit !== false) {
             if (this.time.now > this.exitLockToastAt) {
                 this.exitLockToastAt = this.time.now + 3000;
                 bus.emit('toast', { text: 'qualcosa di grosso blocca ancora la strada.' });
@@ -974,6 +1011,8 @@ export class GameScene extends Phaser.Scene {
         if (!this.boss || this.boss.engaged || this.player.dead || this.exiting) return;
         const dist = Math.abs(this.player.x - this.boss.x);
         if (dist >= 440) return;
+        // la formicona sta nella tana: non si sveglia se cammini sul soffitto
+        if (this.boss.def.kind === 'formicona' && this.player.y < this.boss.y - 60) return;
 
         if (this.def.script === 'pedro' && !this.pedroChoiceShown) {
             this.pedroChoiceShown = true;
@@ -983,8 +1022,7 @@ export class GameScene extends Phaser.Scene {
                     options: [{ label: 'seguilo: stats raddoppiate', danger: true }, { label: 'contrastalo' }],
                     onPick: (i) => {
                         if (i === 0) {
-                            this.scene.pause();
-                            bus.emit('ending', { id: 'pedro' });
+                            this.startPatto();
                         } else {
                             this.boss?.engage();
                         }
@@ -994,7 +1032,10 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
-        const introId = BOSS_INTRO[this.boss.def.kind];
+        let introId = BOSS_INTRO[this.boss.def.kind];
+        // il clone cambia faccia a seconda di quanto footage ha su di te
+        if (this.boss.def.kind === 'ombra' && !state.hasFlag('tommasorveglianza')) introId = 'ombra-intro-scarsa';
+        if (this.boss.def.kind === 'ticummi' && state.hasFlag('tommasorveglianza')) introId = 'ticummi-intro-cliente';
         if (introId && !this.bossIntroShown) {
             this.bossIntroShown = true;
             const boss = this.boss;
@@ -1354,22 +1395,106 @@ export class GameScene extends Phaser.Scene {
     }
 
     private updateAmbush(): void {
-        if (this.ambushes.length === 0 || this.player.dead) return;
-        const next = this.ambushes.find((a) => !state.hasFlag(a.flag));
-        if (!next || this.player.x < next.x) return;
-        state.setFlag(next.flag);
-        if (state.hasFlag('tommasorveglianza')) {
-            this.startDialogue(next.dialogueSafe);
-        } else {
-            this.startDialogue(next.dialogueTheft, () => {
-                const stolen = Math.max(10, Math.round(state.save.barre * 0.25));
-                state.save.barre = Math.max(0, state.save.barre - stolen);
-                state.persist();
-                bus.emit('barre-changed', { barre: state.save.barre, gained: false });
-                bus.emit('toast', { text: `notino ti ha rubato ${stolen} barre. e ride.` });
-                this.cameras.main.shake(200, 0.008);
-            });
+        const list = AMBUSHES[this.def.id];
+        if (!list || this.player.dead || this.exiting) return;
+        for (let i = 0; i < list.length; i++) {
+            const a = list[i];
+            const flag = `agguato-${this.def.id}-${i}`;
+            if (state.hasFlag(flag) || this.player.x < a.x) continue;
+            state.setFlag(flag);
+            if (a.type === 'gag') {
+                this.startDialogue(a.intro);
+                return;
+            }
+            if (state.hasFlag('tommasorveglianza')) {
+                this.startDialogue(TOMMASO_BLOCCA[i % TOMMASO_BLOCCA.length]);
+                return;
+            }
+            this.startDialogue(a.intro, () => this.spawnNotinoAmbush(a.count ?? 1));
+            return;
         }
+    }
+
+    /** notino senza wave: piomba dall'alto, saltella, spara, e poi "non perde" */
+    private spawnNotinoAmbush(count: number): void {
+        this.cameras.main.flash(120, 168, 85, 247);
+        this.shake(180, 0.006);
+        sfx.bossRoar();
+        for (let i = 0; i < count; i++) {
+            const dir = i % 2 === 0 ? 1 : -1;
+            const e = this.spawnEnemy('notino-mini', this.player.x + dir * (300 + i * 60), this.player.y - 140);
+            this.physics.add.collider(e, this.level.layer);
+        }
+    }
+
+    /* ---------- il patto con pedro ---------- */
+
+    private startPatto(): void {
+        const pedro = this.boss;
+        this.boss = null;
+        state.run.patto = true;
+        state.run.hp = state.maxHp;
+        state.run.flow = state.maxFlow;
+        bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
+        bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
+        if (pedro) {
+            // pedro ha quello che voleva: si dissolve in glitch
+            this.add.particles(pedro.x, pedro.y, 'p-spark', {
+                speed: { min: 100, max: 300 },
+                scale: { start: 1.2, end: 0 },
+                tint: 0x22d3ee,
+                lifespan: 500,
+                quantity: 24,
+                stopAfter: 24,
+            });
+            this.tweens.add({ targets: pedro, alpha: 0, duration: 600, onComplete: () => pedro.destroy() });
+        }
+        this.startDialogue('pedro-patto', () => {
+            bus.emit('toast', { text: TOASTS.patto });
+            this.pattoActive = true;
+            this.pattoDeiAt = this.time.now + 20000;
+            this.pattoNextSpawnAt = this.time.now + 2500;
+            this.pattoWarned = 0;
+        });
+    }
+
+    private updatePatto(time: number): void {
+        if (!this.pattoActive || this.player.dead || this.boss) return;
+        // ondate di glitch per assaporare il potere rubato
+        if (time >= this.pattoNextSpawnAt && this.enemies.getLength() < 7) {
+            this.pattoNextSpawnAt = time + 3500;
+            const dir = Math.random() > 0.5 ? 1 : -1;
+            const e = this.spawnEnemy('glitchetto', this.player.x + dir * 420, this.player.y - 160);
+            this.physics.add.collider(e, this.level.layer);
+        }
+        const left = this.pattoDeiAt - time;
+        if (left <= 12000 && this.pattoWarned < 1) {
+            this.pattoWarned = 1;
+            bus.emit('toast', { text: TOASTS.pattoAvviso1 });
+        }
+        if (left <= 6000 && this.pattoWarned < 2) {
+            this.pattoWarned = 2;
+            this.cameras.main.flash(150, 255, 255, 255);
+            this.shake(400, 0.005);
+            bus.emit('toast', { text: TOASTS.pattoAvviso2 });
+        }
+        if (left <= 0) this.arrivoDei();
+    }
+
+    /** piema e lametta, insieme, immortali, senza pause: non si vince */
+    private arrivoDei(): void {
+        this.startDialogue('dei-patto', () => {
+            const x = this.player.x + 280;
+            const y = Math.max(120, this.player.y - 160);
+            this.boss = new Boss(this, x, y, 'dei');
+            this.boss.invulnerable = true;
+            this.boss.frenzy = true;
+            this.lighting.follow(this.boss, 0xffffff, 340, 1.2);
+            this.setupBossColliders();
+            this.boss.engage();
+            this.cameras.main.flash(220, 255, 255, 255);
+            this.shake(700, 0.012);
+        });
     }
 
     /* ---------- reazioni ---------- */
@@ -1432,8 +1557,13 @@ export class GameScene extends Phaser.Scene {
         proj.destroy();
     }
 
-    private onEnemyDied({ x, y, barre, splitsInto }: { x: number; y: number; barre: number; color: number; splitsInto: { kind: EnemyKind; count: number } | null }): void {
+    private onEnemyDied({ x, y, kind, barre, splitsInto }: { x: number; y: number; kind: EnemyKind; barre: number; color: number; splitsInto: { kind: EnemyKind; count: number } | null }): void {
         this.shake(80, 0.004);
+        // notino non muore: "si ritira strategicamente"
+        if (kind === 'notino-mini') {
+            const line = NOTINO_FUGHE[Math.floor(Math.random() * NOTINO_FUGHE.length)];
+            bus.emit('toast', { text: line });
+        }
         if (splitsInto) {
             for (let i = 0; i < splitsInto.count; i++) {
                 const mini = this.spawnEnemy(splitsInto.kind, x + (i ? 20 : -20), y - 10);
@@ -1483,6 +1613,11 @@ export class GameScene extends Phaser.Scene {
             case 'lochef':
                 this.startDialogue('lochef-sconfitto', () => {
                     this.spawnCuore(x, y + 40, 'cuore-lochef');
+                });
+                break;
+            case 'formicona':
+                this.startDialogue('formicona-sconfitta', () => {
+                    this.spawnCuore(x, y + 40, 'cuore-formicona');
                 });
                 break;
             case 'ombra':
@@ -1576,7 +1711,12 @@ export class GameScene extends Phaser.Scene {
         sfx.stopPad();
         this.time.delayedCall(900, () => {
             this.scene.pause();
-            bus.emit('player-died', { lost });
+            if (this.pattoActive) {
+                // il patto finisce come doveva finire
+                bus.emit('ending', { id: 'pedro' });
+            } else {
+                bus.emit('player-died', { lost });
+            }
         });
     }
 

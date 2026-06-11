@@ -155,4 +155,27 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         barre: [10, 16],
         glowColor: 0x22d3ee,
     },
+    // notino senza la wave: saltella, spara e non sta mai zitto
+    'notino-mini': {
+        kind: 'notino-mini',
+        texture: 'enemy-notino-mini',
+        behavior: 'hopper',
+        hp: 8,
+        speed: 280,
+        aggroRange: 520,
+        fireRateMs: 1500,
+        barre: [18, 30],
+        glowColor: 0xa855f7,
+    },
+    // eco della tommasorveglianza: un frammento di registrazione di te
+    eco: {
+        kind: 'eco',
+        texture: 'enemy-eco',
+        behavior: 'chaser',
+        hp: 2,
+        speed: 290,
+        aggroRange: 520,
+        barre: [1, 3],
+        glowColor: 0x22d3ee,
+    },
 };

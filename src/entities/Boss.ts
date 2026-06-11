@@ -9,9 +9,14 @@ type Phase = 1 | 2 | 3;
 
 export class Boss extends Phaser.Physics.Arcade.Sprite {
     readonly def: BossDef;
+    readonly maxHp: number;
     hp: number;
     engaged = false;
     invulnerable: boolean;
+    /** la scena può cambiare cosa evoca (gli echi di ticummi col tuo abbonamento) */
+    summonOverride: BossDef['summonKind'] = undefined;
+    /** modalità dei nel patto con pedro: attacchi a raffica continua */
+    frenzy = false;
     private shieldGraphics?: Phaser.GameObjects.Graphics;
 
     private anchorX: number;
@@ -21,10 +26,11 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     private busy = false;
     private summonedAtPhase: Phase | 0 = 0;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, kind: BossKind) {
+    constructor(scene: Phaser.Scene, x: number, y: number, kind: BossKind, hpOverride?: number) {
         super(scene, x, y, BOSSES[kind].texture);
         this.def = BOSSES[kind];
-        this.hp = this.def.hp;
+        this.maxHp = hpOverride ?? this.def.hp;
+        this.hp = this.maxHp;
         this.invulnerable = this.def.startsInvulnerable ?? false;
         this.anchorX = x;
         this.anchorY = y;
@@ -43,17 +49,17 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     get phase(): Phase {
-        if (this.hp > this.def.hp * 0.66) return 1;
-        if (this.hp > this.def.hp * 0.33) return 2;
+        if (this.hp > this.maxHp * 0.66) return 1;
+        if (this.hp > this.maxHp * 0.33) return 2;
         return 3;
     }
 
     engage(): void {
         if (this.engaged) return;
         this.engaged = true;
-        this.nextAttackAt = this.scene.time.now + 1600;
+        this.nextAttackAt = this.scene.time.now + (this.frenzy ? 400 : 1600);
         sfx.bossRoar();
-        bus.emit('boss-hp', { hp: this.hp, maxHp: this.def.hp, name: this.def.name });
+        bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
     }
 
     update(_time: number, delta: number, player: Phaser.GameObjects.Sprite): void {
@@ -96,6 +102,12 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
 
         if (!this.engaged || this.busy) return;
 
+        // in frenzy l'ancora insegue il bersaglio: non si scappa dagli dei
+        if (this.frenzy && player.active) {
+            this.anchorX = player.x;
+            this.anchorY = player.y - 130;
+        }
+
         // ritorno morbido verso il punto di hover
         body.setVelocity(
             (this.anchorX - this.x) * 1.2 + Math.sin(this.t / 800) * 50,
@@ -108,19 +120,21 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         if (this.def.kind === 'guggu' && !state.hasFlag('ivan')) {
             cd *= 0.6;
         }
+        if (this.frenzy) cd = 500;
         this.nextAttackAt = now + cd;
 
         // evocazione una tantum a inizio fase
-        if (this.def.summonKind && phase >= 2 && this.summonedAtPhase < phase) {
+        const summonKind = this.summonOverride ?? this.def.summonKind;
+        if (summonKind && phase >= 2 && this.summonedAtPhase < phase) {
             this.summonedAtPhase = phase;
-            this.scene.events.emit('boss-summon', { x: this.anchorX - 180, y: this.anchorY, kind: this.def.summonKind });
-            this.scene.events.emit('boss-summon', { x: this.anchorX + 180, y: this.anchorY, kind: this.def.summonKind });
+            this.scene.events.emit('boss-summon', { x: this.anchorX - 180, y: this.anchorY, kind: summonKind });
+            this.scene.events.emit('boss-summon', { x: this.anchorX + 180, y: this.anchorY, kind: summonKind });
             sfx.bossRoar();
             return;
         }
 
-        const pool = this.def.attacks[phase];
-        this.execute(pool[Math.floor(Math.random() * pool.length)], player, phase);
+        const pool = this.def.attacks[this.frenzy ? 3 : phase];
+        this.execute(pool[Math.floor(Math.random() * pool.length)], player, this.frenzy ? 3 : phase);
     }
 
     private execute(attack: BossAttack, player: Phaser.GameObjects.Sprite, phase: Phase): void {
@@ -132,11 +146,13 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             case 'burst': return this.burst(player, phase === 1 ? 3 : 5);
             case 'teleport': return this.teleport(player);
             case 'lamette': return this.lamette(player, phase + 2);
-            case 'summon':
-                if (this.def.summonKind) {
-                    this.scene.events.emit('boss-summon', { x: this.x, y: this.y, kind: this.def.summonKind });
+            case 'summon': {
+                const kind = this.summonOverride ?? this.def.summonKind;
+                if (kind) {
+                    this.scene.events.emit('boss-summon', { x: this.x, y: this.y, kind });
                 }
                 return;
+            }
         }
     }
 
@@ -293,7 +309,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         this.scene.time.delayedCall(60, () => this.active && !this.busy && this.clearTint());
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.velocity.x += Math.sign(this.x - fromX) * 40;
-        bus.emit('boss-hp', { hp: Math.max(0, this.hp), maxHp: this.def.hp, name: this.def.name });
+        bus.emit('boss-hp', { hp: Math.max(0, this.hp), maxHp: this.maxHp, name: this.def.name });
         if (this.hp <= 0) this.die();
         return true;
     }

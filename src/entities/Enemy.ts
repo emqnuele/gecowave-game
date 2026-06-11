@@ -10,6 +10,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private anchorY: number;
     private t = Math.random() * 1000;
     private nextActionAt = 0;
+    private nextShotAt = 0;
     private facingDir: 1 | -1 = -1;
     private chargingUntil = 0;
     private stunnedUntil = 0;
@@ -134,6 +135,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
                 break;
             }
         }
+
+        // chi ha un'arma spara anche in movimento (la torretta fa già da sé)
+        if (this.arch.fireRateMs && this.arch.behavior !== 'turret' && aggro && now >= this.nextShotAt) {
+            this.nextShotAt = now + this.arch.fireRateMs;
+            this.scene.events.emit('enemy-shoot', { x: this.x, y: this.y, tx: target.x, ty: target.y, color: this.arch.glowColor });
+        }
     }
 
     takeDamage(amount: number, fromX: number): void {
@@ -154,6 +161,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.scene.events.emit('enemy-died', {
             x: this.x,
             y: this.y,
+            kind: this.arch.kind,
             barre: amount,
             color: this.arch.glowColor,
             splitsInto: this.arch.splitsInto ?? null,

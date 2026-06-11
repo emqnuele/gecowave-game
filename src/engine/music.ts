@@ -93,7 +93,7 @@ class MusicManager {
         if (name.includes('lochef')) {
             return "assets/music/lochef85's OST 2.mp3";
         }
-        if (name.includes('ombra')) {
+        if (name.includes('ombra') || name.includes('formicona')) {
             return 'assets/music/Fragment Time.mp3';
         }
         if (name.includes('ticummi')) {

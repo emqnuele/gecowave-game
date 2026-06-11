@@ -238,6 +238,49 @@ function enemies(scene: Phaser.Scene): void {
         glow(g, 19, 9, 1.6, 0xf87171, 0.5);
     });
 
+    // notino senza la wave: più piccolo, più arrabbiato, stessa mira
+    make(scene, 'enemy-notino-mini', 34, 42, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(14, 28, 15, 20);
+        g.fillCircle(14, 11, 8);
+        // ciuffo
+        g.fillTriangle(9, 4, 13, 0, 16, 5);
+        // occhi senza frammento: rossi di rabbia normale
+        glow(g, 11, 10, 1.8, 0xf87171, 0.6);
+        glow(g, 17, 10, 1.8, 0xf87171, 0.6);
+        // pistola giocattolo, quella vera è rimasta nell'arena
+        g.fillStyle(0x241a33, 1);
+        g.fillRoundedRect(18, 22, 13, 7, 2);
+        g.fillRect(28, 24, 5, 4);
+        glow(g, 32, 26, 1.8, 0xa855f7, 0.55);
+        g.lineStyle(2.5, INK, 1);
+        g.beginPath();
+        g.moveTo(10, 36); g.lineTo(9, 41);
+        g.moveTo(18, 36); g.lineTo(19, 41);
+        g.strokePath();
+    });
+
+    // eco: un secondo di te, in loop, ostile
+    make(scene, 'enemy-eco', 30, 34, (g) => {
+        g.fillStyle(0x05080c, 1);
+        g.fillEllipse(15, 21, 20, 17);
+        g.fillCircle(15, 9, 7);
+        // coda da geco registrato male
+        g.lineStyle(3, 0x05080c, 1);
+        g.beginPath();
+        g.moveTo(6, 25); g.lineTo(1, 31);
+        g.strokePath();
+        // scanlines
+        g.lineStyle(1, 0x22d3ee, 0.3);
+        for (let y = 5; y < 30; y += 4) {
+            g.beginPath();
+            g.moveTo(4, y); g.lineTo(26, y);
+            g.strokePath();
+        }
+        glow(g, 12, 8, 1.5, 0x22d3ee, 0.7);
+        glow(g, 18, 8, 1.5, 0x22d3ee, 0.7);
+    });
+
     // telecamera della tommasorveglianza: ti guarda. spara pure.
     make(scene, 'enemy-telecamera', 36, 28, (g) => {
         // braccio a muro
@@ -695,6 +738,49 @@ function bosses(scene: Phaser.Scene): void {
         // occhiali che riflettono i grafici
         glow(g, 44, 9, 1.8, 0x22d3ee, 0.6);
         glow(g, 50, 9, 1.8, 0x22d3ee, 0.6);
+    });
+
+    // la formicona: sindaco di formica (fr). ha morso un dio.
+    make(scene, 'boss-formicona', 96, 56, (g) => {
+        g.fillStyle(0x1a0f08, 1);
+        g.fillEllipse(28, 34, 40, 28);
+        g.fillEllipse(54, 30, 26, 20);
+        g.fillCircle(74, 24, 13);
+        // zampe da sindaco: sei, tutte autorevoli
+        g.lineStyle(3, 0x1a0f08, 1);
+        for (const x of [16, 28, 40, 50]) {
+            g.beginPath();
+            g.moveTo(x, 44); g.lineTo(x - 4, 54);
+            g.moveTo(x, 44); g.lineTo(x + 4, 54);
+            g.strokePath();
+        }
+        // antenne
+        g.lineStyle(2, 0x1a0f08, 1);
+        g.beginPath();
+        g.moveTo(78, 13); g.lineTo(84, 4);
+        g.moveTo(72, 12); g.lineTo(74, 2);
+        g.strokePath();
+        // fascia tricolore da sindaco, in diagonale sul torace
+        g.lineStyle(3, 0x4ade80, 0.8);
+        g.beginPath();
+        g.moveTo(58, 22); g.lineTo(48, 38);
+        g.strokePath();
+        g.lineStyle(3, 0xffffff, 0.8);
+        g.beginPath();
+        g.moveTo(62, 24); g.lineTo(52, 40);
+        g.strokePath();
+        g.lineStyle(3, 0xf87171, 0.8);
+        g.beginPath();
+        g.moveTo(66, 26); g.lineTo(56, 42);
+        g.strokePath();
+        // mandibole che hanno morso un dio
+        g.lineStyle(2.5, 0x2b1a10, 1);
+        g.beginPath();
+        g.moveTo(84, 20); g.lineTo(94, 16);
+        g.moveTo(84, 28); g.lineTo(94, 32);
+        g.strokePath();
+        glow(g, 70, 22, 2.6, 0xfb923c, 0.65);
+        glow(g, 78, 22, 2.6, 0xfb923c, 0.65);
     });
 
     // pedro: l'ia glitchata. deve fare paura.

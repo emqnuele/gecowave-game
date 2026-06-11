@@ -14,6 +14,8 @@ export interface BossDef {
     summonKind?: EnemyKind;
     /** invulnerabile finché la scena non decide altrimenti (guggu senza ivan) */
     startsInvulnerable?: boolean;
+    /** false per i boss opzionali: da vivi non bloccano l'uscita del livello */
+    guardsExit?: boolean;
     /** sprite che trema e si teletrasporta a scatti (pedro) */
     glitchy?: boolean;
     contactDamage: number;
@@ -97,7 +99,9 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'ombra',
         name: 'la tua ombra (ha studiato)',
         texture: 'boss-ombra',
-        hp: 40,
+        /* hp da cliente premium: con l'abbonamento il clone ha mesi di footage.
+           senza, la scena lo declassa a 28: dataset incompleto */
+        hp: 50,
         glowColor: 0x22d3ee,
         attacks: {
             1: ['charge', 'dive'],
@@ -122,6 +126,22 @@ export const BOSSES: Record<BossKind, BossDef> = {
         },
         cooldownMs: { 1: 2400, 2: 1900, 3: 1400 },
         summonKind: 'telecamera',
+        contactDamage: 1,
+    },
+    formicona: {
+        kind: 'formicona',
+        name: 'la formicona, sindaco di formica (FR)',
+        texture: 'boss-formicona',
+        hp: 32,
+        glowColor: 0xfb923c,
+        attacks: {
+            1: ['charge', 'dive'],
+            2: ['charge', 'dive', 'summon'],
+            3: ['charge', 'summon', 'dive', 'burst'],
+        },
+        cooldownMs: { 1: 2200, 2: 1800, 3: 1400 },
+        summonKind: 'formica',
+        guardsExit: false,
         contactDamage: 1,
     },
     pedro: {

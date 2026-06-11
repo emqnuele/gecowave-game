@@ -24,9 +24,11 @@ export type EnemyKind =
     | 'specchietto'
     | 'padella'
     | 'ammiratore'
-    | 'telecamera';
+    | 'telecamera'
+    | 'notino-mini'
+    | 'eco';
 
-export type BossKind = 'guggu' | 'breccio' | 'notino' | 'riba' | 'lochef' | 'ombra' | 'ticummi' | 'pedro' | 'dei';
+export type BossKind = 'guggu' | 'breccio' | 'notino' | 'riba' | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'pedro' | 'dei';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }

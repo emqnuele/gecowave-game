@@ -33,7 +33,7 @@ class GameState {
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
     /** vita, flow e malus della run corrente: non si salvano, si vivono */
-    run = { hp: 5, flow: 0, trenbolone: false, smela: false };
+    run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false };
 
     constructor() {
         try {
@@ -52,11 +52,11 @@ class GameState {
     }
 
     get maxHp(): number {
-        return 5 + this.save.stats.costituzione;
+        return (5 + this.save.stats.costituzione) * (this.run.patto ? 2 : 1);
     }
 
     get maxFlow(): number {
-        return 99 + this.save.stats.flusso * 10;
+        return (99 + this.save.stats.flusso * 10) * (this.run.patto ? 2 : 1);
     }
 
     get risonanteDamage(): number {
@@ -64,11 +64,12 @@ class GameState {
     }
 
     get damageMult(): number {
-        return this.run.trenbolone ? 2 : 1;
+        return (this.run.trenbolone ? 2 : 1) * (this.run.patto ? 2 : 1);
     }
 
     resetRun(): void {
-        this.run = { hp: this.maxHp, flow: 0, trenbolone: false, smela: false };
+        this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false };
+        this.run.hp = this.maxHp;
     }
 
     persist(): void {
