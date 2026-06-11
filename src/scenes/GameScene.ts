@@ -444,7 +444,7 @@ export class GameScene extends Phaser.Scene {
                 this.startDialogue(id, () => {
                     bus.emit('choice-show', {
                         title: 'acqua premium della sorgente: 15 barre.',
-                        options: [{ label: 'compra e bevi (15 barre)', danger: true }, { label: 'nuota e basta' }],
+                        options: [{ label: 'compra e bevi (15 barre)', danger: true }, { label: 'no grazie' }],
                         onPick: (i) => {
                             if (i === 0 && state.save.barre >= 15) {
                                 state.save.barre -= 15;
