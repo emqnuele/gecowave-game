@@ -76,6 +76,7 @@ export class GameScene extends Phaser.Scene {
     private ivanInArena = false;
     private ivanBusy = false;
     private nextIvanStrikeAt = 0;
+    private ivanDead = false;
 
     constructor() {
         super('GameScene');
@@ -104,6 +105,7 @@ export class GameScene extends Phaser.Scene {
         this.ivanSprite = null;
         this.ivanInArena = false;
         this.ivanBusy = false;
+        this.ivanDead = false;
 
         generateZoneTextures(this, this.def.color);
 
@@ -686,9 +688,15 @@ export class GameScene extends Phaser.Scene {
         const boss = this.boss;
         if (!boss?.active || !boss.engaged || !state.hasFlag('ivan')) return;
 
+        if (boss.hp <= 15 && this.ivanInArena && !this.ivanDead) {
+            this.ivanDead = true;
+            this.killIvanCutscene();
+            return;
+        }
+
         if (!this.ivanInArena) {
-            // ivan corre in arena: l'unico che può viaggiare nel caos di guggu
             this.ivanInArena = true;
+            this.ivanSprite.setPosition(boss.x - 600, boss.y + 30);
             this.ivanSprite.setFlipX(false);
             this.tweens.killTweensOf(this.ivanSprite);
             this.tweens.add({
@@ -706,6 +714,47 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    private killIvanCutscene(): void {
+        const boss = this.boss;
+        const ivan = this.ivanSprite;
+        if (!boss || !ivan) return;
+
+        this.tweens.killTweensOf(ivan);
+        this.tweens.killTweensOf(boss);
+        this.ivanBusy = true;
+        boss.engaged = false;
+
+        sfx.dash();
+        this.tweens.add({
+            targets: boss,
+            x: ivan.x + Math.sign(boss.x - ivan.x) * 80,
+            y: ivan.y - 20,
+            duration: 350,
+            ease: 'Quad.easeIn',
+            onComplete: () => {
+                sfx.hit();
+                this.shake(200, 0.01);
+                ivan.setTint(0xf87171);
+                
+                this.tweens.add({
+                    targets: ivan,
+                    x: ivan.x - 250,
+                    y: ivan.y + 100,
+                    angle: 85,
+                    alpha: 0.4,
+                    duration: 800,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => {
+                        this.startDialogue('ivan-sacrificio', () => {
+                            ivan.destroy();
+                            boss.engaged = true;
+                        });
+                    }
+                });
+            }
+        });
+    }
+
     private ivanStrike(boss: Boss): void {
         const ivan = this.ivanSprite!;
         this.ivanBusy = true;
@@ -713,7 +762,6 @@ export class GameScene extends Phaser.Scene {
         const homeY = ivan.y;
         const dir = Math.sign(boss.x - ivan.x) || 1;
         ivan.setFlipX(dir < 0);
-        // telegrafo giallo, poi lo squarcio
         ivan.setTintFill(0xfacc15);
         this.time.delayedCall(350, () => {
             if (!ivan.active) return;
@@ -736,7 +784,9 @@ export class GameScene extends Phaser.Scene {
                         this.tweens.add({ targets: g, alpha: 0, scaleX: 1.2, scaleY: 1.2, duration: 280, onComplete: () => g.destroy() });
                         sfx.hit();
                         this.shake(130, 0.006);
-                        boss.takeDamage(4, ivan.x);
+                        
+                        const dmg = Math.min(4, boss.hp - 15);
+                        if (dmg > 0) boss.takeDamage(dmg, ivan.x);
                     }
                     this.time.delayedCall(450, () => {
                         if (!ivan.active) return;
@@ -1193,16 +1243,7 @@ export class GameScene extends Phaser.Scene {
         }
         switch (kind) {
             case 'guggu':
-                // l'esplosione del taglio si porta via anche ivan
-                if (this.ivanSprite?.active) {
-                    const ivan = this.ivanSprite;
-                    this.tweens.killTweensOf(ivan);
-                    ivan.setTint(0xf87171);
-                    this.tweens.add({ targets: ivan, x: x - 200, y: y + 130, angle: 80, alpha: 0.3, duration: 900, ease: 'Quad.easeOut' });
-                }
-                this.startDialogue('ivan-sacrificio', () => {
-                    this.spawnFragment(x, y + 60, 'rimbalzo');
-                });
+                this.spawnFragment(x, y + 60, 'rimbalzo');
                 break;
             case 'breccio':
                 this.startDialogue('breccio-morte', () => {
