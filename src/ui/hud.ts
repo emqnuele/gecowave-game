@@ -20,6 +20,7 @@ export class Hud {
     private fragments: HTMLElement;
     private zone: HTMLElement;
     private waves: HTMLElement;
+    private tommaso: HTMLElement;
     private bossBar: HTMLElement | null = null;
 
     constructor() {
@@ -36,10 +37,11 @@ export class Hud {
 
         this.barre = el('div', 'hud-barre sticker glass-acid-yellow', '♪ 0 barre');
         this.fragments = el('div', 'hud-fragments sticker glass-acid-green', '');
+        this.tommaso = el('div', 'hud-tommaso sticker glass-acid-blue', '🛡️ protetto da tommasorveglianza 👍');
         this.zone = el('div', 'hud-zone sticker', '');
         this.waves = el('div', 'hud-waves');
 
-        this.root.append(topleft, this.barre, this.fragments, this.zone, this.waves);
+        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -54,6 +56,7 @@ export class Hud {
                 void this.barre.offsetWidth;
                 this.barre.classList.add('bump');
             }
+            this.updateTommaso();
         });
         bus.on('fragments-changed', ({ count, total }) => {
             this.fragments.textContent = `✦ wave ${count}/${total}`;
@@ -66,10 +69,17 @@ export class Hud {
         bus.on('boss-hp', (payload) => this.setBoss(payload));
     }
 
-    show(): void { this.root.style.display = ''; }
+    show(): void {
+        this.root.style.display = '';
+        this.updateTommaso();
+    }
     hide(): void {
         this.root.style.display = 'none';
         this.setBoss(null);
+    }
+
+    private updateTommaso(): void {
+        this.tommaso.style.display = state.hasFlag('tommasorveglianza') ? '' : 'none';
     }
 
     private setHp(hp: number, maxHp: number, hurt: boolean): void {

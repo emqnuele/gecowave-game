@@ -309,6 +309,17 @@ body {
   color: var(--green);
 }
 
+.hud-tommaso {
+  position: absolute;
+  bottom: 104px;
+  left: 18px;
+  padding: 6px 14px;
+  transform: rotate(1deg);
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: var(--blue);
+}
+
 .hud-zone {
   position: absolute;
   top: 18px;
