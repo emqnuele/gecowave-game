@@ -28,6 +28,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private attackActiveUntil = 0;
     private comboResetAt = 0;
     private attacking = false;
+    private attackAnimUntil = 0;
     private invulnUntil = 0;
     private healHeldMs = 0;
     private wasGrounded = true;
@@ -313,6 +314,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     private startDash(): void {
         const body = this.body as Phaser.Physics.Arcade.Body;
+        // un dash può interrompere l'animazione d'attacco: chiudi lo stato e l'origine
+        if (this.attacking) {
+            this.attacking = false;
+            this.setOrigin(0.5, 0.5);
+        }
         this.dashing = true;
         this.dashUntil = this.scene.time.now + PHYSICS.dashMs;
         this.dashCooldownUntil = this.scene.time.now + PHYSICS.dashCooldownMs;
@@ -341,6 +347,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const cooldown = state.hasFlag('maschera-completa') ? COMBAT.attackCooldownMs * 0.7 : COMBAT.attackCooldownMs;
         this.attackCooldownUntil = now + cooldown;
         this.attackActiveUntil = now + COMBAT.attackActiveMs;
+        // fallback: se animationcomplete non scatta (anim interrotta da dash/atterraggio)
+        // sblocchiamo comunque lo stato. p-attack dura ~222ms (4 frame a 18fps)
+        this.attackAnimUntil = now + 260;
         this.attackActive = true;
         this.attackDir = dir;
         this.comboResetAt = now + COMBAT.comboWindowMs;
@@ -476,6 +485,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     /* ---------- visuale ---------- */
 
     private updateAnimation(body: Phaser.Physics.Arcade.Body): void {
+        // se l'attacco è scaduto ma animationcomplete non è scattato (anim interrotta),
+        // sblocchiamo lo stato per non restare congelati su un frame
+        if (this.attacking && this.scene.time.now >= this.attackAnimUntil) {
+            this.attacking = false;
+            this.setOrigin(0.5, 0.5);
+        }
         if (this.dashing || this.attacking) return;
         if (this.originX !== 0.5) this.setOrigin(0.5, 0.5);
         if (!this.grounded) {

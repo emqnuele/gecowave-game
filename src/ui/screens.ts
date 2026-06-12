@@ -179,7 +179,7 @@ export class Screens {
         });
         const maxUnlockedIdx = Math.max(reachedIdx, maxVisitedIdx);
 
-        const stack = el('div', 'menu-stack');
+        const stack = el('div', 'menu-stack chapters-scroll');
         LEVEL_ORDER.forEach((id, i) => {
             const unlocked = state.save.endingSeen !== null || i <= maxUnlockedIdx;
             if (!unlocked) return;
@@ -193,7 +193,7 @@ export class Screens {
             }));
         });
         s.append(stack);
-        stack.append(this.btn('indietro', 0, back));
+        s.append(this.btn('indietro', 0, back));
         this.onEsc(back);
     }
 
@@ -283,8 +283,10 @@ export class Screens {
         danger.append(reset);
         s.append(danger);
 
-        s.append(this.btn('indietro', -1, back));
-        this.onEsc(back);
+        // chiudi prima di tornare: showPause ha una guardia su overlay aperto
+        const goBack = () => { this.closeOverlay(); back(); };
+        s.append(this.btn('indietro', -1, goBack));
+        this.onEsc(goBack);
     }
 
     /* ---------- comandi ---------- */
@@ -302,8 +304,9 @@ export class Screens {
         }
         s.append(grid);
         s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.55)">le wave si sbloccano giocando. tranquillo.</span>'));
-        s.append(this.btn('indietro', 1, back));
-        this.onEsc(back);
+        const goBack = () => { this.closeOverlay(); back(); };
+        s.append(this.btn('indietro', 1, goBack));
+        this.onEsc(goBack);
     }
 
     /* ---------- morte ---------- */
@@ -528,83 +531,91 @@ export class Screens {
     }
 
     showCharacterCreation(onConfirm: () => void): void {
-        const s = this.openOverlay('screen opaque char-creation-screen');
+        const s = this.openOverlay('screen opaque char-forge');
         this.setZone('yellow');
 
-        const panel = el('div', 'glass-panel glass-acid-gold char-sheet-panel');
-        s.append(panel);
-
-        // --- STEP 1: NOME ---
-        const step1 = el('div', 'char-step active');
-        step1.append(el('h2', 'font-crisis char-step-title', 'COME TI CHIAMI?'));
-
-        const sub1 = el('div', 'char-subtitle font-marker');
-        sub1.textContent = 'scrivi il tuo nome nella memoria del flusso';
-        step1.append(sub1);
-
-        const nameRow = el('div', 'char-name-row glass-chip');
-        const input = el('input', 'char-name-input') as HTMLInputElement;
-        input.type = 'text';
-        input.value = 'Geco';
-        input.maxLength = 12;
-        input.placeholder = 'Geco';
-        nameRow.append(input);
-        step1.append(nameRow);
-
-        const nextBtn = this.btn('continua', -1.2, () => goToStep2(), 'glass-acid-gold');
-        step1.append(nextBtn);
-        panel.append(step1);
-
-        input.addEventListener('keydown', (e) => {
-            if (e.code === 'Enter') {
-                goToStep2();
-            }
-        });
-
-        // --- STEP 2: PUNTI ---
-        const step2 = el('div', 'char-step');
-        panel.append(step2);
+        // atmosfera souls-like: vignetta, brace fluttuante, emblema
+        s.append(el('div', 'forge-vignette'));
+        const embers = el('div', 'forge-embers');
+        for (let i = 0; i < 16; i++) {
+            const e = el('div', 'forge-ember');
+            e.style.cssText = `left:${(Math.random() * 100).toFixed(1)}%;animation-delay:${(-Math.random() * 14).toFixed(2)}s;animation-duration:${(9 + Math.random() * 9).toFixed(2)}s;--drift:${(Math.random() * 50 - 25).toFixed(0)}px`;
+            embers.append(e);
+        }
+        s.append(embers);
+        s.append(el('div', 'forge-emblem font-crisis', '✦'));
 
         let finalName = 'Geco';
         let availablePoints = 10;
-        const stats = {
-            forza: 0,
-            costituzione: 0,
-            flusso: 0,
-        };
+        const stats = { forza: 0, costituzione: 0, flusso: 0 };
+
+        // --- STEP 1: NOME ---
+        const step1 = el('div', 'forge-step active');
+        step1.append(el('div', 'forge-eyebrow font-martian', 'capitolo zero — il custode provvisorio'));
+        step1.append(el('h1', 'forge-title font-crisis', 'COME TI CHIAMI?'));
+        step1.append(el('div', 'forge-rule'));
+        step1.append(el('div', 'forge-hint font-marker', 'incidi il tuo nome nella memoria del flusso'));
+
+        const nameWrap = el('div', 'forge-nameplate');
+        const input = el('input', 'forge-name-input font-crisis') as HTMLInputElement;
+        input.type = 'text';
+        input.value = '';
+        input.maxLength = 12;
+        input.placeholder = 'Geco';
+        input.spellcheck = false;
+        nameWrap.append(input);
+        step1.append(nameWrap);
+
+        const nextBtn = this.btn('continua →', 0, () => goToStep2(), 'glass-acid-gold');
+        nextBtn.classList.add('forge-btn');
+        step1.append(nextBtn);
+        s.append(step1);
+
+        input.addEventListener('keydown', (e) => {
+            if (e.code === 'Enter') goToStep2();
+        });
+        setTimeout(() => input.focus(), 140);
+
+        // --- STEP 2: PUNTI ---
+        const step2 = el('div', 'forge-step');
+        s.append(step2);
 
         const goToStep2 = () => {
             finalName = input.value.trim() || 'Geco';
             sfx.ui();
-
             step1.classList.remove('active');
             setTimeout(() => {
                 step1.style.display = 'none';
                 step2.style.display = 'flex';
                 step2.classList.add('active');
-
-                title2.innerHTML = `CREAZIONE ${finalName.toUpperCase()}`;
+                title2.textContent = `forgia di ${finalName.toLowerCase()}`;
                 updateAll();
-            }, 200);
+            }, 220);
         };
 
-        const title2 = el('h2', 'font-crisis char-title', 'CREAZIONE GECO');
-        const sub2 = el('div', 'char-subtitle font-marker', 'alloca i 10 punti per plasmare il tuo geco');
-        step2.append(title2, sub2);
+        const header = el('div', 'forge-header');
+        header.append(el('div', 'forge-eyebrow font-martian', 'capitolo zero — allocazione del flusso'));
+        const title2 = el('h1', 'forge-title forge-title-sm font-crisis', 'forgia del geco');
+        header.append(title2);
+        header.append(el('div', 'forge-rule'));
+        step2.append(header);
 
-        const layout = el('div', 'char-layout-container');
+        const layout = el('div', 'forge-body');
         step2.append(layout);
 
-        const leftCol = el('div', 'char-left-col');
-        const rightCol = el('div', 'char-right-col');
+        const leftCol = el('div', 'forge-stats-col');
+        const rightCol = el('div', 'forge-aside');
         layout.append(leftCol, rightCol);
 
-        const pointsEl = el('div', 'char-points-counter sticker glass-acid-yellow', `punti da assegnare: ${availablePoints}`);
+        const pointsEl = el('div', 'forge-points');
+        const pointsNum = el('span', 'forge-points-num font-martian', String(availablePoints));
+        pointsEl.append(el('span', 'forge-points-lbl font-martian', 'punti da assegnare'), pointsNum);
         leftCol.append(pointsEl);
 
         // radar chart svg
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 220 220');
+        // viewBox allargato: lascia spazio alle label ai vertici, così non sbordano
+        svg.setAttribute('viewBox', '-48 -16 305 230');
         svg.classList.add('char-radar-chart');
         rightCol.append(svg);
 
@@ -657,56 +668,61 @@ export class Screens {
             return label;
         };
 
-        const labelForza = createRadarLabel(0, 'FORZA', 'middle', -5);
-        const labelCost = createRadarLabel(1, 'COSTITUZIONE', 'start', 8, 5);
-        const labelFlus = createRadarLabel(2, 'FLUSSO', 'end', 8, -5);
+        const labelForza = createRadarLabel(0, 'FORZA', 'middle', -6);
+        const labelCost = createRadarLabel(1, 'COST', 'start', 10, 4);
+        const labelFlus = createRadarLabel(2, 'FLUSSO', 'end', 10, -4);
 
         const createStatSelector = (key: 'forza' | 'costituzione' | 'flusso', label: string, desc: string) => {
-            const container = el('div', 'char-stat-selector glass-chip');
+            const row = el('div', 'forge-stat');
 
-            const info = el('div', 'char-stat-info');
-            const nameEl = el('span', 'char-stat-name font-marker', label);
-            const descEl = el('span', 'char-stat-desc', desc);
-            info.append(nameEl, descEl);
-            container.append(info);
+            const head = el('div', 'forge-stat-head');
+            head.append(el('span', 'forge-stat-name font-marker', label));
+            const valEl = el('span', 'forge-stat-val font-martian', '00');
+            head.append(valEl);
+            row.append(head);
 
-            const segmentsWrap = el('div', 'char-stat-segments');
+            row.append(el('div', 'forge-stat-desc font-martian', desc));
+
+            const ctl = el('div', 'forge-stat-ctl');
+            const minus = el('button', 'forge-step-btn', '−');
+            const plus = el('button', 'forge-step-btn', '+');
+            const segmentsWrap = el('div', 'forge-segments');
             const segments: HTMLElement[] = [];
             for (let i = 1; i <= 10; i++) {
-                const seg = el('div', 'char-segment');
-                seg.dataset.val = String(i);
+                const seg = el('div', 'forge-segment');
                 segmentsWrap.append(seg);
                 segments.push(seg);
-
                 seg.addEventListener('click', () => {
-                    const targetVal = i;
-                    const curVal = stats[key];
-                    const valToSet = (targetVal === 1 && curVal === 1) ? 0 : targetVal;
-                    const diff = valToSet - curVal;
-
+                    const valToSet = (i === 1 && stats[key] === 1) ? 0 : i;
+                    const diff = valToSet - stats[key];
                     if (diff > 0) {
                         const alloc = Math.min(diff, availablePoints);
-                        if (alloc > 0) {
-                            stats[key] += alloc;
-                            availablePoints -= alloc;
-                            sfx.ui();
-                            updateAll();
-                        }
+                        if (alloc <= 0) return;
+                        stats[key] += alloc; availablePoints -= alloc;
                     } else if (diff < 0) {
-                        stats[key] += diff;
-                        availablePoints -= diff;
-                        sfx.ui();
-                        updateAll();
-                    }
+                        stats[key] += diff; availablePoints -= diff;
+                    } else return;
+                    sfx.ui();
+                    updateAll();
                 });
             }
-            container.append(segmentsWrap);
-            leftCol.append(container);
+            minus.addEventListener('click', () => {
+                if (stats[key] <= 0) return;
+                stats[key]--; availablePoints++; sfx.ui(); updateAll();
+            });
+            plus.addEventListener('click', () => {
+                if (availablePoints <= 0 || stats[key] >= 10) return;
+                stats[key]++; availablePoints--; sfx.ui(); updateAll();
+            });
+            ctl.append(minus, segmentsWrap, plus);
+            row.append(ctl);
+            leftCol.append(row);
 
             return () => {
-                segments.forEach((seg, idx) => {
-                    seg.classList.toggle('filled', idx < stats[key]);
-                });
+                valEl.textContent = String(stats[key]).padStart(2, '0');
+                segments.forEach((seg, idx) => seg.classList.toggle('filled', idx < stats[key]));
+                minus.classList.toggle('disabled', stats[key] <= 0);
+                plus.classList.toggle('disabled', availablePoints <= 0 || stats[key] >= 10);
             };
         };
 
@@ -719,7 +735,8 @@ export class Screens {
             updSelCost();
             updSelFlus();
 
-            pointsEl.textContent = `punti da assegnare: ${availablePoints}`;
+            pointsNum.textContent = String(availablePoints);
+            pointsEl.classList.toggle('spent', availablePoints === 0);
 
             const dForza = 20 + (stats.forza / 10) * 60;
             const dCost = 20 + (stats.costituzione / 10) * 60;
@@ -730,12 +747,24 @@ export class Screens {
             const p2 = getPoint(dFlus, 2);
             statPoly.setAttribute('points', `${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
 
-            labelForza.textContent = `FORZA (${stats.forza})`;
-            labelCost.textContent = `COSTITUZIONE (${stats.costituzione})`;
-            labelFlus.textContent = `FLUSSO (${stats.flusso})`;
+            labelForza.textContent = `FORZA · ${stats.forza}`;
+            labelCost.textContent = `COST · ${stats.costituzione}`;
+            labelFlus.textContent = `FLUSSO · ${stats.flusso}`;
         };
 
-        const confirmBtn = this.btn('inizia la run', -1.2, () => {
+        const actions = el('div', 'forge-actions');
+        const backBtn = this.btn('← nome', 0, () => {
+            sfx.ui();
+            step2.classList.remove('active');
+            setTimeout(() => {
+                step2.style.display = 'none';
+                step1.style.display = 'flex';
+                step1.classList.add('active');
+                input.focus();
+            }, 200);
+        });
+        backBtn.classList.add('forge-btn', 'forge-btn-ghost');
+        const confirmBtn = this.btn('inizia la run →', 0, () => {
             state.save.playerName = finalName;
             state.save.stats.forza = stats.forza;
             state.save.stats.costituzione = stats.costituzione;
@@ -744,8 +773,9 @@ export class Screens {
             state.resetRun();
             this.closeOverlay();
             onConfirm();
-        }, 'glass-acid-yellow');
-
-        step2.append(confirmBtn);
+        }, 'glass-acid-gold');
+        confirmBtn.classList.add('forge-btn');
+        actions.append(backBtn, confirmBtn);
+        step2.append(actions);
     }
 }

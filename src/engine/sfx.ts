@@ -9,7 +9,11 @@ class Sfx {
 
     /** va chiamato dopo un gesto utente per sbloccare l'audio */
     init(): void {
-        if (this.ctx) return;
+        if (this.ctx) {
+            // già creato: assicurati solo che non sia rimasto sospeso
+            this.resume();
+            return;
+        }
         this.ctx = new AudioContext();
         this.master = this.ctx.createGain();
         this.master.gain.value = state.settings.volume;
@@ -19,6 +23,20 @@ class Sfx {
         this.noiseBuffer = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
         const data = this.noiseBuffer.getChannelData(0);
         for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+
+        this.resume();
+        // il browser sospende il contesto quando la tab va in background:
+        // riprenderlo al ritorno evita che i suoni restino accodati e in ritardo
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) this.resume();
+        });
+    }
+
+    /** riavvia il contesto se sospeso: currentTime congelato = suoni in ritardo */
+    resume(): void {
+        if (this.ctx && this.ctx.state === 'suspended') {
+            void this.ctx.resume();
+        }
     }
 
     setVolume(v: number): void {
@@ -31,6 +49,7 @@ class Sfx {
         opts: { type?: OscillatorType; to?: number; vol?: number; delayMs?: number } = {}
     ): void {
         if (!this.ctx || !this.master) return;
+        this.resume();
         const t0 = this.ctx.currentTime + (opts.delayMs ?? 0) / 1000;
         const t1 = t0 + durMs / 1000;
         const osc = this.ctx.createOscillator();
@@ -47,6 +66,7 @@ class Sfx {
 
     private noise(durMs: number, opts: { freq?: number; q?: number; vol?: number } = {}): void {
         if (!this.ctx || !this.master || !this.noiseBuffer) return;
+        this.resume();
         const t0 = this.ctx.currentTime;
         const t1 = t0 + durMs / 1000;
         const src = this.ctx.createBufferSource();
