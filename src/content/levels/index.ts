@@ -3,27 +3,27 @@ import { perduta } from './level01-perduta';
 import { bus } from './level02-bus';
 import { santuario } from './level03-santuario';
 import { tecnokill } from './level04-tecnokill';
-import { trenbolone } from './level04b-trenbolone';
-import { rio } from './level05-rio';
-import { stabilimento } from './level06-stabilimento';
-import { ruhra } from './level07-ruhra';
-import { mente } from './level07b-mente';
-import { caso } from './level08-caso';
-import { tana } from './level09-tana';
-import { sorveglianza } from './level10-sorveglianza';
-import { cantina } from './level11-cantina';
-import { ricordi } from './level12-ricordi';
+import { trenbolone } from './level05-trenbolone';
+import { tana } from './level06-tana';
+import { rio } from './level07-rio';
+import { stabilimento } from './level08-stabilimento';
+import { ruhra } from './level09-ruhra';
+import { mente } from './level09b-mente';
+import { caso } from './level10-caso';
+import { sorveglianza } from './level11-sorveglianza';
+import { cantina } from './level12-cantina';
+import { ricordi } from './level13-ricordi';
 import { voidlv } from './level13b-void';
-import { nucleo } from './level13-nucleo';
-import { barrato } from './level14-barrato';
-import { custode } from './level15-custode';
+import { nucleo } from './level14-nucleo';
+import { barrato } from './level15-barrato';
+import { custode } from './level16-custode';
 
 /* per aggiungere un capitolo: crea un file qui accanto, importalo
    e aggiungilo alla lista. collega le zone col campo `next`. */
 
 const all: LevelDef[] = [
-    perduta, bus, santuario, tecnokill, trenbolone, rio, stabilimento,
-    ruhra, mente, caso, tana, sorveglianza, cantina, ricordi, voidlv, nucleo,
+    perduta, bus, santuario, tecnokill, trenbolone, tana, rio, stabilimento,
+    ruhra, mente, caso, sorveglianza, cantina, ricordi, voidlv, nucleo,
 ];
 
 /* capitoli segreti: raggiungibili solo dai varchi, fuori dalla progressione

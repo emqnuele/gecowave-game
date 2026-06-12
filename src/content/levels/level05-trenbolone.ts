@@ -6,7 +6,7 @@ export const trenbolone: LevelDef = {
     accentWord: 'trenbolone',
     color: 'orange',
     punchline: 'il paradiso artificiale degli spaccini. non si esce senza.',
-    next: 'rio',
+    next: 'tana',
     ambientNote: 70,
     entities: {
         S: { type: 'npc', id: 'spaccino' },

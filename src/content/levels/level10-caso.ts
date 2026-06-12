@@ -10,7 +10,7 @@ export const caso: LevelDef = {
     accentWord: 'analisi 1',
     color: 'blue',
     punchline: 'quarant\'anni di indagini. tre indizi. un geco.',
-    next: 'tana',
+    next: 'sorveglianza',
     script: 'caso',
     ambientNote: 105,
     entities: {

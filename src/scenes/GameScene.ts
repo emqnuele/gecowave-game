@@ -287,10 +287,20 @@ export class GameScene extends Phaser.Scene {
         if (introId === 'tommaso-benvenuto' && !state.hasFlag('tommasorveglianza')) {
             introId = 'tommaso-benvenuto-estraneo';
         }
+        // nella tana il risveglio gira sul nero, poi gli occhi si aprono
+        const wakeUp = () => this.cameras.main.fadeIn(600, 0, 0, 0);
+        const isTanaIntro = this.def.id === 'tana';
         if (introId && !state.save.seenDialogues.includes(introId)) {
             state.save.seenDialogues.push(introId);
             state.persist();
-            this.time.delayedCall(700, () => this.startDialogue(introId!));
+            if (isTanaIntro) {
+                this.time.delayedCall(500, () => this.startDialogue(introId!, wakeUp));
+            } else {
+                this.time.delayedCall(700, () => this.startDialogue(introId!));
+            }
+        } else if (isTanaIntro) {
+            // dialogo già visto in una run precedente: svegliati comunque
+            wakeUp();
         }
 
         this.setupScript();
@@ -585,7 +595,7 @@ export class GameScene extends Phaser.Scene {
                                     this.time.delayedCall(1000, () => {
                                         this.player.stun(999999);
                                         this.startDialogue('trenbo-addormentato', () => {
-                                            this.gotoLevel('rio');
+                                            this.gotoLevel('tana');
                                         });
                                     });
                                 }
@@ -1080,7 +1090,10 @@ export class GameScene extends Phaser.Scene {
         applyZoom();
         this.scale.on('resize', applyZoom);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off('resize', applyZoom));
-        cam.fadeIn(500, 0, 0, 0);
+        // nella tana resti al buio: i dialoghi del sonno girano sul nero,
+        // poi apri gli occhi a fine dialogo (vedi intro in create)
+        if (this.def.id === 'tana') cam.fadeOut(0, 0, 0, 0);
+        else cam.fadeIn(500, 0, 0, 0);
         if (cam.postFX) cam.postFX.addVignette(0.5, 0.5, 0.86);
     }
 
@@ -2553,7 +2566,7 @@ export class GameScene extends Phaser.Scene {
                         this.time.delayedCall(1000, () => {
                             this.player.stun(999999);
                             this.startDialogue('trenbo-addormentato', () => {
-                                this.gotoLevel('rio');
+                                this.gotoLevel('tana');
                             });
                         });
                     }

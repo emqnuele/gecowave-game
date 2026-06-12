@@ -10,7 +10,7 @@ export const tana: LevelDef = {
     accentWord: 'lochef85',
     color: 'red',
     punchline: "c'è posto. c'è sempre posto.",
-    next: 'sorveglianza',
+    next: 'rio',
     script: 'tana',
     introDialogue: 'tana-risveglio',
     ambientNote: 58,
