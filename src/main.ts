@@ -1,4 +1,9 @@
 import Phaser from 'phaser';
+// font bundlati localmente: l'eseguibile funziona anche offline
+import '@fontsource/climate-crisis/400.css';
+import '@fontsource/permanent-marker/400.css';
+import '@fontsource/martian-mono/400.css';
+import '@fontsource/martian-mono/700.css';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL, TOTAL_FRAGMENTS } from './content/levels';

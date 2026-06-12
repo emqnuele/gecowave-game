@@ -3,16 +3,47 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron": "electron .",
+    "app:preview": "npm run build && electron .",
+    "app:build": "npm run build && electron-builder"
   },
   "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "@fontsource/climate-crisis": "^5.2.12",
+    "@fontsource/martian-mono": "^5.2.7",
+    "@fontsource/permanent-marker": "^5.2.7",
     "phaser": "^3.90.0"
+  },
+  "build": {
+    "appId": "com.gecowave.flux",
+    "productName": "GECOWAVE",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.games"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Game"
+    }
   }
 }
