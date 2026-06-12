@@ -694,6 +694,62 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'lametta', color: 'purple', text: 'oh. OH. il geco vuole tenersi le wave. visto, piema? te l\'avevo disegnato io questo finale.' },
         { speaker: 'piema', color: 'blue', text: 'sia messo a verbale che ti avevamo offerto la via semplice. teorema della punizione divina, dimostrazione: ora.' },
     ],
+
+    /* ---------- capitolo segreto: la 14 barrato ---------- */
+    'barrato-ingresso': [
+        { speaker: 'il geco', color: 'green', text: '*il varco si chiude alle spalle. sotto le dune, una linea intera di citelis sepolti. la 14 barrato. quella che guggu cerca ancora.*' },
+        { speaker: 'voce nella sabbia', color: 'yellow', text: '«capolinea della 14 barrato. ultima corsa: mai partita. ultimo passeggero: ancora a bordo.»' },
+    ],
+    'ivan-ricordo': [
+        { speaker: 'cartello del deposito', color: 'yellow', text: '«autista della 14 barrato: i. maggini. encomio per "furia in servizio": ha tagliato in due un citelis impazzito a mani nude. sospeso per "eccesso di taglio".»' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che ora capisce da dove viene la furia di ivan. guggu gli ha sepolto la linea. con dentro la gente.*' },
+    ],
+    'settequaranta-intro': [
+        { speaker: 'il 7:40', color: 'yellow', text: 'BIP. *il citelis sepolto accende i fari da solo*. nessuno scende dalla 14 barrato. nessuno SALE. io resto qui. e MORDO. anche da fermo. soprattutto da fermo.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che non aveva convalidato nemmeno stavolta*' },
+    ],
+    'settequaranta-morte': [
+        { speaker: 'il 7:40', color: 'yellow', text: '...porte... in apertura... finalmente... la corsa... è finita...' },
+        { speaker: 'il geco', color: 'green', text: '*dal relitto rotola un cuore del realm: era il posto a sedere che nessuno aveva mai reclamato. ora è tuo.*' },
+    ],
+    'lore-barrato-1': [
+        { speaker: 'targa arrugginita', color: 'yellow', text: '«linea 14 barrato: istituita per servire una fermata che non esisteva ancora. la fermata non è mai esistita. la linea ci credeva.»' },
+    ],
+    'lore-barrato-2': [
+        { speaker: 'biglietto sbiadito', color: 'yellow', text: '«obliterato l\'ultima volta da i. maggini, autista. timbro illeggibile. sopra, a penna: "questa linea la salvo io". non l\'ha salvata. nessuno gliel\'ha detto.»' },
+    ],
+
+    /* ---------- capitolo segreto: il primo custode ---------- */
+    'custode-ingresso': [
+        { speaker: 'il geco', color: 'green', text: '*le dieci... cinque maschere battono il tempo tutte insieme. il varco si apre su uno studio di registrazione fuori dal realm. dischi d\'oro alle pareti. polvere sul mixer.*' },
+        { speaker: 'voce sul beat', color: 'green', text: 'un altro custode. col mio ritmo addosso. le senti, vero? le maschere. erano la mia faccia, prima di essere la tua.' },
+    ],
+    'custode-intro': [
+        { speaker: 'il primo custode', color: 'green', text: 'io ho fatto i dischi del realm. ogni traccia, ogni colonna sonora che hai sentito. poi ho consegnato le wave, come un bravo geco, e mi hanno dimenticato. è uscito un disco postumo. non l\'ha comprato nessuno.' },
+        { speaker: 'il primo custode', color: 'green', text: 'tu invece le wave le tieni strette. forse hai capito qualcosa che io no. dimostramelo: a tempo. ogni mio colpo cade sul beat. se trovi il ritmo, mi prendi. se lo perdi, ti prendo io.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che batte il piede a 120 bpm*' },
+    ],
+    'custode-morte': [
+        { speaker: 'il primo custode', color: 'green', text: '...perfetto. eri perfetto a tempo. meglio di me. *la maschera si crepa con un click pulito, sul beat*' },
+        { speaker: 'il primo custode', color: 'green', text: 'tieni il ritmo, custode. è l\'unica cosa che resta quando le wave se ne vanno e i dischi smettono di girare. ora vai: la tua, di colonna sonora, non è ancora finita.' },
+        { speaker: 'il geco', color: 'green', text: '*dal mixer si alza un cuore del realm che pulsa sul beat. il primo custode annuisce un\'ultima volta e si dissolve in feedback.*' },
+    ],
+    'lore-custode-1': [
+        { speaker: 'disco d\'oro alla parete', color: 'green', text: '«"Riba la Pipa" — primo custode. certificato disco d\'oro nel gecorealm. unica copia venduta: a sé stesso, per non sentirsi solo.»' },
+    ],
+    'lore-custode-2': [
+        { speaker: 'nastro abbandonato', color: 'green', text: '«provino del primo custode, ultima take: "se qualcuno trova questo nastro, suonatelo a tempo. è l\'unica preghiera che conosco." — il nastro era ancora caldo.»' },
+    ],
+
+    /* ---------- il collasso del realm (modalità collasso) ---------- */
+    'collasso-pedro': [
+        { speaker: 'pedro', color: 'cyan', text: 'h̷a̵i̸ p̶e̵r̷s̸o̵ t̶r̷o̸p̵p̶o̷ t̸e̵m̶p̷o̸. il realm si s̶g̷r̸e̵t̶o̷l̸a̵ e io sono già qui. non era ancora il tuo momento, custode. ma il momento sei TU a sceglierlo, e hai scelto MALE.' },
+        { speaker: 'pedro', color: 'cyan', text: 'niente frammenti, niente dei, niente trama. solo io, in a̵n̶t̷i̸c̵i̶p̷o̸. s̸o̵p̶r̷a̸v̵v̶i̷v̸i̵, se ci riesci.' },
+    ],
+    'collasso-respinto': [
+        { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̷i̸b̵i̶l̷e̸... eri in a̵n̶t̷i̸c̵i̶p̷o̸ pure tu... mi r̶i̷t̸i̵r̶o̷. per ora. ma il realm continua a s̸g̵r̶e̷t̸o̵l̶a̷r̸s̵i̶. non rallentare.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha guadagnato tempo, non pace. il collasso rallenta ma non si ferma.*' },
+    ],
 };
 
 export const ENDING_CONSEGNA: { text: string; punch?: string }[] = [
@@ -751,6 +807,7 @@ export const CREDITS: { role: string; names: string[] }[] = [
     { role: 'gli dei minori e i guardiani', names: ['breccio', 'la formicona', 'il teorema incompiuto', 'il limite notevole', 'flauto speroindio'] },
     { role: 'libera impresa del realm', names: ['ticummi', 'smela', 'danjilo', 'filippus il dodo'] },
     { role: 'roleplay non richiesto', names: ['notino', 'lochef85'] },
+    { role: 'i capitoli segreti', names: ['il 7:40', 'il primo custode'] },
     { role: 'menzioni d\'onore', names: ['markolino', 'la riba', 'commissario romero', 'vavleeh'] },
     { role: 'musica del realm', names: ['flux of coscienza'] },
     { role: '', names: ['grazie per aver custodito la wave.'] },
@@ -789,7 +846,13 @@ export function endingCards(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta', flag
         extra.push({ text: 'il chiosco di acqua del rubinetto di smela, contro ogni pronostico, va fortissimo. lo slogan: "sa di niente, come promesso".' });
     }
     if (flags.includes('maschera-completa')) {
-        extra.push({ text: 'le dieci maschere della tua stessa faccia sono appese al muro di casa. di notte battono il tempo. i vicini non si lamentano: il ritmo è perfetto.' });
+        extra.push({ text: 'le cinque maschere della tua stessa faccia sono appese al muro di casa. di notte battono il tempo. i vicini non si lamentano: il ritmo è perfetto.' });
+    }
+    if (flags.includes('boss-down-settequaranta')) {
+        extra.push({ text: 'la 14 barrato è stata dissepolta. samatt ci ha fatto un giro per nostalgia. il 7:40 ora è un monumento: morde ancora, ma solo i turisti senza biglietto.' });
+    }
+    if (flags.includes('boss-down-custode')) {
+        extra.push({ text: 'il disco postumo del primo custode, "Trovati una Fidanzata", è tornato in classifica nel realm. seconda copia venduta: la tua. lui, da qualche parte, batte il tempo soddisfatto.' });
     }
     return [...base.slice(0, -1), ...extra, base[base.length - 1]];
 }
@@ -880,7 +943,13 @@ export const TOASTS = {
     pattoAvviso1: 'il cielo si incrina ai bordi. qualcosa si è messo in viaggio.',
     pattoAvviso2: 'due luci all\'orizzonte. una viola, una bianca. arrivano INSIEME.',
     limiteScudo: 'il limite ti respinge: vizio di forma. servono i 3 indizi.',
-    mascheraCompleta: 'tutte le maschere: il ritmo perfetto. attacchi più veloci, per sempre.',
+    mascheraCompleta: 'tutte le maschere: il ritmo perfetto. attacchi più veloci, per sempre. un varco verde si è aperto dove tutto è cominciato.',
+    portalLocked: 'il varco è spento. qualcosa deve ancora succedere prima che si apra.',
+    portalBarrato: 'un varco giallo, sepolto nella sabbia. profuma di gasolio e di loop. ci entri?',
+    portalCustode: 'un varco verde che batte il tempo. dall\'altra parte qualcuno ti aspetta da molto.',
+    collassoWarn1: 'il cielo si incrina ai bordi. il realm sta perdendo i pezzi. sbrigati.',
+    collassoWarn2: 'glitch ovunque. il collasso è vicino. pedro lo sente, e si muove.',
+    collassoPedro: 'TROPPO TARDI. pedro ti ha raggiunto. sopravvivi o è la fine.',
 };
 
 export const WAVESUNG = {
@@ -894,6 +963,6 @@ export const WAVESUNG = {
     samattGrazie: { sender: 'samatt', text: 'SCESO. sono SCESO. il realm è enorme e fermo, che meraviglia. guastalla sta riimparando a camminare in linea retta. grazie custode. — samatt (851 giri, record)' },
     markolinoFinale: { sender: 'markolino', text: 'pedro ti aspetta al nucleo. qualsiasi cosa ti offra: è glitchata pure quella. fidati di me che mi fido di poco.' },
     smelaRecensione: { sender: 'smela', text: 'ho letto la tua recensione (la spada). messaggio ricevuto: smela springs chiude. apro un chiosco di sola acqua del rubinetto, dichiarata come tale. il realm non è pronto ma io sì.' },
-    markolinoMaschere5: { sender: 'markolino', text: '5 maschere?? quelle sono le maschere del PRIMO custode, quello che faceva i dischi. continuano a guardarti? normale. continuano a piacerti? meno. cerca le altre.' },
-    markolinoMaschere10: { sender: 'markolino', text: 'TUTTE E DIECI. le hai sentite, vero? battono il tempo. il primo custode lo chiamava "il ritmo perfetto": ogni colpo cade sul beat. ora mena come un disco d\'oro.' },
+    markolinoMaschere5: { sender: 'markolino', text: '3 maschere?? quelle sono le maschere del PRIMO custode, quello che faceva i dischi. continuano a guardarti? normale. continuano a piacerti? meno. cerca le altre, ne mancano due.' },
+    markolinoMaschere10: { sender: 'markolino', text: 'TUTTE E CINQUE. le hai sentite, vero? battono il tempo. il primo custode lo chiamava "il ritmo perfetto": ogni colpo cade sul beat. ora mena come un disco d\'oro. e quel varco verde che è apparso... è casa sua. portaci rispetto.' },
 };

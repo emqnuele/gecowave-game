@@ -35,7 +35,7 @@ export type EnemyKind =
 export type BossKind =
     | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
     | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto'
-    | 'danjilo' | 'smela';
+    | 'danjilo' | 'smela' | 'settequaranta' | 'custode';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }
@@ -45,10 +45,12 @@ export type EntitySpec =
     | { type: 'barre'; amount: number }
     | { type: 'cuore' }
     | { type: 'maschera' }
-    | { type: 'boss'; kind: BossKind };
+    | { type: 'boss'; kind: BossKind }
+    /** varco verso un capitolo segreto; appare solo se needsFlag è attivo */
+    | { type: 'portal'; to: string; needsFlag?: string; label?: string };
 
 /** script speciali di livello gestiti dalla GameScene */
-export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'caso' | 'ruhra' | 'tana' | 'sorveglianza' | 'cantina' | 'ricordi' | 'pedro';
+export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'caso' | 'ruhra' | 'tana' | 'sorveglianza' | 'cantina' | 'ricordi' | 'pedro' | 'custode';
 
 export interface LevelDef {
     id: string;
@@ -65,6 +67,10 @@ export interface LevelDef {
     entities: Record<string, EntitySpec>;
     /** id del livello successivo (uscita X), assente per l'ultimo */
     next?: string;
+    /** capitolo segreto: non entra nella progressione né nella schermata viaggio */
+    secret?: boolean;
+    /** dove sputa l'uscita di un capitolo segreto se manca il portale d'origine */
+    returnTo?: string;
     /** dialogo lanciato al primo ingresso */
     introDialogue?: string;
     /** logica speciale del capitolo */
@@ -90,6 +96,10 @@ export interface SaveData {
     flags: string[];
     endingSeen: string | null;
     playerName: string;
+    /** modalità collasso: il realm si sgretola se perdi tempo, scelta alla forgia */
+    collassoMode: boolean;
+    /** avanzamento del collasso 0..1, persistito così non si azzera riavviando */
+    collasso: number;
     stats: {
         forza: number;
         costituzione: number;

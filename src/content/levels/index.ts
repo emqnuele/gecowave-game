@@ -14,6 +14,8 @@ import { sorveglianza } from './level10-sorveglianza';
 import { cantina } from './level11-cantina';
 import { ricordi } from './level12-ricordi';
 import { nucleo } from './level13-nucleo';
+import { barrato } from './level14-barrato';
+import { custode } from './level15-custode';
 
 /* per aggiungere un capitolo: crea un file qui accanto, importalo
    e aggiungilo alla lista. collega le zone col campo `next`. */
@@ -23,7 +25,13 @@ const all: LevelDef[] = [
     ruhra, mente, caso, tana, sorveglianza, cantina, ricordi, nucleo,
 ];
 
-export const LEVELS: Record<string, LevelDef> = Object.fromEntries(all.map((l) => [l.id, l]));
+/* capitoli segreti: raggiungibili solo dai varchi, fuori dalla progressione
+   e dalla schermata viaggio. */
+const secret: LevelDef[] = [barrato, custode];
+
+export const LEVELS: Record<string, LevelDef> = Object.fromEntries(
+    [...all, ...secret].map((l) => [l.id, l]),
+);
 
 /** ordine canonico dei capitoli, per la schermata di viaggio */
 export const LEVEL_ORDER: string[] = all.map((l) => l.id);

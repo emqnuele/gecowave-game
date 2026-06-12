@@ -1135,6 +1135,56 @@ function bosses(scene: Phaser.Scene): void {
         g.fillRect(72, 80, 4, 8);
         g.fillCircle(74, 88, 3);
     });
+
+    // il 7:40: carcassa di citelis sepolto, fari come occhi, paraurti a denti
+    make(scene, 'boss-settequaranta', 130, 84, (g) => {
+        g.fillStyle(0x3a3000, 1);
+        g.fillRoundedRect(6, 14, 118, 58, 8);
+        g.lineStyle(2, 0xfacc15, 0.7);
+        g.strokeRoundedRect(6, 14, 118, 58, 8);
+        // finestrini sporchi
+        g.fillStyle(0x0a0d12, 1);
+        for (let i = 0; i < 4; i++) g.fillRect(16 + i * 26, 22, 18, 16);
+        // fari-occhi gialli
+        glow(g, 22, 56, 5, 0xfacc15, 0.9);
+        glow(g, 108, 56, 5, 0xfacc15, 0.9);
+        g.fillStyle(0xfde047, 1);
+        g.fillCircle(22, 56, 4);
+        g.fillCircle(108, 56, 4);
+        // paraurti a denti
+        g.fillStyle(0x9ca3af, 1);
+        for (let i = 0; i < 9; i++) g.fillTriangle(14 + i * 13, 72, 20 + i * 13, 72, 17 + i * 13, 82);
+        // numero di linea
+        g.lineStyle(2.5, 0xfacc15, 0.9);
+        g.strokeRect(54, 4, 22, 12);
+        g.lineBetween(58, 10, 62, 10);
+        g.lineBetween(68, 6, 68, 14);
+    });
+
+    // il primo custode: geco spettrale che batte il tempo, aura da disco d'oro
+    make(scene, 'boss-custode', 60, 84, (g) => {
+        g.fillStyle(0x0c1410, 0.95);
+        g.fillRoundedRect(16, 20, 28, 52, 10);
+        g.lineStyle(2, 0x4ade80, 0.8);
+        g.strokeRoundedRect(16, 20, 28, 52, 10);
+        // testa con maschera del custode
+        g.fillStyle(0x0c1410, 1);
+        g.fillCircle(30, 14, 12);
+        g.lineStyle(1.5, 0x4ade80, 0.85);
+        g.strokeCircle(30, 14, 12);
+        // occhi a fessura ritmica
+        glow(g, 25, 13, 2.4, 0x4ade80, 0.9);
+        glow(g, 35, 13, 2.4, 0x4ade80, 0.9);
+        // coda spettrale che si dissolve
+        g.fillStyle(0x4ade80, 0.35);
+        g.fillTriangle(16, 64, 16, 78, 2, 84);
+        // note che gli orbitano
+        g.fillStyle(0xfde047, 0.85);
+        g.fillCircle(50, 30, 3); g.fillRect(52, 22, 1.5, 9);
+        g.fillCircle(8, 36, 3); g.fillRect(10, 28, 1.5, 9);
+        // aura disco d'oro
+        glow(g, 30, 44, 7, 0xfde047, 0.25);
+    });
 }
 
 /* ---------- oggetti ---------- */
@@ -1250,6 +1300,22 @@ function objects(scene: Phaser.Scene): void {
         m.beginPath();
         m.arc(14, 20, 5, 0.3, Math.PI - 0.3);
         m.strokePath();
+    });
+
+    // varco verso i capitoli segreti: anello che pulsa, vuoto al centro
+    make(scene, 'portal', 52, 64, (p) => {
+        glow(p, 26, 32, 14, 0x4ade80, 0.4);
+        p.lineStyle(3, 0x4ade80, 0.9);
+        p.strokeEllipse(26, 32, 36, 52);
+        p.lineStyle(2, 0xa855f7, 0.7);
+        p.strokeEllipse(26, 32, 26, 40);
+        p.fillStyle(0x05080a, 0.92);
+        p.fillEllipse(26, 32, 20, 32);
+        // frammenti che orbitano
+        p.fillStyle(0xfde047, 0.9);
+        p.fillCircle(26, 8, 2.4);
+        p.fillCircle(44, 32, 2.4);
+        p.fillCircle(8, 40, 2);
     });
 
     // stele della lore

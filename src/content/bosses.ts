@@ -36,6 +36,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         },
         cooldownMs: { 1: 2600, 2: 2200, 3: 1700 },
         summonKind: 'pendolare',
+        startsInvulnerable: true,
         contactDamage: 1,
     },
     breccio: {
@@ -278,6 +279,38 @@ export const BOSSES: Record<BossKind, BossDef> = {
         },
         cooldownMs: { 1: 2400, 2: 2000, 3: 1600 },
         summonKind: 'bottiglia',
+        contactDamage: 1,
+    },
+    // capitolo segreto: il citelis delle 7:40, sepolto sotto le dune, morde da fermo
+    settequaranta: {
+        kind: 'settequaranta',
+        name: 'il 7:40 (morde anche da fermo)',
+        texture: 'boss-settequaranta',
+        hp: 80,
+        glowColor: 0xfacc15,
+        attacks: {
+            1: ['charge', 'rain'],
+            2: ['charge', 'rain', 'summon'],
+            3: ['charge', 'charge', 'rain', 'burst', 'summon'],
+        },
+        cooldownMs: { 1: 2300, 2: 1800, 3: 1300 },
+        summonKind: 'pendolare',
+        contactDamage: 2,
+    },
+    // capitolo segreto: il fantasma del primo custode, attacca sul beat
+    custode: {
+        kind: 'custode',
+        name: 'il primo custode (il ritmo perfetto)',
+        texture: 'boss-custode',
+        hp: 90,
+        glowColor: 0x4ade80,
+        attacks: {
+            1: ['radial', 'burst'],
+            2: ['radial', 'burst', 'rain'],
+            3: ['radial', 'rain', 'burst', 'dive'],
+        },
+        // cooldown allineati al beat (500ms): 4, 3, 2 battiti
+        cooldownMs: { 1: 2000, 2: 1500, 3: 1000 },
         contactDamage: 1,
     },
 };

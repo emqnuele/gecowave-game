@@ -299,10 +299,6 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             });
             return false;
         }
-        if (this.def.kind === 'guggu' && !state.hasFlag('ivan')) {
-            amount = Math.max(1, Math.round(amount * 0.2));
-            bus.emit('toast', { text: 'lo scudo attenua il colpo!' });
-        }
         this.engage();
         this.hp -= amount;
         this.setTintFill(0xffffff);

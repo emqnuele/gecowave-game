@@ -75,6 +75,10 @@ class MusicManager {
                 return "assets/music/Lametta MC's OST 2.mp3";
             case 'nucleo':
                 return "assets/music/Until Here's OST.mp3";
+            case 'barrato':
+                return "assets/music/Ivan Maggini's OST 2.mp3";
+            case 'custode':
+                return 'assets/music/GECOWAVE.mp3';
             default:
                 return 'assets/music/GECOWAVE.mp3';
         }
@@ -104,8 +108,11 @@ class MusicManager {
         if (name.includes('ombra') || name.includes('formicona') || name.includes('limite') || name.includes('teorema')) {
             return 'assets/music/Fragment Time.mp3';
         }
-        if (name.includes('furgone')) {
+        if (name.includes('furgone') || name.includes('7:40')) {
             return "assets/music/Ivan Maggini's OST 1.mp3";
+        }
+        if (name.includes('custode')) {
+            return "assets/music/Until Here's OST.mp3";
         }
         if (name.includes('ricordo')) {
             return 'assets/music/Frammenti Infranti.mp3';

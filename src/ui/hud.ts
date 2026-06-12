@@ -23,6 +23,8 @@ export class Hud {
     private waves: HTMLElement;
     private tommaso: HTMLElement;
     private trenboBorder: HTMLElement;
+    private collasso: HTMLElement;
+    private collassoFill: HTMLElement;
     private bossBar: HTMLElement | null = null;
 
     constructor() {
@@ -44,7 +46,14 @@ export class Hud {
         this.zone = el('div', 'hud-zone sticker', '');
         this.waves = el('div', 'hud-waves');
 
-        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.trenboBorder);
+        // barra del collasso: una crepa viola che si allarga, niente numeri
+        this.collasso = el('div', 'collasso-meter');
+        this.collassoFill = el('div', 'collasso-fill');
+        const collassoLabel = el('div', 'collasso-label font-marker', 'collasso');
+        this.collasso.append(this.collassoFill, collassoLabel);
+        this.collasso.style.display = 'none';
+
+        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.collasso, this.trenboBorder);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -74,6 +83,11 @@ export class Hud {
         });
         bus.on('abilities-changed', ({ abilities }) => this.setAbilities(abilities));
         bus.on('boss-hp', (payload) => this.setBoss(payload));
+        bus.on('collasso-changed', ({ value, active }) => {
+            this.collasso.style.display = active ? '' : 'none';
+            this.collassoFill.style.width = `${Math.min(100, value * 100)}%`;
+            this.collasso.classList.toggle('critical', value >= 0.72);
+        });
     }
 
     show(): void {

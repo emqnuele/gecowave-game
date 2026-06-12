@@ -4,9 +4,20 @@ import type { AbilityId, DroppedBarre, SaveData } from '../types';
 const SAVE_KEY = 'gecowave-save-v2';
 const SETTINGS_KEY = 'gecowave-settings-v1';
 
+/* il collasso ci mette ~22 minuti di gioco passivo a riempirsi.
+   ogni boss di trama abbattuto lo ricaccia indietro di un bel pezzo. */
+const COLLASSO_FILL_MS = 22 * 60 * 1000;
+const COLLASSO_BOSS_RELIEF = 0.14;
+
 export interface Settings {
     volume: number;
     screenShake: boolean;
+}
+
+export interface PortalReturn {
+    levelId: string;
+    x: number;
+    y: number;
 }
 
 const defaultSave = (): SaveData => ({
@@ -19,6 +30,8 @@ const defaultSave = (): SaveData => ({
     flags: [],
     endingSeen: null,
     playerName: 'Geco',
+    collassoMode: false,
+    collasso: 0,
     stats: {
         forza: 0,
         costituzione: 0,
@@ -35,6 +48,9 @@ class GameState {
     dropped: DroppedBarre | null = null;
     /** vita, flow e malus della run corrente: non si salvano, si vivono */
     run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false };
+    /** dove tornare uscendo da un capitolo segreto (transient, non persistito) */
+    portalReturn: PortalReturn | null = null;
+    private collassoSinceSave = 0;
 
     constructor() {
         try {
@@ -94,12 +110,28 @@ class GameState {
         localStorage.removeItem(SAVE_KEY);
     }
 
+    get abilities(): AbilityId[] {
+        if (this.godMode) {
+            return [
+                'scivolata',
+                'rimbalzo',
+                'riflesso',
+                'risonante',
+                'rigenerazione',
+                'analisi',
+                'scudo',
+                'acquatossica'
+            ];
+        }
+        return this.save.abilities;
+    }
+
     hasAbility(a: AbilityId): boolean {
-        return this.save.abilities.includes(a);
+        return this.abilities.includes(a);
     }
 
     unlockAbility(a: AbilityId): void {
-        if (!this.hasAbility(a)) {
+        if (!this.save.abilities.includes(a)) {
             this.save.abilities.push(a);
             this.persist();
         }
@@ -122,6 +154,32 @@ class GameState {
             this.save.flags.splice(idx, 1);
             this.persist();
         }
+    }
+
+    /** avanza il collasso col tempo reale; ritorna il valore aggiornato (0..1) */
+    tickCollasso(deltaMs: number): number {
+        if (!this.save.collassoMode || this.save.collasso >= 1) return this.save.collasso;
+        this.save.collasso = Math.min(1, this.save.collasso + deltaMs / COLLASSO_FILL_MS);
+        // persistere ogni frame sarebbe spreco: salviamo ogni ~5s di gioco
+        this.collassoSinceSave += deltaMs;
+        if (this.collassoSinceSave > 5000) {
+            this.collassoSinceSave = 0;
+            this.persist();
+        }
+        return this.save.collasso;
+    }
+
+    /** un boss di trama abbattuto ricaccia indietro il collasso */
+    relieveCollasso(): void {
+        if (!this.save.collassoMode) return;
+        this.save.collasso = Math.max(0, this.save.collasso - COLLASSO_BOSS_RELIEF);
+        this.persist();
+    }
+
+    /** pedro respinto: il realm respira di nuovo, ma non torna a zero */
+    setCollasso(v: number): void {
+        this.save.collasso = Math.max(0, Math.min(1, v));
+        this.persist();
     }
 }
 

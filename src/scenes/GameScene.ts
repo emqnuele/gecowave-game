@@ -20,6 +20,8 @@ interface SceneData {
     levelId: string;
     checkpointId?: string | null;
     showCard?: boolean;
+    /** override dello spawn: usato per rientrare accanto a un varco segreto */
+    spawnAt?: { x: number; y: number };
 }
 
 interface Interactable {
@@ -45,9 +47,11 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     limite: 'limite-intro',
     pedrino: 'pedrino-intro',
     flauto: 'flauto-intro',
+    settequaranta: 'settequaranta-intro',
+    custode: 'custode-intro',
 };
 
-export const TOTAL_MASCHERE = 10;
+export const TOTAL_MASCHERE = 5;
 
 const FALL_DEATH_MARGIN = 3000;
 
@@ -138,6 +142,14 @@ export class GameScene extends Phaser.Scene {
     private ivanBusy = false;
     private nextIvanStrikeAt = 0;
     private ivanDead = false;
+    // collasso: pedro raggiunge il custode se perde troppo tempo
+    private collapsePedro = false;
+    private collapseTriggered = false;
+    private collassoWarned = 0;
+    private nextWildGlitchAt = 0;
+    // il primo custode attacca sul beat: metronomo interno a 120 bpm
+    private beatMs = 500;
+    private nextBeatAt = 0;
 
     constructor() {
         super('GameScene');
@@ -179,6 +191,11 @@ export class GameScene extends Phaser.Scene {
         this.ivanInArena = false;
         this.ivanBusy = false;
         this.ivanDead = false;
+        this.collapsePedro = false;
+        this.collapseTriggered = false;
+        this.collassoWarned = 0;
+        this.nextWildGlitchAt = 0;
+        this.nextBeatAt = 0;
 
         generateZoneTextures(this, this.def.color);
 
@@ -200,6 +217,8 @@ export class GameScene extends Phaser.Scene {
             const cp = this.level.checkpoints.find((c) => c.id === cpId);
             if (cp) sp = { x: cp.x, y: cp.y - 8 };
         }
+        // rientro da un capitolo segreto: spawn accanto al varco d'origine
+        if (data.spawnAt) sp = { x: data.spawnAt.x, y: data.spawnAt.y };
         this.player = new Player(this, sp.x, sp.y);
         this.player.setDepth(4);
         this.lighting.playerLight(this.player);
@@ -232,8 +251,8 @@ export class GameScene extends Phaser.Scene {
             showCard: data.showCard !== false,
         });
         bus.emit('barre-changed', { barre: state.save.barre, gained: false });
-        bus.emit('abilities-changed', { abilities: state.save.abilities });
-        bus.emit('fragments-changed', { count: state.save.abilities.length, total: TOTAL_FRAGMENTS });
+        bus.emit('abilities-changed', { abilities: state.abilities });
+        bus.emit('fragments-changed', { count: state.abilities.length, total: TOTAL_FRAGMENTS });
 
         // la tommasorveglianza ti accoglie diversamente se non sei cliente premium
         let introId = this.def.introDialogue;
@@ -315,6 +334,9 @@ export class GameScene extends Phaser.Scene {
                 case 'maschera':
                     this.spawnMaschera(x, y, `maschera-${this.def.id}`);
                     break;
+                case 'portal':
+                    this.spawnPortal(x, y, spec.to, spec.needsFlag, spec.label);
+                    break;
                 case 'boss': {
                     // i boss sconfitti restano sconfitti, regola souls
                     if (state.hasFlag(`boss-down-${spec.kind}`)) {
@@ -352,6 +374,8 @@ export class GameScene extends Phaser.Scene {
         if (kind === 'riba' && !state.hasFlag('dispositivo')) state.setFlag('dispositivo');
         if (kind === 'lochef') this.spawnCuore(x, y + 50, 'cuore-lochef');
         if (kind === 'formicona') this.spawnCuore(x, y + 50, 'cuore-formicona');
+        if (kind === 'settequaranta') this.spawnCuore(x, y + 50, 'cuore-barrato');
+        if (kind === 'custode') this.spawnCuore(x, y + 50, 'cuore-custode');
         if (kind === 'limite') {
             state.setFlag('caso-risolto');
             this.spawnCuore(x, y + 50, 'cuore-limite');
@@ -646,8 +670,8 @@ export class GameScene extends Phaser.Scene {
             shard.destroy();
             state.unlockAbility(ability);
             sfx.unlock();
-            bus.emit('abilities-changed', { abilities: state.save.abilities });
-            bus.emit('fragments-changed', { count: state.save.abilities.length, total: TOTAL_FRAGMENTS });
+            bus.emit('abilities-changed', { abilities: state.abilities });
+            bus.emit('fragments-changed', { count: state.abilities.length, total: TOTAL_FRAGMENTS });
             bus.emit('ability-unlocked', { ability });
         });
     }
@@ -771,7 +795,7 @@ export class GameScene extends Phaser.Scene {
             bus.emit('barre-changed', { barre: state.save.barre, gained: true });
             const n = this.maschereCount();
             bus.emit('toast', { text: `una maschera della tua stessa faccia (${n}/${TOTAL_MASCHERE}). +25 barre.` });
-            if (n === 5 && !state.hasFlag('maschere-5')) {
+            if (n === 3 && !state.hasFlag('maschere-5')) {
                 state.setFlag('maschere-5');
                 state.save.stats.forza += 1;
                 state.persist();
@@ -782,6 +806,49 @@ export class GameScene extends Phaser.Scene {
                 bus.emit('wavesung', WAVESUNG.markolinoMaschere10);
                 bus.emit('toast', { text: TOASTS.mascheraCompleta });
             }
+        });
+    }
+
+    /* ---------- varchi verso i capitoli segreti ---------- */
+
+    private spawnPortal(x: number, y: number, to: string, needsFlag?: string, label?: string): void {
+        const unlocked = !needsFlag || state.hasFlag(needsFlag);
+        const portal = this.add.sprite(x, y - 8, 'portal').setDepth(5);
+        if (!unlocked) {
+            // varco spento: si intravede appena finché non scatta la condizione
+            portal.setAlpha(0.16).setTint(0x445544);
+            this.interactables.push({
+                x, y: y - 8, range: 60,
+                onInteract: () => bus.emit('toast', { text: TOASTS.portalLocked }),
+            });
+            return;
+        }
+        this.lighting.follow(portal, to === 'barrato' ? 0xfacc15 : 0x4ade80, 220, 1.0);
+        this.tweens.add({ targets: portal, scaleX: { from: 0.92, to: 1.08 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.tweens.add({ targets: portal, angle: { from: -3, to: 3 }, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.add.particles(x, y - 8, 'p-dot', {
+            scale: { start: 0.4, end: 0 },
+            alpha: { start: 0.6, end: 0 },
+            tint: to === 'barrato' ? 0xfacc15 : 0x4ade80,
+            speed: { min: 10, max: 40 },
+            lifespan: 1000,
+            frequency: 120,
+        }).setDepth(4);
+        const hintShown = `portal-hint-${to}`;
+        if (!state.hasFlag(hintShown)) {
+            state.setFlag(hintShown);
+            this.time.delayedCall(900, () => bus.emit('toast', {
+                text: to === 'barrato' ? TOASTS.portalBarrato : TOASTS.portalCustode,
+            }));
+        }
+        this.interactables.push({
+            x, y: y - 8, range: 58,
+            onInteract: () => {
+                if (this.exiting) return;
+                state.portalReturn = { levelId: this.def.id, x, y };
+                bus.emit('toast', { text: `entri nel varco: ${label ?? to}.` });
+                this.gotoLevel(to);
+            },
         });
     }
 
@@ -1047,10 +1114,68 @@ export class GameScene extends Phaser.Scene {
         this.updatePatto(time);
         this.updateIvan(time);
         this.updateFakeWalls();
+        this.updateCollasso(time, delta);
+        this.updateRhythm(time);
 
         if (state.run.trenbolone && Math.random() < 0.2) {
             this.shake(60, 0.0006);
         }
+    }
+
+    /* ---------- il collasso del realm (modalità collasso) ---------- */
+
+    private updateCollasso(time: number, delta: number): void {
+        if (!state.save.collassoMode || this.player.dead || this.exiting) return;
+        // niente collasso durante gli scontri di trama già tesi
+        if (this.pattoActive || this.finalGodsFight) return;
+        const v = state.tickCollasso(delta);
+        bus.emit('collasso-changed', { value: v, active: true });
+
+        if (v >= 0.45 && this.collassoWarned < 1) {
+            this.collassoWarned = 1;
+            bus.emit('toast', { text: TOASTS.collassoWarn1 });
+        }
+        if (v >= 0.72 && this.collassoWarned < 2) {
+            this.collassoWarned = 2;
+            bus.emit('toast', { text: TOASTS.collassoWarn2 });
+        }
+
+        // glitch selvaggi che infestano qualsiasi zona quando il collasso avanza
+        if (v >= 0.6 && !this.boss && time >= this.nextWildGlitchAt) {
+            this.nextWildGlitchAt = time + Phaser.Math.Between(3500, 6500);
+            const side = Math.random() < 0.5 ? -1 : 1;
+            const gx = Phaser.Math.Clamp(this.player.x + side * 420, 40, this.level.widthPx - 40);
+            this.spawnEnemy('glitchetto', gx, this.player.y - 80);
+        }
+
+        // collasso pieno: pedro raggiunge il custode. boss anticipato, quasi impossibile.
+        if (v >= 1 && !this.collapseTriggered && !this.boss && this.def.script !== 'pedro') {
+            this.collapseTriggered = true;
+            this.collapsePedro = true;
+            bus.emit('toast', { text: TOASTS.collassoPedro });
+            this.shake(400, 0.012);
+            this.startDialogue('collasso-pedro', () => {
+                const px = Phaser.Math.Clamp(this.player.x + 220, 80, this.level.widthPx - 80);
+                this.boss = new Boss(this, px, this.player.y - 120, 'pedro');
+                this.boss.frenzy = true;
+                this.lighting.follow(this.boss, this.boss.def.glowColor, 320, 1.1);
+                this.setupBossColliders();
+                this.boss.engage();
+            });
+        }
+    }
+
+    /* ---------- il primo custode: attacchi sul beat, pulse visivo ---------- */
+
+    private updateRhythm(time: number): void {
+        if (this.def.script !== 'custode' || !this.boss?.active || !this.boss.engaged) return;
+        if (time < this.nextBeatAt) return;
+        this.nextBeatAt = time + this.beatMs;
+        // lampo sul beat: il boss imposta la scala ogni frame, quindi pulsiamo col tint
+        const b = this.boss;
+        b.setTintFill(0xfde047);
+        this.time.delayedCall(90, () => b.active && b.clearTint());
+        sfx.ui();
     }
 
     private updateFakeWalls(): void {
@@ -1218,7 +1343,21 @@ export class GameScene extends Phaser.Scene {
     }
 
     private checkExits(): void {
-        if (this.exiting || !this.def.next || this.player.dead) return;
+        if (this.exiting || this.player.dead) return;
+        // i capitoli segreti non hanno `next`: l'uscita riporta al varco d'origine
+        if (!this.def.next) {
+            if (!this.def.secret) return;
+            const hit = this.level.exits.some((r) => r.contains(this.player.x, this.player.y));
+            if (!hit) return;
+            if (this.boss?.active && this.boss.def.guardsExit !== false) return;
+            const ret = state.portalReturn;
+            const target = ret?.levelId ?? this.def.returnTo;
+            if (!target) return;
+            const spawnAt = ret && ret.levelId === target ? { x: ret.x, y: ret.y } : undefined;
+            state.portalReturn = null;
+            this.gotoLevel(target, spawnAt);
+            return;
+        }
         const hit = this.level.exits.some((r) => r.contains(this.player.x, this.player.y));
         if (!hit) return;
         // i boss non si superano scappando (quelli opzionali sì)
@@ -1246,7 +1385,22 @@ export class GameScene extends Phaser.Scene {
         this.gotoLevel(this.def.next);
     }
 
-    private gotoLevel(next: string): void {
+    /** rientro da un capitolo segreto verso il varco d'origine (o il returnTo) */
+    private returnFromSecret(delay: number): void {
+        if (!this.def.secret) return;
+        bus.emit('toast', { text: 'capitolo segreto completato. il varco ti riporta indietro...' });
+        this.time.delayedCall(delay, () => {
+            if (this.exiting || this.player.dead) return;
+            const ret = state.portalReturn;
+            const target = ret?.levelId ?? this.def.returnTo;
+            if (!target) return;
+            const spawnAt = ret && ret.levelId === target ? { x: ret.x, y: ret.y } : undefined;
+            state.portalReturn = null;
+            this.gotoLevel(target, spawnAt);
+        });
+    }
+
+    private gotoLevel(next: string, spawnAt?: { x: number; y: number }): void {
         this.exiting = true;
         state.save.levelId = next;
         state.save.checkpointId = null;
@@ -1254,7 +1408,7 @@ export class GameScene extends Phaser.Scene {
         sfx.stopPad();
         this.cameras.main.fadeOut(450, 0, 0, 0);
         this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-            this.scene.restart({ levelId: next, checkpointId: null } satisfies SceneData);
+            this.scene.restart({ levelId: next, checkpointId: null, spawnAt } satisfies SceneData);
         });
     }
 
@@ -2029,6 +2183,13 @@ export class GameScene extends Phaser.Scene {
 
     private onBossDefeated({ kind, x, y }: { kind: BossKind; x: number; y: number }): void {
         this.boss = null;
+        // pedro del collasso: respinto, non è il pedro della trama. niente finale.
+        if (kind === 'pedro' && this.collapsePedro) {
+            this.collapsePedro = false;
+            state.setCollasso(0.55);
+            this.startDialogue('collasso-respinto');
+            return;
+        }
         if (kind !== 'pedro' && kind !== 'dei') {
             state.setFlag(`boss-down-${kind}`);
         }
@@ -2114,6 +2275,18 @@ export class GameScene extends Phaser.Scene {
                             }
                         },
                     });
+                });
+                break;
+            case 'settequaranta':
+                this.startDialogue('settequaranta-morte', () => {
+                    this.spawnCuore(x, y + 40, 'cuore-barrato');
+                    this.returnFromSecret(4500);
+                });
+                break;
+            case 'custode':
+                this.startDialogue('custode-morte', () => {
+                    this.spawnCuore(x, y + 40, 'cuore-custode');
+                    this.returnFromSecret(4500);
                 });
                 break;
             case 'flauto':
@@ -2202,8 +2375,8 @@ export class GameScene extends Phaser.Scene {
             if (this.pattoActive) {
                 // il patto finisce come doveva finire: morte definitiva
                 bus.emit('ending', { id: 'pedro' });
-            } else if (this.finalGodsFight) {
-                // hai sfidato gli dei e hai perso: game over, niente microfono
+            } else if (this.finalGodsFight || this.collapsePedro) {
+                // hai sfidato gli dei (o il collasso ti ha raggiunto): game over
                 bus.emit('ending', { id: 'sconfitta' });
             } else {
                 bus.emit('player-died', { lost });

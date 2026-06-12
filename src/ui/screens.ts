@@ -102,6 +102,10 @@ export class Screens {
         return this.overlay !== null;
     }
 
+    get isMenuOpen(): boolean {
+        return this.overlay?.classList.contains('menu-screen') ?? false;
+    }
+
     private onEsc(fn: () => void): void {
         this.escHandler = (e) => {
             if (e.code === 'Escape') {
@@ -152,8 +156,10 @@ export class Screens {
 
         const stack = el('div', 'menu-stack');
         stack.append(this.btn('nuova partita', -1.5, () => this.controller.newGame(), 'glass-acid-gold'));
-        if (state.hasSave) {
-            stack.append(this.btn('continua', 1.2, () => this.controller.continueGame()));
+        if (state.hasSave || state.godMode) {
+            if (state.hasSave) {
+                stack.append(this.btn('continua', 1.2, () => this.controller.continueGame()));
+            }
             stack.append(this.btn('capitoli', -1.2, () => this.showChapters(() => this.showMenu())));
         }
         stack.append(this.btn('comandi', -1, () => this.showControls(() => this.showMenu())));
@@ -181,7 +187,7 @@ export class Screens {
 
         const stack = el('div', 'menu-stack chapters-scroll');
         LEVEL_ORDER.forEach((id, i) => {
-            const unlocked = state.save.endingSeen !== null || i <= maxUnlockedIdx;
+            const unlocked = state.godMode || state.save.endingSeen !== null || i <= maxUnlockedIdx;
             if (!unlocked) return;
             const def = LEVELS[id];
             const label = `${i + 1}. ${def.title.toLowerCase()} ${def.accentWord}`;
@@ -192,6 +198,26 @@ export class Screens {
                 this.controller.travel(id);
             }));
         });
+
+        // capitoli segreti: appaiono solo una volta scoperti dal loro varco
+        const secrets = ['barrato', 'custode'].filter(
+            (id) => state.godMode || state.hasFlag(`visto-${id}`),
+        );
+        if (secrets.length) {
+            stack.append(el('div', 'chapters-secret-head font-marker', '※ capitoli segreti'));
+            secrets.forEach((id, j) => {
+                const def = LEVELS[id];
+                const label = `✦ ${def.title.toLowerCase()} ${def.accentWord}`;
+                stack.append(this.btn(label, j % 2 ? 1 : -1, () => {
+                    state.portalReturn = null;
+                    state.save.levelId = id;
+                    state.save.checkpointId = null;
+                    state.persist();
+                    this.controller.travel(id);
+                }));
+            });
+        }
+
         s.append(stack);
         s.append(this.btn('indietro', 0, back));
         this.onEsc(back);
@@ -546,6 +572,7 @@ export class Screens {
         s.append(el('div', 'forge-emblem font-crisis', '✦'));
 
         let finalName = 'Geco';
+        let collassoMode = false;
         let availablePoints = 10;
         const stats = { forza: 0, costituzione: 0, flusso: 0 };
 
@@ -752,6 +779,28 @@ export class Screens {
             labelFlus.textContent = `FLUSSO · ${stats.flusso}`;
         };
 
+        // scelta della modalità: collasso (a tempo) o esplorazione (rilassata)
+        const modeRow = el('div', 'forge-mode');
+        modeRow.append(el('div', 'forge-eyebrow font-martian', 'modalità del realm'));
+        const modeToggle = el('div', 'forge-mode-toggle');
+        const modeExplore = el('button', 'forge-mode-opt active', 'esplorazione');
+        const modeCollasso = el('button', 'forge-mode-opt', 'collasso ☠');
+        const modeDesc = el('div', 'forge-mode-desc font-martian', 'il realm ti aspetta. nessun timer: esplora e segui la trama con calma.');
+        modeToggle.append(modeExplore, modeCollasso);
+        modeRow.append(modeToggle, modeDesc);
+        const setMode = (on: boolean) => {
+            collassoMode = on;
+            modeCollasso.classList.toggle('active', on);
+            modeExplore.classList.toggle('active', !on);
+            modeDesc.textContent = on
+                ? 'il realm si sgretola col tempo. se perdi troppo, pedro ti raggiunge e ti uccide. devi sbrigarti.'
+                : 'il realm ti aspetta. nessun timer: esplora e segui la trama con calma.';
+            sfx.ui();
+        };
+        modeExplore.addEventListener('click', () => setMode(false));
+        modeCollasso.addEventListener('click', () => setMode(true));
+        step2.append(modeRow);
+
         const actions = el('div', 'forge-actions');
         const backBtn = this.btn('← nome', 0, () => {
             sfx.ui();
@@ -769,6 +818,8 @@ export class Screens {
             state.save.stats.forza = stats.forza;
             state.save.stats.costituzione = stats.costituzione;
             state.save.stats.flusso = stats.flusso;
+            state.save.collassoMode = collassoMode;
+            state.save.collasso = 0;
             state.persist();
             state.resetRun();
             this.closeOverlay();

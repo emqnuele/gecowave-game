@@ -576,6 +576,16 @@ body {
   flex: 0 0 auto;
 }
 
+.chapters-secret-head {
+  flex: 0 0 auto;
+  margin: 14px 0 2px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(74, 222, 128, 0.7);
+}
+
 .screen.menu-screen .btn:hover {
   border-color: rgba(223, 177, 91, 0.6) !important;
   box-shadow: 0 0 15px rgba(223, 177, 91, 0.2), 3px 3px 0 rgba(0, 0, 0, 0.85) !important;
@@ -668,6 +678,56 @@ body {
   background: linear-gradient(90deg, #ef4444, var(--red));
   box-shadow: 0 0 14px rgba(248, 113, 113, 0.7);
   transition: width 0.2s ease;
+}
+
+/* ---------- collasso meter ---------- */
+
+.collasso-meter {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, 60vw);
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  overflow: visible;
+}
+
+.collasso-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #6b21a8, #a855f7);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.7);
+  transition: width 0.35s linear;
+}
+
+.collasso-label {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(168, 85, 247, 0.75);
+  text-transform: uppercase;
+}
+
+.collasso-meter.critical {
+  border-color: rgba(248, 113, 113, 0.6);
+  animation: collasso-pulse 0.7s ease-in-out infinite;
+}
+
+.collasso-meter.critical .collasso-fill {
+  background: linear-gradient(90deg, #a855f7, #ef4444);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.85);
+}
+
+@keyframes collasso-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.5); }
 }
 
 /* ---------- settings ---------- */
@@ -1446,6 +1506,50 @@ input[type='range']::-webkit-slider-thumb {
   gap: 18px;
   align-items: center;
   margin-top: 8px;
+}
+
+.forge-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
+.forge-mode-toggle {
+  display: flex;
+  gap: 10px;
+}
+
+.forge-mode-opt {
+  font-family: var(--font-marker);
+  font-size: 13px;
+  padding: 7px 18px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.forge-mode-opt:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.forge-mode-opt.active {
+  color: #fff;
+  border-color: rgba(168, 85, 247, 0.7);
+  background: rgba(168, 85, 247, 0.16);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+}
+
+.forge-mode-desc {
+  font-size: 11px;
+  max-width: 360px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  min-height: 28px;
 }
 
 @keyframes forge-rise {

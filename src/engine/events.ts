@@ -16,6 +16,7 @@ export interface GameEvents {
     'boss-hp': { hp: number; maxHp: number; name: string } | null;
     'choice-show': { title: string; options: { label: string; danger?: boolean }[]; onPick: (index: number) => void };
     'ending': { id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' };
+    'collasso-changed': { value: number; active: boolean };
     'request-pause': {};
 }
 

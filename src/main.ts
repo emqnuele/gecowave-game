@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import './style.css';
 import { PHYSICS } from './config';
-import { FIRST_LEVEL } from './content/levels';
+import { FIRST_LEVEL, TOTAL_FRAGMENTS } from './content/levels';
 import { endingCards, INTRO_CARDS } from './content/story';
 import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
@@ -135,6 +135,11 @@ async function boot(): Promise<void> {
             if (code === 'gecowave-flux-resonance-992173') {
                 state.godMode = !state.godMode;
                 console.log(`%c[GECOWAVE] invincibility: ${state.godMode ? 'ENABLED' : 'DISABLED'}`, 'color: #4ade80; font-weight: bold;');
+                bus.emit('abilities-changed', { abilities: state.abilities });
+                bus.emit('fragments-changed', { count: state.abilities.length, total: TOTAL_FRAGMENTS });
+                if (screens.isMenuOpen) {
+                    screens.showMenu();
+                }
                 return state.godMode ? 'godmode on' : 'godmode off';
             }
             return 'access denied';
