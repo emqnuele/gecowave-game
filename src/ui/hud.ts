@@ -104,6 +104,7 @@ export class Hud {
         this.root.style.display = '';
         this.updateTommaso();
         this.updateTrenbo();
+        this.updateDoomsdayVisibility();
     }
     hide(): void {
         this.root.style.display = 'none';
@@ -116,6 +117,16 @@ export class Hud {
 
     private updateTrenbo(): void {
         this.trenboBorder.style.display = state.run.trenbolone ? 'block' : 'none';
+    }
+
+    private updateDoomsdayVisibility(): void {
+        // hide meter if exploration mode, update otherwise
+        const active = state.save.doomsdayMode;
+        this.doomsday.style.display = active ? '' : 'none';
+        if (active) {
+            this.doomsdayFill.style.width = `${Math.min(100, state.save.doomsday * 100)}%`;
+            this.doomsday.classList.toggle('critical', state.save.doomsday >= 0.72);
+        }
     }
 
     private updateDoomsdayColors(color: ZoneColor): void {

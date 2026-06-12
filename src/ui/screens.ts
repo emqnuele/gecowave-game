@@ -779,28 +779,6 @@ export class Screens {
             labelFlus.textContent = `FLUSSO · ${stats.flusso}`;
         };
 
-        // scelta della modalità: doomsday (a tempo) o esplorazione (rilassata)
-        const modeRow = el('div', 'forge-mode');
-        modeRow.append(el('div', 'forge-eyebrow font-martian', 'modalità del realm'));
-        const modeToggle = el('div', 'forge-mode-toggle');
-        const modeExplore = el('button', 'forge-mode-opt active', 'esplorazione');
-        const modeDoomsday = el('button', 'forge-mode-opt', 'doomsday ☠');
-        const modeDesc = el('div', 'forge-mode-desc font-martian', 'il realm ti aspetta. nessun timer: esplora e segui la trama con calma.');
-        modeToggle.append(modeExplore, modeDoomsday);
-        modeRow.append(modeToggle, modeDesc);
-        const setMode = (on: boolean) => {
-            doomsdayMode = on;
-            modeDoomsday.classList.toggle('active', on);
-            modeExplore.classList.toggle('active', !on);
-            modeDesc.textContent = on
-                ? 'il doomsday si avvicina col tempo. se perdi troppo tempo, pedro ti raggiunge e ti uccide. devi sbrigarti.'
-                : 'il realm ti aspetta. nessun timer: esplora e segui la trama con calma.';
-            sfx.ui();
-        };
-        modeExplore.addEventListener('click', () => setMode(false));
-        modeDoomsday.addEventListener('click', () => setMode(true));
-        step2.append(modeRow);
-
         const actions = el('div', 'forge-actions');
         const backBtn = this.btn('← nome', 0, () => {
             sfx.ui();
@@ -813,7 +791,62 @@ export class Screens {
             }, 200);
         });
         backBtn.classList.add('forge-btn', 'forge-btn-ghost');
-        const confirmBtn = this.btn('inizia la run →', 0, () => {
+        const confirmBtn = this.btn('conferma attributi →', 0, () => {
+            sfx.ui();
+            step2.classList.remove('active');
+            setTimeout(() => {
+                step2.style.display = 'none';
+                step3.style.display = 'flex';
+                step3.classList.add('active');
+                selectMode(false);
+            }, 200);
+        }, 'glass-acid-gold');
+        confirmBtn.classList.add('forge-btn');
+        actions.append(backBtn, confirmBtn);
+        step2.append(actions);
+
+        // --- STEP 3: MODALITÀ DI GIOCO ---
+        const step3 = el('div', 'forge-step');
+        s.append(step3);
+
+        const header3 = el('div', 'forge-header');
+        header3.append(el('div', 'forge-eyebrow font-martian', 'capitolo zero — scelta del destino'));
+        const title3 = el('h1', 'forge-title forge-title-sm font-crisis', 'SCEGLI IL TUO DESTINO');
+        header3.append(title3);
+        header3.append(el('div', 'forge-rule'));
+        step3.append(header3);
+
+        const choiceContainer = el('div', 'doomsday-choices');
+        
+        const exploreCard = el('div', 'mode-card explore-card');
+        exploreCard.append(el('div', 'card-glow'));
+        exploreCard.append(el('div', 'card-icon', '🧭'));
+        exploreCard.append(el('div', 'card-title font-marker', 'Esplorazione'));
+        exploreCard.append(el('div', 'card-desc font-martian', 'Il realm ti aspetta. Nessun timer: esplora e segui la trama con calma.'));
+        
+        const doomsdayCard = el('div', 'mode-card doomsday-card');
+        doomsdayCard.append(el('div', 'card-glow'));
+        doomsdayCard.append(el('div', 'card-icon', '☠'));
+        doomsdayCard.append(el('div', 'card-title font-marker', 'Doomsday'));
+        doomsdayCard.append(el('div', 'card-desc font-martian', 'Il doomsday si avvicina col tempo reale. Se perdi troppo tempo, Pedro ti raggiunge e ti cancella.'));
+        
+        choiceContainer.append(exploreCard, doomsdayCard);
+        step3.append(choiceContainer);
+
+        const actions3 = el('div', 'forge-actions');
+        const backToStep2Btn = this.btn('← attributi', 0, () => {
+            sfx.ui();
+            s.classList.remove('doomsday-active');
+            step3.classList.remove('active');
+            setTimeout(() => {
+                step3.style.display = 'none';
+                step2.style.display = 'flex';
+                step2.classList.add('active');
+            }, 200);
+        });
+        backToStep2Btn.classList.add('forge-btn', 'forge-btn-ghost');
+
+        const confirmRunBtn = this.btn('inizia la run →', 0, () => {
             state.save.playerName = finalName;
             state.save.stats.forza = stats.forza;
             state.save.stats.costituzione = stats.costituzione;
@@ -824,9 +857,27 @@ export class Screens {
             state.resetRun();
             this.closeOverlay();
             onConfirm();
-        }, 'glass-acid-gold');
-        confirmBtn.classList.add('forge-btn');
-        actions.append(backBtn, confirmBtn);
-        step2.append(actions);
+        });
+        confirmRunBtn.classList.add('forge-btn');
+
+        actions3.append(backToStep2Btn, confirmRunBtn);
+        step3.append(actions3);
+
+        const selectMode = (isDoomsday: boolean) => {
+            doomsdayMode = isDoomsday;
+            exploreCard.classList.toggle('selected', !isDoomsday);
+            doomsdayCard.classList.toggle('selected', isDoomsday);
+            s.classList.toggle('doomsday-active', isDoomsday);
+            sfx.ui();
+            
+            if (isDoomsday) {
+                confirmRunBtn.className = 'forge-btn doomsday-confirm';
+            } else {
+                confirmRunBtn.className = 'forge-btn glass-acid-gold';
+            }
+        };
+
+        exploreCard.addEventListener('click', () => selectMode(false));
+        doomsdayCard.addEventListener('click', () => selectMode(true));
     }
 }

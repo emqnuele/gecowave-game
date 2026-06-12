@@ -1528,48 +1528,146 @@ input[type='range']::-webkit-slider-thumb {
   margin-top: 8px;
 }
 
-.forge-mode {
+/* ---------- doomsday choices in forge ---------- */
+
+.doomsday-choices {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin: 32px 0;
+  width: min(720px, 90vw);
+}
+
+.mode-card {
+  position: relative;
+  flex: 1;
+  background: rgba(12, 12, 14, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin: 10px 0 4px;
+  gap: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-.forge-mode-toggle {
-  display: flex;
-  gap: 10px;
+.mode-card .card-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 30%, rgba(255, 255, 255, 0.03) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
-.forge-mode-opt {
-  font-family: var(--font-marker);
-  font-size: 13px;
-  padding: 7px 18px;
-  border-radius: 99px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  transition: all 0.15s ease;
+.mode-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(12, 12, 14, 0.65);
 }
 
-.forge-mode-opt:hover {
-  color: rgba(255, 255, 255, 0.9);
+.mode-card:hover .card-glow {
+  opacity: 1;
 }
 
-.forge-mode-opt.active {
-  color: #fff;
-  border-color: rgba(168, 85, 247, 0.7);
-  background: rgba(168, 85, 247, 0.16);
-  box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+.mode-card .card-icon {
+  font-size: 38px;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-.forge-mode-desc {
+.mode-card:hover .card-icon {
+  transform: scale(1.15) rotate(-3deg);
+}
+
+.mode-card .card-title {
+  font-size: 20px;
+  color: var(--zinc-300);
+  transition: color 0.3s ease;
+}
+
+.mode-card .card-desc {
   font-size: 11px;
-  max-width: 360px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-  min-height: 28px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.45);
+  max-width: 260px;
+  transition: color 0.3s ease;
+}
+
+/* selected states */
+.mode-card.explore-card.selected {
+  border-color: rgba(74, 222, 128, 0.6);
+  background: rgba(74, 222, 128, 0.05);
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.15), inset 0 0 12px rgba(74, 222, 128, 0.05);
+}
+
+.mode-card.explore-card.selected .card-icon {
+  filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.6));
+}
+
+.mode-card.explore-card.selected .card-title {
+  color: #4ade80;
+  text-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+}
+
+.mode-card.explore-card.selected .card-desc {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mode-card.doomsday-card.selected {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.05);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.18), inset 0 0 12px rgba(239, 68, 68, 0.05);
+}
+
+.mode-card.doomsday-card.selected .card-icon {
+  filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.7));
+  animation: card-shake 0.4s infinite alternate;
+}
+
+.mode-card.doomsday-card.selected .card-title {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.mode-card.doomsday-card.selected .card-desc {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes card-shake {
+  0% { transform: scale(1.05) rotate(-1deg); }
+  100% { transform: scale(1.05) rotate(1deg); }
+}
+
+/* doomsday background state on char-forge */
+.char-forge.doomsday-active .forge-vignette {
+  background: radial-gradient(circle, transparent 20%, rgba(79, 0, 0, 0.65) 90%);
+  box-shadow: inset 0 0 120px rgba(239, 68, 68, 0.4);
+}
+
+.char-forge.doomsday-active .forge-embers .forge-ember {
+  --drift: 45px;
+  filter: drop-shadow(0 0 6px #ef4444) hue-rotate(-50deg) saturate(1.8);
+  animation-duration: 4.5s;
+}
+
+/* button dynamic confirm style */
+.forge-btn.doomsday-confirm {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.7);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+}
+
+.forge-btn.doomsday-confirm:hover {
+  background: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.65);
 }
 
 @keyframes forge-rise {

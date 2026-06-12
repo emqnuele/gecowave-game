@@ -146,6 +146,9 @@ export class GameScene extends Phaser.Scene {
     private collapsePedro = false;
     private collapseTriggered = false;
     private doomsdayWarned = 0;
+    private replacedBossKind: BossKind | null = null;
+    private replacedBossX = 0;
+    private replacedBossY = 0;
     private nextWildGlitchAt = 0;
     // il primo custode attacca sul beat: metronomo interno a 120 bpm
     private beatMs = 500;
@@ -194,6 +197,9 @@ export class GameScene extends Phaser.Scene {
         this.collapsePedro = false;
         this.collapseTriggered = false;
         this.doomsdayWarned = 0;
+        this.replacedBossKind = null;
+        this.replacedBossX = 0;
+        this.replacedBossY = 0;
         this.nextWildGlitchAt = 0;
         this.nextBeatAt = 0;
 
@@ -1155,7 +1161,12 @@ export class GameScene extends Phaser.Scene {
             this.collapseTriggered = true;
             this.collapsePedro = true;
             if (this.boss) {
+                this.replacedBossKind = this.boss.def.kind;
+                this.replacedBossX = this.boss.x;
+                this.replacedBossY = this.boss.y;
                 this.boss.destroy();
+            } else {
+                this.replacedBossKind = null;
             }
             bus.emit('toast', { text: TOASTS.doomsdayPedro });
             this.shake(400, 0.012);
@@ -2191,8 +2202,25 @@ export class GameScene extends Phaser.Scene {
         // pedro del doomsday: respinto, non è il pedro della trama. niente finale.
         if (kind === 'pedro' && this.collapsePedro) {
             this.collapsePedro = false;
+            this.collapseTriggered = false;
+            this.doomsdayWarned = 1;
             state.setDoomsday(0.55);
-            this.startDialogue('doomsday-respinto');
+            const replaced = this.replacedBossKind;
+            const rx = this.replacedBossX;
+            const ry = this.replacedBossY;
+            this.replacedBossKind = null;
+            this.bossIntroShown = false;
+            this.startDialogue('doomsday-respinto', () => {
+                if (replaced) {
+                    const hpOverride = replaced === 'ombra' && !state.hasFlag('tommasorveglianza') ? 34 : undefined;
+                    this.boss = new Boss(this, rx, ry, replaced, hpOverride);
+                    if (replaced === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;
+                    if (replaced === 'limite' && this.indiziRaccolti() >= 3) this.boss.invulnerable = false;
+                    if (replaced === 'ticummi' && state.hasFlag('tommasorveglianza')) this.boss.summonOverride = 'eco';
+                    this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
+                    this.setupBossColliders();
+                }
+            });
             return;
         }
         if (kind !== 'pedro' && kind !== 'dei') {
