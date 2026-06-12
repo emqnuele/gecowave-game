@@ -256,7 +256,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
         kind: 'dei',
         name: 'piema & lametta',
         texture: 'boss-dei',
-        hp: 120,
+        hp: 200,
         glowColor: 0xffffff,
         attacks: {
             1: ['lamette', 'radial', 'dive'],
@@ -382,6 +382,28 @@ export const BOSSES: Record<BossKind, BossDef> = {
         contactDamage: 1,
     },
     // piema che giura il falso e tace per amore: il rimpianto peggiore
+    // il 33: il numero che ricorre in tutto il realm. nessuno sa perché.
+    // quando si manifesta in persona, è la cosa più potente del void.
+    trentatre: {
+        kind: 'trentatre',
+        name: 'il 33 (il numero che non doveva esistere)',
+        texture: 'boss-trentatre',
+        // il superboss opzionale: durissimo, ma compatto sulla vita
+        hp: 160,
+        glowColor: 0xfacc15,
+        // solo attacchi a distanza: niente picchiate o cariche, è uno zoner
+        attacks: {
+            1: ['teleport', 'radial', 'rain','burst', 'burst',  'lamette', 'burst', 'lamette','lamette','lamette',  'summon'],
+            2: ['teleport', 'radial', 'rain','burst', 'burst',  'lamette', 'burst', 'lamette','lamette','lamette',  'summon'],
+            3: ['rain', 'lamette', 'burst', 'rain', 'lamette', 'burst', 'rain', 'lamette', 'burst', 'rain', 'lamette', 'burst',],
+        },
+        cooldownMs: { 1: 1300, 2: 950, 3: 650 },
+        summonKind: 'numero',
+        guardsExit: false,
+        glitchy: true,
+        contactDamage: 3,
+        bodyScale: 1.4,
+    },
     garante: {
         kind: 'garante',
         name: 'il garante (l\'ultimo rimpianto di piema)',

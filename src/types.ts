@@ -36,7 +36,8 @@ export type BossKind =
     | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
     | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto'
     | 'danjilo' | 'smela' | 'settequaranta' | 'custode'
-    | 'delegato' | 'notturno' | 'modello' | 'revisore' | 'garante';
+    | 'delegato' | 'notturno' | 'modello' | 'revisore' | 'garante'
+    | 'trentatre';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }

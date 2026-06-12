@@ -1333,6 +1333,38 @@ function bosses(scene: Phaser.Scene): void {
         ricordoScan(g, 52, 80, 0x60a5fa);
     });
 
+    // il 33: due tre giganti e ostili, fatti di numero puro. occhi tra le curve.
+    make(scene, 'boss-trentatre', 88, 84, (g) => {
+        glow(g, 44, 42, 14, 0xfacc15, 0.3);
+        const tre = (cx: number) => {
+            g.lineStyle(7, 0xfde047, 0.95);
+            // curva superiore del 3
+            g.beginPath();
+            g.arc(cx, 24, 14, Math.PI * 1.15, Math.PI * 0.5, false);
+            g.strokePath();
+            // curva inferiore del 3
+            g.beginPath();
+            g.arc(cx, 52, 14, Math.PI * 1.5, Math.PI * 0.85, false);
+            g.strokePath();
+            // bordo interno luminoso
+            g.lineStyle(2, 0xffffff, 0.6);
+            g.beginPath();
+            g.arc(cx, 24, 14, Math.PI * 1.15, Math.PI * 0.5, false);
+            g.strokePath();
+            // occhio ostile annidato nella pancia del numero
+            glow(g, cx + 2, 38, 2.6, 0xf87171, 0.9);
+        };
+        tre(26);
+        tre(62);
+        // glitch tra i due tre: scariche verticali
+        g.lineStyle(1.5, 0xfacc15, 0.5);
+        for (const x of [44, 46, 42]) {
+            g.beginPath();
+            g.moveTo(x, 8); g.lineTo(x, 76);
+            g.strokePath();
+        }
+    });
+
     // il garante: piema che giura il falso. mano alzata, bocca cucita, cuore nascosto
     make(scene, 'boss-garante', 54, 84, (g) => {
         glow(g, 27, 46, 9, 0x60a5fa, 0.25);

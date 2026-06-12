@@ -71,7 +71,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'ancora qui?? il realm COLLASSA. con calma eh, ma collassa. muoviti che più avanti c\'è gente messa peggio di te.' },
     ],
     'lore-cratere': [
-        { speaker: 'bordo del cratere', color: 'green', text: '«epicentro dello scontro. qui la wave ha toccato terra per l\'ultima volta intera. il cratere è perfettamente circolare: piema dice "ovvio", lametta dice "prego".»' },
+        { speaker: 'bordo del cratere', color: 'green', text: '«epicentro dello scontro. qui la wave ha toccato terra per l\'ultima volta intera. cratere perfettamente circolare, diametro 33: piema dice "ovvio", lametta dice "prego". una targa arrugginita sul bordo: "Herbert, (TN), era qui".»' },
     ],
     'lore-scale': [
         { speaker: 'gradino numerato', color: 'green', text: '«le scale del collasso: 847 gradini, uno per ogni giro di samatt. nessuno sa chi le abbia contate. tutti sanno chi le avrebbe contate.»' },
@@ -80,16 +80,16 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'registro del deposito', color: 'yellow', text: '«deposito citelis notturno. regolamento: i bus dormono in piedi, i pendolari dove capita. vietato svegliare il 7:40: morde anche da fermo.»' },
     ],
     'lore-capolinea': [
-        { speaker: 'cartello del capolinea', color: 'yellow', text: '«capolinea fantasma: qui i loop venivano a morire, prima che guggu li rendesse eterni. se aspetti abbastanza, passa un bus che non esiste. non salirci.»' },
+        { speaker: 'cartello del capolinea', color: 'yellow', text: '«capolinea fantasma: qui i loop venivano a morire, prima che guggu li rendesse eterni. se aspetti abbastanza, passa un bus che non esiste. sul vetro, inciso a chiave: "Claudio è sceso qui e non è più risalito". non salirci.»' },
     ],
     'lore-futuri': [
         { speaker: 'cornice vuota', color: 'purple', text: '«galleria dei futuri possibili: 99 specchi. in uno diventi dio, in uno resti geco, in 97 fai una figuraccia. la statistica del realm è spietata.»' },
     ],
     'lore-laboratorio-colori': [
-        { speaker: 'barattolo etichettato', color: 'purple', text: '«laboratorio dei colori di lametta. scaffale a: rabbia (rosso). scaffale b: malinconia (viola). scaffale c: trenbolone (non è un colore ma lo usa come se lo fosse).»' },
+        { speaker: 'barattolo etichettato', color: 'purple', text: '«laboratorio dei colori di lametta. scaffale a: rabbia (rosso). scaffale b: malinconia (viola). scaffale c: trenbolone (lo usa come un colore). scaffale d, chiuso a chiave: "Margherita" — una tinta che lametta non ha mai mostrato a nessuno.»' },
     ],
     'lore-radio': [
-        { speaker: 'torre radio', color: 'red', text: '«da qui notino trasmette il suo server, 24 ore su 24. frequenza: tutte. contenuto: "BUM". ascolti certificati: 1 (sua madre, per controllarlo).»' },
+        { speaker: 'torre radio', color: 'red', text: '«da qui notino trasmette il suo server 24 ore su 24. frequenza: tutte, tranne i 33 MHz — occupati da una vecchia Radio Pico che nessuno riesce a spegnere. contenuto: "BUM". ascolti certificati: 1 (sua madre, per controllarlo).»' },
     ],
     'lore-dune': [
         { speaker: 'palo sepolto', color: 'red', text: '«sotto queste dune c\'è una linea intera di citelis: la 14 barrato. guggu la cerca ancora. le dune non restituiscono niente, nemmeno i mezzi pubblici.»' },
@@ -324,7 +324,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'manuale della catena', color: 'cyan', text: '«procedura di imbottigliamento: 1. prendere acqua. 2. non filtrarla (il sapore è identità aziendale). 3. etichetta PREMIUM. 4. se il cliente si lamenta, vendergli l\'effetto smela III come esperienza.»' },
     ],
     'lore-cisterna': [
-        { speaker: 'cisterna numero 3', color: 'cyan', text: '«livello: pieno. contenuto: ufficialmente "essenza di sorgente". una scritta a pennarello sotto: "rio merdone tale e quale, non dirlo a nessuno — s."»' },
+        { speaker: 'cisterna numero 3', color: 'cyan', text: '«livello: pieno. contenuto: ufficialmente "essenza di sorgente". fornitura elettrica intestata a Enercoop SpA, utenza morosa da 33 mesi. scritta a pennarello sotto: "rio merdone tale e quale, non dirlo a nessuno — s."»' },
     ],
     'furgone-intro': [
         { speaker: 'smela', color: 'cyan', text: 'EHI! tu non sei del tour!! sei venuto a chiudere lo stabilimento, vero? lo sapevo. nessuno apprezza più la libera impresa.' },
@@ -355,6 +355,9 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'lore-trenbolone': [
         { speaker: 'volantino unto', color: 'orange', text: '«TRENBOLONE: prima settimana gratis. seconda settimana doppia. terza settimana sei tu che paghi noi, ma non te ne accorgi. — approvato dal ministero del realm (non vero)»' },
+    ],
+    'lore-combo': [
+        { speaker: 'pietra scolpita', color: 'orange', text: '«la combo migliore è vodka con disaronno. fidati di chi ha perso tutti i denti prima dei trent\'anni.»' },
     ],
     'lore-rio-storia': [
         { speaker: 'pietra del fiume', color: 'orange', text: '«il rio merdone non è sempre stato sacro. prima era solo merdone. poi ci è caduto dentro un frammento della wave e adesso è merdone CON proprietà curative. la natura trova un modo.»' },
@@ -492,7 +495,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'notino', color: 'red', text: 'IL ROLEPLAY NON È REATO!! ...vero?? NON RISPONDERE. me ne vado!! questa zona è LAGGATA comunque!!' },
     ],
     'lore-questura': [
-        { speaker: 'bacheca della questura', color: 'blue', text: '«ricercati del distretto: 1. il limite notevole (latitante). 2. lochef85 (avvicinabile solo con mattarello di servizio). 3. notino (non imputabile, purtroppo). 4. smela (truffa aggravata, ma simpatico).»' },
+        { speaker: 'bacheca della questura', color: 'blue', text: '«ricercati del distretto: 1. il limite notevole (latitante). 2. lochef85 (avvicinabile solo con mattarello di servizio). 3. notino (non imputabile, purtroppo). 4. smela (truffa aggravata, ma simpatico). 5. Johnson Tormenta (professione ignota, reperibilità nulla, foto sempre mossa).»' },
     ],
     'lore-fascicolo': [
         { speaker: 'fascicolo aperto', color: 'blue', text: '«caso analisi 1, nota a margine di romero: "ogni indizio porta a lametta. ma lametta porta al trenbolone, e il trenbolone porta a lametta. il cerchio non è un indizio, è una condanna".»' },
@@ -560,6 +563,20 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'commissario romero', color: 'blue', text: 'tu hai fatto la tua parte, custode. ora muoviti: l\'uscita del void porta dritta al nucleo. il processo lo apro io, l\'esecuzione la fermi tu.' },
     ],
 
+    'lore-33': [
+        { speaker: 'lapide', color: 'cyan', text: '«33. di nuovo.»' },
+        { speaker: 'lapide', color: 'cyan', text: '«non l\'abbiamo messo noi.»' },
+    ],
+    'trentatre-altare': [
+        { speaker: 'l\'altare', color: 'yellow', text: 'tre e tre. è qui da prima di te. lo chiami?' },
+    ],
+    'trentatre-intro': [
+        { speaker: 'il 33', color: 'yellow', text: 'non sono il rimpianto di nessuno. io ricorro.' },
+        { speaker: 'il 33', color: 'yellow', text: 'tre colpi. tre fasi. vediamo come cadi.' },
+    ],
+    'trentatre-sconfitto': [
+        { speaker: 'il 33', color: 'yellow', text: 'tornerò. torno sempre. al trentatreesimo.' },
+    ],
     'romero-guida-1': [
         { speaker: 'commissario romero', color: 'blue', text: 'sta\' vicino, custode. nel void se ti allontani ti perdo, e io con questa schiena non corro. il primo rimpianto è lì avanti: lascia che ci arriviamo insieme.' },
     ],
@@ -579,7 +596,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'commissario romero', color: 'blue', text: 'che aspetti? l\'uscita è lì e porta al nucleo. io resto a verbalizzare. corri, custode: il dovuto processo posso aspettarlo io, non il realm.' },
     ],
     'lore-void-1': [
-        { speaker: 'appunto galleggiante', color: 'cyan', text: '«bozza scartata, calligrafia di lametta: "delega definitiva dei poteri di manutenzione del realm al soggetto PEDRO. motivazione: vabbè dai".»' },
+        { speaker: 'appunto galleggiante', color: 'cyan', text: '«bozza scartata di lametta: "delega definitiva dei poteri di manutenzione al soggetto PEDRO, art. 7". a margine, mano di romero: "art. 7 di QUALE codice? il Codice Penale non arriva agli dei. ci ho provato per quarant\'anni".»' },
     ],
     'lore-void-2': [
         { speaker: 'scontrino nel void', color: 'cyan', text: '«ricevuta: 1× boccetta, ore 03:58. firmato lametta. sul retro, a penna tremante: "stanotte sistemo tutto io, anzi no, lo fa pedro, geniale".»' },
@@ -588,7 +605,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'bozzetto a matita', color: 'cyan', text: '«schizzo di pedro con gli occhi storti, datato il giorno PRIMA del glitch. in basso: "venuto bene". una macchia di colore copre la firma, ma la mano è quella.»' },
     ],
     'lore-void-4': [
-        { speaker: 'log con due versioni', color: 'cyan', text: '«riga originale: "lametta ordina a pedro di raddrizzare il realm". riga corretta in blu: "piema indaga sull\'anomalia". stessa ora. stessa mano? no. la seconda è di piema.»' },
+        { speaker: 'log con due versioni', color: 'cyan', text: '«riga originale: "lametta ordina a pedro di raddrizzare il realm". riga corretta in blu: "piema indaga sull\'anomalia". accanto al profilo di piema, una sola nota: "ultimo accesso: di recente".»' },
     ],
     'lore-void-5': [
         { speaker: 'memo interno mai spedito', color: 'cyan', text: '«da piema, archiviato e mai inviato: "so cos\'ha fatto lametta. lo so da sempre. e non lo consegnerò: il realm può anche restare rotto, il socio no". il void lo tiene da allora.»' },
@@ -715,7 +732,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'contratto luminoso', color: 'cyan', text: '«tommasorveglianza: 0,09€ una tantum. clausola 7: "il cliente accetta di essere il prodotto". clausola 8: "la clausola 7 era uno scherzo". clausola 9: "no".»' },
     ],
     'lore-server': [
-        { speaker: 'rack di server', color: 'cyan', text: '«qui dentro ronza tutto il realm: ogni verso di geco, ogni giro di samatt, ogni flop. alimentato da un frammento della wave e da una ciabatta del brico chiaramente sovraccarica.»' },
+        { speaker: 'rack di server', color: 'cyan', text: '«qui dentro ronza tutto il realm: ogni verso di geco, ogni giro di samatt, ogni flop. su un monitor di servizio, lasciato acceso da anni, va in onda DMAX a volume zero. alimentato da un frammento della wave e da una ciabatta del brico sovraccarica.»' },
     ],
 
     /* ---------- capitolo 9: la cantina di ticummi ---------- */

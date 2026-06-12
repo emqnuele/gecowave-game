@@ -54,6 +54,7 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     modello: 'modello-intro',
     revisore: 'revisore-intro',
     garante: 'garante-intro',
+    trentatre: 'trentatre-intro',
 };
 
 /* l'ordine dei rimpianti nel void: ad ognuno la sua verità */
@@ -472,6 +473,17 @@ export class GameScene extends Phaser.Scene {
             // interactable che segue romero: la sua posizione si aggiorna nel loop
             this.companionInteract = { x, y, range: 80, onInteract: () => this.interactGuida() };
             this.interactables.push(this.companionInteract);
+            return;
+        }
+
+        // l'altare del 33: sfida opt-in al miniboss più potente del void
+        if (id === 'sfida-33') {
+            if (state.hasFlag('boss-down-trentatre')) return;
+            const altar = this.add.sprite(x, y, 'lore-tablet').setDepth(4).setPipeline('Light2D');
+            altar.setScale(1.3).setTint(0xfde047);
+            this.lighting.follow(altar, 0xfacc15, 200, 0.95);
+            this.tweens.add({ targets: altar, y: y - 5, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+            this.interactables.push({ x, y, range: 70, onInteract: () => this.interactSfida33(altar) });
             return;
         }
 
@@ -1231,6 +1243,31 @@ export class GameScene extends Phaser.Scene {
         }
         const n = Math.min(this.voidStep + 1, VOID_REGRETS.length);
         this.startDialogue(`romero-guida-${n}`);
+    }
+
+    /** l'altare del 33: evocabile in qualsiasi momento, anche coi rimpianti vivi.
+        il rimpianto in corso viene accantonato e rievocato dopo la sfida. */
+    private interactSfida33(altar: Phaser.GameObjects.Sprite): void {
+        this.startDialogue('trentatre-altare', () => {
+            bus.emit('choice-show', {
+                title: 'il 33 pulsa nell\'altare. lo evochi? è molto più forte di te.',
+                options: [{ label: 'evoca il 33', danger: true }, { label: 'non ancora' }],
+                onPick: (i) => {
+                    if (i !== 0) return;
+                    // accantono il rimpianto in corso: tornerà fresco dopo il 33
+                    if (this.boss?.active && VOID_REGRETS.includes(this.boss.def.kind)) {
+                        this.boss.destroy();
+                        bus.emit('boss-hp', null);
+                    }
+                    altar.destroy();
+                    this.boss = new Boss(this, altar.x, altar.y - 30, 'trentatre');
+                    this.boss.chase = true;
+                    this.bossIntroShown = false;
+                    this.lighting.follow(this.boss, this.boss.def.glowColor, 320, 1.1);
+                    this.setupBossColliders();
+                },
+            });
+        });
     }
 
     /** l'ultima verità: pedro sta eseguendo l'ordine ORA. arriva markolino. */
@@ -2519,6 +2556,18 @@ export class GameScene extends Phaser.Scene {
                                 this.gotoLevel('rio');
                             });
                         });
+                    }
+                });
+                break;
+            case 'trentatre':
+                this.startDialogue('trentatre-sconfitto', () => {
+                    state.save.barre += 333;
+                    bus.emit('barre-changed', { barre: state.save.barre, gained: true });
+                    bus.emit('toast', { text: '✦ hai battuto il 33. +333 barre. il numero ti rispetta, ora ✦' });
+                    state.persist();
+                    // rievoco il rimpianto accantonato, così la sequenza riprende
+                    if (this.def.script === 'indagine' && !state.hasFlag('void-concluso') && this.voidStep < VOID_REGRETS.length) {
+                        this.time.delayedCall(900, () => this.spawnRegret(this.voidStep));
                     }
                 });
                 break;

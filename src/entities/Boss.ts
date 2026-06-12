@@ -17,6 +17,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     summonOverride: BossDef['summonKind'] = undefined;
     /** modalità dei nel patto con pedro: attacchi a raffica continua */
     frenzy = false;
+    /** insegue il player muovendo lentamente l'ancoraggio (es. il 33) */
+    chase = false;
     private shieldGraphics?: Phaser.GameObjects.Graphics;
 
     private anchorX: number;
@@ -106,6 +108,10 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         if (this.frenzy && player.active) {
             this.anchorX = player.x;
             this.anchorY = player.y - 130;
+        } else if (this.chase && player.active) {
+            // inseguimento morbido: l'ancora scivola verso il player, ma niente raffica
+            this.anchorX += (player.x - this.anchorX) * 0.05;
+            this.anchorY += (player.y - 150 - this.anchorY) * 0.05;
         }
 
         // ritorno morbido verso il punto di hover
