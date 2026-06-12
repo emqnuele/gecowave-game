@@ -142,10 +142,10 @@ export class GameScene extends Phaser.Scene {
     private ivanBusy = false;
     private nextIvanStrikeAt = 0;
     private ivanDead = false;
-    // collasso: pedro raggiunge il custode se perde troppo tempo
+    // doomsday: pedro raggiunge il custode se perde troppo tempo
     private collapsePedro = false;
     private collapseTriggered = false;
-    private collassoWarned = 0;
+    private doomsdayWarned = 0;
     private nextWildGlitchAt = 0;
     // il primo custode attacca sul beat: metronomo interno a 120 bpm
     private beatMs = 500;
@@ -193,7 +193,7 @@ export class GameScene extends Phaser.Scene {
         this.ivanDead = false;
         this.collapsePedro = false;
         this.collapseTriggered = false;
-        this.collassoWarned = 0;
+        this.doomsdayWarned = 0;
         this.nextWildGlitchAt = 0;
         this.nextBeatAt = 0;
 
@@ -1114,7 +1114,7 @@ export class GameScene extends Phaser.Scene {
         this.updatePatto(time);
         this.updateIvan(time);
         this.updateFakeWalls();
-        this.updateCollasso(time, delta);
+        this.updateDoomsday(time, delta);
         this.updateRhythm(time);
 
         if (state.run.trenbolone && Math.random() < 0.2) {
@@ -1122,39 +1122,44 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    /* ---------- il collasso del realm (modalità collasso) ---------- */
+    /* ---------- la modalità doomsday del realm ---------- */
 
-    private updateCollasso(time: number, delta: number): void {
-        if (!state.save.collassoMode || this.player.dead || this.exiting) return;
-        // niente collasso durante gli scontri di trama già tesi
+    private updateDoomsday(time: number, delta: number): void {
+        if (!state.save.doomsdayMode || this.player.dead || this.exiting) return;
+        // niente doomsday durante gli scontri di trama già tesi
         if (this.pattoActive || this.finalGodsFight) return;
-        const v = state.tickCollasso(delta);
-        bus.emit('collasso-changed', { value: v, active: true });
+        const v = state.tickDoomsday(delta);
+        bus.emit('doomsday-changed', { value: v, active: true });
 
-        if (v >= 0.45 && this.collassoWarned < 1) {
-            this.collassoWarned = 1;
-            bus.emit('toast', { text: TOASTS.collassoWarn1 });
+        if (v >= 0.45 && this.doomsdayWarned < 1) {
+            this.doomsdayWarned = 1;
+            bus.emit('toast', { text: TOASTS.doomsdayWarn1 });
         }
-        if (v >= 0.72 && this.collassoWarned < 2) {
-            this.collassoWarned = 2;
-            bus.emit('toast', { text: TOASTS.collassoWarn2 });
+        if (v >= 0.72 && this.doomsdayWarned < 2) {
+            this.doomsdayWarned = 2;
+            bus.emit('toast', { text: TOASTS.doomsdayWarn2 });
         }
 
-        // glitch selvaggi che infestano qualsiasi zona quando il collasso avanza
-        if (v >= 0.6 && !this.boss && time >= this.nextWildGlitchAt) {
+        const activeBoss = this.boss && this.boss.engaged;
+
+        // glitch selvaggi che infestano qualsiasi zona quando il doomsday avanza
+        if (v >= 0.6 && !activeBoss && time >= this.nextWildGlitchAt) {
             this.nextWildGlitchAt = time + Phaser.Math.Between(3500, 6500);
             const side = Math.random() < 0.5 ? -1 : 1;
             const gx = Phaser.Math.Clamp(this.player.x + side * 420, 40, this.level.widthPx - 40);
             this.spawnEnemy('glitchetto', gx, this.player.y - 80);
         }
 
-        // collasso pieno: pedro raggiunge il custode. boss anticipato, quasi impossibile.
-        if (v >= 1 && !this.collapseTriggered && !this.boss && this.def.script !== 'pedro') {
+        // doomsday pieno: pedro raggiunge il custode. boss anticipato, quasi impossibile.
+        if (v >= 1 && !this.collapseTriggered && !activeBoss && this.def.script !== 'pedro') {
             this.collapseTriggered = true;
             this.collapsePedro = true;
-            bus.emit('toast', { text: TOASTS.collassoPedro });
+            if (this.boss) {
+                this.boss.destroy();
+            }
+            bus.emit('toast', { text: TOASTS.doomsdayPedro });
             this.shake(400, 0.012);
-            this.startDialogue('collasso-pedro', () => {
+            this.startDialogue('doomsday-pedro', () => {
                 const px = Phaser.Math.Clamp(this.player.x + 220, 80, this.level.widthPx - 80);
                 this.boss = new Boss(this, px, this.player.y - 120, 'pedro');
                 this.boss.frenzy = true;
@@ -2183,15 +2188,20 @@ export class GameScene extends Phaser.Scene {
 
     private onBossDefeated({ kind, x, y }: { kind: BossKind; x: number; y: number }): void {
         this.boss = null;
-        // pedro del collasso: respinto, non è il pedro della trama. niente finale.
+        // pedro del doomsday: respinto, non è il pedro della trama. niente finale.
         if (kind === 'pedro' && this.collapsePedro) {
             this.collapsePedro = false;
-            state.setCollasso(0.55);
-            this.startDialogue('collasso-respinto');
+            state.setDoomsday(0.55);
+            this.startDialogue('doomsday-respinto');
             return;
         }
         if (kind !== 'pedro' && kind !== 'dei') {
             state.setFlag(`boss-down-${kind}`);
+        }
+        const waveBosses: BossKind[] = ['guggu', 'breccio', 'notino', 'smela', 'teorema', 'ombra'];
+        if (waveBosses.includes(kind) && state.save.doomsdayMode) {
+            state.relieveDoomsday();
+            bus.emit('toast', { text: '✦ frammento di wave recuperato! doomsday allontanato ✦' });
         }
         switch (kind) {
             case 'guggu':

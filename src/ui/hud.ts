@@ -2,8 +2,18 @@ import { ZONE_CSS } from '../config';
 import { ABILITY_CARDS } from '../content/story';
 import { bus } from '../engine/events';
 import { state } from '../engine/state';
-import type { AbilityId } from '../types';
+import type { AbilityId, ZoneColor } from '../types';
 import { el } from './dom';
+
+const DOOMSDAY_THEMES: Record<ZoneColor, { primary: string; dark: string; shadow: string; border: string }> = {
+    green: { primary: '#4ade80', dark: '#166534', shadow: 'rgba(74, 222, 128, 0.7)', border: 'rgba(74, 222, 128, 0.35)' },
+    purple: { primary: '#c084fc', dark: '#6b21a8', shadow: 'rgba(192, 132, 252, 0.7)', border: 'rgba(192, 132, 252, 0.35)' },
+    orange: { primary: '#fb923c', dark: '#9a3412', shadow: 'rgba(251, 146, 60, 0.7)', border: 'rgba(251, 146, 60, 0.35)' },
+    blue: { primary: '#60a5fa', dark: '#1e40af', shadow: 'rgba(96, 165, 250, 0.7)', border: 'rgba(96, 165, 250, 0.35)' },
+    red: { primary: '#f87171', dark: '#991b1b', shadow: 'rgba(248, 113, 113, 0.7)', border: 'rgba(248, 113, 113, 0.35)' },
+    yellow: { primary: '#facc15', dark: '#854d0e', shadow: 'rgba(250, 204, 21, 0.7)', border: 'rgba(250, 204, 21, 0.35)' },
+    cyan: { primary: '#22d3ee', dark: '#075985', shadow: 'rgba(34, 211, 238, 0.7)', border: 'rgba(34, 211, 238, 0.35)' },
+};
 
 const ACTIVE_ORDER: { id: AbilityId; key: string }[] = [
     { id: 'risonante', key: 'F' },
@@ -23,8 +33,8 @@ export class Hud {
     private waves: HTMLElement;
     private tommaso: HTMLElement;
     private trenboBorder: HTMLElement;
-    private collasso: HTMLElement;
-    private collassoFill: HTMLElement;
+    private doomsday: HTMLElement;
+    private doomsdayFill: HTMLElement;
     private bossBar: HTMLElement | null = null;
 
     constructor() {
@@ -46,14 +56,13 @@ export class Hud {
         this.zone = el('div', 'hud-zone sticker', '');
         this.waves = el('div', 'hud-waves');
 
-        // barra del collasso: una crepa viola che si allarga, niente numeri
-        this.collasso = el('div', 'collasso-meter');
-        this.collassoFill = el('div', 'collasso-fill');
-        const collassoLabel = el('div', 'collasso-label font-marker', 'collasso');
-        this.collasso.append(this.collassoFill, collassoLabel);
-        this.collasso.style.display = 'none';
+        this.doomsday = el('div', 'doomsday-meter');
+        this.doomsdayFill = el('div', 'doomsday-fill');
+        const doomsdayLabel = el('div', 'doomsday-label font-marker', 'doomsday');
+        this.doomsday.append(this.doomsdayFill, doomsdayLabel);
+        this.doomsday.style.display = 'none';
 
-        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.collasso, this.trenboBorder);
+        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.doomsday, this.trenboBorder);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -80,13 +89,14 @@ export class Hud {
         bus.on('zone-changed', ({ title, accentWord, color }) => {
             this.zone.textContent = `${title.toLowerCase()} ${accentWord}`;
             this.zone.style.color = ZONE_CSS[color];
+            this.updateDoomsdayColors(color);
         });
         bus.on('abilities-changed', ({ abilities }) => this.setAbilities(abilities));
         bus.on('boss-hp', (payload) => this.setBoss(payload));
-        bus.on('collasso-changed', ({ value, active }) => {
-            this.collasso.style.display = active ? '' : 'none';
-            this.collassoFill.style.width = `${Math.min(100, value * 100)}%`;
-            this.collasso.classList.toggle('critical', value >= 0.72);
+        bus.on('doomsday-changed', ({ value, active }) => {
+            this.doomsday.style.display = active ? '' : 'none';
+            this.doomsdayFill.style.width = `${Math.min(100, value * 100)}%`;
+            this.doomsday.classList.toggle('critical', value >= 0.72);
         });
     }
 
@@ -106,6 +116,14 @@ export class Hud {
 
     private updateTrenbo(): void {
         this.trenboBorder.style.display = state.run.trenbolone ? 'block' : 'none';
+    }
+
+    private updateDoomsdayColors(color: ZoneColor): void {
+        const theme = DOOMSDAY_THEMES[color] || DOOMSDAY_THEMES.purple;
+        this.doomsday.style.setProperty('--doomsday-primary', theme.primary);
+        this.doomsday.style.setProperty('--doomsday-dark', theme.dark);
+        this.doomsday.style.setProperty('--doomsday-shadow', theme.shadow);
+        this.doomsday.style.setProperty('--doomsday-border', theme.border);
     }
 
     private setHp(hp: number, maxHp: number, hurt: boolean): void {

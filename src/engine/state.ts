@@ -4,10 +4,10 @@ import type { AbilityId, DroppedBarre, SaveData } from '../types';
 const SAVE_KEY = 'gecowave-save-v2';
 const SETTINGS_KEY = 'gecowave-settings-v1';
 
-/* il collasso ci mette ~22 minuti di gioco passivo a riempirsi.
+/* il doomsday ci mette ~22 minuti di gioco passivo a riempirsi.
    ogni boss di trama abbattuto lo ricaccia indietro di un bel pezzo. */
-const COLLASSO_FILL_MS = 22 * 60 * 1000;
-const COLLASSO_BOSS_RELIEF = 0.14;
+const DOOMSDAY_FILL_MS = 22 * 60 * 1000;
+const DOOMSDAY_BOSS_RELIEF = 0.14;
 
 export interface Settings {
     volume: number;
@@ -30,8 +30,8 @@ const defaultSave = (): SaveData => ({
     flags: [],
     endingSeen: null,
     playerName: 'Geco',
-    collassoMode: false,
-    collasso: 0,
+    doomsdayMode: false,
+    doomsday: 0,
     stats: {
         forza: 0,
         costituzione: 0,
@@ -50,15 +50,23 @@ class GameState {
     run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false };
     /** dove tornare uscendo da un capitolo segreto (transient, non persistito) */
     portalReturn: PortalReturn | null = null;
-    private collassoSinceSave = 0;
+    private doomsdaySinceSave = 0;
 
     constructor() {
         try {
             const raw = localStorage.getItem(SAVE_KEY);
             if (raw) {
-                this.save = { ...defaultSave(), ...JSON.parse(raw) };
+                const parsed = JSON.parse(raw);
+                this.save = { ...defaultSave(), ...parsed };
                 if (typeof this.save.barre !== 'number' || isNaN(this.save.barre)) {
                     this.save.barre = 0;
+                }
+                // fallback for backward compatibility
+                if (parsed.collassoMode !== undefined && this.save.doomsdayMode === false) {
+                    this.save.doomsdayMode = parsed.collassoMode;
+                }
+                if (parsed.collasso !== undefined && this.save.doomsday === 0) {
+                    this.save.doomsday = parsed.collasso;
                 }
             }
             const s = localStorage.getItem(SETTINGS_KEY);
@@ -156,29 +164,29 @@ class GameState {
         }
     }
 
-    /** avanza il collasso col tempo reale; ritorna il valore aggiornato (0..1) */
-    tickCollasso(deltaMs: number): number {
-        if (!this.save.collassoMode || this.save.collasso >= 1) return this.save.collasso;
-        this.save.collasso = Math.min(1, this.save.collasso + deltaMs / COLLASSO_FILL_MS);
+    /** avanza il doomsday col tempo reale; ritorna il valore aggiornato (0..1) */
+    tickDoomsday(deltaMs: number): number {
+        if (!this.save.doomsdayMode || this.save.doomsday >= 1) return this.save.doomsday;
+        this.save.doomsday = Math.min(1, this.save.doomsday + deltaMs / DOOMSDAY_FILL_MS);
         // persistere ogni frame sarebbe spreco: salviamo ogni ~5s di gioco
-        this.collassoSinceSave += deltaMs;
-        if (this.collassoSinceSave > 5000) {
-            this.collassoSinceSave = 0;
+        this.doomsdaySinceSave += deltaMs;
+        if (this.doomsdaySinceSave > 5000) {
+            this.doomsdaySinceSave = 0;
             this.persist();
         }
-        return this.save.collasso;
+        return this.save.doomsday;
     }
 
-    /** un boss di trama abbattuto ricaccia indietro il collasso */
-    relieveCollasso(): void {
-        if (!this.save.collassoMode) return;
-        this.save.collasso = Math.max(0, this.save.collasso - COLLASSO_BOSS_RELIEF);
+    /** un boss di trama abbattuto ricaccia indietro il doomsday */
+    relieveDoomsday(): void {
+        if (!this.save.doomsdayMode) return;
+        this.save.doomsday = Math.max(0, this.save.doomsday - DOOMSDAY_BOSS_RELIEF);
         this.persist();
     }
 
     /** pedro respinto: il realm respira di nuovo, ma non torna a zero */
-    setCollasso(v: number): void {
-        this.save.collasso = Math.max(0, Math.min(1, v));
+    setDoomsday(v: number): void {
+        this.save.doomsday = Math.max(0, Math.min(1, v));
         this.persist();
     }
 }

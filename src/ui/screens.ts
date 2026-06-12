@@ -572,7 +572,7 @@ export class Screens {
         s.append(el('div', 'forge-emblem font-crisis', '✦'));
 
         let finalName = 'Geco';
-        let collassoMode = false;
+        let doomsdayMode = false;
         let availablePoints = 10;
         const stats = { forza: 0, costituzione: 0, flusso: 0 };
 
@@ -779,26 +779,26 @@ export class Screens {
             labelFlus.textContent = `FLUSSO · ${stats.flusso}`;
         };
 
-        // scelta della modalità: collasso (a tempo) o esplorazione (rilassata)
+        // scelta della modalità: doomsday (a tempo) o esplorazione (rilassata)
         const modeRow = el('div', 'forge-mode');
         modeRow.append(el('div', 'forge-eyebrow font-martian', 'modalità del realm'));
         const modeToggle = el('div', 'forge-mode-toggle');
         const modeExplore = el('button', 'forge-mode-opt active', 'esplorazione');
-        const modeCollasso = el('button', 'forge-mode-opt', 'collasso ☠');
+        const modeDoomsday = el('button', 'forge-mode-opt', 'doomsday ☠');
         const modeDesc = el('div', 'forge-mode-desc font-martian', 'il realm ti aspetta. nessun timer: esplora e segui la trama con calma.');
-        modeToggle.append(modeExplore, modeCollasso);
+        modeToggle.append(modeExplore, modeDoomsday);
         modeRow.append(modeToggle, modeDesc);
         const setMode = (on: boolean) => {
-            collassoMode = on;
-            modeCollasso.classList.toggle('active', on);
+            doomsdayMode = on;
+            modeDoomsday.classList.toggle('active', on);
             modeExplore.classList.toggle('active', !on);
             modeDesc.textContent = on
-                ? 'il realm si sgretola col tempo. se perdi troppo, pedro ti raggiunge e ti uccide. devi sbrigarti.'
+                ? 'il doomsday si avvicina col tempo. se perdi troppo tempo, pedro ti raggiunge e ti uccide. devi sbrigarti.'
                 : 'il realm ti aspetta. nessun timer: esplora e segui la trama con calma.';
             sfx.ui();
         };
         modeExplore.addEventListener('click', () => setMode(false));
-        modeCollasso.addEventListener('click', () => setMode(true));
+        modeDoomsday.addEventListener('click', () => setMode(true));
         step2.append(modeRow);
 
         const actions = el('div', 'forge-actions');
@@ -818,8 +818,8 @@ export class Screens {
             state.save.stats.forza = stats.forza;
             state.save.stats.costituzione = stats.costituzione;
             state.save.stats.flusso = stats.flusso;
-            state.save.collassoMode = collassoMode;
-            state.save.collasso = 0;
+            state.save.doomsdayMode = doomsdayMode;
+            state.save.doomsday = 0;
             state.persist();
             state.resetRun();
             this.closeOverlay();

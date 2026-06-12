@@ -96,10 +96,10 @@ export interface SaveData {
     flags: string[];
     endingSeen: string | null;
     playerName: string;
-    /** modalità collasso: il realm si sgretola se perdi tempo, scelta alla forgia */
-    collassoMode: boolean;
-    /** avanzamento del collasso 0..1, persistito così non si azzera riavviando */
-    collasso: number;
+    /** modalità doomsday: il realm si sgretola se perdi tempo, scelta alla forgia */
+    doomsdayMode: boolean;
+    /** avanzamento del doomsday 0..1, persistito così non si azzera riavviando */
+    doomsday: number;
     stats: {
         forza: number;
         costituzione: number;

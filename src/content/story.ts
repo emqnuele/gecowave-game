@@ -741,14 +741,14 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'nastro abbandonato', color: 'green', text: '«provino del primo custode, ultima take: "se qualcuno trova questo nastro, suonatelo a tempo. è l\'unica preghiera che conosco." — il nastro era ancora caldo.»' },
     ],
 
-    /* ---------- il collasso del realm (modalità collasso) ---------- */
-    'collasso-pedro': [
-        { speaker: 'pedro', color: 'cyan', text: 'h̷a̵i̸ p̶e̵r̷s̸o̵ t̶r̷o̸p̵p̶o̷ t̸e̵m̶p̷o̸. il realm si s̶g̷r̸e̵t̶o̷l̸a̵ e io sono già qui. non era ancora il tuo momento, custode. ma il momento sei TU a sceglierlo, e hai scelto MALE.' },
+    /* ---------- il collasso del realm (modalità doomsday) ---------- */
+    'doomsday-pedro': [
+        { speaker: 'pedro', color: 'cyan', text: 'h̷a̵i̸ p̶e̵r̷s̸o̵ t̶r̷o̸p̵p̶o̷ t̸e̵m̶p̷o̸. il realm si s̶g̷r̷e̵t̶o̷l̸a̵ e io sono già qui. non era ancora il tuo momento, custode. ma il momento sei TU a sceglierlo, e hai scelto MALE.' },
         { speaker: 'pedro', color: 'cyan', text: 'niente frammenti, niente dei, niente trama. solo io, in a̵n̶t̷i̸c̵i̶p̷o̸. s̸o̵p̶r̷a̸v̵v̶i̷v̸i̵, se ci riesci.' },
     ],
-    'collasso-respinto': [
-        { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̷i̸b̵i̶l̷e̸... eri in a̵n̶t̷i̸c̵i̶p̷o̸ pure tu... mi r̶i̷t̸i̵r̶o̷. per ora. ma il realm continua a s̸g̵r̶e̷t̸o̵l̶a̷r̸s̵i̶. non rallentare.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha guadagnato tempo, non pace. il collasso rallenta ma non si ferma.*' },
+    'doomsday-respinto': [
+        { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̷i̸b̵i̶l̷e̸... eri in a̵n̶t̷i̸c̵i̶p̷o̸ pure tu... mi r̶i̷t̸i̵r̶o̷. per ora. ma il realm continua a s̸g̵r̵e̷t̶o̵l̶a̷r̸s̵i̶. non rallentare.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha guadagnato tempo, non pace. il doomsday rallenta ma non si ferma.*' },
     ],
 };
 
@@ -947,9 +947,9 @@ export const TOASTS = {
     portalLocked: 'il varco non è attivo',
     portalBarrato: 'un varco attivo. profuma di gasolio e di loop. ci entri?',
     portalCustode: 'un varco che batte il tempo. dall\'altra parte qualcuno ti aspetta da molto.',
-    collassoWarn1: 'il cielo si incrina ai bordi. il realm sta perdendo i pezzi. sbrigati.',
-    collassoWarn2: 'glitch ovunque. il collasso è vicino. pedro lo sente, e si muove.',
-    collassoPedro: 'TROPPO TARDI. pedro ti ha raggiunto. sopravvivi o è la fine.',
+    doomsdayWarn1: 'il cielo si incrina ai bordi. il realm sta perdendo i pezzi. sbrigati.',
+    doomsdayWarn2: 'glitch ovunque. il doomsday è vicino. pedro lo sente, e si muove.',
+    doomsdayPedro: 'TROPPO TARDI. pedro ti ha raggiunto. sopravvivi o è la fine.',
 };
 
 export const WAVESUNG = {
