@@ -1601,22 +1601,22 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 /* selected states */
-.mode-card.explore-card.selected {
+.mode-card.standard-card.selected {
   border-color: rgba(74, 222, 128, 0.6);
   background: rgba(74, 222, 128, 0.05);
   box-shadow: 0 0 24px rgba(74, 222, 128, 0.15), inset 0 0 12px rgba(74, 222, 128, 0.05);
 }
 
-.mode-card.explore-card.selected .card-icon {
+.mode-card.standard-card.selected .card-icon {
   filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.6));
 }
 
-.mode-card.explore-card.selected .card-title {
+.mode-card.standard-card.selected .card-title {
   color: #4ade80;
   text-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
 }
 
-.mode-card.explore-card.selected .card-desc {
+.mode-card.standard-card.selected .card-desc {
   color: rgba(255, 255, 255, 0.8);
 }
 

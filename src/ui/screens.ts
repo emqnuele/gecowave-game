@@ -818,11 +818,11 @@ export class Screens {
 
         const choiceContainer = el('div', 'doomsday-choices');
         
-        const exploreCard = el('div', 'mode-card explore-card');
-        exploreCard.append(el('div', 'card-glow'));
-        exploreCard.append(el('div', 'card-icon', '🧭'));
-        exploreCard.append(el('div', 'card-title font-marker', 'Esplorazione'));
-        exploreCard.append(el('div', 'card-desc font-martian', 'Il realm ti aspetta. Nessun timer: esplora e segui la trama con calma.'));
+        const standardCard = el('div', 'mode-card standard-card');
+        standardCard.append(el('div', 'card-glow'));
+        standardCard.append(el('div', 'card-icon', '🧭'));
+        standardCard.append(el('div', 'card-title font-marker', 'Standard'));
+        standardCard.append(el('div', 'card-desc font-martian', 'L\'esperienza classica di gioco. Nessun timer: affronta i boss e vivi la storia al tuo ritmo.'));
         
         const doomsdayCard = el('div', 'mode-card doomsday-card');
         doomsdayCard.append(el('div', 'card-glow'));
@@ -830,7 +830,7 @@ export class Screens {
         doomsdayCard.append(el('div', 'card-title font-marker', 'Doomsday'));
         doomsdayCard.append(el('div', 'card-desc font-martian', 'Il doomsday si avvicina col tempo reale. Se perdi troppo tempo, Pedro ti raggiunge e ti cancella.'));
         
-        choiceContainer.append(exploreCard, doomsdayCard);
+        choiceContainer.append(standardCard, doomsdayCard);
         step3.append(choiceContainer);
 
         const actions3 = el('div', 'forge-actions');
@@ -865,7 +865,7 @@ export class Screens {
 
         const selectMode = (isDoomsday: boolean) => {
             doomsdayMode = isDoomsday;
-            exploreCard.classList.toggle('selected', !isDoomsday);
+            standardCard.classList.toggle('selected', !isDoomsday);
             doomsdayCard.classList.toggle('selected', isDoomsday);
             s.classList.toggle('doomsday-active', isDoomsday);
             sfx.ui();
@@ -877,7 +877,7 @@ export class Screens {
             }
         };
 
-        exploreCard.addEventListener('click', () => selectMode(false));
+        standardCard.addEventListener('click', () => selectMode(false));
         doomsdayCard.addEventListener('click', () => selectMode(true));
     }
 }
