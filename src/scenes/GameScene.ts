@@ -49,7 +49,15 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     flauto: 'flauto-intro',
     settequaranta: 'settequaranta-intro',
     custode: 'custode-intro',
+    delegato: 'delegato-intro',
+    notturno: 'notturno-intro',
+    modello: 'modello-intro',
+    revisore: 'revisore-intro',
+    garante: 'garante-intro',
 };
+
+/* l'ordine dei rimpianti nel void: ad ognuno la sua verità */
+const VOID_REGRETS: BossKind[] = ['delegato', 'notturno', 'modello', 'revisore', 'garante'];
 
 export const TOTAL_MASCHERE = 5;
 
@@ -142,6 +150,13 @@ export class GameScene extends Phaser.Scene {
     private ivanBusy = false;
     private nextIvanStrikeAt = 0;
     private ivanDead = false;
+    // il void: romero ti guida tra i rimpianti, uno scontro per ogni verità
+    private companion: Phaser.GameObjects.Sprite | null = null;
+    private companionBaseY = 0;
+    private companionInteract: Interactable | null = null;
+    private voidArenas: { x: number; y: number }[] = [];
+    private voidStep = 0;
+    private voidBusy = false;
     // doomsday: pedro raggiunge il custode se perde troppo tempo
     private collapsePedro = false;
     private collapseTriggered = false;
@@ -194,6 +209,12 @@ export class GameScene extends Phaser.Scene {
         this.ivanInArena = false;
         this.ivanBusy = false;
         this.ivanDead = false;
+        this.companion = null;
+        this.companionBaseY = 0;
+        this.companionInteract = null;
+        this.voidArenas = [];
+        this.voidStep = 0;
+        this.voidBusy = false;
         this.collapsePedro = false;
         this.collapseTriggered = false;
         this.doomsdayWarned = 0;
@@ -432,6 +453,25 @@ export class GameScene extends Phaser.Scene {
         // marker invisibile: qui smela si rivela come boss finale
         if (id === 'smela-arena') {
             this.smelaArena = { x, y };
+            return;
+        }
+
+        // marker invisibili delle arene del void: una per ogni rimpianto
+        if (id.startsWith('arena-')) {
+            this.voidArenas.push({ x, y });
+            this.voidArenas.sort((a, b) => a.x - b.x);
+            return;
+        }
+
+        // romero che ti fa da guida tra i rimpianti: cammina piano accanto a te e si parla
+        if (id === 'romero-guida') {
+            const guide = this.add.sprite(x, y + 4, 'npc-romero').setDepth(4).setPipeline('Light2D');
+            this.lighting.follow(guide, 0x60a5fa, 170, 0.8);
+            this.companion = guide;
+            this.companionBaseY = y + 4;
+            // interactable che segue romero: la sua posizione si aggiorna nel loop
+            this.companionInteract = { x, y, range: 80, onInteract: () => this.interactGuida() };
+            this.interactables.push(this.companionInteract);
             return;
         }
 
@@ -1085,6 +1125,140 @@ export class GameScene extends Phaser.Scene {
             state.setFlag('wavesung-finale');
             this.time.delayedCall(1200, () => bus.emit('wavesung', WAVESUNG.markolinoFinale));
         }
+        if (this.def.script === 'indagine') this.setupVoid();
+    }
+
+    /* ---------- il void: i rimpianti di piema e lametta ---------- */
+
+    /** quante verità sono già state strappate ai rimpianti (0..5) */
+    private veritaRivelate(): number {
+        return VOID_REGRETS.filter((k) => state.hasFlag(`boss-down-${k}`)).length;
+    }
+
+    private setupVoid(): void {
+        this.voidStep = this.veritaRivelate();
+        // riallineo romero alla verità a cui siamo arrivati
+        if (this.companion) {
+            const here = this.voidArenas[Math.min(this.voidStep, this.voidArenas.length - 1)];
+            if (here) this.companion.setPosition(here.x - 90, this.companionBaseY);
+        }
+        if (this.voidStep >= VOID_REGRETS.length) {
+            // tutto già visto: il void è solo un corridoio verso il nucleo
+            if (this.companion && this.voidArenas.length) {
+                const last = this.voidArenas[this.voidArenas.length - 1];
+                this.companion.setPosition(last.x + 60, this.companionBaseY);
+            }
+            // se sei uscito prima della chiusura, la riproponiamo così l'uscita si apre
+            if (!state.hasFlag('void-concluso')) {
+                this.time.delayedCall(1200, () => this.voidClimax());
+            }
+            return;
+        }
+        if (!state.hasFlag('wavesung-void')) {
+            state.setFlag('wavesung-void');
+            this.time.delayedCall(2200, () => bus.emit('wavesung', WAVESUNG.markolinoVoid));
+        }
+        this.spawnRegret(this.voidStep);
+    }
+
+    /** materializza il rimpianto di turno nella sua arena */
+    private spawnRegret(idx: number): void {
+        const arena = this.voidArenas[idx];
+        if (!arena) return;
+        const kind = VOID_REGRETS[idx];
+        this.boss = new Boss(this, arena.x, arena.y - 20, kind);
+        this.bossIntroShown = false;
+        this.lighting.follow(this.boss, this.boss.def.glowColor, 260, 1.0);
+        this.setupBossColliders();
+    }
+
+    /** un rimpianto è caduto: si rivela la verità e romero ti porta al prossimo */
+    private onVeritaRivelata(idx: number): void {
+        this.voidStep = idx + 1;
+        const last = idx >= VOID_REGRETS.length - 1;
+        this.startDialogue(`verita-${idx + 1}`, () => {
+            if (last) {
+                this.voidClimax();
+                return;
+            }
+            // romero non teletrasporta: cammina col player verso la prossima arena (updateVoid)
+            this.time.delayedCall(900, () => this.spawnRegret(idx + 1));
+        });
+    }
+
+    /** romero cammina piano, resta accanto al player e si ferma se lo perde */
+    private updateVoid(time: number, delta: number): void {
+        const c = this.companion;
+        if (this.def.script !== 'indagine' || !c) return;
+
+        // obiettivo: il punto a sinistra dell'arena di turno (o oltre l'ultima, a fine void)
+        let objX: number;
+        if (this.voidStep < this.voidArenas.length) {
+            objX = this.voidArenas[this.voidStep].x - 70;
+        } else {
+            const lastArena = this.voidArenas[this.voidArenas.length - 1];
+            objX = (lastArena?.x ?? this.player.x) + 80;
+        }
+
+        // guida ma resta vicino: non si allontana mai più di `lead` dal player.
+        // se il player resta indietro, romero non supera player+lead → di fatto lo aspetta.
+        const lead = 150;
+        const targetX = Phaser.Math.Clamp(objX, this.player.x - lead, this.player.x + lead);
+
+        const speed = 150; // px/s, più lento del geco: non vola mai avanti
+        const step = (speed * delta) / 1000;
+        const dx = targetX - c.x;
+        if (Math.abs(dx) <= step + 1) {
+            c.x = targetX;
+        } else {
+            c.x += Math.sign(dx) * step;
+            c.setFlipX(dx < 0);
+        }
+        c.y = this.companionBaseY + Math.sin(time / 320) * 2;
+
+        // l'interactable segue romero
+        if (this.companionInteract) {
+            this.companionInteract.x = c.x;
+            this.companionInteract.y = c.y;
+        }
+    }
+
+    /** parlare con romero lungo il cammino: commento contestuale alla verità di turno */
+    private interactGuida(): void {
+        if (state.hasFlag('void-concluso')) {
+            this.startDialogue('romero-guida-fine');
+            return;
+        }
+        const n = Math.min(this.voidStep + 1, VOID_REGRETS.length);
+        this.startDialogue(`romero-guida-${n}`);
+    }
+
+    /** l'ultima verità: pedro sta eseguendo l'ordine ORA. arriva markolino. */
+    private voidClimax(): void {
+        if (this.voidBusy) return;
+        this.voidBusy = true;
+        this.startDialogue('void-svolta', () => {
+            // markolino piomba di corsa da destra
+            const mx = this.player.x + 520;
+            const mk = this.add.sprite(mx, this.player.y, 'npc-markolino').setDepth(5).setPipeline('Light2D');
+            this.lighting.follow(mk, 0x4ade80, 200, 0.9);
+            mk.setFlipX(true);
+            bus.emit('wavesung', WAVESUNG.markolinoPedroMuove);
+            this.tweens.add({
+                targets: mk,
+                x: this.player.x + 90,
+                duration: 1100,
+                ease: 'Quad.easeOut',
+                onComplete: () => {
+                    this.startDialogue('markolino-avviso-pedro', () => {
+                        this.startDialogue('void-addio-romero', () => {
+                            state.setFlag('void-concluso');
+                            bus.emit('toast', { text: 'pianti romero e corri verso il nucleo.' });
+                        });
+                    });
+                },
+            });
+        });
     }
 
     /* ---------- loop ---------- */
@@ -1119,6 +1293,7 @@ export class GameScene extends Phaser.Scene {
         this.updateChase(delta);
         this.updatePatto(time);
         this.updateIvan(time);
+        this.updateVoid(time, delta);
         this.updateFakeWalls();
         this.updateDoomsday(time, delta);
         this.updateRhythm(time);
@@ -1388,6 +1563,13 @@ export class GameScene extends Phaser.Scene {
             if (this.time.now > this.exitLockToastAt) {
                 this.exitLockToastAt = this.time.now + 3000;
                 bus.emit('toast', { text: 'piema ha ancora bisogno di te. la porta non si apre.' });
+            }
+            return;
+        }
+        if (this.def.script === 'indagine' && !state.hasFlag('void-concluso')) {
+            if (this.time.now > this.exitLockToastAt) {
+                this.exitLockToastAt = this.time.now + 3000;
+                bus.emit('toast', { text: 'romero non ha finito. i rimpianti vanno guardati fino in fondo.' });
             }
             return;
         }
@@ -2339,6 +2521,13 @@ export class GameScene extends Phaser.Scene {
                         });
                     }
                 });
+                break;
+            case 'delegato':
+            case 'notturno':
+            case 'modello':
+            case 'revisore':
+            case 'garante':
+                this.onVeritaRivelata(VOID_REGRETS.indexOf(kind));
                 break;
             case 'pedro':
                 this.startDialogue('pedro-sconfitto', () => {

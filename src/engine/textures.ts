@@ -1185,6 +1185,198 @@ function bosses(scene: Phaser.Scene): void {
         // aura disco d'oro
         glow(g, 30, 44, 7, 0xfde047, 0.25);
     });
+
+    /* ---------- i rimpianti del void ----------
+       figure umane deformi, fatte di ricordo: torso, testa, arti, ma
+       sbagliate. viola = colpe di lametta, blu = colpe di piema. */
+
+    // scanline da ricordo corrotto, riusata da tutti i rimpianti
+    const ricordoScan = (g: Phaser.GameObjects.Graphics, w: number, h: number, c: number) => {
+        g.lineStyle(1, c, 0.18);
+        for (let y = 6; y < h - 4; y += 5) {
+            g.beginPath();
+            g.moveTo(4, y); g.lineTo(w - 4, y);
+            g.strokePath();
+        }
+    };
+
+    // il delegato: lametta a braccia aperte che scarica l'ordine. tiene un foglio
+    make(scene, 'boss-delegato', 52, 80, (g) => {
+        glow(g, 26, 44, 8, 0xc084fc, 0.22);
+        g.fillStyle(0x140a1f, 0.95);
+        g.fillRoundedRect(16, 22, 22, 40, 8);   // torso
+        g.fillCircle(27, 13, 11);               // testa
+        g.lineStyle(1.5, 0xc084fc, 0.8);
+        g.strokeRoundedRect(16, 22, 22, 40, 8);
+        g.strokeCircle(27, 13, 11);
+        // braccia spalancate: «non è colpa mia, fallo tu»
+        g.lineStyle(4, 0x140a1f, 1);
+        g.beginPath();
+        g.moveTo(16, 30); g.lineTo(2, 22);
+        g.moveTo(38, 30); g.lineTo(50, 22);
+        g.strokePath();
+        // un foglio sporto in avanti: la delega
+        g.fillStyle(0xe9d5ff, 0.85);
+        g.fillRect(44, 18, 8, 10);
+        // gambe
+        g.lineStyle(4, 0x140a1f, 1);
+        g.beginPath();
+        g.moveTo(22, 62); g.lineTo(20, 78);
+        g.moveTo(32, 62); g.lineTo(34, 78);
+        g.strokePath();
+        // occhi che guardano altrove
+        glow(g, 23, 12, 2.2, 0xe9d5ff, 0.8);
+        glow(g, 32, 12, 2.2, 0xe9d5ff, 0.8);
+        ricordoScan(g, 52, 80, 0xc084fc);
+    });
+
+    // il notturno: lametta delle 4, fatto, accasciato, con la boccetta in mano
+    make(scene, 'boss-notturno', 52, 80, (g) => {
+        glow(g, 26, 46, 8, 0xc084fc, 0.22);
+        g.fillStyle(0x140a1f, 0.95);
+        g.fillRoundedRect(15, 28, 24, 36, 8);   // torso curvo in avanti
+        g.fillCircle(24, 20, 11);               // testa china
+        g.lineStyle(1.5, 0xc084fc, 0.7);
+        g.strokeRoundedRect(15, 28, 24, 36, 8);
+        g.strokeCircle(24, 20, 11);
+        // un braccio penzola, l'altro regge la boccetta di trenbolone
+        g.lineStyle(4, 0x140a1f, 1);
+        g.beginPath();
+        g.moveTo(16, 36); g.lineTo(8, 54);
+        g.moveTo(38, 36); g.lineTo(44, 50);
+        g.strokePath();
+        g.fillStyle(0x84cc16, 0.9);             // boccetta verde
+        g.fillRoundedRect(42, 48, 6, 12, 2);
+        g.fillStyle(0xc084fc, 0.6);
+        g.fillRect(43, 45, 4, 4);
+        // gambe molli
+        g.lineStyle(4, 0x140a1f, 1);
+        g.beginPath();
+        g.moveTo(22, 64); g.lineTo(18, 78);
+        g.moveTo(31, 64); g.lineTo(33, 78);
+        g.strokePath();
+        // occhi a mezz'asta
+        g.lineStyle(2, 0xe9d5ff, 0.8);
+        g.beginPath();
+        g.moveTo(19, 21); g.lineTo(23, 22);
+        g.moveTo(26, 21); g.lineTo(30, 22);
+        g.strokePath();
+        ricordoScan(g, 52, 80, 0xc084fc);
+    });
+
+    // il modello: pedro in posa dentro la cornice, disegnato già storto
+    make(scene, 'boss-modello', 54, 82, (g) => {
+        // cornice del quadro
+        g.lineStyle(3, 0xe9d5ff, 0.7);
+        g.strokeRect(5, 5, 44, 72);
+        glow(g, 27, 42, 8, 0xc084fc, 0.2);
+        g.fillStyle(0x0e1216, 0.95);
+        g.fillRoundedRect(18, 26, 20, 34, 6);   // corpo
+        g.fillRoundedRect(20, 8, 18, 16, 4);    // testa quadrata da pedro
+        g.lineStyle(1.5, 0xc084fc, 0.8);
+        g.strokeRoundedRect(18, 26, 20, 34, 6);
+        g.strokeRoundedRect(20, 8, 18, 16, 4);
+        // posa: un braccio alzato, fermato nel disegno
+        g.lineStyle(4, 0x0e1216, 1);
+        g.beginPath();
+        g.moveTo(20, 32); g.lineTo(12, 18);
+        g.moveTo(36, 32); g.lineTo(44, 40);
+        g.strokePath();
+        // gambe
+        g.beginPath();
+        g.moveTo(24, 60); g.lineTo(22, 74);
+        g.moveTo(32, 60); g.lineTo(34, 74);
+        g.strokePath();
+        // occhi GIÀ storti: uno alto, uno basso, prima del glitch
+        glow(g, 25, 14, 2.2, 0xf87171, 0.85);
+        glow(g, 33, 17, 2.2, 0x67e8f9, 0.85);
+        ricordoScan(g, 54, 82, 0xc084fc);
+    });
+
+    // il revisore: piema con gli occhiali che riscrive i log. penna e cancellature
+    make(scene, 'boss-revisore', 52, 80, (g) => {
+        glow(g, 26, 44, 8, 0x60a5fa, 0.22);
+        g.fillStyle(0x081019, 0.95);
+        g.fillRoundedRect(16, 22, 22, 40, 8);
+        g.fillCircle(27, 13, 11);
+        g.lineStyle(1.5, 0x60a5fa, 0.8);
+        g.strokeRoundedRect(16, 22, 22, 40, 8);
+        g.strokeCircle(27, 13, 11);
+        // occhiali da revisore
+        g.lineStyle(1.5, 0x93c5fd, 0.9);
+        g.strokeCircle(23, 13, 3.4);
+        g.strokeCircle(31, 13, 3.4);
+        g.beginPath();
+        g.moveTo(26.4, 13); g.lineTo(27.6, 13);
+        g.strokePath();
+        // braccio che impugna la penna rossa
+        g.lineStyle(4, 0x081019, 1);
+        g.beginPath();
+        g.moveTo(38, 32); g.lineTo(46, 44);
+        g.strokePath();
+        g.lineStyle(2.5, 0xf87171, 1);
+        g.beginPath();
+        g.moveTo(46, 44); g.lineTo(50, 50);
+        g.strokePath();
+        // cancellature rosse sul torace: log riscritti
+        g.lineStyle(2, 0xf87171, 0.8);
+        g.beginPath();
+        g.moveTo(18, 34); g.lineTo(34, 36);
+        g.moveTo(18, 42); g.lineTo(32, 40);
+        g.strokePath();
+        // gambe
+        g.lineStyle(4, 0x081019, 1);
+        g.beginPath();
+        g.moveTo(22, 62); g.lineTo(20, 78);
+        g.moveTo(32, 62); g.lineTo(34, 78);
+        g.strokePath();
+        ricordoScan(g, 52, 80, 0x60a5fa);
+    });
+
+    // il garante: piema che giura il falso. mano alzata, bocca cucita, cuore nascosto
+    make(scene, 'boss-garante', 54, 84, (g) => {
+        glow(g, 27, 46, 9, 0x60a5fa, 0.25);
+        g.fillStyle(0x081019, 0.95);
+        g.fillRoundedRect(17, 24, 22, 42, 8);
+        g.fillCircle(28, 14, 11);
+        g.lineStyle(1.5, 0x60a5fa, 0.85);
+        g.strokeRoundedRect(17, 24, 22, 42, 8);
+        g.strokeCircle(28, 14, 11);
+        // mano destra alzata nel giuramento
+        g.lineStyle(4, 0x081019, 1);
+        g.beginPath();
+        g.moveTo(39, 32); g.lineTo(46, 16);
+        g.strokePath();
+        g.fillStyle(0x081019, 1);
+        g.fillCircle(46, 14, 4);
+        // mano sinistra sul petto, sopra il cuore che nasconde
+        g.lineStyle(4, 0x081019, 1);
+        g.beginPath();
+        g.moveTo(17, 34); g.lineTo(24, 44);
+        g.strokePath();
+        glow(g, 26, 44, 2.4, 0xf87171, 0.4);   // cuore nascosto sotto la mano
+        // bocca cucita: il silenzio
+        g.lineStyle(1.5, 0x93c5fd, 0.9);
+        g.beginPath();
+        g.moveTo(23, 18); g.lineTo(33, 18);
+        g.strokePath();
+        g.lineStyle(1, 0xf87171, 0.8);
+        for (const x of [25, 28, 31]) {
+            g.beginPath();
+            g.moveTo(x, 16); g.lineTo(x, 20);
+            g.strokePath();
+        }
+        // occhi fermi
+        glow(g, 24, 13, 2.2, 0x93c5fd, 0.85);
+        glow(g, 32, 13, 2.2, 0x93c5fd, 0.85);
+        // gambe
+        g.lineStyle(4, 0x081019, 1);
+        g.beginPath();
+        g.moveTo(23, 66); g.lineTo(21, 82);
+        g.moveTo(33, 66); g.lineTo(35, 82);
+        g.strokePath();
+        ricordoScan(g, 54, 84, 0x60a5fa);
+    });
 }
 
 /* ---------- oggetti ---------- */

@@ -313,4 +313,89 @@ export const BOSSES: Record<BossKind, BossDef> = {
         cooldownMs: { 1: 2000, 2: 1500, 3: 1000 },
         contactDamage: 1,
     },
+
+    /* ---------- i rimpianti del void: cinque persone-ricordo, deformi,
+       che custodiscono ognuna una verità su lametta (1-3) o piema (4-5).
+       sono ricordi sbagliati del passato che non vogliono essere visti. */
+
+    // lametta che delega: «raddrizzalo tu». scarica responsabilità a mani aperte
+    delegato: {
+        kind: 'delegato',
+        name: 'il delegato (un rimpianto di lametta)',
+        texture: 'boss-delegato',
+        hp: 28,
+        glowColor: 0xc084fc,
+        attacks: {
+            1: ['radial', 'burst'],
+            2: ['radial', 'burst', 'dive'],
+            3: ['radial', 'burst', 'dive'],
+        },
+        cooldownMs: { 1: 2400, 2: 2000, 3: 1700 },
+        guardsExit: false,
+        glitchy: true,
+        contactDamage: 1,
+    },
+    // lametta delle quattro di notte, fatto di trenbolone, che firma l'ordine
+    notturno: {
+        kind: 'notturno',
+        name: 'il notturno (un rimpianto di lametta)',
+        texture: 'boss-notturno',
+        hp: 34,
+        glowColor: 0xc084fc,
+        attacks: {
+            1: ['charge', 'lamette'],
+            2: ['charge', 'lamette', 'rain'],
+            3: ['charge', 'lamette', 'rain', 'burst'],
+        },
+        cooldownMs: { 1: 2300, 2: 1900, 3: 1500 },
+        contactDamage: 1,
+    },
+    // pedro in posa nel ritratto: disegnato già storto, prima del glitch
+    modello: {
+        kind: 'modello',
+        name: 'il modello (un rimpianto di lametta)',
+        texture: 'boss-modello',
+        hp: 38,
+        glowColor: 0xc084fc,
+        attacks: {
+            1: ['radial', 'lamette'],
+            2: ['radial', 'lamette', 'teleport'],
+            3: ['radial', 'lamette', 'teleport', 'burst'],
+        },
+        cooldownMs: { 1: 2200, 2: 1800, 3: 1400 },
+        contactDamage: 1,
+    },
+    // piema che riscrive i log per coprire il socio: cancella e riscrive
+    revisore: {
+        kind: 'revisore',
+        name: 'il revisore (un rimpianto di piema)',
+        texture: 'boss-revisore',
+        hp: 42,
+        glowColor: 0x60a5fa,
+        attacks: {
+            1: ['rain', 'radial'],
+            2: ['rain', 'radial', 'teleport'],
+            3: ['rain', 'radial', 'teleport', 'summon'],
+        },
+        cooldownMs: { 1: 2200, 2: 1800, 3: 1400 },
+        summonKind: 'numero',
+        contactDamage: 1,
+    },
+    // piema che giura il falso e tace per amore: il rimpianto peggiore
+    garante: {
+        kind: 'garante',
+        name: 'il garante (l\'ultimo rimpianto di piema)',
+        texture: 'boss-garante',
+        hp: 50,
+        glowColor: 0x60a5fa,
+        attacks: {
+            1: ['radial', 'rain', 'dive'],
+            2: ['radial', 'rain', 'teleport', 'burst'],
+            3: ['radial', 'rain', 'teleport', 'burst', 'summon'],
+        },
+        cooldownMs: { 1: 2000, 2: 1600, 3: 1200 },
+        summonKind: 'numero',
+        glitchy: true,
+        contactDamage: 1,
+    },
 };

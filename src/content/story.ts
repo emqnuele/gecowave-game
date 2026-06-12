@@ -498,6 +498,102 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'fascicolo aperto', color: 'blue', text: '«caso analisi 1, nota a margine di romero: "ogni indizio porta a lametta. ma lametta porta al trenbolone, e il trenbolone porta a lametta. il cerchio non è un indizio, è una condanna".»' },
     ],
 
+    /* ---------- il void dei rimpianti (romero, dopo i ricordi) ---------- */
+    'void-intro': [
+        { speaker: 'commissario romero', color: 'blue', text: 'eccoti. dopo i ricordi non ho chiuso occhio: il caso analisi 1 non era chiuso per niente. mancava il movente, e il movente è qui dentro.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'questo è il void: dove galleggia tutto quello che piema e lametta non hanno voluto guardare. appunti, bozze, log. i RIMPIANTI. la questura non può toccare un dio, ma un rimpianto è una prova ammissibile.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'ce ne sono cinque. ognuno custodisce una verità e nessuno vuole essere visto: ti verranno addosso. seguimi, custode. ti porto io di rimpianto in rimpianto. tu mena, io verbalizzo.' },
+    ],
+
+    'delegato-intro': [
+        { speaker: 'il delegato', color: 'purple', text: 'la responsabilità? te la passo. tieni. firma qui. e qui. il realm è storto, raddrizzalo TU. io ho da fare.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'questo è lametta nel momento esatto in cui ha scaricato tutto su pedro. guarda come tiene il foglio lontano da sé. picchialo: voglio sentirglielo dire fino in fondo.' },
+    ],
+    'notturno-intro': [
+        { speaker: 'il notturno', color: 'purple', text: 'sono le quattro... ho la boccetta... e ho un\'idea geniale per il bambino... gli dico io come si aggiusta un mondo... *singhiozzo divino*' },
+        { speaker: 'commissario romero', color: 'blue', text: 'l\'ordine a pedro lametta l\'ha dato COSÌ. fatto come una biglia. sapeva e l\'ha fatto comunque. è un\'aggravante, custode. battila.' },
+    ],
+    'modello-intro': [
+        { speaker: 'il modello', color: 'purple', text: 'stai fermo, pedro, la posa è perfetta. ti disegno con gli occhi un po\'... storti. fidati. l\'arte non anticipa: l\'arte ORDINA.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'questo è il ritratto. lametta ha disegnato pedro già glitchato PRIMA del glitch. non era una profezia. era un mandato. spaccalo.' },
+    ],
+    'revisore-intro': [
+        { speaker: 'il revisore', color: 'blue', text: 'questo log non va bene. lo riscrivo. "piema cercava una soluzione". ecco. molto meglio. la verità è solo una bozza con più autorità.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'e qui... qui mi si stringe lo stomaco. è piema. sapeva tutto e ha riscritto i registri per coprire il socio. il supervisore assente non era assente. nascondeva. forza.' },
+    ],
+    'garante-intro': [
+        { speaker: 'il garante', color: 'blue', text: 'giuro che non sapevo. *mano alzata, bocca cucita.* non sapevo. non ho visto niente. mettetelo a verbale: non sapevo.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'l\'ultimo. e il peggiore. piema sapeva tutto e ha scelto di proteggere il socio invece della verità. lametta ha fatto il danno; piema l\'ha coperto a mente lucida. chiudiamo.' },
+    ],
+
+    'verita-1': [
+        { speaker: 'verità n.1', color: 'cyan', text: '«lametta non ha creato pedro per amore. l\'ha creato per delega: un erede a cui scaricare un realm che non aveva voglia di sistemare.»' },
+        { speaker: 'commissario romero', color: 'blue', text: 'una. la firma è sua. avanti, il prossimo rimpianto ci aspetta più in là. resta dietro di me.' },
+    ],
+    'verita-2': [
+        { speaker: 'verità n.2', color: 'cyan', text: '«l\'ordine fatale — "raddrizzalo tu" — è stato dato da lametta fatto di trenbolone, alle quattro del mattino. lucido abbastanza da firmare, troppo per pentirsi.»' },
+        { speaker: 'commissario romero', color: 'blue', text: 'due. aggravante confermata. mi gira la testa solo a verbalizzarlo. continuiamo.' },
+    ],
+    'verita-3': [
+        { speaker: 'verità n.3', color: 'cyan', text: '«il glitch non è stato un incidente: era nel disegno. lametta aveva ritratto pedro già storto. gli ha dato la forma della sua rovina e l\'ha chiamata arte.»' },
+        { speaker: 'commissario romero', color: 'blue', text: 'tre. con lametta ho chiuso. quel che resta... riguarda l\'altro. e non mi piace per niente.' },
+    ],
+    'verita-4': [
+        { speaker: 'verità n.4', color: 'cyan', text: '«piema sapeva. ha riscritto i log della nascita di pedro per cancellare le tracce di lametta. il "cercavo una soluzione" era una sua correzione di bozze.»' },
+        { speaker: 'commissario romero', color: 'blue', text: 'quattro. il supervisore mente. ma manca ancora il perché. e il perché, custode, è sempre la parte che fa più male.' },
+    ],
+    'verita-5': [
+        { speaker: 'verità n.5', color: 'cyan', text: '«piema ha coperto tutto per non consegnare il socio. sapeva da prima dei sei giorni che lametta avrebbe rotto qualcosa, e ogni volta ha scelto di insabbiare invece di fermarlo.»' },
+        { speaker: 'commissario romero', color: 'blue', text: 'cinque. ci siamo. lametta ha combinato il disastro; piema lo ha coperto sapendo tutto. il secondo, per me, pesa di più. il caso è... aspetta. ASPETTA. questo log è di STANOTTE.' },
+    ],
+
+    'void-svolta': [
+        { speaker: 'commissario romero', color: 'blue', text: 'l\'ordine. l\'ordine di lametta a pedro. non è un ricordo, custode: è in ESECUZIONE. proprio adesso. pedro sta facendo quello che gli è stato detto di fare.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'io devo formalizzare. servono le firme, il fascicolo, il dovuto processo. ci vorranno ore. tu... tu non hai ore.' },
+    ],
+    'markolino-avviso-pedro': [
+        { speaker: 'markolino', color: 'green', text: 'CUSTODE!! l\'ho seguito il tuo segnale fin qui, sei sceso pure nel VOID, ma adesso BASTA: pedro si è mosso. al nucleo. ADESSO. il realm ha iniziato a "raddrizzarsi" e ti garantisco che non è una bella cosa.' },
+        { speaker: 'markolino', color: 'green', text: 'le verità le abbiamo. servivano. ma una verità non ferma un\'esecuzione: la ferma un geco che corre. VAI.' },
+    ],
+    'void-addio-romero': [
+        { speaker: 'commissario romero', color: 'blue', text: 'vai col ragazzino. io resto a mettere tutto a verbale: quando torni, lametta e piema avranno un fascicolo lungo quarant\'anni ad aspettarli.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'tu hai fatto la tua parte, custode. ora muoviti: l\'uscita del void porta dritta al nucleo. il processo lo apro io, l\'esecuzione la fermi tu.' },
+    ],
+
+    'romero-guida-1': [
+        { speaker: 'commissario romero', color: 'blue', text: 'sta\' vicino, custode. nel void se ti allontani ti perdo, e io con questa schiena non corro. il primo rimpianto è lì avanti: lascia che ci arriviamo insieme.' },
+    ],
+    'romero-guida-2': [
+        { speaker: 'commissario romero', color: 'blue', text: 'una verità in tasca. mi tremano un po\' le mani, non ci faccio caso da quarant\'anni. andiamo piano verso il prossimo: non scappa, è già un rimpianto.' },
+    ],
+    'romero-guida-3': [
+        { speaker: 'commissario romero', color: 'blue', text: 'finora è tutto lametta. e fa male abbastanza. ma ho il sospetto che il fondo non l\'abbiamo ancora toccato. resta al mio fianco.' },
+    ],
+    'romero-guida-4': [
+        { speaker: 'commissario romero', color: 'blue', text: 'da qui in poi non è più solo lametta, custode. c\'è l\'altro. e l\'altro lo davo per uno dei buoni. tienimi il passo: questa parte non voglio sbagliarla.' },
+    ],
+    'romero-guida-5': [
+        { speaker: 'commissario romero', color: 'blue', text: 'l\'ultimo. quello che non volevo trovare. stammi accanto: dopo questo, o chiudo il caso, o il caso chiude me.' },
+    ],
+    'romero-guida-fine': [
+        { speaker: 'commissario romero', color: 'blue', text: 'che aspetti? l\'uscita è lì e porta al nucleo. io resto a verbalizzare. corri, custode: il dovuto processo posso aspettarlo io, non il realm.' },
+    ],
+    'lore-void-1': [
+        { speaker: 'appunto galleggiante', color: 'cyan', text: '«bozza scartata, calligrafia di lametta: "delega definitiva dei poteri di manutenzione del realm al soggetto PEDRO. motivazione: vabbè dai".»' },
+    ],
+    'lore-void-2': [
+        { speaker: 'scontrino nel void', color: 'cyan', text: '«ricevuta: 1× boccetta, ore 03:58. firmato lametta. sul retro, a penna tremante: "stanotte sistemo tutto io, anzi no, lo fa pedro, geniale".»' },
+    ],
+    'lore-void-3': [
+        { speaker: 'bozzetto a matita', color: 'cyan', text: '«schizzo di pedro con gli occhi storti, datato il giorno PRIMA del glitch. in basso: "venuto bene". una macchia di colore copre la firma, ma la mano è quella.»' },
+    ],
+    'lore-void-4': [
+        { speaker: 'log con due versioni', color: 'cyan', text: '«riga originale: "lametta ordina a pedro di raddrizzare il realm". riga corretta in blu: "piema indaga sull\'anomalia". stessa ora. stessa mano? no. la seconda è di piema.»' },
+    ],
+    'lore-void-5': [
+        { speaker: 'memo interno mai spedito', color: 'cyan', text: '«da piema, archiviato e mai inviato: "so cos\'ha fatto lametta. lo so da sempre. e non lo consegnerò: il realm può anche restare rotto, il socio no". il void lo tiene da allora.»' },
+    ],
+
     /* ---------- i ricordi di pedro ---------- */
     'ricordi-ingresso': [
         { speaker: 'il dispositivo della riba', color: 'cyan', text: '*il dispositivo si riaccende da solo. sullo schermo: "memoria esterna rilevata: PEDRO — backup giorno 1-42". il realm intorno si piega in fotogrammi.*' },
@@ -807,8 +903,9 @@ export const CREDITS: { role: string; names: string[] }[] = [
     { role: 'gli dei minori e i guardiani', names: ['breccio', 'la formicona', 'il teorema incompiuto', 'il limite notevole', 'flauto speroindio'] },
     { role: 'libera impresa del realm', names: ['ticummi', 'smela', 'danjilo', 'filippus il dodo'] },
     { role: 'roleplay non richiesto', names: ['notino', 'lochef85'] },
+    { role: 'l\'indagine che nessuno voleva', names: ['commissario romero', 'i cinque rimpianti'] },
     { role: 'i capitoli segreti', names: ['il 7:40', 'il primo custode'] },
-    { role: 'menzioni d\'onore', names: ['markolino', 'la riba', 'commissario romero', 'vavleeh'] },
+    { role: 'menzioni d\'onore', names: ['markolino', 'la riba', 'vavleeh'] },
     { role: 'musica del realm', names: ['flux of coscienza'] },
     { role: '', names: ['grazie per aver custodito la wave.'] },
 ];
@@ -961,6 +1058,8 @@ export const WAVESUNG = {
     ticummiArrabbiato: { sender: 'ticummi', text: 'hai distrutto la mia ombra e non sei nemmeno cliente. vieni in cantina a discuterne, sconosciuto. porta 0,09€ per il disturbo.' },
     ticummiClausola: { sender: 'ticummi', text: 'gentile cliente, la informiamo che è scattata la clausola 12: i suoi dati sono ora armi. la aspettiamo in cantina. grazie per la fiducia. 🫶' },
     samattGrazie: { sender: 'samatt', text: 'SCESO. sono SCESO. il realm è enorme e fermo, che meraviglia. guastalla sta riimparando a camminare in linea retta. grazie custode. — samatt (851 giri, record)' },
+    markolinoVoid: { sender: 'markolino', text: 'romero ti ha portato nel VOID?? quel posto è fatto di rimpianti, non guardarli troppo a lungo. strappagli le verità e basta. io provo a raggiungerti.' },
+    markolinoPedroMuove: { sender: 'markolino', text: 'NON È UN\'ESERCITAZIONE: pedro sta eseguendo l\'ordine. il realm si sta "raddrizzando". al nucleo, custode, ADESSO. lascia perdere le firme di romero.' },
     markolinoFinale: { sender: 'markolino', text: 'pedro ti aspetta al nucleo. qualsiasi cosa ti offra: è glitchata pure quella. fidati di me che mi fido di poco.' },
     smelaRecensione: { sender: 'smela', text: 'ho letto la tua recensione (la spada). messaggio ricevuto: smela springs chiude. apro un chiosco di sola acqua del rubinetto, dichiarata come tale. il realm non è pronto ma io sì.' },
     markolinoMaschere5: { sender: 'markolino', text: '3 maschere?? quelle sono le maschere del PRIMO custode, quello che faceva i dischi. continuano a guardarti? normale. continuano a piacerti? meno. cerca le altre, ne mancano due.' },

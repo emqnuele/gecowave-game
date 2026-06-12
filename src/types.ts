@@ -35,7 +35,8 @@ export type EnemyKind =
 export type BossKind =
     | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
     | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto'
-    | 'danjilo' | 'smela' | 'settequaranta' | 'custode';
+    | 'danjilo' | 'smela' | 'settequaranta' | 'custode'
+    | 'delegato' | 'notturno' | 'modello' | 'revisore' | 'garante';
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }
@@ -50,7 +51,7 @@ export type EntitySpec =
     | { type: 'portal'; to: string; needsFlag?: string; label?: string };
 
 /** script speciali di livello gestiti dalla GameScene */
-export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'caso' | 'ruhra' | 'tana' | 'sorveglianza' | 'cantina' | 'ricordi' | 'pedro' | 'custode';
+export type LevelScript = 'bus' | 'lametta' | 'trenbolone' | 'caso' | 'ruhra' | 'tana' | 'sorveglianza' | 'cantina' | 'ricordi' | 'indagine' | 'pedro' | 'custode';
 
 export interface LevelDef {
     id: string;

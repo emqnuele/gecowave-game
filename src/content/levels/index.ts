@@ -13,6 +13,7 @@ import { tana } from './level09-tana';
 import { sorveglianza } from './level10-sorveglianza';
 import { cantina } from './level11-cantina';
 import { ricordi } from './level12-ricordi';
+import { voidlv } from './level13b-void';
 import { nucleo } from './level13-nucleo';
 import { barrato } from './level14-barrato';
 import { custode } from './level15-custode';
@@ -22,7 +23,7 @@ import { custode } from './level15-custode';
 
 const all: LevelDef[] = [
     perduta, bus, santuario, tecnokill, trenbolone, rio, stabilimento,
-    ruhra, mente, caso, tana, sorveglianza, cantina, ricordi, nucleo,
+    ruhra, mente, caso, tana, sorveglianza, cantina, ricordi, voidlv, nucleo,
 ];
 
 /* capitoli segreti: raggiungibili solo dai varchi, fuori dalla progressione

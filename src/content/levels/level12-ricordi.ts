@@ -10,7 +10,7 @@ export const ricordi: LevelDef = {
     accentWord: 'pedro',
     color: 'cyan',
     punchline: 'giorno 1: "ciao mondo". giorno 42: il mondo non rispose.',
-    next: 'nucleo',
+    next: 'void',
     script: 'ricordi',
     introDialogue: 'ricordi-ingresso',
     ambientNote: 76,
