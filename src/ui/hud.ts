@@ -10,6 +10,7 @@ const ACTIVE_ORDER: { id: AbilityId; key: string }[] = [
     { id: 'riflesso', key: 'G' },
     { id: 'analisi', key: 'H' },
     { id: 'scudo', key: 'R' },
+    { id: 'acquatossica', key: 'V' },
 ];
 
 export class Hud {

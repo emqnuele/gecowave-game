@@ -117,6 +117,9 @@ export class GameScene extends Phaser.Scene {
     private pedroChoiceShown = false;
     // il patto con pedro: potere vero, poi arrivano gli dei
     private pattoActive = false;
+    // scontro finale con gli dei dopo aver rifiutato di consegnare le wave:
+    // qui la morte è definitiva (game over, niente respawn)
+    private finalGodsFight = false;
     private pattoDeiAt = 0;
     private pattoNextSpawnAt = 0;
     private pattoWarned = 0;
@@ -163,6 +166,7 @@ export class GameScene extends Phaser.Scene {
         this.bossIntroShown = false;
         this.pedroChoiceShown = false;
         this.pattoActive = false;
+        this.finalGodsFight = false;
         this.pattoWarned = 0;
         this.scudoUntil = 0;
         this.scudoGfx = null;
@@ -231,10 +235,15 @@ export class GameScene extends Phaser.Scene {
         bus.emit('abilities-changed', { abilities: state.save.abilities });
         bus.emit('fragments-changed', { count: state.save.abilities.length, total: TOTAL_FRAGMENTS });
 
-        if (this.def.introDialogue && !state.save.seenDialogues.includes(this.def.introDialogue)) {
-            state.save.seenDialogues.push(this.def.introDialogue);
+        // la tommasorveglianza ti accoglie diversamente se non sei cliente premium
+        let introId = this.def.introDialogue;
+        if (introId === 'tommaso-benvenuto' && !state.hasFlag('tommasorveglianza')) {
+            introId = 'tommaso-benvenuto-estraneo';
+        }
+        if (introId && !state.save.seenDialogues.includes(introId)) {
+            state.save.seenDialogues.push(introId);
             state.persist();
-            this.time.delayedCall(700, () => this.startDialogue(this.def.introDialogue!));
+            this.time.delayedCall(700, () => this.startDialogue(introId!));
         }
 
         this.setupScript();
@@ -363,6 +372,7 @@ export class GameScene extends Phaser.Scene {
         if (id.startsWith('ivan')) return 'npc-ivan';
         if (id.startsWith('ticummi')) return 'npc-ticummi';
         if (id.startsWith('smela') || id.startsWith('venditore')) return 'npc-smela';
+        if (id.startsWith('filippus')) return 'npc-filippus';
         if (id.startsWith('piema')) return 'npc-piema';
         if (id.startsWith('lochef')) return 'npc-lochef';
         if (id.startsWith('lametta')) return 'npc-lametta';
@@ -502,6 +512,15 @@ export class GameScene extends Phaser.Scene {
                             }
                         }
                     });
+                });
+                break;
+            case 'filippus-dodo':
+                this.startDialogue('filippus-dodo', () => {
+                    if (state.hasFlag('filippus-dono')) return;
+                    state.setFlag('filippus-dono');
+                    state.save.barre += 40;
+                    bus.emit('barre-changed', { barre: state.save.barre, gained: true });
+                    sfx.pickup();
                 });
                 break;
             case 'venditore-acqua':
@@ -2122,6 +2141,7 @@ export class GameScene extends Phaser.Scene {
                                     bus.emit('ending', { id: 'consegna' });
                                 } else {
                                     this.startDialogue('dei-rifiuto', () => {
+                                        this.finalGodsFight = true;
                                         this.boss = new Boss(this, x, y - 40, 'dei');
                                         this.lighting.follow(this.boss, 0xffffff, 320, 1.1);
                                         this.setupBossColliders();
@@ -2180,8 +2200,11 @@ export class GameScene extends Phaser.Scene {
         this.time.delayedCall(900, () => {
             this.scene.pause();
             if (this.pattoActive) {
-                // il patto finisce come doveva finire
+                // il patto finisce come doveva finire: morte definitiva
                 bus.emit('ending', { id: 'pedro' });
+            } else if (this.finalGodsFight) {
+                // hai sfidato gli dei e hai perso: game over, niente microfono
+                bus.emit('ending', { id: 'sconfitta' });
             } else {
                 bus.emit('player-died', { lost });
             }

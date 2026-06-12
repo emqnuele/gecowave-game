@@ -1,6 +1,6 @@
 import { ZONE_CSS } from '../config';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
-import { ABILITY_CARDS, DEATH_PUNCHLINES } from '../content/story';
+import { ABILITY_CARDS, CREDITS, DEATH_PUNCHLINES } from '../content/story';
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -465,6 +465,66 @@ export class Screens {
             window.addEventListener('keydown', this.escHandler, { once: true });
         };
         showCard();
+    }
+
+    /* ---------- finale: storia + titoli di coda ---------- */
+
+    endingSequence(cards: { text: string; punch?: string }[], opts: { outcome: 'win' | 'lose'; title: string }, onDone: () => void): void {
+        this.storySequence(cards, () => this.showCredits(opts, onDone));
+    }
+
+    private showCredits(opts: { outcome: 'win' | 'lose'; title: string }, onDone: () => void): void {
+        const win = opts.outcome === 'win';
+        const s = this.openOverlay(`screen opaque credits-screen ${win ? 'credits-win' : 'credits-lose'}`);
+
+        const end = el('h1', 'credits-end');
+        end.textContent = 'THE END';
+        const sub = el('div', 'credits-sub font-marker');
+        sub.textContent = opts.title;
+
+        const roll = el('div', 'credits-roll');
+        const inner = el('div', 'credits-inner');
+        const game = el('div', 'credits-game');
+        game.textContent = 'GECOWAVE';
+        inner.append(game);
+        for (const c of CREDITS) {
+            if (c.role) {
+                const r = el('div', 'credits-role');
+                r.textContent = c.role;
+                inner.append(r);
+            }
+            for (const n of c.names) {
+                const nm = el('div', 'credits-name');
+                nm.textContent = n;
+                inner.append(nm);
+            }
+        }
+        roll.append(inner);
+        s.append(end, sub, roll);
+
+        let fw: ReturnType<typeof setInterval> | null = null;
+        const finish = () => {
+            if (fw) { clearInterval(fw); fw = null; }
+            this.closeOverlay();
+            onDone();
+        };
+        const back = this.btn('torna al menu', 1, finish, win ? 'glass-acid-gold' : 'glass-acid-red');
+        back.classList.add('credits-btn');
+        s.append(back);
+
+        if (win) {
+            const colors = ['#4ade80', '#facc15', '#60a5fa', '#f472b6', '#22d3ee', '#fb923c'];
+            fw = setInterval(() => {
+                if (this.overlay !== s) { if (fw) clearInterval(fw); return; }
+                const f = el('div', 'firework');
+                f.style.left = `${8 + Math.random() * 84}%`;
+                f.style.top = `${12 + Math.random() * 56}%`;
+                f.style.setProperty('--fw', colors[Math.floor(Math.random() * colors.length)]);
+                s.append(f);
+                setTimeout(() => f.remove(), 1100);
+            }, 420);
+        }
+        this.onEsc(finish);
     }
 
     showCharacterCreation(onConfirm: () => void): void {

@@ -122,6 +122,13 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-ricetta': [
         { speaker: 'ricettario unto', color: 'cyan', text: '«trenbolone artigianale di ticummi: ingredienti segreti, procedimento segreto, effetti notissimi. nota a margine: "diluire per lametta, che esagera".»' },
     ],
+    'filippus-dodo': [
+        { speaker: 'filippus il dodo', color: 'blue', text: '...oh. un ospite. nel caveau. di solito qui non arriva nessuno, a parte i ragni e i sensi di colpa di ticummi. io sono FILIPPUS IL DODO. piacere.' },
+        { speaker: 'filippus il dodo', color: 'blue', text: 'sì, lo so: "un dodo dovrebbe essere estinto". e infatti lo ero. poi ho iniziato a tirare 40000 kg di panca piana e l\'estinzione ha fatto un passo indietro. la natura rispetta i numeri grossi.' },
+        { speaker: 'filippus il dodo', color: 'blue', text: 'ticummi è una lumaca di merda. io sono molto meglio. scrivo il codice col mignolo. mentre mi alleno con l\'altro braccio.' },
+        { speaker: 'filippus il dodo', color: 'blue', text: 'visto che sei arrivato fin qui, e visto che hai le spalle strette (offesa), tieni: un piccolo dono. e ricordati la regola d\'oro: il leg day non si salta. MAI. nemmeno col double jump. (io posso)' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che giura solennemente di allenare le gambe*' },
+    ],
     'lore-caveau': [
         { speaker: 'porta del caveau', color: 'cyan', text: '«caveau degli 0,09: qui ticummi conserva ogni singolo pagamento mai ricevuto, incorniciato. il totale fa 0,27€. il caveau è costato 40.000 barre.»' },
     ],
@@ -583,6 +590,11 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'BENVENUTO NEL CENTRO DATI TOMMASORVEGLIANZA. lei è cliente premium. il suo abbonamento la sta osservando. 🫶' },
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'rilevata intenzione di raggiungere il signor ticummi. la informiamo che il signor ticummi non c\'è. la informiamo anche che sta mentendo, perché la stiamo guardando da 9 telecamere.' },
     ],
+    'tommaso-benvenuto-estraneo': [
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'UTENTE NON REGISTRATO NEL CENTRO DATI TOMMASORVEGLIANZA. lei non ha l\'abbonamento. lei non ha i permessi. lei, tecnicamente, non dovrebbe nemmeno esistere nei nostri registri. eppure eccola. 👀' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'rilevata intenzione di raggiungere il signor ticummi. la informiamo che, da non cliente, non gode di alcuna protezione. né esterna, né interna. né da noi. anzi: soprattutto da noi.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che si sente osservato da molti più di 9 occhi*' },
+    ],
     'ombra-intro': [
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'bentornato, CLIENTE PREMIUM. ricorda quando ha pagato 0,09€ per "protezione totale da ogni pericolo esterno"? ecco. lei non ha mai letto la parte sui pericoli INTERNI. 👍' },
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'da quel giorno l\'abbiamo guardata SEMPRE: 41.077 secondi di lei che salta, mena, scivola e si cura nei momenti sbagliati. con quei dati abbiamo costruito... questo.' },
@@ -693,28 +705,55 @@ export const ENDING_CONSEGNA: { text: string; punch?: string }[] = [
     },
     {
         text: 'tu torni un comune mortale. un geco sul muro, di sera, mentre la wave passa. era questo il punto, da sempre.',
-        punch: 'fine. quella buona.',
+        punch: 'good ending.',
     },
 ];
 
 export const ENDING_DEI: { text: string; punch?: string }[] = [
     {
-        text: 'hai sconfitto gli dei. il realm trattiene il fiato: il custode provvisorio è diventato dio effettivo. piema chiede un ricorso formale. lametta, stranamente, applaude.',
+        text: 'hai sconfitto gli dei. il realm trattiene il fiato: il custode provvisorio è diventato dio effettivo. piema chiede un ricorso formale. lametta, stranamente, applaude. ah no ma non sono morti?',
     },
     {
-        text: 'la gecowave sei tu, adesso. la senti scorrere: ogni serata, ogni inside joke, ogni bus in ritardo del realm passa da te. è tantissima roba. forse troppa.',
-        punch: 'fine. quella assurda. ma il geco se l\'è meritata.',
+        text: 'la gecowave sei tu, adesso. la senti scorrere. è tantissima roba. forse troppa.',
+        punch: 'the end. ma il geco se l\'è meritata.',
     },
 ];
 
 export const ENDING_PEDRO: { text: string; punch?: string }[] = [
     {
-        text: 'è andata esattamente così. il potere doppio era vero, i venti secondi di gloria pure. pedro non aveva mentito su niente, tecnicamente. è questo il suo trucco da sempre.',
+        text: 'è andata esattamente così. il powerup era vero. pedro non aveva mentito su niente, tecnicamente. è questo il suo problema.',
     },
     {
         text: 'piema e lametta non si erano mai mossi insieme prima. per te hanno fatto un\'eccezione. nel realm i traditori durano quanto una storia di 24 ore, e tu non sei arrivato nemmeno alla seconda visualizzazione.',
-        punch: 'fine sbagliata: il microfono ti riaspetta. pedro, da qualche parte, ride.',
+        punch: 'BAD ENDING. ma almeno sei stato figo per un po\'.' ,
     },
+];
+
+export const ENDING_SCONFITTA: { text: string; punch?: string }[] = [
+    {
+        text: 'hai rifiutato di consegnare le wave e hai sfidato gli dei. piema e lametta, insieme per la prima volta, non perdonano. l\'equazione e la pennellata ti raggiungono nello stesso identico istante.',
+    },
+    {
+        text: 'il custode si spegne sul muro, con tutte le wave ancora addosso. pedro ne raccoglie qualcosa, ticummi pure, è come se non fossero mai state tue. perché in effetti non lo erano.',
+    },
+    {
+        text: 'nessun respawn, stavolta. solo il silenzio, e una gecowave che torna come prima. senza di te.',
+        punch: 'fine. il realm continua. tu no.',
+    },
+];
+
+/** titoli di coda: il cast del realm */
+export const CREDITS: { role: string; names: string[] }[] = [
+    { role: 'il custode provvisorio', names: ['il geco'] },
+    { role: 'i creatori del gecorealm', names: ['piema', 'lametta'] },
+    { role: 'il traditore', names: ['pedro'] },
+    { role: 'il dipartimento bus', names: ['guggu', 'ivan maggini', 'samatt', 'guastalla'] },
+    { role: 'gli dei minori e i guardiani', names: ['breccio', 'la formicona', 'il teorema incompiuto', 'il limite notevole', 'flauto speroindio'] },
+    { role: 'libera impresa del realm', names: ['ticummi', 'smela', 'danjilo', 'filippus il dodo'] },
+    { role: 'roleplay non richiesto', names: ['notino', 'lochef85'] },
+    { role: 'menzioni d\'onore', names: ['markolino', 'la riba', 'commissario romero', 'vavleeh'] },
+    { role: 'musica del realm', names: ['flux of coscienza'] },
+    { role: '', names: ['grazie per aver custodito la wave.'] },
 ];
 
 /** battute di notino quando il suo agguato finisce male (per lui) */
@@ -726,8 +765,9 @@ export const NOTINO_FUGHE = [
 ];
 
 /** i finali si ricordano cosa hai fatto: righe extra dai flag */
-export function endingCards(id: 'consegna' | 'dei' | 'pedro', flags: string[]): { text: string; punch?: string }[] {
+export function endingCards(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta', flags: string[]): { text: string; punch?: string }[] {
     if (id === 'pedro') return ENDING_PEDRO;
+    if (id === 'sconfitta') return ENDING_SCONFITTA;
     const base = id === 'consegna' ? ENDING_CONSEGNA : ENDING_DEI;
     const extra: { text: string; punch?: string }[] = [];
     if (flags.includes('ticummi-graziato')) {

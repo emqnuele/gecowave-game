@@ -416,6 +416,33 @@ function npcs(scene: Phaser.Scene): void {
         g.strokePath();
     });
 
+    // filippus il dodo: dodo estinto ma troppo muscoloso per restarlo
+    make(scene, 'npc-filippus', 46, 54, (g) => {
+        g.fillStyle(INK, 1);
+        // petto enorme da panca piana
+        g.fillEllipse(23, 36, 42, 34);
+        // braccia gonfie
+        g.fillEllipse(7, 34, 13, 24);
+        g.fillEllipse(39, 34, 13, 24);
+        // testolina da dodo, sproporzionata
+        g.fillCircle(23, 13, 9);
+        // becco
+        g.fillStyle(0x3a4252, 1);
+        g.fillTriangle(23, 11, 23, 19, 35, 16);
+        // ciuffo di piume
+        g.fillStyle(INK, 1);
+        g.fillTriangle(15, 5, 17, 1, 20, 6);
+        g.fillTriangle(19, 4, 21, 0, 24, 5);
+        // occhio acceso
+        glow(g, 21, 11, 2.2, 0x60a5fa, 0.7);
+        // zampette tozze
+        g.lineStyle(4.5, INK, 1);
+        g.beginPath();
+        g.moveTo(17, 51); g.lineTo(16, 54);
+        g.moveTo(29, 51); g.lineTo(30, 54);
+        g.strokePath();
+    });
+
     // piema: dio creatore, attualmente fuso per analisi 1
     make(scene, 'npc-piema', 34, 52, (g) => {
         g.fillStyle(0x16161f, 1);

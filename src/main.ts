@@ -96,22 +96,30 @@ async function boot(): Promise<void> {
 
     bus.on('ending', ({ id }) => {
         sfx.stopPad();
-        const cards = endingCards(id, state.save.flags);
-        if (id === 'pedro') {
-            // finale sbagliato: gli dei ti hanno raggiunto, si riprova dalla scelta
-            screens.storySequence(cards, () => controller.retry());
-            return;
-        }
         music.playEnding();
         hud.hide();
         game.scene.stop('GameScene');
-        screens.storySequence(cards, () => {
-            state.save.endingSeen = id;
-            // ng+: si riparte dall'inizio con tutte le wave, ma boss e agguati tornano
-            state.save.levelId = FIRST_LEVEL;
-            state.save.checkpointId = null;
-            state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-') && !f.startsWith('agguato-'));
-            state.persist();
+        const cards = endingCards(id, state.save.flags);
+        // pedro (patto) e sconfitta (sfida agli dei persa) sono game over definitivi
+        const lose = id === 'pedro' || id === 'sconfitta';
+        const title =
+            id === 'consegna' ? 'HAI SALVATO IL GECOREALM'
+            : id === 'dei' ? 'ORA IL GECOREALM È TUO'
+            : id === 'pedro' ? 'GLI DEI TI HANNO RAGGIUNTO'
+            : 'IL REALM CONTINUA. TU NO.';
+        screens.endingSequence(cards, { outcome: lose ? 'lose' : 'win', title }, () => {
+            if (lose) {
+                // hai perso: il salvataggio viene cancellato, si riparte da zero
+                state.reset();
+            } else {
+                state.save.endingSeen = id;
+                // ng+: si riparte dall'inizio con tutte le wave, ma boss e agguati tornano
+                state.save.levelId = FIRST_LEVEL;
+                state.save.checkpointId = null;
+                state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-') && !f.startsWith('agguato-'));
+                state.persist();
+            }
+            music.playMenu();
             screens.showMenu();
         });
     });

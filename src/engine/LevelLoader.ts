@@ -79,6 +79,9 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
                 const frame = pool[Math.floor(rnd() * pool.length)];
                 const s = fakeWalls.create(cx, cy, 'tileset_main', frame) as Phaser.Physics.Arcade.Sprite;
                 s.setScale(ART_SCALE);
+                // il corpo statico è calcolato sul frame 160px non scalato:
+                // senza refreshBody resta enorme (zona fantasma di ~5 tile)
+                s.refreshBody();
                 s.setPipeline('Light2D');
                 continue;
             }
@@ -90,8 +93,10 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
                 const frame = pool[Math.floor(rnd() * pool.length)];
                 const s = breakableWalls.create(cx, cy, 'tileset_main', frame) as Phaser.Physics.Arcade.Sprite;
                 s.setScale(ART_SCALE);
+                // refreshBody riallinea dimensione E posizione del corpo alla
+                // scala: setSize da solo lasciava il corpo sfalsato (blocco fantasma)
+                s.refreshBody();
                 s.setPipeline('Light2D');
-                (s.body as Phaser.Physics.Arcade.StaticBody).setSize(TILE, TILE);
                 continue;
             }
             dataRow.push(-1);
