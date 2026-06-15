@@ -24,7 +24,7 @@ export const tecnokill: LevelDef = {
         g: { type: 'enemy', kind: 'glitchetto' },
         b: { type: 'barre', amount: 10 },
         Z: { type: 'maschera' },
-        Y: { type: 'portal', to: 'barrato', needsFlag: 'boss-down-guggu', label: 'la 14 barrato' },
+        Y: { type: 'portal', to: 'barrato', needsFlag: 'boss-down-walter', label: 'la 14 barrato' },
         B: { type: 'boss', kind: 'notino' },
     },
     grid: [

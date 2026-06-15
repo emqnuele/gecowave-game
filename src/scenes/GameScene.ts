@@ -989,9 +989,16 @@ export class GameScene extends Phaser.Scene {
             x, y: y - 8, range: 58,
             onInteract: () => {
                 if (this.exiting) return;
-                state.portalReturn = { levelId: this.def.id, x, y };
-                bus.emit('toast', { text: `entri nel varco: ${label ?? to}.` });
-                this.gotoLevel(to);
+                bus.emit('choice-show', {
+                    title: `un varco verso ${label ?? to}. ci entri?`,
+                    options: [{ label: `entra: ${label ?? to}` }, { label: 'resta qui' }],
+                    onPick: (i) => {
+                        if (i !== 0 || this.exiting) return;
+                        state.portalReturn = { levelId: this.def.id, x, y };
+                        bus.emit('toast', { text: `entri nel varco: ${label ?? to}.` });
+                        this.gotoLevel(to);
+                    },
+                });
             },
         });
     }

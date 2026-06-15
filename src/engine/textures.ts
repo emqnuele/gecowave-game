@@ -1774,18 +1774,17 @@ function objects(scene: Phaser.Scene): void {
 
     // varco verso i capitoli segreti: anello che pulsa, vuoto al centro
     make(scene, 'portal', 52, 64, (p) => {
-        glow(p, 26, 32, 14, 0x4ade80, 0.4);
-        p.lineStyle(3, 0x4ade80, 0.9);
-        p.strokeEllipse(26, 32, 36, 52);
-        p.lineStyle(2, 0xa855f7, 0.7);
-        p.strokeEllipse(26, 32, 26, 40);
-        p.fillStyle(0x05080a, 0.92);
-        p.fillEllipse(26, 32, 20, 32);
-        // frammenti che orbitano
-        p.fillStyle(0xfde047, 0.9);
-        p.fillCircle(26, 8, 2.4);
-        p.fillCircle(44, 32, 2.4);
-        p.fillCircle(8, 40, 2);
+        // una fenditura appena percettibile: si nota solo se la cerchi
+        glow(p, 26, 32, 10, 0x4ade80, 0.12);
+        p.lineStyle(1, 0x4ade80, 0.25);
+        p.strokeEllipse(26, 32, 34, 50);
+        p.lineStyle(1, 0xa855f7, 0.2);
+        p.strokeEllipse(26, 32, 24, 38);
+        p.fillStyle(0x05080a, 0.7);
+        p.fillEllipse(26, 32, 18, 30);
+        // un solo frammento smorto, quasi spento
+        p.fillStyle(0xfde047, 0.35);
+        p.fillCircle(26, 9, 1.6);
     });
 
     // stele della lore

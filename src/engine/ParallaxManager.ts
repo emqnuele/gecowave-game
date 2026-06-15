@@ -27,8 +27,6 @@ function themeFor(zone: ZoneColor, levelId: string): LayerConfig[] {
     const painted = custom ? `bg-painted-${levelId}` : legacy;
     const layers: LayerConfig[] = [
         { key: painted, fallbackKey: legacy, speed: 0.03, depth: -20, fitHeight: true, tint: true, tintStrength: custom ? 0.18 : 0.4 },
-        { key: `bg-${zone}-0`, speed: 0.16, depth: -16, opacity: 0.95 },
-        { key: `bg-${zone}-1`, speed: 0.32, depth: -14, opacity: 0.95 },
     ];
     if (zone === 'purple' || zone === 'blue' || zone === 'green') {
         layers.push({ key: 'ruins_columns', speed: 0.55, speedY: 0.9, depth: -12, scale: 0.8, opacity: 0.92, tint: true, tintStrength: 0.18 });
