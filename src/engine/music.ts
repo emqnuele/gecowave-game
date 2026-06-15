@@ -182,7 +182,8 @@ class MusicManager {
         }
 
         const oldAudio = this.currentAudio;
-        const encodedPath = encodeURI(path);
+        // encodeURI non codifica '#': i nomi file con '#' verrebbero letti come fragment
+        const encodedPath = path.split('/').map(encodeURIComponent).join('/');
         // use html5 audio to stream large files without decoding delay
         const newAudio = new Audio(encodedPath);
         newAudio.loop = loop;
