@@ -21,9 +21,9 @@ export class BootScene extends Phaser.Scene {
             if (id === 'perduta') continue;
             this.load.image(`bg-painted-${id}`, `assets/backgrounds/${id}.png`);
         }
-        // capitoli segreti di walter: riusano il fondale del trenbolone, poi scurito in scena
-        this.load.image('bg-painted-galliate', 'assets/backgrounds/trenbolone.png');
-        this.load.image('bg-painted-marcetti', 'assets/backgrounds/trenbolone.png');
+        // capitoli segreti di walter: fondali dedicati (se mancano, fallback al parallax legacy)
+        this.load.image('bg-painted-galliate', 'assets/backgrounds/galliate.png');
+        this.load.image('bg-painted-marcetti', 'assets/backgrounds/marcetti.png');
 
         // sheet 2828x1403: righe 0-2 da 8 frame 350x350, riga 3 attacco a 700x350
         this.load.spritesheet('player', 'assets/sprites/player_sheet.png', { frameWidth: 350, frameHeight: 350 });
