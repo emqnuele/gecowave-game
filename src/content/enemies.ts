@@ -210,4 +210,15 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         barre: [1, 3],
         glowColor: 0x84cc16,
     },
+    // le fiat tipo di galliate: sgommano addosso al player
+    fiattipo: {
+        kind: 'fiattipo',
+        texture: 'enemy-fiattipo',
+        behavior: 'charger',
+        hp: 5,
+        speed: 560,
+        aggroRange: 420,
+        barre: [2, 5],
+        glowColor: 0xdc2626,
+    },
 };

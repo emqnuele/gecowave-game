@@ -56,10 +56,22 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     revisore: 'revisore-intro',
     garante: 'garante-intro',
     trentatre: 'trentatre-intro',
+    maranza: 'maranza-intro',
+    maranzone: 'maranzone-intro',
+    istruttore: 'istruttore-intro',
+    annascrivania: 'annascrivania-intro',
+    walter: 'walter-boss-intro',
 };
 
 /* l'ordine dei rimpianti nel void: ad ognuno la sua verità */
 const VOID_REGRETS: BossKind[] = ['delegato', 'notturno', 'modello', 'revisore', 'garante'];
+
+/* la quest di walter baruffoni: sequenza di boss per capitolo.
+   l'ultimo di marcetti è walter stesso, rivelato e ingrandito. */
+const BARUFFONI_SEQ: Record<string, BossKind[]> = {
+    galliate: ['maranza', 'maranzone'],
+    marcetti: ['istruttore', 'annascrivania', 'walter'],
+};
 
 export const TOTAL_MASCHERE = 5;
 
@@ -160,6 +172,10 @@ export class GameScene extends Phaser.Scene {
     private voidArenas: { x: number; y: number }[] = [];
     private voidStep = 0;
     private voidBusy = false;
+    // la quest di walter: arene sequenziali in galliate e marcetti
+    private baruffoniArenas: { x: number; y: number }[] = [];
+    private baruffoniStep = 0;
+    private baruffoniBusy = false;
     // doomsday: pedro raggiunge il custode se perde troppo tempo
     private collapsePedro = false;
     private collapseTriggered = false;
@@ -219,6 +235,9 @@ export class GameScene extends Phaser.Scene {
         this.voidArenas = [];
         this.voidStep = 0;
         this.voidBusy = false;
+        this.baruffoniArenas = [];
+        this.baruffoniStep = 0;
+        this.baruffoniBusy = false;
         this.collapsePedro = false;
         this.collapseTriggered = false;
         this.doomsdayWarned = 0;
@@ -271,6 +290,15 @@ export class GameScene extends Phaser.Scene {
         this.parallax.build(this.def.color, this.def.id);
         this.parallax.resize();
         this.buildPrompt();
+
+        // i capitoli di walter riusano il fondale del trenbolone ma cupo e malato
+        if (this.def.script === 'galliate' || this.def.script === 'marcetti') {
+            const cam = this.cameras.main;
+            const tint = this.def.script === 'galliate' ? 0x150406 : 0x1a1206;
+            const veil = this.add.rectangle(0, 0, cam.width, cam.height, tint, 0.42)
+                .setOrigin(0, 0).setScrollFactor(0).setDepth(3);
+            this.scale.on('resize', () => veil.setSize(cam.width, cam.height));
+        }
 
         state.setFlag(`visto-${this.def.id}`);
 
@@ -445,6 +473,7 @@ export class GameScene extends Phaser.Scene {
         if (id.startsWith('guastalla')) return 'npc-guastalla';
         if (id.startsWith('studente') || id.startsWith('professore') || id.startsWith('bimbo')) return 'npc-studente';
         if (id.startsWith('romero')) return 'npc-romero';
+        if (id.startsWith('walter')) return 'npc-walter';
         if (id.startsWith('vavleeh')) return 'npc-vavleeh';
         if (id.startsWith('indizio')) return 'lore-tablet';
         return 'npc-markolino';
@@ -474,6 +503,24 @@ export class GameScene extends Phaser.Scene {
         if (id.startsWith('arena-')) {
             this.voidArenas.push({ x, y });
             this.voidArenas.sort((a, b) => a.x - b.x);
+            return;
+        }
+
+        // marker invisibili delle arene della quest di walter
+        if (id.startsWith('warena-')) {
+            this.baruffoniArenas.push({ x, y });
+            this.baruffoniArenas.sort((a, b) => a.x - b.x);
+            return;
+        }
+
+        // walter ti accompagna come faceva romero: cammina piano e si parla
+        if (id === 'walter-guida') {
+            const guide = this.add.sprite(x, y + 4, 'npc-walter').setDepth(4).setPipeline('Light2D');
+            this.lighting.follow(guide, 0x86efac, 160, 0.8);
+            this.companion = guide;
+            this.companionBaseY = y + 4;
+            this.companionInteract = { x, y, range: 80, onInteract: () => this.interactWalterGuida() };
+            this.interactables.push(this.companionInteract);
             return;
         }
 
@@ -663,6 +710,32 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'samatt-loop':
                 this.startDialogue(state.hasFlag('boss-down-guggu') ? 'samatt-libero' : id);
+                break;
+            case 'walter-bus':
+                // walter si sblocca solo dopo guggu: prima dorme della grossa
+                if (!state.hasFlag('boss-down-guggu')) {
+                    bus.emit('toast', { text: 'walter ronfa appoggiato a un palo. meglio non svegliarlo ora.' });
+                    return;
+                }
+                if (state.hasFlag('boss-down-walter')) {
+                    this.startDialogue('walter-bus-dopo');
+                    return;
+                }
+                this.startDialogue('walter-bus-intro', () => {
+                    bus.emit('choice-show', {
+                        title: 'walter sbadiglia: "mi daresti una mano a galliate? è una cosa veloce, 3 annetti al massimo."',
+                        options: [{ label: 'aiuta walter (vai a galliate)' }, { label: 'no, ho da fare' }],
+                        onPick: (i) => {
+                            if (i !== 0) {
+                                bus.emit('toast', { text: 'walter: "...va beh. torna quando vuoi. io intanto schiaccio un pisolino."' });
+                                return;
+                            }
+                            state.portalReturn = { levelId: 'bus', x: this.player.x, y: this.player.y };
+                            bus.emit('toast', { text: 'sali sulla wolkswagen polo di walter. destinazione: galliate.' });
+                            this.gotoLevel('galliate');
+                        },
+                    });
+                });
                 break;
             case 'indizio-1':
             case 'indizio-2':
@@ -1154,6 +1227,140 @@ export class GameScene extends Phaser.Scene {
             this.time.delayedCall(1200, () => bus.emit('wavesung', WAVESUNG.markolinoFinale));
         }
         if (this.def.script === 'indagine') this.setupVoid();
+        if (this.def.script === 'galliate' || this.def.script === 'marcetti') this.setupBaruffoni();
+    }
+
+    /* ---------- la quest di walter baruffoni: galliate e marcetti ---------- */
+
+    /** la sequenza di boss di questo capitolo (vuota fuori dalla quest) */
+    private baruffoniSeq(): BossKind[] {
+        return BARUFFONI_SEQ[this.def.id] ?? [];
+    }
+
+    private setupBaruffoni(): void {
+        const seq = this.baruffoniSeq();
+        if (seq.length === 0) return;
+        this.baruffoniStep = seq.filter((k) => state.hasFlag(`boss-down-${k}`)).length;
+        // riallineo walter all'arena di turno
+        if (this.companion) {
+            const here = this.baruffoniArenas[Math.min(this.baruffoniStep, this.baruffoniArenas.length - 1)];
+            if (here) this.companion.setPosition(here.x - 90, this.companionBaseY);
+        }
+        if (this.baruffoniStep >= seq.length) {
+            // capitolo già concluso: walter resta in fondo, l'uscita è libera
+            if (this.companion && this.baruffoniArenas.length) {
+                const last = this.baruffoniArenas[this.baruffoniArenas.length - 1];
+                this.companion.setPosition(last.x + 60, this.companionBaseY);
+            }
+            return;
+        }
+        this.spawnBaruffoniBoss(this.baruffoniStep);
+    }
+
+    /** materializza il boss di turno nella sua arena (l'ultimo di marcetti è walter) */
+    private spawnBaruffoniBoss(idx: number): void {
+        const seq = this.baruffoniSeq();
+        const kind = seq[idx];
+        const arena = this.baruffoniArenas[idx];
+        if (!kind || !arena) return;
+        if (kind === 'walter') {
+            this.walterReveal(arena);
+            return;
+        }
+        this.boss = new Boss(this, arena.x, arena.y - 20, kind);
+        this.bossIntroShown = false;
+        this.lighting.follow(this.boss, this.boss.def.glowColor, 260, 1.0);
+        this.setupBossColliders();
+    }
+
+    /** un boss della quest è caduto: walter commenta e fa avanzare la sequenza */
+    private onBaruffoniDown(kind: BossKind): void {
+        const seq = this.baruffoniSeq();
+        const idx = seq.indexOf(kind);
+        if (idx < 0) return;
+        this.baruffoniStep = idx + 1;
+        const last = idx >= seq.length - 1;
+        this.startDialogue(`${this.def.id}-verita-${idx + 1}`, () => {
+            if (last) {
+                this.onBaruffoniComplete();
+                return;
+            }
+            this.time.delayedCall(900, () => this.spawnBaruffoniBoss(idx + 1));
+        });
+    }
+
+    /** galliate: ultimo maranza giù → strada libera verso le autoscuole */
+    private onBaruffoniComplete(): void {
+        if (this.def.id !== 'galliate') return;
+        bus.emit('toast', { text: 'la strada per le autoscuole marcetti è libera. walter sorride.' });
+    }
+
+    /** walter smette di sonnacchiare: si rivela boss finale e si ingrandisce */
+    private walterReveal(arena: { x: number; y: number }): void {
+        if (this.baruffoniBusy) return;
+        this.baruffoniBusy = true;
+        this.startDialogue('walter-rivelazione', () => {
+            // l'npc che ti seguiva sparisce: ora è il boss
+            if (this.companionInteract) {
+                this.interactables = this.interactables.filter((i) => i !== this.companionInteract);
+                this.companionInteract = null;
+            }
+            const cx = this.companion?.x ?? arena.x;
+            this.companion?.destroy();
+            this.companion = null;
+            const wy = arena.y - 30;
+            const boss = new Boss(this, cx, wy, 'walter');
+            boss.setScale(0.35);
+            this.boss = boss;
+            this.bossIntroShown = true; // l'ingaggio lo faccio io dopo la crescita
+            this.lighting.follow(boss, boss.def.glowColor, 320, 1.1);
+            this.setupBossColliders();
+            this.cameras.main.shake(600, 0.01);
+            this.cameras.main.flash(300, 22, 163, 74);
+            this.tweens.add({
+                targets: boss,
+                scale: 1.15,
+                duration: 1500,
+                ease: 'Back.easeOut',
+                onComplete: () => boss.active && boss.engage(),
+            });
+        });
+    }
+
+    /** walter cammina piano accanto al player, come faceva romero nel void */
+    private updateBaruffoni(time: number, delta: number): void {
+        const c = this.companion;
+        if ((this.def.script !== 'galliate' && this.def.script !== 'marcetti') || !c) return;
+        let objX: number;
+        if (this.baruffoniStep < this.baruffoniArenas.length) {
+            objX = this.baruffoniArenas[this.baruffoniStep].x - 70;
+        } else {
+            const lastArena = this.baruffoniArenas[this.baruffoniArenas.length - 1];
+            objX = (lastArena?.x ?? this.player.x) + 80;
+        }
+        const lead = 150;
+        const targetX = Phaser.Math.Clamp(objX, this.player.x - lead, this.player.x + lead);
+        const speed = 150;
+        const step = (speed * delta) / 1000;
+        const dx = targetX - c.x;
+        if (Math.abs(dx) <= step + 1) {
+            c.x = targetX;
+        } else {
+            c.x += Math.sign(dx) * step;
+            c.setFlipX(dx < 0);
+        }
+        c.y = this.companionBaseY + Math.sin(time / 320) * 2;
+        if (this.companionInteract) {
+            this.companionInteract.x = c.x;
+            this.companionInteract.y = c.y;
+        }
+    }
+
+    /** parlare con walter lungo il cammino: commento contestuale e strano */
+    private interactWalterGuida(): void {
+        const seq = this.baruffoniSeq();
+        const n = Math.min(this.baruffoniStep + 1, seq.length);
+        this.startDialogue(`${this.def.id}-walter-${n}`);
     }
 
     /* ---------- il void: i rimpianti di piema e lametta ---------- */
@@ -1347,6 +1554,7 @@ export class GameScene extends Phaser.Scene {
         this.updatePatto(time);
         this.updateIvan(time);
         this.updateVoid(time, delta);
+        this.updateBaruffoni(time, delta);
         this.updateFakeWalls();
         this.updateDoomsday(time, delta);
         this.updateRhythm(time);
@@ -1623,6 +1831,13 @@ export class GameScene extends Phaser.Scene {
             if (this.time.now > this.exitLockToastAt) {
                 this.exitLockToastAt = this.time.now + 3000;
                 bus.emit('toast', { text: 'romero non ha finito. i rimpianti vanno guardati fino in fondo.' });
+            }
+            return;
+        }
+        if (this.def.script === 'galliate' && !state.hasFlag('boss-down-maranzone')) {
+            if (this.time.now > this.exitLockToastAt) {
+                this.exitLockToastAt = this.time.now + 3000;
+                bus.emit('toast', { text: 'walter sbadiglia: "aspetta... prima questi maranza. galliate non si attraversa così."' });
             }
             return;
         }
@@ -2606,6 +2821,19 @@ export class GameScene extends Phaser.Scene {
                 this.startDialogue('custode-morte', () => {
                     this.spawnCuore(x, y + 40, 'cuore-custode');
                     this.returnFromSecret(4500);
+                });
+                break;
+            case 'maranza':
+            case 'maranzone':
+            case 'istruttore':
+            case 'annascrivania':
+                this.onBaruffoniDown(kind);
+                break;
+            case 'walter':
+                this.startDialogue('walter-morte', () => {
+                    this.spawnCuore(x, y + 40, 'cuore-walter');
+                    bus.emit('toast', { text: 'walter, spirando: "...comprate verisure. il primo mese è scontato."' });
+                    this.returnFromSecret(5000);
                 });
                 break;
             case 'flauto':

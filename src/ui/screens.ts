@@ -200,7 +200,7 @@ export class Screens {
         });
 
         // capitoli segreti: appaiono solo una volta scoperti dal loro varco
-        const secrets = ['barrato', 'custode'].filter(
+        const secrets = ['barrato', 'custode', 'galliate', 'marcetti'].filter(
             (id) => state.godMode || state.hasFlag(`visto-${id}`),
         );
         if (secrets.length) {

@@ -31,11 +31,10 @@ export const BOSSES: Record<BossKind, BossDef> = {
         glowColor: 0xfacc15,
         attacks: {
             1: ['charge', 'rain'],
-            2: ['charge', 'rain', 'summon'],
-            3: ['charge', 'charge', 'rain', 'summon'],
+            2: ['charge', 'rain', 'burst'],
+            3: ['charge', 'charge', 'rain', 'burst'],
         },
         cooldownMs: { 1: 2600, 2: 2200, 3: 1700 },
-        summonKind: 'pendolare',
         startsInvulnerable: true,
         contactDamage: 1,
     },
@@ -418,6 +417,88 @@ export const BOSSES: Record<BossKind, BossDef> = {
         cooldownMs: { 1: 2000, 2: 1600, 3: 1200 },
         summonKind: 'numero',
         glitchy: true,
+        contactDamage: 1,
+    },
+
+    /* ---------- la quest di walter baruffoni: galliate e le autoscuole marcetti ---------- */
+
+    // primo maranza di galliate: spaccone qualunque, scalda l'ambiente
+    maranza: {
+        kind: 'maranza',
+        name: 'un maranza con la borsa a tracolla',
+        texture: 'boss-maranza',
+        hp: 40,
+        glowColor: 0xdc2626,
+        attacks: {
+            1: ['charge', 'dive'],
+            2: ['charge', 'dive', 'burst'],
+            3: ['charge', 'charge', 'burst'],
+        },
+        cooldownMs: { 1: 2200, 2: 1800, 3: 1400 },
+        contactDamage: 1,
+    },
+    // il maranzone: si è incazzato perché l'hai guardato male. boss di galliate
+    maranzone: {
+        kind: 'maranzone',
+        name: 'il maranzone (l\'hai guardato male)',
+        texture: 'boss-maranzone',
+        hp: 70,
+        glowColor: 0xb91c1c,
+        attacks: {
+            1: ['charge', 'burst', 'rain'],
+            2: ['charge', 'burst', 'rain', 'summon'],
+            3: ['charge', 'charge', 'burst', 'radial', 'summon'],
+        },
+        cooldownMs: { 1: 2000, 2: 1600, 3: 1200 },
+        summonKind: 'fiattipo',
+        contactDamage: 1,
+    },
+    // dipendente dell'autoscuola: l'istruttore di guida che ti odia
+    istruttore: {
+        kind: 'istruttore',
+        name: 'l\'istruttore di guida (3 annetti di livore)',
+        texture: 'boss-istruttore',
+        hp: 60,
+        glowColor: 0xf59e0b,
+        attacks: {
+            1: ['dive', 'rain'],
+            2: ['dive', 'rain', 'burst'],
+            3: ['dive', 'rain', 'burst', 'radial'],
+        },
+        cooldownMs: { 1: 2200, 2: 1800, 3: 1400 },
+        contactDamage: 1,
+    },
+    // la signora anna alla scrivania: segretaria temibile
+    annascrivania: {
+        kind: 'annascrivania',
+        name: 'la signora anna (alla scrivania)',
+        texture: 'boss-annascrivania',
+        hp: 75,
+        glowColor: 0xf59e0b,
+        attacks: {
+            1: ['radial', 'rain'],
+            2: ['radial', 'rain', 'summon'],
+            3: ['radial', 'rain', 'burst', 'summon'],
+        },
+        cooldownMs: { 1: 2100, 2: 1700, 3: 1300 },
+        summonKind: 'fiattipo',
+        contactDamage: 1,
+    },
+    // walter baruffoni: da npc sonnacchioso a boss finale gigante
+    walter: {
+        kind: 'walter',
+        name: 'walter baruffoni, re delle autoscuole',
+        texture: 'boss-walter',
+        hp: 110,
+        glowColor: 0x16a34a,
+        attacks: {
+            1: ['charge', 'burst', 'rain'],
+            2: ['charge', 'burst', 'rain', 'radial', 'summon'],
+            3: ['charge', 'charge', 'burst', 'radial', 'rain', 'summon'],
+        },
+        cooldownMs: { 1: 2000, 2: 1500, 3: 1100 },
+        summonKind: 'fiattipo',
+        bodyScale: 0.8,
         contactDamage: 1,
     },
 };

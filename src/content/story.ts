@@ -863,6 +863,114 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̷i̸b̵i̶l̷e̸... eri in a̵n̶t̷i̸c̵i̶p̷o̸ pure tu... mi r̶i̷t̸i̵r̶o̷. per ora. ma il realm continua a s̸g̵r̵e̷t̶o̵l̶a̷r̸s̵i̶. non rallentare.' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco che ha guadagnato tempo, non pace. il doomsday rallenta ma non si ferma.*' },
     ],
+
+    /* ---------- la quest opzionale di walter baruffoni ---------- */
+
+    'walter-bus-intro': [
+        { speaker: 'walter baruffoni', color: 'green', text: '*un signore tozzo sonnecchia contro un palo, le chiavi di una wolkswagen polo in mano* ...eh? ah. sei tu quello che ha... *sbadiglia* ...sistemato guggu. bravo. bravo bravo.' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'io sono walter. walter baruffoni. autoscuole marcetti, le conosci? "dove la patente la prendi in 3 annetti". *si appisola un secondo* ...scusa, dicevo.' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'guggu mi aveva preso una cosa. una cosa mia. ora che non c\'è più dovrei andare a... a riprendermela. ma galliate è messa male, amico. maranza, fiat tipo che sgommano, gente che ti guarda e tira fuori il coltello.' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'tu però sei in gamba. uno così. *ti fissa con gli occhi mezzi chiusi* mi accompagni? è una passeggiata. tre annetti al massimo.' },
+    ],
+    'walter-bus-dopo': [
+        { speaker: 'il geco', color: 'green', text: '*il palo dove ronfava walter è vuoto. resta solo una macchia d\'olio a forma di wolkswagen polo.*' },
+    ],
+
+    'galliate-intro': [
+        { speaker: 'walter baruffoni', color: 'green', text: '*la polo si ferma con un rutto di marmitta* eccoci. galliate. *annusa l\'aria* ...senti? sa di cordura e di chewing-gum. casa.' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'tu apri la strada, io ti vengo dietro. non sono più tanto sveglio nelle gambe. dormo. dormo tanto, sai? *sbadiglia* ...dicevo qualcosa?' },
+    ],
+    'galliate-walter-1': [
+        { speaker: 'walter baruffoni', color: 'green', text: 'questi maranza... non c\'entrano niente con me, eh. sono solo... ostacoli. ostacoli con la borsa a tracolla. *si gratta* ...però uno spazzino servirebbe.' },
+    ],
+    'galliate-walter-2': [
+        { speaker: 'walter baruffoni', color: 'green', text: 'guggu non era cattivo sai. cioè. *pausa lunga* ...cioè era cattivo con ME. mi doveva dei soldi. tante guide. tante. non pagava mai. *occhi che si chiudono* ...zzz... eh? niente.' },
+    ],
+    'galliate-verita-1': [
+        { speaker: 'un maranza', color: 'red', text: 'aoh ma quello dietro de te... quello è baruffoni? *ride* ma sa che a galliate lo cercano? digli che anna lo saluta. CON AFFETTO.' },
+        { speaker: 'walter baruffoni', color: 'green', text: '*finge di dormire* ...non lo conosco quel maranza. mai visto. andiamo avanti.' },
+    ],
+    'galliate-verita-2': [
+        { speaker: 'il maranzone', color: 'red', text: 'M\'HAI GUARDATO MALE! *boccheggia a terra* ...e comunque... baruffoni... ci ha fregato tutti. chiedi all\'autoscuola. chiedi alla anna. chiedi a chi... ha firmato...' },
+        { speaker: 'walter baruffoni', color: 'green', text: '*sbadiglia rumorosamente* delira. il colpo in testa. andiamo amico, le autoscuole marcetti sono lì dietro. quasi a casa.' },
+    ],
+
+    'marcetti-intro': [
+        { speaker: 'walter baruffoni', color: 'green', text: '*davanti a un capannone scrostato. insegna: AUTOSCUOLE MARCETTI* eccola. la mia creatura. tre annetti per una patente, ma che atmosfera, eh?' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'dentro ci sono ancora i miei... dipendenti. erano di guggu, adesso. ma il cuore è sempre stato mio. *occhi che brillano un attimo* ...convincili. con le maniere che sai.' },
+    ],
+    'marcetti-walter-1': [
+        { speaker: 'walter baruffoni', color: 'green', text: 'l\'istruttore. brav\'uomo. ti boccia all\'esame da trent\'anni così rifai le guide e paghi ancora. *sorride* ...geniale, no? era una mia idea.' },
+    ],
+    'marcetti-walter-2': [
+        { speaker: 'walter baruffoni', color: 'green', text: 'anna sta alla scrivania. anna sa tutto. anna ha le firme. *si fa serio per mezzo secondo* ...anna sa anche cose che non dovrebbe dire. falla stare zitta. cioè. convincila.' },
+    ],
+    'marcetti-walter-3': [
+        { speaker: 'walter baruffoni', color: 'green', text: '*completamente sveglio per la prima volta* siamo quasi alla mia scrivania, amico. la scrivania del titolare. manca solo... un\'ultima firmetta.' },
+    ],
+    'marcetti-verita-1': [
+        { speaker: 'l\'istruttore', color: 'orange', text: '*sputa sangue* ...baruffoni? lo segui ANCORA? quello ha venduto l\'autoscuola a guggu vent\'anni fa. coi soldi ci ha fatto la polo. poi si è pentito... e ha mandato te.' },
+        { speaker: 'walter baruffoni', color: 'green', text: '*sbadiglia* bugie da bocciato. avanti. la anna ci aspetta.' },
+    ],
+    'marcetti-verita-2': [
+        { speaker: 'la signora anna', color: 'orange', text: '*sistema gli occhiali a catenella* glielo dico io allora, visto che lui dorme sempre quando arriva il momento. walter ha INTESTATO tutto a guggu per non pagare i debiti. guggu non era il re cattivo dei bus. era l\'unico che teneva aperto.' },
+        { speaker: 'la signora anna', color: 'orange', text: 'e tu, povero geco, hai ammazzato l\'unico che gli stava davanti. ora baruffoni ha di nuovo le autoscuole marcetti. e non gli servi più. *guarda walter* ...digli grazie, almeno.' },
+        { speaker: 'walter baruffoni', color: 'green', text: '*non sbadiglia più* ...grazie. davvero. sei stato perfetto. proprio perfetto.' },
+    ],
+
+    'walter-rivelazione': [
+        { speaker: 'walter baruffoni', color: 'green', text: 'sai qual è la cosa bella di uno sveglio e in gamba come te? che fa tutto il lavoro e non chiede mai perché. guggu mi aveva tolto le autoscuole marcetti. tu me le hai ridate. una per una.' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'guggu non pagava le guide perché le guide erano MIE e i debiti erano MIEI e io gliele avevo SCARICATE addosso. lui teneva in piedi tutto. tu hai tolto di mezzo l\'unico problema che avevo. il resto — i maranza, l\'istruttore, anna — sapevano troppo.' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'e adesso sai troppo pure tu. *le chiavi della polo tintinnano* peccato. mi stavi simpatico, geco. dormi bene.' },
+        { speaker: 'il geco', color: 'green', text: '*walter inspira. la pancia si gonfia. il sonnellino è finito. cresce, cresce, e non smette.*' },
+    ],
+    'walter-morte': [
+        { speaker: 'walter baruffoni', color: 'green', text: '*si sgonfia lentamente, tornando piccolo* ...e va beh. tre annetti buttati. *tossisce* ...senti, un ultimo consiglio da chi se ne intende di fregature...' },
+        { speaker: 'walter baruffoni', color: 'green', text: 'proteggi quello che è tuo. casa, macchina, autoscuola. comprate VERISURE. il primo mese è scontato e l\'antifurto te lo installano gratis. *si addormenta per sempre, sereno*' },
+    ],
+
+    /* boss intro della quest */
+    'maranza-intro': [
+        { speaker: 'un maranza', color: 'red', text: 'aoh. AOH. ma che me guardi? *si tira su i pantaloni* a galliate non se passa se prima non se balla.' },
+    ],
+    'maranzone-intro': [
+        { speaker: 'il maranzone', color: 'red', text: 'A ME?! M\'HAI GUARDATO MALE A ME?! *si gonfia di rabbia* mo te faccio la patente io. la patente per l\'ALDILÀ.' },
+    ],
+    'istruttore-intro': [
+        { speaker: 'l\'istruttore', color: 'orange', text: 'foglio rosa scaduto. assicurazione scaduta. esistenza scaduta. *batte la paletta sul palmo* sei BOCCIATO. di nuovo. per sempre.' },
+    ],
+    'annascrivania-intro': [
+        { speaker: 'la signora anna', color: 'orange', text: 'numeretto? no? allora si accomodi nella fila dei DEFUNTI. *timbra l\'aria tre volte* pratica respinta.' },
+    ],
+    'walter-boss-intro': [
+        { speaker: 'walter baruffoni', color: 'green', text: '*enorme, gli occhi finalmente spalancati* benvenuto all\'esame finale, geco. niente foglio rosa. solo io.' },
+    ],
+
+    /* le pietre/easter egg: la verità a piccole dosi */
+    'lore-galliate-1': [
+        { speaker: 'muro di galliate', color: 'red', text: '«BARUFFONI DEBITORE» — scritto a bomboletta, poi cancellato male, poi riscritto più grande.' },
+    ],
+    'lore-galliate-2': [
+        { speaker: 'volantino bagnato', color: 'red', text: '«AUTOSCUOLE MARCETTI — gestione GUGGU dal 2004». sotto, a penna: "l\'unico che ci dava lo stipendio".' },
+    ],
+    'lore-galliate-3': [
+        { speaker: 'cartello stradale', color: 'red', text: '«GALLIATE NON È PERICOLOSA. è solo che a tutti deve dei soldi la stessa persona». firmato: il comune (stanco).' },
+    ],
+    'lore-galliate-4': [
+        { speaker: 'scontrino sbiadito', color: 'red', text: 'una wolkswagen polo, usata, pagata in contanti. data: il giorno dopo la vendita dell\'autoscuola a guggu. che combinazione.' },
+    ],
+    'lore-marcetti-1': [
+        { speaker: 'bacheca dell\'autoscuola', color: 'orange', text: '«ISTRUTTORE DEL MESE» da 240 mesi di fila. la foto è ingiallita. nessun altro si è mai candidato. nessun altro è mai stato promosso.' },
+    ],
+    'lore-marcetti-2': [
+        { speaker: 'registro delle guide', color: 'orange', text: 'colonna "PAGATO": tutta vuota tranne una riga. cliente: g. guggu. importo: TUTTO. nota: "copre anche le rate di walter".' },
+    ],
+    'lore-marcetti-3': [
+        { speaker: 'post-it sul monitor di anna', color: 'orange', text: '«se torna walter: NON firmare niente. ricordati cosa è successo a chi ha firmato l\'altra volta». il post-it è di tre anni fa.' },
+    ],
+    'lore-marcetti-4': [
+        { speaker: 'targa sulla scrivania', color: 'orange', text: '«WALTER BARUFFONI — TITOLARE». sotto, graffiato di fresco: "di nuovo". il geco non era il primo a fare il lavoro sporco. era solo l\'ultimo.' },
+    ],
 };
 
 export const ENDING_CONSEGNA: { text: string; punch?: string }[] = [

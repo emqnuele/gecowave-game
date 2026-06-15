@@ -17,6 +17,8 @@ import { voidlv } from './level13b-void';
 import { nucleo } from './level14-nucleo';
 import { barrato } from './level15-barrato';
 import { custode } from './level16-custode';
+import { galliate } from './level02b-galliate';
+import { marcetti } from './level02c-marcetti';
 
 /* per aggiungere un capitolo: crea un file qui accanto, importalo
    e aggiungilo alla lista. collega le zone col campo `next`. */
@@ -28,7 +30,7 @@ const all: LevelDef[] = [
 
 /* capitoli segreti: raggiungibili solo dai varchi, fuori dalla progressione
    e dalla schermata viaggio. */
-const secret: LevelDef[] = [barrato, custode];
+const secret: LevelDef[] = [barrato, custode, galliate, marcetti];
 
 export const LEVELS: Record<string, LevelDef> = Object.fromEntries(
     [...all, ...secret].map((l) => [l.id, l]),

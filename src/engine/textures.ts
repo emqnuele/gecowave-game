@@ -352,6 +352,32 @@ function enemies(scene: Phaser.Scene): void {
         // led rec, sempre acceso
         glow(g, 12, 11, 1.2, 0xf87171, 0.8);
     });
+
+    // fiat tipo di galliate: utilitaria scura che sgomma addosso
+    make(scene, 'enemy-fiattipo', 64, 34, (g) => {
+        // scocca
+        g.fillStyle(0x14171f, 1);
+        g.fillRoundedRect(2, 14, 60, 16, { tl: 4, tr: 4, bl: 6, br: 6 });
+        // tettuccio basso e tirato
+        g.fillStyle(0x191d27, 1);
+        g.fillRoundedRect(16, 4, 34, 14, { tl: 10, tr: 8, bl: 0, br: 0 });
+        g.lineStyle(1.5, 0x4a2530, 1);
+        g.strokeRoundedRect(2, 14, 60, 16, { tl: 4, tr: 4, bl: 6, br: 6 });
+        // finestrini
+        g.fillStyle(0x05060a, 1);
+        g.fillRect(20, 7, 12, 9);
+        g.fillRect(34, 7, 12, 9);
+        // fari accesi rossi
+        glow(g, 60, 20, 2.4, 0xdc2626, 0.7);
+        glow(g, 4, 20, 1.8, 0xf59e0b, 0.5);
+        // ruote
+        g.fillStyle(0x05060a, 1);
+        g.fillCircle(16, 30, 7);
+        g.fillCircle(48, 30, 7);
+        g.lineStyle(1.5, 0x4a2530, 1);
+        g.strokeCircle(16, 30, 7);
+        g.strokeCircle(48, 30, 7);
+    });
 }
 
 /* ---------- npc ---------- */
@@ -622,6 +648,42 @@ function npcs(scene: Phaser.Scene): void {
         g.strokePath();
         g.fillStyle(0xc084fc, 0.9);
         g.fillEllipse(53, 23, 5, 7);
+    });
+
+    // walter baruffoni: proprietario sonnacchioso delle autoscuole marcetti
+    make(scene, 'npc-walter', 40, 54, (g) => {
+        // pancetta e polo verdina (la sua wolkswagen polo se la porta addosso)
+        g.fillStyle(0x14241a, 1);
+        g.fillEllipse(20, 36, 26, 30);
+        g.fillCircle(20, 14, 9);
+        // colletto della polo
+        g.fillStyle(0x1e3a2a, 1);
+        g.fillTriangle(13, 24, 20, 30, 27, 24);
+        // chiavi della polo in mano
+        g.lineStyle(2, 0x4a4252, 1);
+        g.beginPath();
+        g.moveTo(30, 34); g.lineTo(35, 40);
+        g.strokePath();
+        g.fillStyle(0xf59e0b, 0.9);
+        g.fillCircle(36, 41, 2.5);
+        // occhi mezzi chiusi: si addormenta sempre
+        g.lineStyle(2, 0x0a0a0a, 0.9);
+        g.beginPath();
+        g.moveTo(14, 14); g.lineTo(18, 14);
+        g.moveTo(22, 14); g.lineTo(26, 14);
+        g.strokePath();
+        // zzz del sonnellino
+        g.fillStyle(0x86efac, 0.7);
+        g.fillRect(30, 4, 4, 1.5);
+        g.fillRect(31, 7, 3, 1.5);
+        // gambette
+        g.lineStyle(3, 0x14241a, 1);
+        g.beginPath();
+        g.moveTo(14, 48); g.lineTo(13, 53);
+        g.moveTo(26, 48); g.lineTo(27, 53);
+        g.strokePath();
+        glow(g, 16, 14, 1.3, 0x86efac, 0.4);
+        glow(g, 24, 14, 1.3, 0x86efac, 0.4);
     });
 }
 
@@ -1408,6 +1470,190 @@ function bosses(scene: Phaser.Scene): void {
         g.moveTo(33, 66); g.lineTo(35, 82);
         g.strokePath();
         ricordoScan(g, 54, 84, 0x60a5fa);
+    });
+
+    /* ---------- la quest di walter: maranza, dipendenti e walter boss ---------- */
+
+    // maranza base: tuta, borsello a tracolla, occhi spenti
+    make(scene, 'boss-maranza', 56, 80, (g) => {
+        g.fillStyle(0x16110f, 1);
+        g.fillRoundedRect(16, 24, 24, 42, 8);
+        g.fillCircle(28, 14, 11);
+        // cappellino col frontino dritto
+        g.fillStyle(0x2a1410, 1);
+        g.fillRoundedRect(17, 3, 22, 7, 3);
+        g.fillRect(15, 9, 18, 3);
+        // catena d'oro
+        g.lineStyle(2, 0xf59e0b, 0.9);
+        g.beginPath();
+        g.arc(28, 28, 7, 0.2, Math.PI - 0.2);
+        g.strokePath();
+        // borsello a tracolla
+        g.fillStyle(0x3b0a0a, 1);
+        g.fillRoundedRect(34, 36, 12, 14, 3);
+        g.lineStyle(2, 0x16110f, 1);
+        g.beginPath();
+        g.moveTo(18, 26); g.lineTo(40, 44);
+        g.strokePath();
+        // braccia
+        g.lineStyle(4, 0x16110f, 1);
+        g.beginPath();
+        g.moveTo(17, 32); g.lineTo(8, 46);
+        g.moveTo(39, 32); g.lineTo(46, 44);
+        g.strokePath();
+        // gambe
+        g.beginPath();
+        g.moveTo(23, 66); g.lineTo(21, 78);
+        g.moveTo(33, 66); g.lineTo(35, 78);
+        g.strokePath();
+        glow(g, 24, 14, 2, 0xdc2626, 0.6);
+        glow(g, 32, 14, 2, 0xdc2626, 0.6);
+    });
+
+    // maranzone: lo stesso ma gonfio e furibondo. l'hai guardato male
+    make(scene, 'boss-maranzone', 72, 92, (g) => {
+        g.fillStyle(0x1a0c0a, 1);
+        g.fillRoundedRect(18, 26, 36, 50, 10);
+        g.fillCircle(36, 16, 13);
+        // cappellino
+        g.fillStyle(0x2a1410, 1);
+        g.fillRoundedRect(22, 2, 28, 9, 3);
+        g.fillRect(19, 9, 22, 3);
+        // sopracciglia incazzate
+        g.lineStyle(2.5, 0x000000, 1);
+        g.beginPath();
+        g.moveTo(28, 12); g.lineTo(34, 16);
+        g.moveTo(44, 12); g.lineTo(38, 16);
+        g.strokePath();
+        // catenazza
+        g.lineStyle(3, 0xfbbf24, 0.95);
+        g.beginPath();
+        g.arc(36, 32, 9, 0.2, Math.PI - 0.2);
+        g.strokePath();
+        // braccia gonfie a pugni
+        g.lineStyle(6, 0x1a0c0a, 1);
+        g.beginPath();
+        g.moveTo(20, 34); g.lineTo(8, 50);
+        g.moveTo(52, 34); g.lineTo(64, 50);
+        g.strokePath();
+        g.fillStyle(0x1a0c0a, 1);
+        g.fillCircle(7, 52, 6);
+        g.fillCircle(65, 52, 6);
+        // gambe
+        g.lineStyle(5, 0x1a0c0a, 1);
+        g.beginPath();
+        g.moveTo(29, 76); g.lineTo(26, 90);
+        g.moveTo(43, 76); g.lineTo(46, 90);
+        g.strokePath();
+        glow(g, 31, 16, 2.6, 0xb91c1c, 0.8);
+        glow(g, 41, 16, 2.6, 0xb91c1c, 0.8);
+    });
+
+    // istruttore di guida: camicia, paletta, sguardo da esame fallito
+    make(scene, 'boss-istruttore', 54, 84, (g) => {
+        g.fillStyle(0x1b1a12, 1);
+        g.fillRoundedRect(16, 24, 24, 44, 7);
+        g.fillCircle(28, 14, 10);
+        // camicia con taschino
+        g.fillStyle(0x2a2818, 1);
+        g.fillRect(22, 28, 12, 18);
+        g.fillStyle(0xf59e0b, 0.9);
+        g.fillRect(24, 32, 4, 4);
+        // paletta del segnale stop
+        g.lineStyle(3, 0x2b2d3d, 1);
+        g.beginPath();
+        g.moveTo(40, 40); g.lineTo(48, 22);
+        g.strokePath();
+        g.fillStyle(0xdc2626, 1);
+        g.fillCircle(49, 18, 7);
+        g.lineStyle(1.5, 0xffffff, 0.9);
+        g.strokeCircle(49, 18, 7);
+        // braccio
+        g.lineStyle(4, 0x1b1a12, 1);
+        g.beginPath();
+        g.moveTo(16, 32); g.lineTo(8, 44);
+        g.strokePath();
+        // gambe
+        g.beginPath();
+        g.moveTo(23, 68); g.lineTo(21, 82);
+        g.moveTo(33, 68); g.lineTo(35, 82);
+        g.strokePath();
+        glow(g, 24, 14, 2, 0xf59e0b, 0.6);
+        glow(g, 32, 14, 2, 0xf59e0b, 0.6);
+    });
+
+    // signora anna: dietro la scrivania, timbri e occhiali a catenella
+    make(scene, 'boss-annascrivania', 96, 70, (g) => {
+        // scrivania
+        g.fillStyle(0x1a130c, 1);
+        g.fillRoundedRect(4, 40, 88, 26, 4);
+        g.lineStyle(1.5, 0x4a3a22, 1);
+        g.strokeRoundedRect(4, 40, 88, 26, 4);
+        // busto dietro la scrivania
+        g.fillStyle(0x22160f, 1);
+        g.fillRoundedRect(34, 14, 28, 30, 8);
+        g.fillCircle(48, 10, 9);
+        // capelli cotonati
+        g.fillStyle(0x3a2a18, 1);
+        g.fillEllipse(48, 4, 22, 8);
+        // occhiali a catenella
+        g.lineStyle(1.5, 0xf59e0b, 0.9);
+        g.strokeCircle(44, 10, 3);
+        g.strokeCircle(52, 10, 3);
+        // timbro alzato in mano
+        g.lineStyle(3, 0x22160f, 1);
+        g.beginPath();
+        g.moveTo(62, 24); g.lineTo(72, 14);
+        g.strokePath();
+        g.fillStyle(0x4a3a22, 1);
+        g.fillRect(68, 8, 8, 7);
+        // pratiche accatastate
+        g.fillStyle(0xe5e7eb, 0.55);
+        g.fillRect(10, 34, 14, 8);
+        g.fillRect(72, 34, 14, 8);
+        glow(g, 44, 10, 1.6, 0xf59e0b, 0.6);
+        glow(g, 52, 10, 1.6, 0xf59e0b, 0.6);
+    });
+
+    // walter boss: gigantesco, occhi spalancati, chiavi della polo come arma
+    make(scene, 'boss-walter', 96, 110, (g) => {
+        // corpaccione verde-cupo
+        g.fillStyle(0x0f2418, 1);
+        g.fillEllipse(48, 70, 70, 78);
+        g.fillCircle(48, 26, 22);
+        g.lineStyle(2, 0x16a34a, 0.8);
+        g.strokeCircle(48, 26, 22);
+        // polo gigante: colletto
+        g.fillStyle(0x16331f, 1);
+        g.fillTriangle(34, 44, 48, 58, 62, 44);
+        // occhi ora spalancati: non dorme più
+        g.fillStyle(0xffffff, 0.95);
+        g.fillCircle(40, 24, 6);
+        g.fillCircle(56, 24, 6);
+        g.fillStyle(0x000000, 1);
+        g.fillCircle(41, 25, 2.5);
+        g.fillCircle(55, 25, 2.5);
+        // ghigno
+        g.lineStyle(2.5, 0x0a0a0a, 1);
+        g.beginPath();
+        g.arc(48, 32, 9, 0.15, Math.PI - 0.15);
+        g.strokePath();
+        // braccia enormi
+        g.lineStyle(9, 0x0f2418, 1);
+        g.beginPath();
+        g.moveTo(20, 60); g.lineTo(4, 86);
+        g.moveTo(76, 60); g.lineTo(92, 84);
+        g.strokePath();
+        // mazzo di chiavi della polo come flagello
+        g.fillStyle(0x4a4252, 1);
+        g.fillCircle(92, 86, 5);
+        g.lineStyle(2, 0xf59e0b, 0.9);
+        g.beginPath();
+        g.moveTo(92, 86); g.lineTo(96, 96);
+        g.strokePath();
+        glow(g, 40, 24, 3, 0x16a34a, 0.7);
+        glow(g, 56, 24, 3, 0x16a34a, 0.7);
+        glow(g, 48, 70, 5, 0x16a34a, 0.4);
     });
 }
 
