@@ -34,6 +34,9 @@ jobs:
       - name: build app
         run: npm run build
 
+      - name: generate icons & installer art
+        run: npm run gen-icons
+
       - name: package
         run: npx electron-builder ${{ matrix.platform }} --publish never
 

@@ -1,7 +1,7 @@
 {
   "name": "gecowave-flux-of-cosenza",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -9,12 +9,15 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "electron": "electron .",
+    "gen-icons": "node scripts/gen-icons.mjs",
     "app:preview": "npm run build && electron .",
-    "app:build": "npm run build && electron-builder"
+    "app:build": "npm run gen-icons && npm run build && electron-builder"
   },
   "devDependencies": {
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
+    "png2icons": "^2.0.1",
+    "sharp": "^0.35.1",
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },
@@ -26,24 +29,67 @@
   },
   "build": {
     "appId": "com.gecowave.flux",
-    "productName": "GECOWAVE",
+    "productName": "GECOWAVE - The Flux of Coscience",
     "files": [
       "dist/**/*",
       "electron/**/*"
     ],
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "mac": {
       "target": "dmg",
-      "category": "public.app-category.games"
+      "category": "public.app-category.games",
+      "icon": "build/icon.icns"
+    },
+    "dmg": {
+      "title": "GECOWAVE - The Flux of Coscience",
+      "artifactName": "GECOWAVE-${version}.${ext}",
+      "icon": "build/icon.icns",
+      "iconSize": 110,
+      "background": "build/dmg-background.png",
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 150,
+          "y": 215,
+          "type": "file"
+        },
+        {
+          "x": 390,
+          "y": 215,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "GECOWAVE - The Flux of Coscience",
+      "artifactName": "GECOWAVE-Setup-${version}.${ext}"
     },
     "linux": {
       "target": "AppImage",
-      "category": "Game"
+      "category": "Game",
+      "icon": "build/icon.png"
     }
   }
 }

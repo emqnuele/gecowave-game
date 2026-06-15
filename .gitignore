@@ -25,3 +25,11 @@ dist-ssr
 
 # electron build output
 release/
+
+# icone e grafiche installer generate da public/icon.png
+build/icon.png
+build/icon.ico
+build/icon.icns
+build/installerSidebar.bmp
+build/installerHeader.bmp
+build/dmg-background.png

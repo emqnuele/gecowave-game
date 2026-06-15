@@ -1,8 +1,12 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 // in dev carichiamo il server vite, in produzione il build statico
 const DEV_URL = process.env.VITE_DEV_SERVER_URL;
+
+// icona finestra: rilevante in dev su win/linux (in pacchetto usa l'icona del bundle)
+const ICON = path.join(__dirname, '..', 'build', 'icon.png');
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -10,6 +14,7 @@ function createWindow() {
         height: 720,
         backgroundColor: '#000000',
         autoHideMenuBar: true,
+        ...(fs.existsSync(ICON) ? { icon: ICON } : {}),
         webPreferences: {
             contextIsolation: true,
             nodeIntegration: false,
