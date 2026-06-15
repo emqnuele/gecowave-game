@@ -65,3 +65,17 @@ jobs:
         with:
           files: artifacts/**/*
           generate_release_notes: true
+          body: |
+            ## Installazione
+
+            **Windows** — apri `GECOWAVE-Setup-*.exe` e segui il wizard. Se compare SmartScreen ("editore sconosciuto"): *Ulteriori informazioni → Esegui comunque*.
+
+            **macOS** — apri il `.dmg` e trascina l'app in Applicazioni. L'app non è firmata da Apple, quindi al primo avvio macOS dirà che è "danneggiata". Non lo è: apri il Terminale e lancia una volta questo comando, poi riaprila normalmente:
+
+            ```bash
+            xattr -dr com.apple.quarantine "/Applications/GECOWAVE - The Flux of Coscience.app"
+            ```
+
+            **Linux** — rendi eseguibile l'`.AppImage` (`chmod +x`) e lancialo.
+
+            ---
