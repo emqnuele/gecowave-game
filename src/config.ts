@@ -43,10 +43,20 @@ export const COMBAT = {
     risonanteChargeMs: 650,
     risonanteSpeed: 720,
     risonanteDamage: 0.5,
-    /** riflesso distorto: clone esca */
+    /** riflesso distorto: clone esca/aiutante */
     riflessoCost: 25,
-    riflessoDurationMs: 3200,
-    riflessoCooldownMs: 6000,
+    riflessoDurationMs: 6000,
+    riflessoCooldownMs: 9000,
+    riflessoSpeedMult: 0.85,
+    riflessoHitDamageBase: 0.1,
+    riflessoHitDamageFlowMult: 0.5,
+    riflessoJumpCooldownMs: 900,
+    /** ritmo calmo: pausa lunga tra un fendente e l'altro */
+    riflessoAttackCooldownMs: 2200,
+    /** durata della fase di riposizionamento dopo un colpo */
+    riflessoReposeMs: 1200,
+    /** attesa iniziale dopo lo spawn prima del primo colpo */
+    riflessoFirstAttackDelayMs: 1000,
     /** analisi 1: tempesta matematica */
     analisiCost: 40,
     analisiDurationMs: 3000,

@@ -12,6 +12,7 @@ import { state } from '../engine/state';
 import { music } from '../engine/music';
 import { generateZoneTextures } from '../engine/textures';
 import { Boss } from '../entities/Boss';
+import { Companion } from '../entities/Companion';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import type { AbilityId, BossKind, EnemyKind, LevelDef } from '../types';
@@ -110,8 +111,9 @@ export class GameScene extends Phaser.Scene {
     private checkpointSprites = new Map<string, Phaser.GameObjects.Sprite>();
     private lighting!: LightingManager;
     private parallax!: ParallaxManager;
-    private clone: Phaser.GameObjects.Sprite | null = null;
+    private clone: Companion | null = null;
     private cloneUntil = 0;
+    private cloneColliders: Phaser.Physics.Arcade.Collider[] = [];
     private analisiUntil = 0;
     private nextAnalisiTick = 0;
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
@@ -184,6 +186,7 @@ export class GameScene extends Phaser.Scene {
         this.exiting = false;
         this.boss = null;
         this.clone = null;
+        this.cloneColliders = [];
         this.mirror = null;
         this.interactables = [];
         this.analisiGlyphs = [];
@@ -1332,7 +1335,7 @@ export class GameScene extends Phaser.Scene {
         this.updatePrompt();
         this.updateBossTrigger();
         this.magnetBarre();
-        this.updateClone();
+        this.updateClone(time, delta);
         this.updateAnalisi(time);
         this.updateScudo(time);
         this.updateAcquaTossica(time);
@@ -1776,38 +1779,84 @@ export class GameScene extends Phaser.Scene {
     }
 
     private onRiflesso({ x, y, facing }: { x: number; y: number; facing: number }): void {
-        this.clone?.destroy();
-        const clone = this.physics.add.sprite(x, y, 'player', 0)
-            .setScale(this.player.scaleX, this.player.scaleY)
-            .setFlipX(facing < 0)
-            .setAlpha(0.65)
-            .setTint(0x22d3ee)
-            .setDepth(4);
-        (clone.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-        clone.play('p-idle');
+        this.killClone();
+        const clone = new Companion(this, x, y, facing < 0 ? -1 : 1);
         this.clone = clone;
         this.cloneUntil = this.time.now + COMBAT.riflessoDurationMs;
         this.lighting.follow(clone, 0x22d3ee, 180, 0.9);
-        // il riflesso assorbe i colpi nemici
-        this.physics.add.overlap(this.enemyProjectiles, clone, (a, b) => {
-            this.popProjectile((a === clone ? b : a) as Phaser.Physics.Arcade.Sprite);
-        });
-        this.tweens.add({ targets: clone, y: y - 6, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+        // stessa fisica del player: terreno, muri, porte
+        this.cloneColliders.push(
+            this.physics.add.collider(clone, this.level.layer),
+            this.physics.add.collider(clone, this.level.breakableWalls),
+            this.physics.add.collider(clone, this.doorGroup),
+            // il riflesso assorbe i colpi nemici (resta un'esca)
+            this.physics.add.overlap(this.enemyProjectiles, clone, (a, b) => {
+                this.popProjectile((a === clone ? b : a) as Phaser.Physics.Arcade.Sprite);
+            }),
+            // riusa il sistema d'attacco del player: la hitbox colpisce i nemici
+            this.physics.add.overlap(clone.attackHitbox, this.enemies, (_hb, obj) => {
+                if (!clone.attackActive) return;
+                const enemy = obj as Enemy;
+                clone.consumeSwing();
+                this.cloneHitFx(enemy);
+                enemy.takeDamage(clone.attackDamage, clone.x);
+            }),
+        );
+        if (this.boss) {
+            this.cloneColliders.push(
+                this.physics.add.overlap(clone.attackHitbox, this.boss, (_hb, obj) => {
+                    if (!clone.attackActive || !this.boss) return;
+                    clone.consumeSwing();
+                    this.cloneHitFx(obj as Phaser.GameObjects.Sprite);
+                    this.boss.takeDamage(clone.attackDamage, clone.x);
+                }),
+            );
+        }
     }
 
-    private updateClone(): void {
-        if (this.clone && this.clone.active && this.time.now >= this.cloneUntil) {
-            this.add.particles(this.clone.x, this.clone.y, 'p-spark', {
-                speed: { min: 80, max: 200 },
-                scale: { start: 0.8, end: 0 },
-                tint: 0x22d3ee,
-                lifespan: 350,
-                quantity: 12,
-                stopAfter: 12,
-            });
-            this.clone.destroy();
-            this.clone = null;
+    private killClone(): void {
+        this.cloneColliders.forEach((c) => c.destroy());
+        this.cloneColliders = [];
+        this.clone?.kill();
+        this.clone = null;
+    }
+
+    private cloneHitFx(target: Phaser.GameObjects.Sprite): void {
+        this.add.particles(target.x, target.y, 'p-spark', {
+            speed: { min: 60, max: 140 },
+            scale: { start: 0.5, end: 0 },
+            tint: 0x22d3ee,
+            lifespan: 200,
+            quantity: 5,
+            stopAfter: 5,
+        }).setDepth(6);
+    }
+
+    private nearestHostile(x: number, y: number): (Phaser.GameObjects.Sprite & { active: boolean }) | null {
+        let best: (Phaser.GameObjects.Sprite & { active: boolean }) | null = null;
+        let bestDist = Infinity;
+        const candidates = [...this.enemies.getChildren(), ...(this.boss ? [this.boss] : [])];
+        for (const c of candidates) {
+            const e = c as Phaser.GameObjects.Sprite & { active: boolean };
+            if (!e.active) continue;
+            const d = Math.hypot(x - e.x, y - e.y);
+            if (d < bestDist) {
+                best = e;
+                bestDist = d;
+            }
         }
+        return best;
+    }
+
+    private updateClone(time: number, delta: number): void {
+        const clone = this.clone;
+        if (!clone || !clone.active) return;
+        if (time >= this.cloneUntil) {
+            this.killClone();
+            return;
+        }
+        clone.update(time, delta, this.nearestHostile(clone.x, clone.y));
     }
 
     private onAnalisi(): void {
