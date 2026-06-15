@@ -5,10 +5,54 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/x-icon" href="./favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GECOWAVE: The Flux of Cosenza</title>
+  <title>GECOWAVE: The Flux of Coscience</title>
+  <style>
+    /* loader inline: dipinto subito, prima del bundle js/css, copre il boot */
+    #boot-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      background: #000;
+      transition: opacity 0.45s ease;
+    }
+    #boot-loader.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #boot-loader .bl-geco {
+      font-size: 52px;
+      line-height: 1;
+      animation: bl-bounce 1s ease-in-out infinite;
+      filter: drop-shadow(0 0 22px rgba(223, 177, 91, 0.5));
+    }
+    #boot-loader .bl-text {
+      font-family: 'Martian Mono', ui-monospace, monospace;
+      font-size: 11px;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      color: #dfb15b;
+      animation: bl-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes bl-bounce {
+      0%, 100% { transform: translateY(0) rotate(-4deg); }
+      50% { transform: translateY(-16px) rotate(4deg); }
+    }
+    @keyframes bl-pulse {
+      50% { opacity: 0.4; }
+    }
+  </style>
 </head>
 
 <body>
+  <div id="boot-loader">
+    <div class="bl-geco">🦎</div>
+    <div class="bl-text">sintonizzando la gecowave…</div>
+  </div>
   <div id="game"></div>
   <div id="ui"></div>
   <script type="module" src="/src/main.ts"></script>

@@ -138,6 +138,12 @@ async function boot(): Promise<void> {
         music.init();
         music.playMenu();
         screens.showMenu();
+        // il menu è pronto: spengo il loader e lo rimuovo a fine transizione
+        const loader = document.getElementById('boot-loader');
+        if (loader) {
+            loader.classList.add('hide');
+            loader.addEventListener('transitionend', () => loader.remove(), { once: true });
+        }
     });
 
     Object.defineProperty(window, 'toggleGecoMode', {

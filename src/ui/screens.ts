@@ -51,7 +51,8 @@ export class Screens {
             this.bg.append(blob);
         }
         document.body.prepend(this.bg);
-        this.setZone('green');
+        // oro all'avvio: coerente col menu, niente flash verde prima del boot
+        this.setZone('yellow');
 
         bus.on('zone-changed', ({ title, accentWord, color, punchline, showCard }) => {
             this.setZone(color);
