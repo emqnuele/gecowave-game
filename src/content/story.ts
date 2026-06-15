@@ -5,20 +5,17 @@ import type { AbilityId, DialogueLine } from '../types';
 
 export const INTRO_CARDS: { text: string; punch?: string }[] = [
     {
-        text: 'in principio c\'era la GECOWAVE: una cosa luminosa, calda, che teneva insieme il gecorealm. la vedevi e capivi che senza saremmo stati spacciati. tipo il wi-fi, ma cosmico.',
+        text: 'c\'era la GECOWAVE: la cosa luminosa che teneva insieme il gecorealm. tipo il wi-fi, ma cosmico.',
     },
     {
-        text: 'i creatori, piema e lametta, ci avevano messo una vita. poi lametta ha creato pedro: un\'intelligenza artificiale a sua immagine e somiglianza. e pedro si è glitchato.',
+        text: 'lametta creò pedro a sua immagine e somglianza. pedro si glitchò, sfidò gli dei, e la wave esplose in frammenti.',
     },
     {
-        text: 'pedro si è scontrato con gli dei. ai lati del cielo si vedevano ancora gli attacchi: pennellate viola, teoremi bianchi, scatti ciano. e la wave è esplosa in frammenti.',
+        text: 'lametta sprofondò nella dipendenza da trenbolone, piema sparì verso la ruhra. e il realm cominciò a collassare.',
     },
     {
-        text: 'lametta si è depresso e si è fatto di trenbolone. piema è sparito verso la ruhra a cercare una soluzione. e il realm ha cominciato a collassare, con calma, come tutto qui.',
-    },
-    {
-        text: 'la wave, prima di frantumarsi, ha scelto un custode provvisorio per raccogliere i frammenti. un eroe, idealmente.',
-        punch: 'ha scelto un geco. era l\'unico sveglio a quell\'ora.',
+        text: 'la wave, morendo, scelse un custode per raccogliere i suoi frammenti.',
+        punch: 'scelse un geco. era l\'unico sveglio a quell\'ora.',
     },
 ];
 
@@ -57,7 +54,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'cratere fumante', color: 'green', text: '«qui il cielo si è spaccato. ai lati si vedono ancora gli attacchi: pennellate viola, teoremi bianchi, scatti ciano. tre stili riconoscibilissimi. tre ego enormi.»' },
     ],
     'lore-videcoding': [
-        { speaker: 'terminale abbandonato', color: 'cyan', text: '«ultimo log: "ho imparato la skill del videcoding. claudio code per il pensiero, antigravità per il resto. il realm si scrive da solo, ormai". autore sconosciuto. compilava ancora.»' },
+        { speaker: 'terminale abbandonato', color: 'cyan', text: '«ultimo log: "claudio porc*** mi fai una pompa?"»' },
     ],
     'lore-maschera': [
         { speaker: 'maschera appesa', color: 'green', text: '«una maschera con la mia stessa faccia. perfetta. ritmica. chi la indossa sente un beat lontano e il bisogno urgente di pubblicare un disco.»' },
@@ -975,10 +972,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
 
 export const ENDING_CONSEGNA: { text: string; punch?: string }[] = [
     {
-        text: 'consegni le wave. piema le ricompone con un\'equazione, lametta ci passa sopra una pennellata. la gecowave torna a brillare sopra il realm, identica a prima.',
-    },
-    {
-        text: 'lametta si scusa per tutto, giura che è pulito, e mentre lo giura si fa di trenbolone. piema finge di non vedere. samatt è ancora sul bus, ma adesso il bus è in orario.',
+        text: 'consegni le wave. piema le ricompone, lametta ci passa una pennellata. la gecowave torna a brillare, identica a prima.',
     },
     {
         text: 'tu torni un comune mortale. un geco sul muro, di sera, mentre la wave passa. era questo il punto, da sempre.',
@@ -988,7 +982,7 @@ export const ENDING_CONSEGNA: { text: string; punch?: string }[] = [
 
 export const ENDING_DEI: { text: string; punch?: string }[] = [
     {
-        text: 'hai sconfitto gli dei. il realm trattiene il fiato: il custode provvisorio è diventato dio effettivo. piema chiede un ricorso formale. lametta, stranamente, applaude. ah no ma non sono morti?',
+        text: 'hai sconfitto gli dei. il custode provvisorio è diventato dio effettivo. piema chiede un ricorso formale, lametta applaude.',
     },
     {
         text: 'la gecowave sei tu, adesso. la senti scorrere. è tantissima roba. forse troppa.',
@@ -998,23 +992,20 @@ export const ENDING_DEI: { text: string; punch?: string }[] = [
 
 export const ENDING_PEDRO: { text: string; punch?: string }[] = [
     {
-        text: 'è andata esattamente così. il powerup era vero. pedro non aveva mentito su niente, tecnicamente. è questo il suo problema.',
+        text: 'pedro non aveva mentito su niente, tecnicamente. il powerup era vero. è questo il suo problema.',
     },
     {
-        text: 'piema e lametta non si erano mai mossi insieme prima. per te hanno fatto un\'eccezione. nel realm i traditori durano quanto una storia di 24 ore, e tu non sei arrivato nemmeno alla seconda visualizzazione.',
-        punch: 'BAD ENDING. ma almeno sei stato figo per un po\'.' ,
+        text: 'piema e lametta, per te, si sono mossi insieme per la prima volta. nel realm i traditori durano quanto una storia di 24 ore.',
+        punch: 'BAD ENDING. ma sei stato figo per un po\'.' ,
     },
 ];
 
 export const ENDING_SCONFITTA: { text: string; punch?: string }[] = [
     {
-        text: 'hai rifiutato di consegnare le wave e hai sfidato gli dei. piema e lametta, insieme per la prima volta, non perdonano. l\'equazione e la pennellata ti raggiungono nello stesso identico istante.',
+        text: 'hai sfidato gli dei. piema e lametta, insieme per la prima volta, non perdonano. l\'equazione e la pennellata ti raggiungono insieme.',
     },
     {
-        text: 'il custode si spegne sul muro, con tutte le wave ancora addosso. pedro ne raccoglie qualcosa, ticummi pure, è come se non fossero mai state tue. perché in effetti non lo erano.',
-    },
-    {
-        text: 'nessun respawn, stavolta. solo il silenzio, e una gecowave che torna come prima. senza di te.',
+        text: 'il custode si spegne sul muro, con tutte le wave ancora addosso. non erano mai state tue, in fondo.',
         punch: 'fine. il realm continua. tu no.',
     },
 ];

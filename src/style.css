@@ -624,6 +624,64 @@ body {
   transform: rotate(-1.5deg);
 }
 
+/* ---------- narrazione (intro / finale) ---------- */
+
+.narration-screen {
+  /* vignetta da racconto attorno al fuoco */
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 46%, rgba(223, 177, 91, 0.05), transparent 70%),
+    #000;
+}
+
+.narration {
+  max-width: 680px;
+  padding: 0 48px;
+  text-align: center;
+  position: relative;
+  animation: narration-in 0.5s ease both;
+}
+
+.narration-orn {
+  font-size: 22px;
+  color: rgba(223, 177, 91, 0.55);
+  margin-bottom: 28px;
+  letter-spacing: 0.4em;
+  text-shadow: 0 0 18px rgba(223, 177, 91, 0.4);
+  animation: soft-pulse 3.2s ease-in-out infinite;
+}
+
+.narration-text {
+  font-family: var(--font-martian);
+  font-size: 15px;
+  line-height: 2.1;
+  color: var(--zinc-300);
+  min-height: 4.2em;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.8);
+}
+
+.narration-punch {
+  display: block;
+  margin-top: 22px;
+  font-family: var(--font-marker);
+  font-size: 21px;
+  color: rgba(255, 255, 255, 0.92);
+  transform: rotate(-1.5deg);
+  text-shadow: 0 0 26px rgba(223, 177, 91, 0.35);
+  animation: narration-in 0.4s ease both;
+}
+
+.narration-hint {
+  margin-top: 40px;
+  color: rgba(255, 255, 255, 0.32);
+  animation: soft-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes narration-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ---------- morte ---------- */
 
 .death-title {

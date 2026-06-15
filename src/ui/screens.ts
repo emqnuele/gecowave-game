@@ -460,22 +460,53 @@ export class Screens {
     storySequence(cards: { text: string; punch?: string }[], onDone: () => void): void {
         let i = 0;
         const showCard = () => {
-            const s = this.openOverlay('screen opaque');
-            const panel = el('div', 'story-card glass-panel');
-            const p = el('p');
-            p.textContent = cards[i].text;
-            panel.append(p);
-            if (cards[i].punch) {
-                const punch = el('span', 'punch');
-                punch.textContent = cards[i].punch!;
-                panel.append(punch);
-            }
-            s.append(panel);
-            const hint = el('div', 'label');
-            hint.textContent = 'clic per continuare';
-            hint.style.cssText = 'color:rgba(255,255,255,.4);margin-top:6px;animation:soft-pulse 1.6s ease-in-out infinite';
-            s.append(hint);
+            const s = this.openOverlay('screen opaque narration-screen');
+            const panel = el('div', 'narration');
+            const orn = el('div', 'narration-orn', '✦');
+            const p = el('p', 'narration-text');
+            const hint = el('div', 'narration-hint label', 'clic per continuare');
+            panel.append(orn, p);
+            s.append(panel, hint);
+
+            const full = cards[i].text;
+            const punch = cards[i].punch;
+            let typing: number | null = null;
+            let allDone = false;
+
+            const punchEl = punch ? el('span', 'narration-punch') : null;
+            if (punchEl) panel.append(punchEl);
+
+            // digita una stringa su un elemento col ritmo sonoro dei dialoghi npc
+            const typeInto = (target: HTMLElement, str: string, onComplete: () => void) => {
+                let typed = 0;
+                typing = window.setInterval(() => {
+                    typed++;
+                    target.textContent = str.slice(0, typed);
+                    if (typed % 3 === 0) sfx.ui();
+                    if (typed >= str.length) {
+                        clearInterval(typing!);
+                        typing = null;
+                        onComplete();
+                    }
+                }, 28);
+            };
+
+            const finishPunch = () => { allDone = true; };
+            const startPunch = () => {
+                if (punchEl && punch) typeInto(punchEl, punch, finishPunch);
+                else allDone = true;
+            };
+            const startTyping = () => typeInto(p, full, startPunch);
+
             const advance = () => {
+                if (!allDone) {
+                    // primo input: completa tutto istantaneamente, secondo input: avanza
+                    if (typing) { clearInterval(typing); typing = null; }
+                    p.textContent = full;
+                    if (punchEl && punch) punchEl.textContent = punch;
+                    allDone = true;
+                    return;
+                }
                 sfx.ui();
                 i++;
                 if (i < cards.length) showCard();
@@ -484,14 +515,16 @@ export class Screens {
                     onDone();
                 }
             };
-            s.addEventListener('click', advance, { once: true });
+
+            s.addEventListener('click', advance);
             this.escHandler = (e) => {
                 if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE') {
                     e.preventDefault();
                     advance();
                 }
             };
-            window.addEventListener('keydown', this.escHandler, { once: true });
+            window.addEventListener('keydown', this.escHandler);
+            startTyping();
         };
         showCard();
     }
