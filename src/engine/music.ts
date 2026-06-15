@@ -26,7 +26,7 @@ class MusicManager {
     }
 
     playMenu(): void {
-        this.transitionTo('assets/music/GECOWAVE.mp3');
+        this.transitionTo("assets/music/Until Here's OST.mp3");
     }
 
     playEnding(): void {
@@ -50,11 +50,19 @@ class MusicManager {
             case 'perduta':
                 return 'assets/music/GECOWAVE.mp3';
             case 'bus':
-                return "assets/music/Ivan Maggini's OST 2.mp3";
+                return "assets/music/Ivan Maggini's OST 1.mp3";
+            case 'galliate':
+                return 'assets/music/Altra #4 (Novara).mp3';
+            case 'marcetti':
+                return 'assets/music/Altra #2 (Querela).mp3';
             case 'santuario':
                 return "assets/music/Lametta MC's OST 1.mp3";
             case 'tecnokill':
-                return 'assets/music/Fragment Time.mp3';
+                return "assets/music/Notino's OST.mp3";
+            case 'trenbolone':
+                return 'assets/music/Altra #1.mp3';
+            case 'tana':
+                return "assets/music/lochef85's OST 1.mp3";
             case 'rio':
                 return 'assets/music/Tommasorveglianza.mp3';
             case 'stabilimento':
@@ -64,19 +72,19 @@ class MusicManager {
             case 'mente':
                 return "assets/music/Piema's OST 2.mp3";
             case 'caso':
-                return "assets/music/Piema's OST 2.mp3";
-            case 'ricordi':
-                return 'assets/music/Frammenti Infranti.mp3';
-            case 'tana':
-                return "assets/music/lochef85's OST 1.mp3";
+                return 'assets/music/Fragment Time.mp3';
             case 'sorveglianza':
-                return 'assets/music/Tommasorveglianza.mp3';
+                return 'assets/music/Destornillador-2.mp3';
             case 'cantina':
                 return "assets/music/Lametta MC's OST 2.mp3";
+            case 'ricordi':
+                return 'assets/music/Altra #3 (Nostalgica).mp3';
+            case 'void':
+                return 'assets/music/Frammenti Infranti.mp3';
             case 'nucleo':
-                return "assets/music/Until Here's OST.mp3";
+                return "assets/music/lochef85's OST 2.mp3";
             case 'barrato':
-                return "assets/music/Ivan Maggini's OST 2.mp3";
+                return "assets/music/Ivan Maggini's OST 1.mp3";
             case 'custode':
                 return 'assets/music/GECOWAVE.mp3';
             default:
@@ -86,42 +94,69 @@ class MusicManager {
 
     private getBossTrack(bossName: string): string {
         const name = bossName.toLowerCase();
+        // finale: la sfida agli dei, 'piema & lametta'
+        if (name.includes('piema') && name.includes('lametta')) {
+            return 'assets/music/Final Boss Fight (Piema & Lametta MC).mp3';
+        }
+        // pedro traditore: check prima di pedrino, che contiene anch'esso 'pedro'
+        if (name.includes('traditore')) {
+            return 'assets/music/Pedro Tetraedro.mp3';
+        }
+        // pedrino: il ricordo nostalgico di pedro
+        if (name.includes('pedro') || name.includes('ricordo')) {
+            return 'assets/music/Altra #3 (Nostalgica).mp3';
+        }
         if (name.includes('guggu')) {
             return "assets/music/Ivan Maggini's OST 1.mp3";
         }
-        // prima degli altri check: il boss finale si chiama 'piema & lametta'
-        if (name.includes('piema') || name.includes('dei')) {
-            return 'assets/music/Destornillador-2.mp3';
-        }
-        if (name.includes('breccio') || name.includes('lametta')) {
-            return "assets/music/Lametta MC's OST 2.mp3";
+        if (name.includes('breccio')) {
+            return "assets/music/Lametta MC's OST 1.mp3";
         }
         if (name.includes('notino')) {
             return "assets/music/Notino's OST.mp3";
         }
         if (name.includes('riba')) {
-            return "assets/music/Piema's OST 2.mp3";
+            return "assets/music/Piema's OST 1.mp3";
         }
-        if (name.includes('lochef')) {
+        // arco consegne: danjilo, smela, il furgone
+        if (name.includes('furgone') || name.includes('smela') || name.includes('danjilo')) {
+            return "assets/music/Ivan Maggini's OST 2.mp3";
+        }
+        if (name.includes('lochef') || name.includes('7:40') || name.includes('settequaranta')) {
             return "assets/music/lochef85's OST 2.mp3";
         }
-        if (name.includes('ombra') || name.includes('formicona') || name.includes('limite') || name.includes('teorema')) {
+        if (name.includes('limite')) {
             return 'assets/music/Fragment Time.mp3';
         }
-        if (name.includes('furgone') || name.includes('7:40')) {
-            return "assets/music/Ivan Maggini's OST 1.mp3";
-        }
-        if (name.includes('custode')) {
-            return "assets/music/Until Here's OST.mp3";
-        }
-        if (name.includes('ricordo')) {
-            return 'assets/music/Frammenti Infranti.mp3';
+        if (name.includes('ombra') || name.includes('33') || name.includes('trentatre')) {
+            return 'assets/music/Destornillador-2.mp3';
         }
         if (name.includes('ticummi')) {
             return 'assets/music/Frammenti Infranti.mp3';
         }
-        if (name.includes('pedro')) {
+        if (name.includes('formicona')) {
+            return 'assets/music/Tommasorveglianza.mp3';
+        }
+        if (name.includes('teorema')) {
+            return "assets/music/Piema's OST 2.mp3";
+        }
+        if (name.includes('flauto')) {
+            return 'assets/music/Altra #1.mp3';
+        }
+        // rimpianti del void
+        if (name.includes('delegato') || name.includes('notturno') || name.includes('modello') || name.includes('revisore') || name.includes('garante')) {
             return 'assets/music/Frammenti Infranti.mp3';
+        }
+        // arco autoscuole: maranza, istruttore, anna, walter
+        if (name.includes('maranza') || name.includes('istruttore') || name.includes('anna') || name.includes('walter')) {
+            return 'assets/music/Altra #2 (Querela).mp3';
+        }
+        if (name.includes('custode')) {
+            return 'assets/music/GECOWAVE.mp3';
+        }
+        // arena speciale di lametta (lametta-arena)
+        if (name.includes('lametta')) {
+            return "assets/music/Lametta MC's OST 2.mp3";
         }
         return 'assets/music/GECOWAVE.mp3';
     }

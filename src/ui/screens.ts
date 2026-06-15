@@ -870,11 +870,9 @@ export class Screens {
             s.classList.toggle('doomsday-active', isDoomsday);
             sfx.ui();
             
-            if (isDoomsday) {
-                confirmRunBtn.className = 'forge-btn doomsday-confirm';
-            } else {
-                confirmRunBtn.className = 'forge-btn glass-acid-gold';
-            }
+            // preserva le classi base sticker; cambia solo l'accento
+            confirmRunBtn.className = 'btn sticker forge-btn';
+            confirmRunBtn.classList.add(isDoomsday ? 'doomsday-confirm' : 'glass-acid-gold');
         };
 
         standardCard.addEventListener('click', () => selectMode(false));
