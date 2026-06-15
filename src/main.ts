@@ -104,6 +104,10 @@ async function boot(): Promise<void> {
         music.playEnding();
         hud.hide();
         game.scene.stop('GameScene');
+        // il render loop di phaser continua a girare: nascondo il canvas trasparente
+        // sotto i titoli di coda, altrimenti la compositing race lo fa flickerare
+        const gameEl = document.getElementById('game')!;
+        gameEl.style.display = 'none';
         const cards = endingCards(id, state.save.flags);
         // pedro (patto) e sconfitta (sfida agli dei persa) sono game over definitivi
         const lose = id === 'pedro' || id === 'sconfitta';
@@ -124,6 +128,7 @@ async function boot(): Promise<void> {
                 state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-') && !f.startsWith('agguato-'));
                 state.persist();
             }
+            gameEl.style.display = '';
             music.playMenu();
             screens.showMenu();
         });
