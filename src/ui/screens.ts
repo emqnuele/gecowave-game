@@ -147,7 +147,7 @@ export class Screens {
         const s = this.openOverlay('screen opaque menu-screen');
         this.setZone('yellow');
 
-        s.append(this.kicker('the flux of cosenza', 'glass-acid-gold', '#dfb15b', false));
+        s.append(this.kicker('the flux of coscience', 'glass-acid-gold', '#dfb15b', false));
 
         const title = el('h1', 'menu-title font-crisis', 'GECO<span class="font-marker" style="color:#dfb15b;display:inline-block;transform:rotate(-3deg);text-transform:lowercase">wave</span>');
         s.append(title);
