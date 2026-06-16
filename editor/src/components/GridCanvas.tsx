@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Maximize2, Plus, Minus } from 'lucide-react';
 import { useEditor } from '@/state/editorStore';
-import { textureForSpec, describeCell } from '@/lib/catalog';
-import { tileFrameIndex } from '@/lib/tileFrames';
+import { describeCell } from '@/lib/catalog';
+import { CELL, drawGlyph } from '@/lib/render';
 import type { BakedTextures } from '@/lib/textureBaker';
 
-const CELL = 28;
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
 interface View {
@@ -181,12 +180,13 @@ export function GridCanvas({ baked }: { baked: BakedTextures }) {
     }, [def, cols, rows]);
     fitRef.current = fit;
 
-    // fit automatico SOLO al cambio livello, non a ogni modifica
+    // fit al cambio livello e quando lo store lo richiede (es. carica versione)
     const levelFile = useEditor((s) => s.current?.file);
+    const fitNonce = useEditor((s) => s.fitNonce);
     useEffect(() => {
         const t = setTimeout(() => fitRef.current(), 0);
         return () => clearTimeout(t);
-    }, [levelFile]);
+    }, [levelFile, fitNonce]);
 
     const cellAt = (e: React.MouseEvent): { c: number; r: number } => {
         const rect = canvasRef.current!.getBoundingClientRect();
@@ -326,77 +326,3 @@ export function GridCanvas({ baked }: { baked: BakedTextures }) {
     );
 }
 
-function drawGlyph(
-    ctx: CanvasRenderingContext2D,
-    baked: BakedTextures,
-    def: import('@game/types').LevelDef,
-    ch: string,
-    c: number,
-    r: number,
-) {
-    const x = c * CELL;
-    const y = r * CELL;
-    if (ch === '#' || ch === 'F' || ch === '%') {
-        const frame = baked.tiles[tileFrameIndex(def.grid, c, r)] ?? baked.tiles[0];
-        if (frame) ctx.drawImage(frame, x, y, CELL, CELL);
-        if (ch === 'F') outline(ctx, x, y, '#facc15');
-        if (ch === '%') outline(ctx, x, y, '#f87171');
-        return;
-    }
-    if (ch === '~') {
-        ctx.fillStyle = 'rgba(96,165,250,0.4)';
-        ctx.fillRect(x, y, CELL, CELL);
-        return;
-    }
-    if (ch === '^') return drawSprite(ctx, baked, 'spikes', x, y);
-    if (ch === 'P') return badge(ctx, x, y, '#4ade80', 'P');
-    if (ch === 'C') return drawSprite(ctx, baked, 'mic', x, y);
-    if (ch === 'X') return badge(ctx, x, y, '#c084fc', 'X');
-    const spec = def.entities[ch];
-    if (spec) {
-        drawSprite(ctx, baked, textureForSpec(spec), x, y);
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.font = '8px monospace';
-        ctx.fillText(ch, x + 1, y + 8);
-    } else {
-        ctx.fillStyle = '#f87171';
-        ctx.fillRect(x, y, CELL, CELL);
-        ctx.fillStyle = '#000';
-        ctx.font = '10px monospace';
-        ctx.fillText(ch, x + 9, y + 18);
-    }
-}
-
-function drawSprite(ctx: CanvasRenderingContext2D, baked: BakedTextures, key: string, x: number, y: number) {
-    const img = baked.sprites.get(key);
-    if (!img) {
-        ctx.fillStyle = '#333';
-        ctx.fillRect(x + 4, y + 4, CELL - 8, CELL - 8);
-        return;
-    }
-    const scale = Math.min(CELL / img.width, CELL / img.height);
-    const w = img.width * scale;
-    const h = img.height * scale;
-    ctx.drawImage(img, x + (CELL - w) / 2, y + (CELL - h) / 2, w, h);
-}
-
-function outline(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([3, 2]);
-    ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
-    ctx.setLineDash([]);
-}
-
-function badge(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, label: string) {
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.25;
-    ctx.fillRect(x, y, CELL, CELL);
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
-    ctx.fillStyle = color;
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText(label, x + 9, y + 19);
-}

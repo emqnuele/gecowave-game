@@ -34,6 +34,8 @@ interface EditorState {
     dirty: boolean;
     past: Snapshot[];
     future: Snapshot[];
+    /** incrementato quando il canvas deve rifare il fit (apri/carica livello) */
+    fitNonce: number;
 
     init: () => void;
     selectLevel: (file: string) => void;
@@ -53,6 +55,8 @@ interface EditorState {
     undo: () => void;
     redo: () => void;
     patchMeta: (patch: Partial<LevelDef>) => void;
+    /** carica un intero LevelDef (es. una versione storica) come copia di lavoro */
+    applyDef: (def: LevelDef) => void;
     setEntities: (entities: Record<string, EntitySpec>) => void;
     resize: (cols: number, rows: number) => void;
 }
@@ -70,6 +74,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     dirty: false,
     past: [],
     future: [],
+    fitNonce: 0,
 
     init: () => {
         const files = loadLevelFiles();
@@ -212,6 +217,14 @@ export const useEditor = create<EditorState>((set, get) => ({
         const def = get().def;
         if (!def) return;
         set({ def: { ...def, ...patch }, dirty: true });
+    },
+
+    applyDef: (incoming) => {
+        const def = get().def;
+        if (!def) return;
+        get().beginStroke();
+        // la versione storica e un LevelDef completo; rifa il fit dopo
+        set({ def: structuredClone(incoming), dirty: true, fitNonce: get().fitNonce + 1 });
     },
 
     setEntities: (entities) => {

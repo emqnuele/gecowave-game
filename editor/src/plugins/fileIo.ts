@@ -1,6 +1,10 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import type { Plugin } from 'vite';
+
+const exec = promisify(execFile);
 
 /* middleware dev: legge e scrive i file dei livelli del gioco.
    non esiste in produzione, l'editor gira solo in locale. */
@@ -22,14 +26,59 @@ export function levelFileIo(gameRoot: string): Plugin {
             req.on('error', no);
         });
 
+    const relPath = (file: string): string => `src/content/levels/${file}`;
+    const safeFile = (file: string | null): file is string =>
+        !!file && !file.includes('/') && !file.includes('..') && file.endsWith('.ts');
+
     return {
         name: 'gecowave-level-file-io',
         configureServer(server) {
             server.middlewares.use(async (req, res, next) => {
                 const url = req.url ?? '';
                 if (!url.startsWith('/api/')) return next();
+                const query = new URLSearchParams(url.split('?')[1] ?? '');
+                const path = url.split('?')[0];
 
                 try {
+                    // cronologia git di un livello: ?file=level07-rio.ts
+                    // --name-only cattura il path che il file aveva a OGNI commit
+                    // (segue i rinomini), cosi /api/show usa il path giusto.
+                    if (path === '/api/history' && req.method === 'GET') {
+                        const file = query.get('file');
+                        if (!safeFile(file)) return json(res, 400, { error: 'file non valido' });
+                        const { stdout } = await exec(
+                            'git',
+                            ['log', '--follow', '--name-only', '--format=%x00%H%x1f%an%x1f%aI%x1f%s', '--', relPath(file)],
+                            { cwd: gameRoot, maxBuffer: 10 * 1024 * 1024 },
+                        );
+                        const commits = stdout
+                            .split('\x00')
+                            .filter((b) => b.trim())
+                            .map((block) => {
+                                const lines = block.split('\n');
+                                const [sha, author, date, ...msg] = lines[0].split('\x1f');
+                                // prima riga non vuota dopo il meta = path a quel commit
+                                const pathAt = lines.slice(1).find((l) => l.trim()) ?? relPath(file);
+                                return { sha, author, date, message: msg.join('\x1f'), path: pathAt.trim() };
+                            });
+                        return json(res, 200, { commits });
+                    }
+
+                    // sorgente di un livello a una revisione: ?sha=..&path=..
+                    if (path === '/api/show' && req.method === 'GET') {
+                        const sha = query.get('sha');
+                        const filePath = query.get('path');
+                        const okPath = filePath && /^src\/content\/levels\/[\w.-]+\.ts$/.test(filePath);
+                        if (!okPath || !sha || !/^[0-9a-f]+$/i.test(sha)) {
+                            return json(res, 400, { error: 'parametri non validi' });
+                        }
+                        const { stdout } = await exec('git', ['show', `${sha}:${filePath}`], {
+                            cwd: gameRoot,
+                            maxBuffer: 10 * 1024 * 1024,
+                        });
+                        return json(res, 200, { source: stdout });
+                    }
+
                     // lista dei file livello (escluso il registro index.ts)
                     if (url === '/api/levels' && req.method === 'GET') {
                         const files = (await readdir(levelsDir)).filter(

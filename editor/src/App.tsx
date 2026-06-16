@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { History } from 'lucide-react';
+import iconUrl from '@/assets/icon.png';
 import { useEditor } from '@/state/editorStore';
 import { useTextures } from '@/state/useTextures';
 import { GridCanvas } from '@/components/GridCanvas';
@@ -6,6 +8,7 @@ import { Palette } from '@/components/Palette';
 import { Toolbar } from '@/components/Toolbar';
 import { LegendPanel } from '@/components/LegendPanel';
 import { MetaPanel } from '@/components/MetaPanel';
+import { HistoryModal } from '@/components/HistoryModal';
 import { cn } from '@/lib/utils';
 
 export function App() {
@@ -14,7 +17,9 @@ export function App() {
     const files = useEditor((s) => s.files);
     const current = useEditor((s) => s.current);
     const dirty = useEditor((s) => s.dirty);
+    const def = useEditor((s) => s.def);
     const selectLevel = useEditor((s) => s.selectLevel);
+    const [showHistory, setShowHistory] = useState(false);
 
     useEffect(() => init(), [init]);
 
@@ -39,7 +44,7 @@ export function App() {
         <div className="flex h-full flex-col">
             <header className="surface flex h-14 shrink-0 items-center gap-3 border-b border-line px-4">
                 <div className="flex items-center gap-2">
-                    <span className="grid h-6 w-6 place-items-center rounded-md bg-acid text-xs font-black text-black">G</span>
+                    <img src={iconUrl} alt="gecowave" className="h-7 w-7 rounded-md object-contain" />
                     <span className="font-bold tracking-tight text-acid">GECOWAVE</span>
                     <span className="rounded bg-panel-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-neutral-500">
                         editor · dev
@@ -64,12 +69,24 @@ export function App() {
                     </span>
                 )}
                 {dirty && (
-                    <span className="ml-auto flex items-center gap-1.5 text-xs text-amber-400">
+                    <span className="flex items-center gap-1.5 text-xs text-amber-400">
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
                         non salvato
                     </span>
                 )}
+                {current && baked && (
+                    <button
+                        onClick={() => setShowHistory(true)}
+                        className="ml-auto flex items-center gap-1.5 rounded-md border border-line bg-panel-2 px-2.5 py-1.5 text-xs text-neutral-300 transition-colors hover:border-acid hover:text-white"
+                    >
+                        <History size={14} /> cronologia
+                    </button>
+                )}
             </header>
+
+            {showHistory && current && def && baked && (
+                <HistoryModal baked={baked} file={current.file} current={def} onClose={() => setShowHistory(false)} />
+            )}
 
             {error && (
                 <div className="bg-red-950 px-4 py-2 text-xs text-red-300">errore baking texture: {error}</div>
