@@ -138,6 +138,50 @@ export function textureForSpec(spec: EntitySpec): string {
     }
 }
 
+/** etichetta leggibile per una spec di entita (pannelli e overlay) */
+export function describeSpec(spec: EntitySpec): string {
+    switch (spec.type) {
+        case 'enemy':
+            return `nemico: ${spec.kind}`;
+        case 'boss':
+            return `boss: ${spec.kind}`;
+        case 'npc':
+            return `npc: ${spec.id}`;
+        case 'lore':
+            return `lore: ${spec.id}`;
+        case 'ability':
+            return `abilita: ${spec.ability}`;
+        case 'barre':
+            return `barre: ${spec.amount}`;
+        case 'cuore':
+            return 'cuore';
+        case 'maschera':
+            return 'maschera';
+        case 'portal':
+            return `portale -> ${spec.to || '?'}`;
+    }
+}
+
+const GLYPH_LABEL: Record<string, string> = {
+    '.': 'vuoto',
+    '#': 'blocco / terreno',
+    F: 'muro finto',
+    '%': 'muro distruttibile',
+    '^': 'spine',
+    '~': 'acqua',
+    P: 'spawn',
+    C: 'microfono (checkpoint)',
+    X: 'uscita',
+};
+
+/** descrive cosa c'e in una cella: glyph fisso o entita della legenda */
+export function describeCell(ch: string, entities: Record<string, EntitySpec>): string {
+    if (ch in GLYPH_LABEL) return GLYPH_LABEL[ch];
+    const spec = entities[ch];
+    if (spec) return describeSpec(spec);
+    return `'${ch}' - non in legenda`;
+}
+
 /** tutte le chiavi texture richieste dalla palette, per il baker */
 export function catalogTextureKeys(): string[] {
     const cat = buildCatalog();

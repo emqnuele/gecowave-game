@@ -5,6 +5,10 @@ import type { EntitySpec, LevelDef } from '@game/types';
 
 const q = (s: string): string => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 
+/* chiave oggetto: senza virgolette se identificatore valido (come a mano),
+   quotata solo quando necessario (es. cifre, simboli) */
+const key = (k: string): string => (/^[A-Za-z_$][\w$]*$/.test(k) ? k : q(k));
+
 function spec(s: EntitySpec): string {
     const parts: string[] = [`type: ${q(s.type)}`];
     switch (s.type) {
@@ -35,10 +39,14 @@ function spec(s: EntitySpec): string {
     return `{ ${parts.join(', ')} }`;
 }
 
-export function serializeLevel(def: LevelDef, exportName: string): string {
+export function serializeLevel(def: LevelDef, exportName: string, header?: string | null): string {
     const lines: string[] = [];
     lines.push(`import type { LevelDef } from '../../types';`);
     lines.push('');
+    if (header) {
+        lines.push(header);
+        lines.push('');
+    }
     lines.push(`export const ${exportName}: LevelDef = {`);
     lines.push(`    id: ${q(def.id)},`);
     lines.push(`    title: ${q(def.title)},`);
@@ -54,7 +62,7 @@ export function serializeLevel(def: LevelDef, exportName: string): string {
 
     lines.push(`    entities: {`);
     for (const [letter, s] of Object.entries(def.entities)) {
-        lines.push(`        ${q(letter)}: ${spec(s)},`);
+        lines.push(`        ${key(letter)}: ${spec(s)},`);
     }
     lines.push(`    },`);
 

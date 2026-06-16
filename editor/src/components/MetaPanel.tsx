@@ -43,7 +43,7 @@ export function MetaPanel() {
         setSaving(true);
         setMsg(null);
         try {
-            const src = serializeLevel(def, current.exportName);
+            const src = serializeLevel(def, current.exportName, current.header);
             await saveLevelFile(current.file, src);
             useEditor.setState({ dirty: false });
             setMsg('salvato ✓');

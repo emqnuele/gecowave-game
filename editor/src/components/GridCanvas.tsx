@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Maximize2, Plus, Minus } from 'lucide-react';
 import { useEditor } from '@/state/editorStore';
-import { textureForSpec } from '@/lib/catalog';
+import { textureForSpec, describeCell } from '@/lib/catalog';
 import { tileFrameIndex } from '@/lib/tileFrames';
 import type { BakedTextures } from '@/lib/textureBaker';
 
@@ -299,8 +299,28 @@ export function GridCanvas({ baked }: { baked: BakedTextures }) {
                 </button>
             </div>
 
-            <div className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-panel/80 px-2 py-1 text-[11px] text-neutral-400 backdrop-blur">
-                {hover ? `${hover.c}, ${hover.r}` : `${cols}×${rows}`} · due dita = scorri · pinch = zoom · spazio+trascina = pan
+            <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-md bg-panel/85 px-2.5 py-1.5 text-[11px] backdrop-blur">
+                {hover ? (
+                    <>
+                        <span className="tabular-nums text-neutral-500">
+                            {hover.c}, {hover.r}
+                        </span>
+                        <span className="h-3 w-px bg-line" />
+                        {(() => {
+                            const ch = def?.grid[hover.r]?.[hover.c] ?? '.';
+                            const label = def ? describeCell(ch, def.entities) : 'vuoto';
+                            return (
+                                <span className={ch === '.' ? 'text-neutral-600' : 'font-medium text-acid'}>
+                                    {label}
+                                </span>
+                            );
+                        })()}
+                    </>
+                ) : (
+                    <span className="text-neutral-500">
+                        {cols}×{rows}
+                    </span>
+                )}
             </div>
         </div>
     );
