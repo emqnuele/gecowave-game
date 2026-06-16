@@ -416,6 +416,8 @@ export class GameScene extends Phaser.Scene {
                     // l'ombra senza abbonamento è addestrata su poco footage
                     const hpOverride = spec.kind === 'ombra' && !state.hasFlag('tommasorveglianza') ? 34 : undefined;
                     this.boss = new Boss(this, x, y, spec.kind, hpOverride);
+                    // pedro finale forte come il pedro del doomsday: raffica e inseguimento
+                    if (spec.kind === 'pedro') this.boss.frenzy = true;
                     // in ng+ ivan è già dei nostri: guggu si taglia subito
                     if (spec.kind === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;
                     // il limite si arresta solo con tutti e tre gli indizi
