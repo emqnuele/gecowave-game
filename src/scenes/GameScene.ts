@@ -7,6 +7,7 @@ import { DecorationManager } from '../engine/DecorationManager';
 import { LightingManager } from '../engine/LightingManager';
 import { loadLevel, type LoadedLevel } from '../engine/LevelLoader';
 import { ParallaxManager } from '../engine/ParallaxManager';
+import { npcTexture } from '../engine/npcTexture';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import { music } from '../engine/music';
@@ -461,23 +462,6 @@ export class GameScene extends Phaser.Scene {
         return e;
     }
 
-    private npcTexture(id: string): string {
-        if (id.startsWith('ivan')) return 'npc-ivan';
-        if (id.startsWith('ticummi')) return 'npc-ticummi';
-        if (id.startsWith('smela') || id.startsWith('venditore')) return 'npc-smela';
-        if (id.startsWith('filippus')) return 'npc-filippus';
-        if (id.startsWith('piema')) return 'npc-piema';
-        if (id.startsWith('lochef')) return 'npc-lochef';
-        if (id.startsWith('lametta')) return 'npc-lametta';
-        if (id.startsWith('samatt')) return 'npc-samatt';
-        if (id.startsWith('guastalla')) return 'npc-guastalla';
-        if (id.startsWith('studente') || id.startsWith('professore') || id.startsWith('bimbo')) return 'npc-studente';
-        if (id.startsWith('romero')) return 'npc-romero';
-        if (id.startsWith('walter')) return 'npc-walter';
-        if (id.startsWith('vavleeh')) return 'npc-vavleeh';
-        if (id.startsWith('indizio')) return 'lore-tablet';
-        return 'npc-markolino';
-    }
 
     private spawnNpc(id: string, x: number, y: number): void {
         // marker invisibili degli inseguimenti nella tana
@@ -559,7 +543,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
-        const texture = this.npcTexture(id);
+        const texture = npcTexture(id);
         const npc = this.add.sprite(x, y + 4, texture).setDepth(4).setPipeline('Light2D');
         this.lighting.follow(npc, ZONE_HEX[this.def.color], 160, 0.7);
         // vavleeh è steso a terra: niente fluttuazione, per rispetto
