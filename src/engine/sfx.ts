@@ -214,6 +214,71 @@ class Sfx {
         this.noise(900, { freq: 260, q: 0.8, vol: 0.12 });
     }
 
+    /** ogni nemico muore col suo materiale: vetro, ferro, vernice, carne, gesso, nastro */
+    death(kind: string): void {
+        switch (kind) {
+            case 'specchietto':
+                // vetro che va in mille pezzi
+                for (let k = 0; k < 6; k++) this.tone(2600 + Math.random() * 2400, 160 + k * 40, { type: 'sine', vol: 0.025, delayMs: k * 28 });
+                this.noise(220, { freq: 6000, q: 1.5, vol: 0.12 });
+                break;
+            case 'bottiglia':
+                this.noise(140, { freq: 2800, q: 2.5, vol: 0.1 });
+                this.noise(300, { freq: 900, q: 0.7, vol: 0.08, delayMs: 60, to: 300 });
+                break;
+            case 'ricordo':
+                // carta che si strappa
+                this.noise(260, { freq: 3200, q: 0.9, vol: 0.09, to: 1800 });
+                this.tone(440, 500, { type: 'sine', to: 220, vol: 0.03, delayMs: 120 });
+                break;
+            case 'tecnodrone':
+            case 'telecamera':
+                this.buzz(0, 1.4);
+                this.tone(900, 300, { type: 'square', to: 80, vol: 0.05 });
+                this.noise(160, { freq: 3500, q: 3, vol: 0.06, delayMs: 120 });
+                break;
+            case 'citelis':
+            case 'fiattipo':
+                // lamiera che si accartoccia
+                this.noise(500, { freq: 400, q: 0.6, vol: 0.2, type: 'lowpass' });
+                this.clankFar(0, 2);
+                this.tone(220, 400, { type: 'sawtooth', to: 60, vol: 0.05 });
+                break;
+            case 'glitchetto':
+                for (let k = 0; k < 5; k++) this.tone(200 + Math.random() * 2000, 40, { type: 'square', vol: 0.035, delayMs: k * 45 });
+                break;
+            case 'pittura':
+            case 'pittura-mini':
+                // splat di vernice
+                this.noise(240, { freq: 600, q: 0.8, vol: 0.16, type: 'lowpass', to: 180 });
+                this.tone(320, 160, { type: 'sine', to: 90, vol: 0.06 });
+                break;
+            case 'formica':
+                this.noise(70, { freq: 3000, q: 2, vol: 0.12 });
+                this.noise(60, { freq: 1600, q: 2, vol: 0.08, delayMs: 50 });
+                break;
+            case 'padella':
+                this.tone(620, 900, { type: 'triangle', vol: 0.06 });
+                this.tone(1710, 600, { type: 'sine', vol: 0.03 });
+                this.noise(80, { freq: 3000, q: 3, vol: 0.1 });
+                break;
+            case 'numero':
+                // il gesso che si sbriciola sulla lavagna
+                this.noise(300, { freq: 4500, q: 4, vol: 0.06, to: 2500 });
+                this.pebble(0, 1.2);
+                break;
+            case 'eco':
+                // un nastro che si riavvolge e si spezza
+                this.tone(300, 450, { type: 'sawtooth', to: 1800, vol: 0.04 });
+                this.noise(200, { freq: 1500, q: 1, vol: 0.06, delayMs: 380 });
+                break;
+            default:
+                // carne: un lamento corto e il tonfo
+                this.tone(180 + Math.random() * 60, 260, { type: 'sawtooth', to: 90, vol: 0.05, attackMs: 15 });
+                this.noise(140, { freq: 300, q: 0.7, vol: 0.12, type: 'lowpass', delayMs: 120 });
+        }
+    }
+
     /* ---------- passi e atterraggi ---------- */
 
     /** un passo: il materiale decide il colore, un filo di caso il resto */

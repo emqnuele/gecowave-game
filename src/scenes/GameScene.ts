@@ -3732,6 +3732,7 @@ export class GameScene extends Phaser.Scene {
 
     private onEnemyDied({ x, y, kind, barre, splitsInto }: { x: number; y: number; kind: EnemyKind; barre: number; color: number; splitsInto: { kind: EnemyKind; count: number } | null }): void {
         this.shake(80, 0.004);
+        sfx.death(kind);
         // notino non muore: "si ritira strategicamente"
         if (kind === 'notino-mini') {
             const line = NOTINO_FUGHE[Math.floor(Math.random() * NOTINO_FUGHE.length)];
