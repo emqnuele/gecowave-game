@@ -47,3 +47,4 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 
 ### Fase 5 — trama
 - trame secondarie per ogni personaggio, lore ambientale nelle stanze, finali estesi
+- migliorare la trama del gioco enormemente, più scelte, più conseguenze, più misteri, più colpi di scena, più emozioni. in generale attualmente è molto sloppy e poco soddisfacente, non dobbiamo riscrivere tutto ma dobbiamo renderlo più coerente, più profondo, più interessante, più divertente, più emozionante. abbiamo bisogno di una storia da film da gioco di serie A.

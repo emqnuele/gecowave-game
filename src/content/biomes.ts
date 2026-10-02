@@ -40,6 +40,8 @@ export interface BiomeDef {
     /** luce ambiente: più alta = più leggibile, più bassa = più paura */
     ambient: number;
     lightShafts: boolean;
+    /** tutto al chiuso: niente cielo, la regione è una tana di stanze */
+    indoor?: boolean;
     /** sagome scure in primo piano davanti al giocatore */
     foreground: 'leaves' | 'chains' | 'pillars' | 'pipes' | 'cables' | 'crystals' | 'reeds' | 'none';
 }
@@ -88,7 +90,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* la via del trenbolone: laboratori clandestini, fango tossico */
     lab: {
-        ...base, id: 'lab', material: 'mud',
+        ...base, id: 'lab', indoor: true, material: 'mud',
         rock: 0x5a4532, rim: 0xffb86b, accent: 0xfb923c,
         surface: ['bottles', 'moss'], ceiling: ['drips', 'cables'],
         skyline: 'swamp', skyTop: 0x160d06, skyBottom: 0x33200f, haze: 0x5a3818,
@@ -97,7 +99,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* la tana: grotta di radici, ragnatele, bozzoli */
     burrow: {
-        ...base, id: 'burrow', material: 'roots',
+        ...base, id: 'burrow', indoor: true, material: 'roots',
         rock: 0x4d3632, rim: 0xd99a8a, accent: 0xf87171,
         surface: ['moss'], ceiling: ['roots', 'webs'],
         skyline: 'cave', skyTop: 0x0c0606, skyBottom: 0x1f0f0d, haze: 0x2f1714,
@@ -115,7 +117,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* lo stabilimento di smela: tubi, valvole, grate */
     factory: {
-        ...base, id: 'factory', material: 'metal',
+        ...base, id: 'factory', indoor: true, material: 'metal',
         rock: 0x3f5458, rim: 0x9ee8f0, accent: 0x22d3ee,
         surface: ['cables', 'rubble'], ceiling: ['cables', 'drips', 'chains'],
         skyline: 'factory', skyTop: 0x061214, skyBottom: 0x10292d, haze: 0x1b454b,
@@ -133,7 +135,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* la mente di piema: carta, formule, vuoto bianco */
     mind: {
-        ...base, id: 'mind', material: 'crystal',
+        ...base, id: 'mind', indoor: true, material: 'crystal',
         rock: 0x50607a, rim: 0xdbe7ff, accent: 0x93c5fd,
         surface: ['books', 'crystals'], ceiling: ['glitch', 'chains'],
         skyline: 'dream', skyTop: 0x0a0f1c, skyBottom: 0x22304d, haze: 0x3a4c74,
@@ -151,7 +153,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* la tommasorveglianza: data center */
     servers: {
-        ...base, id: 'servers', material: 'circuit',
+        ...base, id: 'servers', indoor: true, material: 'circuit',
         rock: 0x2f4a50, rim: 0x7ef0ff, accent: 0x22d3ee,
         surface: ['cables'], ceiling: ['cables', 'glitch'],
         skyline: 'servers', skyTop: 0x030b0d, skyBottom: 0x0b2227, haze: 0x13383f,
@@ -160,7 +162,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* la cantina di ticummi: mattoni, botti, bottiglie */
     cellar: {
-        ...base, id: 'cellar', material: 'brick',
+        ...base, id: 'cellar', indoor: true, material: 'brick',
         rock: 0x4f3e3a, rim: 0xd6b494, accent: 0x60a5fa,
         surface: ['bottles', 'rubble'], ceiling: ['webs', 'drips'],
         skyline: 'cellar', skyTop: 0x0a0707, skyBottom: 0x1e1512, haze: 0x2e211c,
@@ -169,7 +171,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* i ricordi di pedro: sogno sbiadito, frammenti bianchi */
     memory: {
-        ...base, id: 'memory', material: 'stone',
+        ...base, id: 'memory', indoor: true, material: 'stone',
         rock: 0x5a6a72, rim: 0xe6fbff, accent: 0x67e8f9,
         surface: ['ash', 'glitch'], ceiling: ['glitch', 'stalactites'],
         skyline: 'dream', skyTop: 0x0c1418, skyBottom: 0x26383f, haze: 0x45616b,
@@ -178,7 +180,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* il void dei rimpianti */
     void: {
-        ...base, id: 'void', material: 'void',
+        ...base, id: 'void', indoor: true, material: 'void',
         rock: 0x2c3340, rim: 0x9fe9f5, accent: 0x22d3ee,
         surface: ['glitch', 'ash'], ceiling: ['glitch'],
         skyline: 'void', skyTop: 0x020305, skyBottom: 0x0b1218, haze: 0x152027,
@@ -187,7 +189,7 @@ export const BIOMES: Record<string, BiomeDef> = {
     },
     /* il nucleo di pedro: palco finale, cavi e casse */
     core: {
-        ...base, id: 'core', material: 'circuit',
+        ...base, id: 'core', indoor: true, material: 'circuit',
         rock: 0x353d52, rim: 0xa5f3fc, accent: 0x22d3ee,
         surface: ['cables', 'glitch'], ceiling: ['cables', 'chains'],
         skyline: 'servers', skyTop: 0x04060c, skyBottom: 0x10182a, haze: 0x1d2a45,
