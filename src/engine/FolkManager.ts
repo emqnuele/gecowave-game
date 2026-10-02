@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { TILE } from '../config';
 import { FOLK, FOLK_AFTER, FOLK_CHAT, FOLK_PANIC, FOLK_PEDRO, type FolkKind } from '../content/folk';
 import { mulberry32 } from './art/ink';
-import { ensureFolkTexture } from './art/folk';
+import { folkImage } from './art/folk';
+import { CreatureGlow } from './art/creatureKit';
 import type { NavGraph } from './nav/NavGraph';
 import { state } from './state';
 import type { DialogueLine } from '../types';
@@ -29,6 +30,8 @@ export interface FolkTalk {
 class Wanderer {
     readonly kind: FolkKind;
     readonly sprite: Phaser.GameObjects.Image;
+    /** occhi accesi del passante */
+    readonly glow: CreatureGlow;
     readonly talk: FolkTalk;
     seg: number;
     x: number;
@@ -46,6 +49,7 @@ class Wanderer {
 
     constructor(sprite: Phaser.GameObjects.Image, kind: FolkKind, seg: number, x: number, feet: number, home: Room | null, onTalk: (w: Wanderer) => void) {
         this.sprite = sprite;
+        this.glow = new CreatureGlow(sprite);
         this.kind = kind;
         this.seg = seg;
         this.x = x;
@@ -111,10 +115,9 @@ export class FolkManager {
     }
 
     private spawn(kind: FolkKind, seg: number, x: number, eye: number, home: Room | null): void {
-        const key = ensureFolkTexture(this.scene, kind.look, eye);
         const s = this.nav.segments[seg];
         const feet = (s.r + 1) * TILE;
-        const sprite = this.scene.add.image(x, feet + 1, key).setOrigin(0.5, 1).setDepth(3.6).setPipeline('Light2D');
+        const sprite = folkImage(this.scene, x, feet + 1, kind.look, eye).setDepth(3.6);
         const w = new Wanderer(sprite, kind, seg, x, feet, home, (who) => this.converse(who));
         w.facing = Math.random() < 0.5 ? -1 : 1;
         this.folk.push(w);
@@ -160,6 +163,7 @@ export class FolkManager {
             const visible = w.x > cam.x - 500 && w.x < cam.right + 500 && w.feet > cam.y - 400 && w.feet < cam.bottom + 500;
             w.sprite.setVisible(visible);
             if (!visible) {
+                w.glow.setVisible(false);
                 if (w.bubble) w.bubble.text.setVisible(false);
                 continue;
             }
@@ -169,6 +173,10 @@ export class FolkManager {
             w.sprite.setPosition(w.x, w.feet + 1 - bob);
             w.sprite.setFlipX(w.facing < 0);
             w.sprite.setRotation(w.mode === 'walk' ? Math.sin((time + w.phase) / 110) * 0.05 : 0);
+            // passo a fotogrammi: chi scappa corre, chi è fermo resta sul primo
+            const moving = w.mode === 'walk' || w.mode === 'flee';
+            w.sprite.setFrame(moving ? Math.floor((time + w.phase) / (w.mode === 'flee' ? 80 : 140)) % 4 : 0);
+            w.glow.sync();
             w.talk.x = w.x;
             w.talk.y = w.feet - 26;
             if (w.bubble) {
@@ -320,6 +328,7 @@ export class FolkManager {
     destroy(): void {
         for (const w of this.folk) {
             w.sprite.destroy();
+            w.glow.destroy();
             w.bubble?.text.destroy();
         }
         this.folk = [];

@@ -5,7 +5,8 @@ import { questsFor, type QuestDef, type QuestPerson } from '../content/quests';
 import type { DialogueLine, EnemyKind } from '../types';
 import type { RegionLayout } from '../world/types';
 import { hashString } from './art/ink';
-import { ensureFolkTexture } from './art/folk';
+import { folkImage } from './art/folk';
+import { animateCreature } from './art/creatureKit';
 import { bus } from './events';
 import type { LightingManager } from './LightingManager';
 import { sfx } from './sfx';
@@ -86,11 +87,12 @@ export class QuestManager {
     }
 
     private person(who: QuestPerson, c: number, r: number, eye: number, onTalk: () => void): Placed['giver'] {
-        const key = ensureFolkTexture(this.scene, who.look, eye);
         const x = c * TILE + TILE / 2;
         const feet = (r + 1) * TILE;
-        const sprite = this.scene.add.image(x, feet + 1, key).setOrigin(0.5, 1).setDepth(3.7).setPipeline('Light2D');
-        this.scene.tweens.add({ targets: sprite, scaleY: 1.03, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        const sprite = folkImage(this.scene, x, feet + 1, who.look, eye).setDepth(3.7);
+        this.scene.tweens.add({ targets: sprite, scaleY: sprite.scaleY * 1.03, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        // fermo ad aspettarti: niente passo, solo gli occhi accesi
+        animateCreature(sprite, Number.POSITIVE_INFINITY);
         const mark = this.scene.add.text(x, feet - 66, '!', {
             fontFamily: '"Permanent Marker", cursive',
             fontSize: '22px',

@@ -647,6 +647,7 @@ export class GameScene extends Phaser.Scene {
     /** personaggio di scena: foglio a inchiostro animato se esiste, texture semplice altrimenti */
     private castSprite(x: number, y: number, key: string): Phaser.GameObjects.Sprite {
         const sprite = this.add.sprite(x, y, ensureCreature(this, key), 0).setPipeline('Light2D');
+        sprite.setScale(1 / creatureRes(this, sprite.texture.key));
         animateCreature(sprite);
         return sprite;
     }

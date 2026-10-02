@@ -553,9 +553,9 @@ function register(scene: Phaser.Scene, spec: CreatureSpec, key: string, el: HTML
 /** lo strato emissivo che segue la creatura: sommato, fuori dalla pipeline delle luci */
 export class CreatureGlow {
     readonly image: Phaser.GameObjects.Image | null;
-    private target: Phaser.GameObjects.Sprite;
+    private target: Phaser.GameObjects.Image;
 
-    constructor(target: Phaser.GameObjects.Sprite) {
+    constructor(target: Phaser.GameObjects.Image) {
         this.target = target;
         const key = glowKey(target.texture.key);
         this.image = target.scene.textures.exists(key)
@@ -588,12 +588,10 @@ export class CreatureGlow {
     }
 }
 
-/** sprite di scena (personaggi, comparse): scala logica, respiro a fotogrammi e occhi accesi */
-export function animateCreature(sprite: Phaser.GameObjects.Sprite, msPerFrame = 240): void {
+/** sprite di scena (personaggi, comparse): respiro a fotogrammi e occhi accesi */
+export function animateCreature(sprite: Phaser.GameObjects.Image, msPerFrame = 240): void {
     const scene = sprite.scene;
     const key = sprite.texture.key;
-    const res = creatureRes(scene, key);
-    if (res !== 1) sprite.setScale(sprite.scaleX / res, sprite.scaleY / res);
     const n = creatureFrames(scene, key);
     const glow = new CreatureGlow(sprite);
     let t = Math.random() * 1000;

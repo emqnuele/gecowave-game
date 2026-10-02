@@ -113,6 +113,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **boss**: 30 fogli in `creatures/bosses.ts` (trama) e `creatures/bossesVoid.ts` (dei, void, autoscuole), pezzi comuni in `bossKit.ts` (testa da geco di fronte, gambe, braccia, scanline e sfaldamento dei ricordi, aure). Quelli di profilo (`faces`: guggu, riba, lochef, ticummi, furgone, formicona, 7:40) si girano verso il geco; gli altri sono frontali. Il ciclo accelera a ogni fase e lo strato emissivo pulsa con la rabbia.
 - **costo**: i fogli si disegnano al primo uso (`ensureCreature` nei costruttori di `Enemy` e `Boss`); `prewarmCreatures` all'apertura del capitolo prepara la legenda e gli evocati dei boss. Le vecchie sagome `Graphics` di nemici e boss sono state tolte da `textures.ts`.
 - **personaggi**: i 16 npc della trama (`creatures/npcs.ts`) sono frontali, respirano a fotogrammi e passano da `castSprite` in `GameScene` (`animateCreature`: scala logica, ciclo, strato emissivo). Le vecchie sagome `Graphics` degli npc sono state tolte.
+- **passanti**: i 14 tipi di comparse (`art/folk.ts`) usano lo stesso kit, di profilo verso destra (il codice li gira), 4 fotogrammi di camminata (fermi sul primo, di corsa quando scappano), occhi del colore della regione sullo strato emissivo; `folkImage` mette i piedi sul pavimento al netto del margine (`FOLK_ORIGIN_Y`).
 - **galleria**: `?gallery` (solo sviluppo, filtro con `?gallery=boss-`, `&cell=230`) mostra tutto il cast sotto una luce che segue il mouse.
 
 ### ADR-018 — il suono prende la forma del posto (fase 6)
