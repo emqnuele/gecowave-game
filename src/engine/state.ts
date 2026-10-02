@@ -13,6 +13,8 @@ const DOOMSDAY_BOSS_RELIEF = 0.14;
 export interface Settings {
     volume: number;
     screenShake: boolean;
+    /** la freccia che indica il prossimo varco verso l'obiettivo */
+    guide: boolean;
 }
 
 export interface PortalReturn {
@@ -45,12 +47,13 @@ const defaultSave = (): SaveData => ({
     messages: [],
     record: { deaths: 0, kills: 0, bosses: 0, playMs: 0 },
     radio: null,
+    explored: {},
 });
 
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
 class GameState {
     save: SaveData = defaultSave();
-    settings: Settings = { volume: 0.7, screenShake: true };
+    settings: Settings = { volume: 0.7, screenShake: true, guide: true };
     godMode = false;
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
@@ -67,7 +70,7 @@ class GameState {
             if (raw) {
                 const parsed = JSON.parse(raw);
                 const fresh = defaultSave();
-                this.save = { ...fresh, ...parsed, record: { ...fresh.record, ...(parsed.record ?? {}) } };
+                this.save = { ...fresh, ...parsed, record: { ...fresh.record, ...(parsed.record ?? {}) }, explored: { ...(parsed.explored ?? {}) } };
                 if (typeof this.save.barre !== 'number' || isNaN(this.save.barre)) {
                     this.save.barre = 0;
                 }
@@ -118,6 +121,14 @@ class GameState {
         this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false };
         this.run.hp = this.maxHp;
         this.run.trenbolone = this.hasFlag('trenbolone-attivo');
+    }
+
+    /** segna una stanza come esplorata; true se è nuova */
+    explore(regionId: string, room: number): boolean {
+        const list = (this.save.explored[regionId] ??= []);
+        if (list.includes(room)) return false;
+        list.push(room);
+        return true;
     }
 
     persist(): void {

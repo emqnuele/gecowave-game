@@ -8,6 +8,7 @@ import { useItem } from '../engine/inventory';
 import { music } from '../engine/music';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
+import { regionView } from '../engine/regionView';
 import { TOTAL_MASCHERE } from '../scenes/GameScene';
 import type { ZoneColor } from '../types';
 import './phone.css';
@@ -626,7 +627,76 @@ export class Phone {
 
     /* ---------- mappa del realm ---------- */
 
+    /** la regione in corso: si vede solo dove sei passato, più il contorno dei varchi accanto */
+    private renderRegionMap(root: HTMLElement): void {
+        const L = regionView.layout;
+        if (!L || regionView.id !== state.save.levelId) return;
+        const lv = LEVELS[regionView.id];
+        const explored = new Set(state.save.explored[regionView.id] ?? []);
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', `-4 -4 ${L.cols + 8} ${L.rows + 8}`);
+        svg.setAttribute('role', 'img');
+        svg.setAttribute('aria-label', `mappa di ${lv?.accentWord ?? 'questa regione'}`);
+        const add = (tag: string, attrs: Record<string, string | number>) => {
+            const n = document.createElementNS(ns, tag);
+            for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, String(v));
+            svg.append(n);
+            return n;
+        };
+        const accent = lv ? ZONE_CSS[lv.color] : '#4ade80';
+        const near = new Set<number>();
+        for (const d of L.doors) {
+            if (explored.has(d.a)) near.add(d.b);
+            if (explored.has(d.b)) near.add(d.a);
+        }
+        const fillOf: Record<string, string> = { arena: '#3b0d12', rest: '#0d2a1a', secret: '#2a1240', start: '#10202a', exit: '#2a2508' };
+        for (const room of L.rooms) {
+            const R = room.rect;
+            if (explored.has(room.id)) {
+                add('rect', { x: R.x + 1, y: R.y + 1, width: R.w - 2, height: R.h - 2, rx: 3, fill: fillOf[room.kind] ?? '#15151c', stroke: room.id === regionView.room ? accent : 'rgba(255,255,255,0.55)', 'stroke-width': room.id === regionView.room ? 3 : 1.5 });
+            } else if (near.has(room.id)) {
+                add('rect', { x: R.x + 1, y: R.y + 1, width: R.w - 2, height: R.h - 2, rx: 3, fill: 'none', stroke: 'rgba(255,255,255,0.18)', 'stroke-width': 1.2, 'stroke-dasharray': '4 4' });
+            }
+        }
+        // i varchi tra stanze note
+        for (const d of L.doors) {
+            if (!explored.has(d.a) && !explored.has(d.b)) continue;
+            const A = L.rooms[d.a];
+            const B = L.rooms[d.b];
+            if (d.axis === 'h') {
+                const right = A.rect.x < B.rect.x ? B : A;
+                add('rect', { x: right.rect.x - 2, y: d.y - 4, width: 4, height: 4, fill: d.kind === 'open' ? accent : '#a855f7' });
+            } else {
+                const bottom = A.rect.y < B.rect.y ? B : A;
+                add('rect', { x: d.x, y: bottom.rect.y - 2, width: d.len, height: 4, fill: d.kind === 'drop' ? '#f87171' : accent });
+            }
+        }
+        const T = 32;
+        const roomOf = (x: number, y: number) => L.rooms.find((o) => x / T >= o.rect.x && x / T < o.rect.x + o.rect.w && y / T >= o.rect.y && y / T < o.rect.y + o.rect.h);
+        for (const m of regionView.markers) {
+            const room = roomOf(m.x, m.y);
+            if (!room || !explored.has(room.id)) continue;
+            if (m.kind === 'mic') add('circle', { cx: m.x / T, cy: m.y / T, r: 3.5, fill: '#22d3ee', stroke: '#000', 'stroke-width': 1 });
+            if (m.kind === 'exit') add('rect', { x: m.x / T - 3, y: m.y / T - 6, width: 6, height: 9, fill: '#facc15', stroke: '#000', 'stroke-width': 1 });
+        }
+        const goal = regionView.goal;
+        if (goal) {
+            const star = add('text', { x: goal.x / T, y: goal.y / T + 5, 'text-anchor': 'middle', 'font-size': 16, fill: '#f87171' });
+            star.textContent = '✶';
+        }
+        if (regionView.player) {
+            add('circle', { cx: regionView.player.x / T, cy: regionView.player.y / T, r: 4.5, fill: '#fff', stroke: accent, 'stroke-width': 2, class: 'here' });
+        }
+        const map = el('div', 'region-map glass-panel');
+        map.append(svg);
+        root.append(text('div', 'phone-section', `${lv ? lv.accentWord : 'regione'} · ${explored.size}/${L.rooms.length} stanze`), map);
+        if (goal) root.append(text('div', 'region-goal', `✶ obiettivo: ${goal.label}`));
+        root.append(text('div', 'phone-section', 'il gecorealm'));
+    }
+
     private renderMap(root: HTMLElement): void {
+        this.renderRegionMap(root);
         const ids = LEVEL_ORDER;
         const step = 64;
         const w = 300;
@@ -854,6 +924,20 @@ export class Phone {
         });
         shake.append(toggle);
         root.append(shake);
+
+        const guide = el('div', 'phone-row glass-chip');
+        guide.append(text('span', 'name', 'freccia guida'));
+        const gt = el('button', `toggle sticker ${state.settings.guide ? 'on' : ''}`);
+        gt.textContent = state.settings.guide ? 'attiva' : 'spenta';
+        gt.addEventListener('click', () => {
+            state.settings.guide = !state.settings.guide;
+            state.persistSettings();
+            gt.classList.toggle('on', state.settings.guide);
+            gt.textContent = state.settings.guide ? 'attiva' : 'spenta';
+            sfx.ui();
+        });
+        guide.append(gt);
+        root.append(guide);
 
         root.append(text('div', 'phone-section', 'comandi del telefono'));
         for (const [k, v] of [['apri e chiudi', 'TAB / P'], ['indietro', 'ESC'], ['mangia al volo', 'C']]) {

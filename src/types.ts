@@ -127,6 +127,8 @@ export interface SaveData {
     record: { deaths: number; kills: number; bosses: number; playMs: number };
     /** traccia scelta dalla radio, null = musica del capitolo */
     radio: string | null;
+    /** stanze visitate per regione: la mappa del telefono si rivela da qui */
+    explored: Record<string, number[]>;
 }
 
 export interface PhoneMessage {

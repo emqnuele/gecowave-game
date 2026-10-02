@@ -18,6 +18,8 @@ import { loadRegion } from '../world/registry';
 import { oldXToProgress, type RegionLayout, type Room } from '../world/types';
 import { npcTexture } from '../engine/npcTexture';
 import { NavGraph } from '../engine/nav/NavGraph';
+import { RegionGuide } from '../engine/RegionGuide';
+import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -151,6 +153,12 @@ export class GameScene extends Phaser.Scene {
     private analisiUntil = 0;
     private nextAnalisiTick = 0;
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
+    private guide: RegionGuide | null = null;
+    private guideGfx!: Phaser.GameObjects.Graphics;
+    private guideText!: Phaser.GameObjects.Text;
+    private lastRoom = -1;
+    /** dove stanno gli npc di trama, per indicarli */
+    private npcAt = new Map<string, { x: number; y: number }>();
     /** sbarre che chiudono l'arena finché il boss è vivo */
     private arenaBars!: Phaser.Physics.Arcade.StaticGroup;
     private arenaGfx: Phaser.GameObjects.Graphics | null = null;
@@ -246,6 +254,9 @@ export class GameScene extends Phaser.Scene {
         this.interactables = [];
         this.analisiGlyphs = [];
         this.homing = [];
+        this.npcAt.clear();
+        this.lastRoom = -1;
+        this.guide = this.layout ? new RegionGuide(this.layout) : null;
         this.checkpointSprites.clear();
         this.lamettaCenter = null;
         this.lamettaActive = false;
@@ -349,6 +360,7 @@ export class GameScene extends Phaser.Scene {
         this.parallax.build(this.def.color, this.def.id, this.biome, this.layout ? this.layout.horizonRow * TILE : this.level.heightPx);
         this.parallax.resize();
         this.buildPrompt();
+        this.buildGuide();
 
         // i capitoli di walter riusano il fondale del trenbolone ma cupo e malato
         if (this.def.script === 'galliate' || this.def.script === 'marcetti') {
@@ -602,6 +614,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
+        this.npcAt.set(id, { x, y });
         const texture = npcTexture(id);
         const npc = this.add.sprite(x, y + 4, texture).setDepth(4).setPipeline('Light2D');
         this.lighting.follow(npc, ZONE_HEX[this.def.color], 160, 0.7);
@@ -1697,6 +1710,8 @@ export class GameScene extends Phaser.Scene {
         this.updateClone(time, delta);
         this.updateHoming(delta);
         this.updateArenaLock(time);
+        this.updateExplore();
+        this.updateGuide(time);
         this.updateAnalisi(time);
         this.updateScudo(time);
         this.updateAcquaTossica(time);
@@ -1997,7 +2012,7 @@ export class GameScene extends Phaser.Scene {
         if (this.boss?.active && this.boss.def.guardsExit !== false) {
             if (this.time.now > this.exitLockToastAt) {
                 this.exitLockToastAt = this.time.now + 3000;
-                bus.emit('toast', { text: 'qualcosa di grosso blocca ancora la strada.' });
+                bus.emit('toast', { text: `${this.boss.def.name.split(',')[0]} ti sbarra ancora la strada. segui la freccia.` });
             }
             return;
         }
@@ -2066,6 +2081,95 @@ export class GameScene extends Phaser.Scene {
             this.prompt.setPosition(near.x, near.y - 48 + Math.sin(this.time.now / 300) * 3);
         } else {
             this.prompt.setVisible(false);
+        }
+    }
+
+    /* ---------- orientamento: stanze esplorate, obiettivo, freccia ---------- */
+
+    private updateExplore(): void {
+        if (!this.layout) return;
+        const room = this.roomAt(this.player.x, this.player.y);
+        if (!room || room.id === this.lastRoom) return;
+        this.lastRoom = room.id;
+        if (state.explore(this.def.id, room.id)) state.persist();
+        regionView.room = room.id;
+    }
+
+    /** cosa serve adesso per andare avanti, in ordine di urgenza */
+    private currentObjective(): { x: number; y: number; label: string } | null {
+        const boss = this.boss;
+        if (boss?.active && !boss.engaged && boss.def.guardsExit !== false) return { x: boss.x, y: boss.y, label: boss.def.name.split(',')[0] };
+        const npc = (id: string, label: string) => {
+            const at = this.npcAt.get(id);
+            return at ? { ...at, label } : null;
+        };
+        if (this.def.script === 'ruhra' && !state.hasAbility('analisi')) return npc('piema-mente', 'piema');
+        if (this.def.id === 'trenbolone' && !state.run.trenbolone && !state.hasFlag('boss-down-flauto')) return npc('spaccino', 'lo spaccino');
+        if (this.def.script === 'indagine' && !state.hasFlag('void-concluso')) {
+            const a = this.voidArenas[Math.min(this.voidStep, this.voidArenas.length - 1)];
+            if (a) return { ...a, label: 'il prossimo rimpianto' };
+        }
+        if ((this.def.script === 'galliate' || this.def.script === 'marcetti') && this.baruffoniStep < this.baruffoniSeq().length) {
+            const a = this.baruffoniArenas[this.baruffoniStep];
+            if (a) return { ...a, label: 'la prossima arena' };
+        }
+        if (this.smelaArena && state.hasFlag('boss-down-danjilo')) return { ...this.smelaArena, label: 'la sorgente' };
+        const exit = this.level.exits[0];
+        if (exit) return { x: exit.centerX, y: exit.centerY, label: this.def.next ? 'uscita' : 'ritorno' };
+        return null;
+    }
+
+    private buildGuide(): void {
+        this.guideGfx = this.add.graphics().setDepth(9);
+        this.guideText = this.add.text(0, 0, '', {
+            fontFamily: '"Permanent Marker", cursive',
+            fontSize: '13px',
+            color: '#e2e8f0',
+            stroke: '#000',
+            strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(9);
+        regionView.id = this.def.id;
+        regionView.layout = this.layout;
+        regionView.markers = [
+            ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y, kind: 'mic' as const })),
+            ...this.level.exits.slice(0, 1).map((e) => ({ x: e.centerX, y: e.centerY, kind: 'exit' as const })),
+        ];
+    }
+
+    /** freccia attorno al geco verso il prossimo varco giusto; sparisce in combattimento e quando sei arrivato */
+    private updateGuide(time: number): void {
+        const g = this.guideGfx;
+        g.clear();
+        this.guideText.setVisible(false);
+        const goal = this.currentObjective();
+        regionView.player = { x: this.player.x, y: this.player.y };
+        regionView.goal = goal;
+        if (!goal || !state.settings.guide || this.player.dead || this.boss?.engaged || this.chaseSprite) return;
+        const next = this.guide ? this.guide.nextPoint(this.player.x, this.player.y, goal.x, goal.y) : { x: goal.x, y: goal.y, rooms: 0 };
+        if (!next) return;
+        const dx = next.x - this.player.x;
+        const dy = next.y - this.player.y;
+        const d = Math.hypot(dx, dy);
+        if (next.rooms === 0 && d < 140) return;
+        const a = Math.atan2(dy, dx);
+        const R = 64;
+        const cx = this.player.x + Math.cos(a) * R;
+        const cy = this.player.y - 6 + Math.sin(a) * R;
+        const pulse = 0.55 + Math.sin(time / 260) * 0.2;
+        const tip = { x: cx + Math.cos(a) * 11, y: cy + Math.sin(a) * 11 };
+        const l = { x: cx + Math.cos(a + 2.5) * 10, y: cy + Math.sin(a + 2.5) * 10 };
+        const r = { x: cx + Math.cos(a - 2.5) * 10, y: cy + Math.sin(a - 2.5) * 10 };
+        g.fillStyle(0x000000, 0.6 * pulse);
+        g.fillTriangle(tip.x + 2, tip.y + 2, l.x + 2, l.y + 2, r.x + 2, r.y + 2);
+        g.fillStyle(ZONE_HEX[this.def.color], pulse);
+        g.fillTriangle(tip.x, tip.y, l.x, l.y, r.x, r.y);
+        g.lineStyle(2, 0x000000, 0.8 * pulse);
+        g.strokeTriangle(tip.x, tip.y, l.x, l.y, r.x, r.y);
+        // l'etichetta solo da fermi: in corsa basta la freccia
+        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        if (Math.abs(body.velocity.x) < 30 && body.blocked.down) {
+            const far = next.rooms > 0 ? ` · ${next.rooms} stanz${next.rooms === 1 ? 'a' : 'e'}` : '';
+            this.guideText.setText(`${goal.label}${far}`).setPosition(this.player.x, this.player.y - 58).setAlpha(pulse + 0.2).setVisible(true);
         }
     }
 

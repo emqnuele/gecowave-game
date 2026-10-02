@@ -879,3 +879,31 @@ button.phone-row {
     transition: none !important;
   }
 }
+
+.region-map {
+  padding: 6px;
+  margin: 4px 0 8px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.region-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.region-map .here {
+  animation: region-here 1.2s ease-in-out infinite;
+}
+
+@keyframes region-here {
+  50% { opacity: 0.35; }
+}
+
+.region-goal {
+  font-family: var(--font-marker);
+  color: #f87171;
+  font-size: 13px;
+  transform: rotate(-1deg);
+  margin-bottom: 6px;
+}
