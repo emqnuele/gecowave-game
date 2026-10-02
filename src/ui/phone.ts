@@ -11,6 +11,7 @@ import { state } from '../engine/state';
 import { regionView } from '../engine/regionView';
 import { achievementsBlocked } from '../engine/achievements';
 import { ACHIEVEMENTS } from '../content/achievements';
+import { QUESTS } from '../content/quests';
 import { TOTAL_MASCHERE } from '../scenes/GameScene';
 import type { ZoneColor } from '../types';
 import './phone.css';
@@ -804,6 +805,25 @@ export class Phone {
             { name: 'la quest di walter baruffoni', done: ['boss-down-maranza', 'boss-down-maranzone', 'boss-down-istruttore', 'boss-down-annascrivania', 'boss-down-walter'].filter((f) => state.hasFlag(f)).length, total: 5, show: state.hasFlag('visto-galliate') },
             { name: 'amuleti collezionati', done: state.save.charms.length, total: Object.values(ITEMS).filter((i) => i.kind === 'amuleto').length, show: true },
         ];
+        // le missioni dei passanti accettate, con lo stato
+        const mine = QUESTS.filter((q) => state.save.quests[q.id]);
+        if (mine.length) {
+            root.append(text('div', 'phone-section', 'missioni dei passanti'));
+            for (const q of mine) {
+                const st = state.save.quests[q.id];
+                const row = el('div', `phone-row glass-chip ${st.s === 'fatta' ? '' : 'glass-acid-yellow'}`);
+                const main = el('div', 'main');
+                const lv = LEVELS[q.region];
+                const how = st.s === 'fatta' ? 'completata' : st.s === 'pronta' ? 'torna da chi te l\'ha chiesto'
+                    : q.kind === 'caccia' && q.hunt ? `${st.n}/${q.hunt.count} ${q.hunt.label}`
+                    : q.kind === 'cerca' ? `cerca: ${q.thing?.name} (stanze laterali)` : `porta ${q.thing?.name} a ${q.recipient?.name}`;
+                main.append(text('div', 'name', q.title), text('div', 'preview', `${lv?.accentWord ?? q.region} · ${how}`));
+                row.append(main, text('span', 'meta', st.s === 'fatta' ? '✓' : st.s === 'pronta' ? '?' : '…'));
+                if (st.s === 'fatta') row.style.opacity = '0.6';
+                root.append(row);
+            }
+            root.append(text('div', 'phone-section', 'collezioni'));
+        }
         for (const q of quests.filter((q) => q.show)) {
             const row = el('div', 'phone-row glass-chip');
             const main = el('div', 'main');

@@ -102,6 +102,35 @@ export const ITEMS: Record<string, ItemDef> = {
         id: 'sim-pedro', name: 'sim di pedro', icon: '📶', kind: 'amuleto', cost: 2,
         desc: 'il flow si ricarica da solo, piano piano. dentro c\'è ancora un po\' di lui.',
     },
+    /* le ricompense delle missioni dei passanti */
+    'biglietto-citelis': {
+        id: 'biglietto-citelis', name: 'abbonamento del citelis', icon: '🎫', kind: 'amuleto', cost: 1,
+        desc: 'corri un po\' più veloce e la scivolata torna prima. scaduto nel 2019, nessuno controlla.',
+    },
+    'pennello-copista': {
+        id: 'pennello-copista', name: 'pennello del copista', icon: '🖌️', kind: 'amuleto', cost: 1,
+        desc: 'i colpi fanno il 12% di danno in più. tratto pulito, coscienza sporca.',
+    },
+    'canna-pescatore': {
+        id: 'canna-pescatore', name: 'canna da pesca del rio', icon: '🎣', kind: 'amuleto', cost: 1,
+        desc: 'le barre arrivano da più lontano e ne cadono un po\' di più. abboccano solo i sacchetti.',
+    },
+    'grembiule-cuoco': {
+        id: 'grembiule-cuoco', name: 'grembiule dell\'aiuto-cuoco', icon: '🧑‍🍳', kind: 'amuleto', cost: 2,
+        desc: '+1 vita massima e ti curi più in fretta. macchiato di cose che è meglio non sapere.',
+    },
+    'casco-operaio': {
+        id: 'casco-operaio', name: 'caschetto del sindacato', icon: '⛑️', kind: 'amuleto', cost: 2,
+        desc: 'prendi un quarto di danno in meno. omologato per scioperi e crolli.',
+    },
+    'tesi-dottorando': {
+        id: 'tesi-dottorando', name: 'tesi del dottorando', icon: '📚', kind: 'amuleto', cost: 1,
+        desc: 'ogni colpo dà il 25% di flow in più. 400 pagine, nessuna conclusione.',
+    },
+    'catenina-maranza': {
+        id: 'catenina-maranza', name: 'catenina del maranza', icon: '🪙', kind: 'amuleto', cost: 1,
+        desc: 'i fendenti arrivano un po\' più lontano. finto oro, vera arroganza.',
+    },
 
     /* ---------- potenziamenti ---------- */
     tacca: {
@@ -189,6 +218,13 @@ export function charmMods(equipped: readonly string[]): CharmMods {
             case 'geco-portafortuna': m.barre *= 1.6; break;
             case 'cuore-vetro': m.damage *= 1.6; m.damageTaken *= 2; break;
             case 'sim-pedro': m.flowRegen += 4; break;
+            case 'biglietto-citelis': m.speed *= 1.08; m.dashCooldown *= 0.85; break;
+            case 'pennello-copista': m.damage *= 1.12; break;
+            case 'canna-pescatore': m.magnet *= 2; m.barre *= 1.2; break;
+            case 'grembiule-cuoco': m.maxHp += 1; m.healTime *= 0.8; break;
+            case 'casco-operaio': m.damageTaken *= 0.75; break;
+            case 'tesi-dottorando': m.flowPerHit *= 1.25; break;
+            case 'catenina-maranza': m.range *= 1.15; break;
         }
     }
     return m;

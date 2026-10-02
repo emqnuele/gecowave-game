@@ -21,6 +21,7 @@ import { npcTexture } from '../engine/npcTexture';
 import { NavGraph } from '../engine/nav/NavGraph';
 import { RegionGuide } from '../engine/RegionGuide';
 import { FolkManager } from '../engine/FolkManager';
+import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
 import { REGION_COUNT } from '../content/achievements';
@@ -160,6 +161,7 @@ export class GameScene extends Phaser.Scene {
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
     private guide: RegionGuide | null = null;
     private folk!: FolkManager;
+    private quests!: QuestManager;
     private atmosphere!: Atmosphere;
     private nextTrophyCheckAt = 0;
     /** lo scontro col boss in corso: se ti colpisce niente "intoccabile" */
@@ -382,6 +384,12 @@ export class GameScene extends Phaser.Scene {
             widthPx: this.level.widthPx,
         });
         this.interactables.push(...this.folk.talkables);
+        this.quests = new QuestManager(this, this.lighting, (lines, onEnd) => this.startLines(lines, onEnd));
+        this.quests.setup(this.def.id, this.layout, this.biome.accent, this.player, [
+            ...this.level.entities.filter((e) => e.spec.type !== 'enemy').map((e) => ({ x: e.x, y: e.y })),
+            ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y })),
+        ]);
+        this.interactables.push(...this.quests.talkables);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.folk.destroy());
         this.spawnDroppedBarre();
         this.setupColliders();
@@ -3264,6 +3272,7 @@ export class GameScene extends Phaser.Scene {
             }
         }
         state.save.record.kills++;
+        this.quests.onKill(kind);
         const total = Math.round(barre * state.mods.barre);
         const pieces = Math.max(1, Math.round(total / 5));
         for (let i = 0; i < pieces; i++) {

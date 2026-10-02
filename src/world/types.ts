@@ -60,6 +60,9 @@ export interface RegionLayout {
     /** coppie [vecchia x in celle, progresso sul percorso], ordinate per x:
         agguati e trigger del capitolo lineare si ritrovano nella regione */
     progressPairs: [number, number][];
+    /** posizioni in piedi verificate col geco simulato (colonna, riga, stanza):
+        missioni e oggetti messi qui sono sempre raggiungibili e mai trappole */
+    spots?: [number, number, number][];
 }
 
 /** progresso sul percorso corrispondente a una x del vecchio capitolo lineare */

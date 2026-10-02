@@ -23,6 +23,19 @@ function buildOne(id: string): boolean {
     const fixed = simRepair(region.def.grid, region.def.entities, region.layout, abilitiesFor(id));
     const v = fixed.verdict;
     const ok = r.exitReached && r.lostBeats === 0 && v.exit && v.stuck.length === 0 && v.missing.length === 0;
+    // fino a 4 posti per stanza, sparsi in larghezza, su aria libera con la testa libera
+    const rows = fixed.grid;
+    const spots: [number, number, number][] = [];
+    for (const room of region.layout.rooms) {
+        const R = room.rect;
+        const here = v.good.filter((g) => g.c > R.x && g.c < R.x + R.w - 1 && g.r > R.y && g.r < R.y + R.h - 1
+            && rows[g.r][g.c] === '.' && rows[g.r - 1][g.c] === '.' && rows[g.r + 1][g.c] === '#').sort((a, b) => a.c - b.c);
+        for (const k of [0.15, 0.4, 0.65, 0.9]) {
+            const s = here[Math.floor(k * (here.length - 1))];
+            if (s && !spots.some(([c, r]) => c === s.c && r === s.r)) spots.push([s.c, s.r, room.id]);
+        }
+    }
+    region.layout.spots = spots;
     const file = encodeRegion(def, fixed.grid, region.def.entities, region.layout);
     const json = JSON.stringify(file);
     console.log(

@@ -131,6 +131,8 @@ export interface SaveData {
     explored: Record<string, number[]>;
     /** fermate del citelis scoperte: "capitolo:microfono" */
     stops: string[];
+    /** missioni dei passanti: fase e contatore */
+    quests: Record<string, { s: 'attiva' | 'pronta' | 'fatta'; n: number }>;
     /** trofei sbloccati */
     achievements: string[];
     /** la modalità assistita è stata accesa almeno una volta in questa partita */

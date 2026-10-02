@@ -17,6 +17,8 @@ export interface SimVerdict {
     /** entità (non nemici) senza una posizione in piedi abbastanza vicina */
     missing: { c: number; r: number; what: string }[];
     states: number;
+    /** posizioni in piedi da cui l'uscita resta raggiungibile */
+    good: { c: number; r: number }[];
 }
 
 const ENTITY_FREE = '#.^~F%';
@@ -41,15 +43,18 @@ export function simVerify(grid: string[], entities: Record<string, EntitySpec>, 
         }
     });
     const start = settleAt(m, P.c, P.r, ab);
-    if (!start) return { exit: false, stuck: [], missing: [], states: 0 };
+    if (!start) return { exit: false, stuck: [], missing: [], states: 0, good: [] };
     const reach = simReach(m, start, ab);
     const pts: { k: number; x: number; y: number }[] = [];
     for (const [k, b] of reach.reached) pts.push({ k, x: b.x + BODY_W / 2, y: b.y + BODY_H / 2 });
     const exitKeys = pts.filter((p) => exits.some((e) => Math.abs(e.c * 32 + 16 - p.x) < 40 && Math.abs(e.r * 32 + 16 - p.y) < 48)).map((p) => p.k);
     const fin = canFinish(reach, exitKeys);
     const stuck: { c: number; r: number }[] = [];
+    const good: { c: number; r: number }[] = [];
     for (const [k, b] of reach.reached) {
-        if (!fin.has(k)) stuck.push({ c: Math.floor((b.x + BODY_W / 2) / 32), r: Math.round((b.y + BODY_H) / 32) - 1 });
+        const cell = { c: Math.floor((b.x + BODY_W / 2) / 32), r: Math.round((b.y + BODY_H) / 32) - 1 };
+        if (!fin.has(k)) stuck.push(cell);
+        else good.push(cell);
     }
     const missing = targets.filter((t) => {
         const x = t.c * 32 + 16;
@@ -57,7 +62,7 @@ export function simVerify(grid: string[], entities: Record<string, EntitySpec>, 
         const [rx, ry] = t.boss ? [420, 360] : [60, 64];
         return !pts.some((p) => Math.abs(p.x - x) < rx && Math.abs(p.y - y) < ry);
     }).map(({ c, r, what }) => ({ c, r, what }));
-    return { exit: exitKeys.length > 0, stuck, missing, states: reach.reached.size };
+    return { exit: exitKeys.length > 0, stuck, missing, states: reach.reached.size, good };
 }
 
 function roomOf(layout: RegionLayout, c: number, r: number): Room | null {

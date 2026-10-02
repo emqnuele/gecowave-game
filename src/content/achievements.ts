@@ -1,4 +1,5 @@
 import type { SaveData } from '../types';
+import { QUESTS } from './quests';
 
 /* i trofei del realm: si sbloccano solo senza modalità assistita.
    quelli segreti restano ??? finché non li prendi */
@@ -16,6 +17,7 @@ export interface AchievementDef {
 const flag = (f: string) => (s: SaveData) => s.flags.includes(f);
 
 export const REGION_COUNT = 20;
+const QUEST_TOTAL = QUESTS.length;
 
 export const ACHIEVEMENTS: AchievementDef[] = [
     // la strada principale
@@ -55,6 +57,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     { id: 'cartografo', icon: '🗺️', name: 'cartografo', desc: 'esplora ogni stanza di una regione.' },
     { id: 'gecografo', icon: '🧭', name: 'gecografo', desc: 'esplora ogni stanza di tutte le regioni.' },
     { id: 'chiacchierone', icon: '💬', name: 'chiacchierone', desc: 'fai due chiacchiere con 25 passanti.', check: (s) => s.record.talks >= 25 },
+    { id: 'buon-samaritano', icon: '🤝', name: 'buon samaritano', desc: 'completa 5 missioni dei passanti.', check: (s) => Object.values(s.quests).filter((q) => q.s === 'fatta').length >= 5 },
+    { id: 'tuttofare', icon: '🧰', name: 'tuttofare del realm', desc: 'completa tutte le missioni dei passanti.', check: (s) => Object.values(s.quests).filter((q) => q.s === 'fatta').length >= QUEST_TOTAL },
     // combattimento
     { id: 'intoccabile', icon: '🛡️', name: 'intoccabile', desc: 'batti un boss di trama senza farti colpire.' },
     { id: 'sterminatore', icon: '💀', name: 'sterminatore', desc: 'sconfiggi 300 nemici.', check: (s) => s.record.kills >= 300 },

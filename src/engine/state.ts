@@ -49,6 +49,7 @@ const defaultSave = (): SaveData => ({
     radio: null,
     explored: {},
     stops: [],
+    quests: {},
     achievements: [],
     assisted: false,
     scores: {},
