@@ -19,6 +19,7 @@ import { oldXToProgress, type RegionLayout, type Room } from '../world/types';
 import { npcTexture } from '../engine/npcTexture';
 import { NavGraph } from '../engine/nav/NavGraph';
 import { RegionGuide } from '../engine/RegionGuide';
+import { FolkManager } from '../engine/FolkManager';
 import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
@@ -29,7 +30,7 @@ import { Boss } from '../entities/Boss';
 import { Companion } from '../entities/Companion';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
-import type { AbilityId, BossKind, EnemyKind, LevelDef } from '../types';
+import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
 
 interface SceneData {
     levelId: string;
@@ -154,6 +155,7 @@ export class GameScene extends Phaser.Scene {
     private nextAnalisiTick = 0;
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
     private guide: RegionGuide | null = null;
+    private folk!: FolkManager;
     private guideGfx!: Phaser.GameObjects.Graphics;
     private guideText!: Phaser.GameObjects.Text;
     private lastRoom = -1;
@@ -353,6 +355,17 @@ export class GameScene extends Phaser.Scene {
 
         this.spawnEntities();
         this.spawnCheckpoints();
+        this.folk = new FolkManager(this, this.nav, (lines) => this.startLines(lines));
+        this.folk.populate({
+            seed: this.def.id,
+            biomeId: this.biome.id,
+            eye: this.biome.accent,
+            layout: this.layout,
+            avoid: this.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'boss').map((e) => ({ x: e.x, y: e.y })),
+            widthPx: this.level.widthPx,
+        });
+        this.interactables.push(...this.folk.talkables);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.folk.destroy());
         this.spawnDroppedBarre();
         this.setupColliders();
         this.setupEvents();
@@ -1709,6 +1722,7 @@ export class GameScene extends Phaser.Scene {
         this.magnetBarre();
         this.updateClone(time, delta);
         this.updateHoming(delta);
+        this.folk.update(time, delta, this.player, this.threats(), !!this.boss?.engaged);
         this.updateArenaLock(time);
         this.updateExplore();
         this.updateGuide(time);
@@ -2169,7 +2183,7 @@ export class GameScene extends Phaser.Scene {
         const body = this.player.body as Phaser.Physics.Arcade.Body;
         if (Math.abs(body.velocity.x) < 30 && body.blocked.down) {
             const far = next.rooms > 0 ? ` · ${next.rooms} stanz${next.rooms === 1 ? 'a' : 'e'}` : '';
-            this.guideText.setText(`${goal.label}${far}`).setPosition(this.player.x, this.player.y - 58).setAlpha(pulse + 0.2).setVisible(true);
+            this.guideText.setText(`${goal.label}${far}`).setPosition(this.player.x, this.player.y + 44).setAlpha(pulse + 0.2).setVisible(true);
         }
     }
 
@@ -3389,8 +3403,23 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
+    /** chi è sveglio e cattivo, per i passanti che devono scappare */
+    private threats(): { x: number; y: number }[] {
+        const out: { x: number; y: number }[] = [];
+        for (const child of this.enemies.getChildren()) {
+            const e = child as Enemy;
+            if (e.active && !e.dormant && (e.mode === 'chase' || e.mode === 'alert')) out.push({ x: e.x, y: e.y });
+        }
+        if (this.chaseSprite?.active) out.push({ x: this.chaseSprite.x, y: this.chaseSprite.y });
+        return out;
+    }
+
     private startDialogue(id: string, onEnd?: () => void): void {
-        const lines = DIALOGUES[id];
+        this.startLines(DIALOGUES[id], onEnd);
+    }
+
+    /** dialogo con righe costruite al volo (i passanti) */
+    private startLines(lines: DialogueLine[] | undefined, onEnd?: () => void): void {
         if (!lines) {
             onEnd?.();
             return;
