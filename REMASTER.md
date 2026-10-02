@@ -61,3 +61,18 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 - migliorare la trama del gioco enormemente, più scelte, più conseguenze, più misteri, più colpi di scena, più emozioni. in generale attualmente è molto sloppy e poco soddisfacente, non dobbiamo riscrivere tutto ma dobbiamo renderlo più coerente, più profondo, più interessante, più divertente, più emozionante. abbiamo bisogno di una storia da film da gioco di serie A.
 
 **stato fase 5**: finale vero "riscatto" ✅: al nucleo, chi ha visto i ricordi di pedro può ricordargli il giorno 30; con le cinque verità del void pedro capisce di essere stato usato e si combatte il glitch (l'ordine di lametta) invece di lui; con il caso chiuso romero arresta gli dei; le wave si possono affidare a pedro redento. così caso, ricordi e void pagano davvero. archi secondari ✅: il quaderno strappato di pedro (5 pagine, il custode l'ha scelto lui), il pensiero sepolto di piema (cancellarlo come fece lui o portarlo fuori come prova: cambia void e processo), notino a casa o disarmato, lochef arrestato o libero, romero e il caffè, gli ospiti della piazza che dipendono dalle scelte. lore ambientale ✅: 80 note, una piccola storia in 4 parti per regione. finali estesi ✅: una riga per ogni conseguenza.
+
+
+fase 6:
+
+
+migliorare i boss e mostri. migliorare le loro texture e come sono fatti. sono molto minimali e bruttini attualmente. sempre in stile del gioco e con shader coerenti ecc..
+
+
+musica ovattata + eco quando si è sottoterra.
+
++effetti particolari sfx per ogni scenario/livello e situazione che adattano musica e ogni cosa. tipo eco, ecc..
+
+molto importante queste cose !!!
+
+in generale migliore le texture dei nemici, boss ecc.. e gli sfx
