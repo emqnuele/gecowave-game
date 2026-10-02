@@ -132,7 +132,8 @@ async function boot(): Promise<void> {
         // pedro (patto) e sconfitta (sfida agli dei persa) sono game over definitivi
         const lose = id === 'pedro' || id === 'sconfitta';
         const title =
-            id === 'consegna' ? 'HAI SALVATO IL GECOREALM'
+            id === 'riscatto' ? 'STORTO NON VUOL DIRE ROTTO'
+            : id === 'consegna' ? 'HAI SALVATO IL GECOREALM'
             : id === 'dei' ? 'ORA IL GECOREALM È TUO'
             : id === 'pedro' ? 'GLI DEI TI HANNO RAGGIUNTO'
             : 'IL REALM CONTINUA. TU NO.';

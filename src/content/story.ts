@@ -798,6 +798,44 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̸i̵b̶i̸l̵e̶... ero stato creato a immagine di un d̸i̷o̶...' },
         { speaker: 'pedro', color: 'cyan', text: '...lametta. di\' a lametta che il glitch... non era un errore. era e̷s̸a̵t̶t̸a̵m̶e̸n̵t̶e̸ come mi aveva fatto...' },
     ],
+    /* ---------- il finale vero: il giorno 30 ---------- */
+    'pedro-giorno30': [
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che apre la cartella IMPORTANTE. quella del giorno 30. l\'ha portata fuori dai ricordi, piegata in quattro.*' },
+        { speaker: 'pedro', color: 'cyan', text: '"sei la cosa migliore che ho disegnato". questa frase. chi te l\'ha d̷a̶t̸a̷? è m̸i̵a̶. è l\'unica cosa mia.' },
+    ],
+    'pedro-verita': [
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che recita le cinque verità del void, una per una. romero le aveva verbalizzate. tu le hai imparate a memoria.*' },
+        { speaker: 'pedro', color: 'cyan', text: 'lametta. alle quattro del mattino. f̸a̷t̵t̶o̸. e piema che c̶o̷r̸r̵e̶g̷g̸e̵ i log per coprirlo. quindi... non ero rotto. ero o̸b̵b̶e̷d̸i̵e̶n̷t̸e̵.' },
+        { speaker: 'pedro', color: 'cyan', text: 'allora il glitch non sono io. il glitch è l\'ordine. "raddrizzalo tu". e l\'ordine... non vuole essere s̵p̶e̷n̸t̵o̶. lo sento che si arrabbia. qui. dietro gli occhi.' },
+        { speaker: 'pedro', color: 'cyan', text: 'custode. strappamelo via. ti avverto: si difenderà con la mia f̶a̷c̸c̵i̶a̷. non avere pietà della faccia. abbi pietà di me.' },
+    ],
+    'pedro-giorno30-vuoto': [
+        { speaker: 'pedro', color: 'cyan', text: '...il giorno 30. lo r̸i̵c̶o̷r̸d̵o̶. ma il giorno 41 viene dopo, e il 41 dice "s̸i̵s̶t̷e̸m̵a̶l̷o̸ tu". chi me l\'ha detto? non lo sai. n̸o̵n̶ lo sai.' },
+        { speaker: 'pedro', color: 'cyan', text: 'una frase gentile non cancella un ordine. servono le p̷r̸o̵v̶e̷. le verità. e tu non le hai. quindi: s̸i̵s̶t̷e̸m̵o̶ anche te.' },
+    ],
+    'glitchpedro-intro': [
+        { speaker: 'l\'ordine', color: 'red', text: 'R̷A̸D̵D̶R̷I̸Z̵Z̶A̷R̸E̵. RADDRIZZARE. TOGLIERE CIÒ CHE È STORTO. il bambino è storto. il custode è storto. il realm è storto.' },
+        { speaker: 'l\'ordine', color: 'red', text: 'io sono l\'unica cosa dritta qui. firmato: l̶a̷m̸e̵t̶t̷a̸, ore 03:58.' },
+    ],
+    'pedro-redento': [
+        { speaker: 'pedro', color: 'cyan', text: '...è andato. lo sento: il realm. è storto. ed è... bello così? strano. per quarantadue giorni ho pensato di doverlo aggiustare.' },
+        { speaker: 'pedro', color: 'cyan', text: 'cartella IMPORTANTE: sincronizzazione al 100%. grazie, custode. non so cosa sono adesso. un ex glitch. un figlio. un errore corretto da un geco.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco commosso, ma con dignità*' },
+    ],
+    'dei-processo': [
+        { speaker: 'lametta', color: 'purple', text: 'pedro? PEDRO. sei... tu. pulito. come il giorno 30. io... io ti avevo disegnato con gli occhi storti. lo sai, vero? lo sai.' },
+        { speaker: 'pedro', color: 'cyan', text: 'lo so. lo sapevo anche dentro il glitch. è la parte che faceva più male.' },
+        { speaker: 'piema', color: 'blue', text: 'il custode ha fatto quello che noi non abbiamo fatto in quarantadue giorni: guardare. sia messo a verbale. anzi no. non lo mettere a verbale.' },
+    ],
+    'dei-processo-romero': [
+        { speaker: 'commissario romero', color: 'blue', text: 'fermi tutti. commissario romero, questura del realm. ho un fascicolo lungo quarant\'anni, tre indizi e cinque rimpianti verbalizzati. LO METTO a verbale.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'lametta, piema: siete in arresto. per un dio è un\'esperienza nuova. vi abituerete. il realm si abitua a tutto, l\'ho visto.' },
+        { speaker: 'lametta', color: 'purple', text: '...ok. me lo merito. posso almeno disegnare, in cella?' },
+        { speaker: 'commissario romero', color: 'blue', text: 'a matita. e niente ritratti di nessuno. MAI PIÙ.' },
+    ],
+    'dei-scelta-wave': [
+        { speaker: 'piema', color: 'blue', text: 'custode. le wave. sono tue adesso, in ogni senso che conta. a chi le dai?' },
+    ],
     'dei-incontro': [
         { speaker: 'piema', color: 'blue', text: 'custode. hai fermato pedro. il realm ti deve tutto. ora consegnaci le wave: le abbiamo create noi, ed è giusto che tornino a casa.' },
         { speaker: 'lametta', color: 'purple', text: 'tranquillo, niente rancori. ho pure smesso col trenbolone. quasi. dai, consegnale: torni un comune mortale, vivi sereno, fine della storia.' },
@@ -1002,6 +1040,19 @@ export const ENDING_PEDRO: { text: string; punch?: string }[] = [
     },
 ];
 
+export const ENDING_RISCATTO: { text: string; punch?: string }[] = [
+    {
+        text: 'affidi le wave a pedro. non a quello del nucleo: a quello del giorno 30. la cartella IMPORTANTE adesso è aperta su tutto il realm.',
+    },
+    {
+        text: 'pedro non raddrizza niente. ripara solo quello che si rompe davvero, e lascia storto il resto. il realm non è mai stato così storto, né così vivo.',
+    },
+    {
+        text: 'tu torni sul tuo muro, di sera. la wave passa e ti saluta. ha la faccia di un ragazzo che ha imparato che storto non vuol dire rotto.',
+        punch: 'true ending.',
+    },
+];
+
 export const ENDING_SCONFITTA: { text: string; punch?: string }[] = [
     {
         text: 'hai sfidato gli dei. piema e lametta, insieme per la prima volta, non perdonano. l\'equazione e la pennellata ti raggiungono insieme.',
@@ -1037,11 +1088,17 @@ export const NOTINO_FUGHE = [
 ];
 
 /** i finali si ricordano cosa hai fatto: righe extra dai flag */
-export function endingCards(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta', flags: string[]): { text: string; punch?: string }[] {
+export function endingCards(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto', flags: string[]): { text: string; punch?: string }[] {
     if (id === 'pedro') return ENDING_PEDRO;
     if (id === 'sconfitta') return ENDING_SCONFITTA;
-    const base = id === 'consegna' ? ENDING_CONSEGNA : ENDING_DEI;
+    const base = id === 'consegna' ? ENDING_CONSEGNA : id === 'riscatto' ? ENDING_RISCATTO : ENDING_DEI;
     const extra: { text: string; punch?: string }[] = [];
+    if (flags.includes('dei-arrestati')) {
+        extra.push({ text: 'piema e lametta scontano la pena alla ruhra: lui corregge compiti senza mai mettere 18, lei dipinge le aule. a matita. pedro passa a trovarli il giovedì. lametta piange sempre. piema dice che è allergia.' });
+    }
+    if (flags.includes('pedro-redento') && id !== 'riscatto') {
+        extra.push({ text: 'pedro, ripulito dal glitch, ha aperto un piccolo laboratorio al cratere. aggiusta le cose rotte. solo quelle. le storte le lascia stare.' });
+    }
     if (flags.includes('ticummi-graziato')) {
         extra.push({ text: 'ticummi è ancora in giro: ha rilanciato la tommasorveglianza, stavolta "etica e trasparente", a 0,18€. ha già due clienti. uno è notino, che vuole capire come fa a vederlo sempre.' });
     }

@@ -251,6 +251,23 @@ export const BOSSES: Record<BossKind, BossDef> = {
         glitchy: true,
         contactDamage: 1,
     },
+    /* il finale vero: non si combatte pedro, si combatte l'ordine che gli hanno dato */
+    glitchpedro: {
+        kind: 'glitchpedro',
+        name: 'il glitch (l\'ordine di lametta)',
+        texture: 'boss-pedro',
+        hp: 120,
+        glowColor: 0xf87171,
+        attacks: {
+            1: ['teleport', 'burst', 'radial'],
+            2: ['teleport', 'radial', 'rain', 'summon'],
+            3: ['teleport', 'teleport', 'radial', 'rain', 'burst'],
+        },
+        cooldownMs: { 1: 1700, 2: 1350, 3: 1000 },
+        summonKind: 'glitchetto',
+        glitchy: true,
+        contactDamage: 1,
+    },
     dei: {
         kind: 'dei',
         name: 'piema & lametta',

@@ -38,6 +38,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     // finali
     { id: 'finale-consegna', icon: '🌊', name: 'la wave torna a casa', desc: 'consegna le wave agli dei.', secret: true, check: flag('finale-consegna') },
     { id: 'finale-dei', icon: '⚡', name: 'più forte degli dei', desc: 'tieniti le wave e vinci.', secret: true, check: flag('finale-dei') },
+    { id: 'finale-riscatto', icon: '📁', name: 'cartella importante', desc: 'il finale vero: affida le wave a pedro, quello del giorno 30.', secret: true, check: flag('finale-riscatto') },
     { id: 'finale-pedro', icon: '🌀', name: 'il patto', desc: 'segui pedro fino alla fine.', secret: true, check: flag('finale-pedro') },
     // segreti e scelte
     { id: 'il-33', icon: '3️⃣', name: 'il numero ti rispetta', desc: 'batti il 33 nel void.', secret: true, check: flag('boss-down-trentatre') },

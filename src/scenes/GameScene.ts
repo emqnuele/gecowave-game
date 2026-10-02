@@ -81,6 +81,7 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     istruttore: 'istruttore-intro',
     annascrivania: 'annascrivania-intro',
     walter: 'walter-boss-intro',
+    glitchpedro: 'glitchpedro-intro',
 };
 
 /* l'ordine dei rimpianti nel void: ad ognuno la sua verità */
@@ -189,6 +190,8 @@ export class GameScene extends Phaser.Scene {
     private colorDropsTaken = 0;
     private mirror: Phaser.GameObjects.Sprite | null = null;
     private pedroChoiceShown = false;
+    /** pedro spento mentre combatti il suo glitch */
+    private pedroShell: Boss | null = null;
     // il patto con pedro: potere vero, poi arrivano gli dei
     private pattoActive = false;
     // scontro finale con gli dei dopo aver rifiutato di consegnare le wave:
@@ -280,6 +283,7 @@ export class GameScene extends Phaser.Scene {
         this.colorDropsTaken = 0;
         this.bossIntroShown = false;
         this.pedroChoiceShown = false;
+        this.pedroShell = null;
         this.pattoActive = false;
         this.finalGodsFight = false;
         this.pattoWarned = 0;
@@ -2485,15 +2489,16 @@ export class GameScene extends Phaser.Scene {
             // se hai camminato nei suoi ricordi, pedro lo sa. e gli pesa.
             const incontro = state.hasFlag('ricordi-visti') ? 'pedro-incontro-ricordi' : 'pedro-incontro';
             this.startDialogue(incontro, () => {
+                // chi ha camminato nei ricordi ha una terza strada: la cartella del giorno 30
+                const options = [{ label: 'seguilo: stats raddoppiate', danger: true }, { label: 'contrastalo' }];
+                if (state.hasFlag('ricordi-visti')) options.push({ label: 'ricordagli il giorno 30' });
                 bus.emit('choice-show', {
                     title: 'pedro aspetta una risposta.',
-                    options: [{ label: 'seguilo: stats raddoppiate', danger: true }, { label: 'contrastalo' }],
+                    options,
                     onPick: (i) => {
-                        if (i === 0) {
-                            this.startPatto();
-                        } else {
-                            this.boss?.engage();
-                        }
+                        if (i === 0) this.startPatto();
+                        else if (i === 2) this.giorno30();
+                        else this.boss?.engage();
                     },
                 });
             });
@@ -3496,29 +3501,16 @@ export class GameScene extends Phaser.Scene {
                 this.onVeritaRivelata(VOID_REGRETS.indexOf(kind));
                 break;
             case 'pedro':
-                this.startDialogue('pedro-sconfitto', () => {
-                    this.startDialogue('dei-incontro', () => {
-                        bus.emit('choice-show', {
-                            title: 'le wave tornano a chi le ha create?',
-                            options: [{ label: 'consegna le wave' }, { label: 'tienitele. sfida gli dei.', danger: true }],
-                            onPick: (i) => {
-                                if (i === 0) {
-                                    this.scene.pause();
-                                    bus.emit('ending', { id: 'consegna' });
-                                } else {
-                                    this.startDialogue('dei-rifiuto', () => {
-                                        this.finalGodsFight = true;
-                                        this.boss = this.makeBoss(x, y - 40, 'dei');
-                                        this.lighting.follow(this.boss, 0xffffff, 320, 1.1);
-                                        this.setupBossColliders();
-                                        this.boss.engage();
-                                    });
-                                }
-                            },
-                        });
-                    });
-                });
+                this.startDialogue('pedro-sconfitto', () => this.sceltaFinale(x, y, false));
                 break;
+            case 'glitchpedro': {
+                // il glitch si strappa via: pedro torna in sé
+                const shell = this.pedroShell;
+                if (shell?.scene) this.tweens.add({ targets: shell, alpha: 1, duration: 900 });
+                state.setFlag('pedro-redento');
+                this.startDialogue('pedro-redento', () => this.sceltaFinale(x, y, true));
+                break;
+            }
             case 'dei':
                 this.time.delayedCall(800, () => {
                     this.scene.pause();
@@ -3526,6 +3518,77 @@ export class GameScene extends Phaser.Scene {
                 });
                 break;
         }
+    }
+
+    /** il finale vero comincia qui: con le verità del void pedro si ferma e il nemico diventa l'ordine */
+    private giorno30(): void {
+        this.startDialogue('pedro-giorno30', () => {
+            if (!state.hasFlag('void-concluso')) {
+                this.startDialogue('pedro-giorno30-vuoto', () => this.boss?.engage());
+                return;
+            }
+            this.startDialogue('pedro-verita', () => {
+                const pedro = this.boss;
+                if (!pedro) return;
+                const { x, y } = pedro;
+                this.boss = null;
+                this.add.particles(x, y, 'p-spark', { speed: { min: 80, max: 260 }, scale: { start: 1.2, end: 0 }, tint: [0x22d3ee, 0xf87171], lifespan: 600, quantity: 30, stopAfter: 30 });
+                this.tweens.add({ targets: pedro, alpha: 0.35, duration: 500 });
+                // pedro resta lì, spento, mentre il glitch esce da lui
+                pedro.engaged = false;
+                pedro.setActive(false);
+                (pedro.body as Phaser.Physics.Arcade.Body).enable = false;
+                this.pedroShell = pedro;
+                this.boss = this.makeBoss(x + 160, y - 60, 'glitchpedro');
+                this.bossIntroShown = false;
+                this.lighting.follow(this.boss, this.boss.def.glowColor, 300, 1.1);
+                this.setupBossColliders();
+                this.shake(500, 0.012);
+            });
+        });
+    }
+
+    /** le wave dopo il finale vero: agli dei, a te, o a pedro */
+    private sceltaFinale(x: number, y: number, redento: boolean): void {
+        const after = () => {
+            const options = [{ label: 'consegna le wave agli dei' }, { label: 'tienitele. sfida gli dei.', danger: true }];
+            if (redento) options.push({ label: 'affidale a pedro, quello del giorno 30' });
+            bus.emit('choice-show', {
+                title: 'le wave tornano a chi le ha create?',
+                options,
+                onPick: (i) => {
+                    if (i === 0) {
+                        this.scene.pause();
+                        bus.emit('ending', { id: 'consegna' });
+                    } else if (i === 2) {
+                        this.scene.pause();
+                        bus.emit('ending', { id: 'riscatto' });
+                    } else {
+                        this.startDialogue('dei-rifiuto', () => {
+                            this.finalGodsFight = true;
+                            this.boss = this.makeBoss(x, y - 40, 'dei');
+                            this.lighting.follow(this.boss, 0xffffff, 320, 1.1);
+                            this.setupBossColliders();
+                            this.boss.engage();
+                        });
+                    }
+                },
+            });
+        };
+        if (!redento) {
+            this.startDialogue('dei-incontro', after);
+            return;
+        }
+        this.startDialogue('dei-processo', () => {
+            if (state.hasFlag('caso-risolto')) {
+                this.startDialogue('dei-processo-romero', () => {
+                    state.setFlag('dei-arrestati');
+                    this.startDialogue('dei-scelta-wave', after);
+                });
+            } else {
+                this.startDialogue('dei-scelta-wave', after);
+            }
+        });
     }
 
     /** colliders per un boss evocato dopo il create (gli dei) */

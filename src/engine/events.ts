@@ -15,7 +15,7 @@ export interface GameEvents {
     'ability-unlocked': { ability: AbilityId };
     'boss-hp': { hp: number; maxHp: number; name: string } | null;
     'choice-show': { title: string; options: { label: string; danger?: boolean }[]; onPick: (index: number) => void };
-    'ending': { id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' };
+    'ending': { id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto' };
     'doomsday-changed': { value: number; active: boolean };
     'request-pause': {};
     'inventory-changed': {};

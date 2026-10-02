@@ -35,7 +35,7 @@ export type EnemyKind =
     | 'fiattipo';
 
 export type BossKind =
-    | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite'
+    | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite' | 'glitchpedro'
     | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto'
     | 'danjilo' | 'smela' | 'settequaranta' | 'custode'
     | 'delegato' | 'notturno' | 'modello' | 'revisore' | 'garante'
