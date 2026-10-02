@@ -349,10 +349,11 @@
 }
 
 .phone-clock {
-  font-family: var(--font-crisis);
+  font-family: var(--font-fell);
+  font-weight: 400;
   font-size: 64px;
   line-height: 0.95;
-  color: #fff;
+  color: var(--sx-bone);
   text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
   font-variant-numeric: tabular-nums;
 }
@@ -403,9 +404,10 @@
 }
 
 .home-widget .w-waves {
-  font-family: var(--font-crisis);
-  font-size: 13px;
-  color: #fff;
+  font-family: var(--font-fell);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--sx-bone);
 }
 
 .home-widget:focus-visible {
@@ -578,9 +580,10 @@
 
 .phone-section {
   margin: 18px 0 8px;
-  font-family: var(--font-marker);
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-fell);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: var(--sx-bone);
 }
 
 .phone-row {
@@ -622,9 +625,10 @@ button.phone-row {
 }
 
 .phone-row .name {
-  font-family: var(--font-marker);
-  font-size: 14px;
-  color: #fff;
+  font-family: var(--font-fell);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: var(--sx-bone);
 }
 
 .phone-row .preview {
@@ -660,8 +664,9 @@ button.phone-row {
 .phone-tab {
   cursor: pointer;
   padding: 6px 13px;
-  font-family: var(--font-martian);
-  font-size: 10px;
+  font-family: var(--font-fell);
+  font-size: 12px;
+  letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.55);
 }
 
@@ -674,9 +679,11 @@ button.phone-row {
   max-width: 86%;
   padding: 10px 13px;
   margin: 0 0 10px;
-  font-size: 11px;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
   line-height: 1.6;
-  color: var(--zinc-300);
+  color: #cfc6b0;
   border-radius: 16px 16px 16px 4px;
 }
 
@@ -712,8 +719,10 @@ button.phone-row {
 }
 
 .call-name {
-  font-family: var(--font-crisis);
-  font-size: 24px;
+  font-family: var(--font-fell);
+  font-size: 26px;
+  letter-spacing: 0.08em;
+  color: var(--sx-bone);
 }
 
 .call-state {
@@ -738,11 +747,10 @@ button.phone-row {
 .phone-btn {
   cursor: pointer;
   padding: 9px 18px;
-  font-family: var(--font-martian);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: #fff;
+  font-family: var(--font-fell);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--sx-bone);
   transition: transform 0.15s ease;
 }
 
@@ -858,10 +866,10 @@ button.phone-row {
 }
 
 .detail .name {
-  font-family: var(--font-marker);
-  font-size: 17px;
-  color: #fff;
-  transform: rotate(-1deg);
+  font-family: var(--font-fell);
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  color: var(--sx-bone);
 }
 
 .detail p {
@@ -1010,9 +1018,10 @@ button.phone-row {
 }
 
 .player-card .pname {
-  font-family: var(--font-crisis);
-  font-size: 22px;
-  color: #fff;
+  font-family: var(--font-fell);
+  font-size: 24px;
+  letter-spacing: 0.08em;
+  color: var(--sx-bone);
 }
 
 /* ---------- radio ---------- */
@@ -1024,8 +1033,9 @@ button.phone-row {
 }
 
 .now-playing .freq {
-  font-family: var(--font-crisis);
-  font-size: 30px;
+  font-family: var(--font-fell);
+  font-size: 32px;
+  letter-spacing: 0.08em;
   color: var(--yellow);
   line-height: 1;
 }
