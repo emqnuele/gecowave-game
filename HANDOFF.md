@@ -132,7 +132,7 @@ Il tilemap resta **invisibile, solo per le collisioni**; tutta la grafica è nuo
 - `src/ui/screens.ts`: card "amuleto trovato" su `charm-found`; comandi aggiornati.
 - `editor/src/lib/catalog.ts` e `serialize.ts` supportano il tipo `item`.
 
-### Fase 3a — generatore di regioni (committato, NON ancora usato dal gioco)
+### Fase 3a — generatore di regioni (committato, collegato al gioco in `da60103`)
 Cartella `src/world/` (pura TS, niente Phaser: gira in Node):
 
 | file | ruolo |
@@ -175,7 +175,7 @@ Cartella `src/world/` (pura TS, niente Phaser: gira in Node):
 9. Report finale (`exitReached`, `lostBeats`, `stuck`, `stuckFull`), poi scrittura delle lettere con `force`. `layout` include `rooms`, `doors`, `pathLength`, `horizonRow` (pavimento medio in superficie) e `oldXToProgress` (interpolazione vecchia x → progresso sul percorso, per gli agguati).
 10. `GEN_DEBUG`: `skipCarve`, `skipRepair`, `trace(g, room, label)`, `onSkeletonFail`.
 
-**Stato attuale** (`scripts/world/run.sh report all 1`): tutte le 20 regioni hanno `exitReached: true` e `lostBeats: 0`; 17 hanno `stuck: 0` al primo tentativo e barrato arriva a 0 al secondo. Restano vicoli ciechi **solo in perduta e bus** (mosse BASIC/DASH, prima del doppio salto): ~460/~280 celle al tentativo 0, ~80–190 anche dopo 40 tentativi. `stuckFull` è sempre 0. Tempi 0.1–3.5 s per regione.
+**Stato attuale** (`scripts/world/run.sh report all 1`): tutte le 20 regioni escono pulite **al primo tentativo**: uscita raggiungibile, nessun beat perso, `stuck` e `stuckFull` a 0. Superficie camminabile (posizioni in piedi raggiungibili, `scripts/world/run.sh sizes`): **10.1× il gioco vecchio** in totale, da 5.7× (santuario) a 41× (barrato).
 
 **Strumenti offline** (in `scripts/world/`, si lanciano con `scripts/world/run.sh <nome> [args]`, che usa esbuild + node; nessuna dipendenza nuova):
 - `report [id|all] [tentativi]`: report per regione;
@@ -194,21 +194,34 @@ Cartella `src/world/` (pura TS, niente Phaser: gira in Node):
 - I pozzi (shaft) con mensole a tutta larghezza distanti 3 righe sono invalicabili: servono sporgenze alternate da un lato solo (45% della larghezza).
 - Il validatore dei salti: l'apice coincide con la quota d'arrivo (i valori di rise/run sono già prudenti rispetto alla fisica vera: salto 3.75 celle, doppio +2.8, dash ~4 celle).
 - Il debug con il modello di mosse sbagliato inganna: perduta è BASIC, bus DASH, il resto FULL.
+- Una stanza "chiusa dal doppio salto" costruita tutta con mosse FULL è una trappola appena ci si entra da un varco alto (ci cadi dentro e non risali). Lo scheletro di ogni stanza è sempre percorribile con le mosse del capitolo; il cancello FULL sta solo sul ramo verso la stanza laterale successiva.
+- La verifica pessimistica vale solo **prima** dello scavo delle stanze. Le riparazioni dopo lo scavo verificano sulla griglia vera (`dig(..., { carved: true })`), altrimenti nessun piano "funziona" e si applica il ripiego alla cieca.
+- Le sporgenze degli shaft hanno il varco tra i lati entro `run - 1` delle mosse del capitolo.
 
 ---
 
 ## 4. Punto in cui ero (prossimo passo immediato)
-**Togliere i vicoli ciechi residui in perduta e bus**, poi integrare le regioni nel gioco. Idee per i vicoli ciechi, in ordine di preferenza:
-1. In `rooms.ts`, per le regioni BASIC/DASH: niente pozzi più profondi di 3 righe nei profili a gradini (`floorProfile`, i pits di `hall`) e cave meno profonde. Il tipo di mosse va passato a `carveRoom`.
-2. Post-processo: per ogni componente di celle `reached && !finishes`, riempire di roccia la fossa (alzare il pavimento delle colonne coinvolte fino al bordo più basso circostante), invece di scavare.
-3. Nella riparazione dei vicoli ciechi, usare `dig(..., mustWork=true)` e provare più destinazioni; oggi prende la `finishes` più vicina e se fallisce applica il piano di ripiego.
-4. Ultima spiaggia: più tentativi (offline il tempo non conta).
+Le regioni girano nel gioco (verificato con screenshot in superficie e sottoterra su perduta). Prossimi passi, in ordine:
+1. **Giocare davvero una regione** (con l'utente o a mano): controllare che trama, boss, agguati, inseguimenti della tana, arene del void e di walter scattino nel posto giusto. Tutta la logica posizionale ora passa da `progressAt`.
+2. **Mappa che si rivela** (punto 8 sotto): in una regione da 60 stanze senza mappa ci si perde.
+3. **Cancelli d'abilità veri**: oggi in perduta e bus quasi nessuna stanza laterale è chiusa dal doppio salto (1 su 27, `scripts/world/run.sh gates`), perché lo scavo aperto delle stanze aggira le scale FULL. Va progettato un cancello fisico (mensola alta, camino verticale) nel varco verso la stanza dopo, con verifica genera-e-testa (tolto se crea trappole). Da fare insieme alle nuove wave della Fase 4.
+4. Poi la 3b (mondo vivo) e la 3c (hub e bus).
 
 ---
 
 ## 5. Piano per completare la Fase 3 (come intendevo farlo)
 
 ### 3a — integrazione delle regioni nel gioco
+**Fatto (punti 1–7)**. Com'è stato fatto, dove diverge dal piano:
+- i JSON stanno in `public/regions/<id>.json` (non in `src/content`): li carica il `BootScene` con `load.json`, così il bundle resta leggero. `npm run regions` li rigenera (deterministico, ~15 s) e fallisce se una regione non è valida. Formato in `src/world/codec.ts` (righe RLE come coppie `[carattere, n]`, perché le cifre sono lettere della legenda); il campo `source` è l'impronta del capitolo vecchio e in dev avvisa se la regione è da rigenerare;
+- `src/world/registry.ts`: `loadRegion(scene, id)` unisce i metadati di `LEVELS` con griglia e legenda della regione; se il JSON manca si gioca il capitolo vecchio;
+- `RegionLayout.progressPairs` + `oldXToProgress(layout, x)` in `types.ts`;
+- `GameScene`: `layout`, `roomAt`, `progressAt` (le stanze laterali valgono il `pathIndex` dell'anchor), `progressOfOldX`, `openSpotNear` (comparse di notino, glitch e pedro del doomsday mai dentro la roccia). Le guide (romero, walter) nelle regioni fluttuano accanto al player dal lato dell'obiettivo; nei capitoli vecchi camminano come prima (`moveGuide`). Lo zoom era già 1.05 con livelli alti;
+- `RoomBackdrops`: parete di fondo del materiale scurito dietro ogni stanza chiusa, Light2D (le stanze della riga più alta lasciano intravedere il dipinto, alpha 0.62);
+- `TerrainRenderer`: chunk dipinti attorno alla camera (la vista subito, un pezzo di margine per frame, via oltre 3 pezzi). Ogni chunk ricava i contorni da una **finestra di celle** con 8 celle di margine: il contorno globale della roccia di una regione ha centinaia di migliaia di punti e usarlo come clip costava decine di ms a chunk. Il contorno globale serve solo alla vestizione, divisa per chunk. Build del terreno di perduta: 64 ms;
+- nemici dormienti (`Enemy.setDormant`, sveglia entro 1500×1000 px, sonno oltre 1800×1250); i tetti delle comparse (lametta, patto) contano solo i nemici svegli (`awakeEnemies`); luci dei props fino a 260 (phaser rende solo le più vicine alla camera).
+
+Piano originale, per riferimento:
 1. **Generazione offline in JSON**:
    - script `scripts/world/build-regions.ts` (via `run.sh`) che chiama `generateRegion(def, 40)` per ogni capitolo e scrive `src/content/regions/<id>.json`;
    - contenuto: griglia in RLE per riga, `entities` (legenda estesa), layout serializzabile (`rooms`, `doors`, `pathLength`, `horizonRow`, `progressPairs` al posto della funzione `oldXToProgress`, `slotW/H`, `macroW/H`, `cols/rows`);
@@ -226,8 +239,8 @@ Cartella `src/world/` (pura TS, niente Phaser: gira in Node):
 5. **Parallasse**: ancorare le strisce a `horizonRow*TILE` invece che al fondo livello (`ParallaxManager.build(..., levelHeight)` → `horizonY`). Sotto terra le strisce escono di scena; servono i **fondali delle stanze**: per le stanze non `surface`, una TileSprite del materiale scurito a depth −5 con Light2D, così le luci rivelano le pareti come in HK.
 6. **TerrainRenderer in streaming**: le regioni hanno ~190k celle, troppe per dipingere tutto. Contorni e vestizione si calcolano al build (misurare i tempi). I chunk si dipingono in `update(camera)` entro vista + margine, massimo 1–2 per frame, ed escono (destroy + rimozione texture) oltre circa 2 schermi.
 7. Prestazioni: nemici dormienti oltre ~1.5 schermi (niente update e body disabilitato); alzare il tetto di luci dei props (`LightingManager.prop`, oggi 40); verificare l'emitter `buildWater`.
-8. **Mappa che si rivela**: `SaveData.explored: Record<regionId, number[]>` (stanze visitate). L'app Mappa del telefono disegna le stanze del layout in scala (visitate piene, attuale evidenziata, icone di microfoni e boss), più la vista attuale dei capitoli. Opzionale, come Cornifer: mappa comprabile o trovabile per regione.
-9. Editor: oggi lavora sulle griglie vecchie (sorgente della trama). In futuro potrà aprire i JSON.
+8. **(da fare) Mappa che si rivela**: `SaveData.explored: Record<regionId, number[]>` (stanze visitate). L'app Mappa del telefono disegna le stanze del layout in scala (visitate piene, attuale evidenziata, icone di microfoni e boss), più la vista attuale dei capitoli. Opzionale, come Cornifer: mappa comprabile o trovabile per regione.
+9. **(da fare)** Editor: oggi lavora sulle griglie vecchie (sorgente della trama). In futuro potrà aprire i JSON.
 
 ### 3b — mondo vivo e pericoloso
 - `Wanderer`: npc ambientali che camminano, restano fermi, dicono battute a fumetto quando ti avvicini e scappano se combatti vicino.
