@@ -94,8 +94,9 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - Musica per ora del giorno: passa-basso WebAudio condiviso (`music.setNight`), da 20 kHz a 1,6 kHz su scala logaritmica; spento durante i boss. Se WebAudio fallisce la musica suona senza filtro.
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
-### In corso
-- Rigenerazione completa delle regioni con simulatore corretto (bug del blocco del salto dal muro non azzerato) e controllo dei boss per stanza.
+### In corso / aperto
+- **ricordi**: con il simulatore corretto la rigenerazione fallisce (24 stati bloccati in una conca profonda nella caverna laterale 29, colonne ~572-588, righe ~199-205). Resta in gioco la versione precedente, generata col simulatore vecchio: la conca è probabilmente presente anche lì. Il riempimento a strati è stato provato e scartato (peggiora di uno stato e il giro si ferma). Strade possibili: scaletta di mensole a zig-zag nella conca, oppure un altro seme per ricordi (`attemptRegion` usa `region:<id>:<tentativo>`). Analisi: `KEEP_FAIL=1 scripts/world/run.sh build-regions ricordi` poi `REGION_FILE=/tmp/ricordi.fail.json scripts/world/run.sh simstuck ricordi`.
+- **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
 ### Da fare
 - Piattaforme che crollano, allagamenti.

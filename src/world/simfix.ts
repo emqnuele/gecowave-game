@@ -120,9 +120,6 @@ export function simRepair(grid: string[], entities: Record<string, EntitySpec>, 
                 for (const o of group) {
                     for (const y of [o.r, o.r - 1]) if (g.get(o.c, y) === AIR) g.force(o.c, y, '#');
                 }
-            } else if (!fixed) {
-                // una conca grande si colma a strati: una riga per giro, poi si riverifica
-                for (const o of group) if (g.get(o.c, o.r) === AIR) g.force(o.c, o.r, '#');
             }
         }
         // le lettere tornano al loro posto; se la roccia le ha coperte salgono finché trovano aria

@@ -319,6 +319,7 @@ Feedback dell'utente: mappe irrisolvibili, boss/meccaniche/npc che non funzionan
 - Il log tecnico dettagliato con le decisioni (ADR) è in `DEV_LOG.md`.
 
 ### Prossimi passi
+0. Ricordi non passa la verifica col simulatore corretto (vedi `DEV_LOG.md`, sezione "In corso / aperto").
 1. Bot sulla campagna intera con le regioni rigenerate (tappe: `scripts/world/waypoints.ts`).
 2. Piattaforme che crollano, allagamenti, sfide a tempo.
 3. Trame secondarie per personaggio, più scelte a metà gioco.
