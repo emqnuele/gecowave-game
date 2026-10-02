@@ -592,7 +592,7 @@ export class GameScene extends Phaser.Scene {
             this.lighting.follow(guide, 0x86efac, 160, 0.8);
             this.companion = guide;
             this.companionBaseY = y + 4;
-            this.companionInteract = { x, y, range: 80, onInteract: () => this.interactWalterGuida() };
+            this.companionInteract = { x, y, range: 48, onInteract: () => this.interactWalterGuida() };
             this.interactables.push(this.companionInteract);
             return;
         }
@@ -604,7 +604,7 @@ export class GameScene extends Phaser.Scene {
             this.companion = guide;
             this.companionBaseY = y + 4;
             // interactable che segue romero: la sua posizione si aggiorna nel loop
-            this.companionInteract = { x, y, range: 80, onInteract: () => this.interactGuida() };
+            this.companionInteract = { x, y, range: 48, onInteract: () => this.interactGuida() };
             this.interactables.push(this.companionInteract);
             return;
         }
@@ -1606,7 +1606,10 @@ export class GameScene extends Phaser.Scene {
     private moveGuide(c: Phaser.GameObjects.Sprite, objX: number, time: number, delta: number): void {
         if (this.layout) {
             const side = Math.sign(objX - this.player.x) || 1;
-            const tx = this.player.x + side * 70;
+            // da fermo la guida si avvicina: così ci si parla senza rincorrerla
+            const body = this.player.body as Phaser.Physics.Arcade.Body;
+            const still = Math.abs(body.velocity.x) < 20 && body.blocked.down;
+            const tx = this.player.x + side * (still ? 34 : 70);
             const ty = this.player.y - 26;
             // rimasta in un'altra stanza: ti raggiunge invece di attraversare mezza regione
             if (Math.hypot(tx - c.x, ty - c.y) > 900) c.setPosition(tx, ty);
