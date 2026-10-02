@@ -71,11 +71,11 @@ export interface RegionReport {
 }
 
 /** genera e valida; se qualcosa non torna si riprova con un altro seme */
-export function generateRegion(def: LevelDef, maxAttempts = 40): Region & { report: RegionReport; attempt: number } {
+export function generateRegion(def: LevelDef, maxAttempts = 40, firstAttempt = 0): Region & { report: RegionReport; attempt: number } {
     let best: (Region & { report: RegionReport; attempt: number }) | null = null;
     let lastError: Error | null = null;
     const score = (r: RegionReport) => (r.exitReached ? 0 : 1e6) + r.lostBeats * 1e4 + r.stuck * 10 + r.stuckFull;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    for (let attempt = firstAttempt; attempt < firstAttempt + maxAttempts; attempt++) {
         let res: Region & { report: RegionReport };
         try {
             res = attemptRegion(def, attempt);

@@ -17,10 +17,23 @@ import { abilitiesFor } from './abilities';
 
 const outDir = 'public/regions';
 
+/** il simulatore boccia anche regioni che il modello astratto approva: si riprova col tentativo dopo */
+const SIM_RETRIES = 6;
+
 function buildOne(id: string): boolean {
+    let from = 0;
+    for (let k = 0; k <= SIM_RETRIES; k++) {
+        const res = buildAttempt(id, from, k === SIM_RETRIES);
+        if (res.ok) return true;
+        from = res.attempt + 1;
+    }
+    return false;
+}
+
+function buildAttempt(id: string, firstAttempt: number, last: boolean): { ok: boolean; attempt: number } {
     const def = LEVELS[id];
     const t0 = performance.now();
-    const region = generateRegion(def, 40);
+    const region = generateRegion(def, 40, firstAttempt);
     const r = region.report;
     let fixed = simRepair(region.def.grid, region.def.entities, region.layout, abilitiesFor(id));
     // chi torna più avanti con abilità nuove non deve trovare trappole: si ripara anche per loro
@@ -74,7 +87,8 @@ function buildOne(id: string): boolean {
     const file = encodeRegion(def, grid, entities, region.layout);
     const json = JSON.stringify(file);
     console.log(
-        `${id.padEnd(13)} ${ok ? 'ok  ' : 'FAIL'} ${String(Math.round(performance.now() - t0)).padStart(6)}ms`,
+        `${id.padEnd(13)} ${ok ? 'ok  ' : last ? 'FAIL' : 'riprovo'} ${String(Math.round(performance.now() - t0)).padStart(6)}ms`,
+        `tentativo ${region.attempt}`,
         `${region.layout.cols}x${region.layout.rows}`,
         `${region.layout.rooms.length} stanze`,
         `${v.states} posizioni`,
@@ -85,7 +99,7 @@ function buildOne(id: string): boolean {
     for (const line of gateLog) if (!line.includes('scartato') || process.env.GATE_DEBUG) console.log(`${id.padEnd(13)}${line}`);
     if (ok) writeFileSync(`${outDir}/${id}.json`, json);
     else if (process.env.KEEP_FAIL) writeFileSync(`${process.env.TMPDIR ?? '/tmp'}/${id}.fail.json`, json);
-    return ok;
+    return { ok, attempt: region.attempt };
 }
 
 const only = process.argv[2];
