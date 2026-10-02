@@ -166,7 +166,9 @@ export class Soundscape {
         }
         if (input.boss && room?.kind === 'arena') space = this.sound.under === 'void' ? 'void' : 'arena';
 
-        const muffle = Math.min(1, u * (0.5 + 0.35 * depth + 0.15 * enclosure) * this.sound.muffle);
+        // nei capitoli tutti sotto terra l'ovattato è la normalità: si sente, ma la musica resta godibile
+        const indoor = this.biome.indoor ? 0.75 : 1;
+        const muffle = Math.min(0.85, u * (0.35 + 0.3 * depth + 0.15 * enclosure) * this.sound.muffle * indoor);
         const underwater = input.player.headUnder;
         acoustics.set({
             space,
