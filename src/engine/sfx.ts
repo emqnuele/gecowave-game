@@ -279,6 +279,70 @@ class Sfx {
         }
     }
 
+    /** la voce del boss quando attacca: ognuno si annuncia a modo suo */
+    bossVoice(texture: string): void {
+        const k = texture.replace('boss-', '');
+        switch (k) {
+            case 'guggu': case 'settequaranta': case 'furgone':
+                this.tone(233, 700, { type: 'sawtooth', vol: 0.05, attackMs: 20 });
+                this.tone(294, 700, { type: 'sawtooth', vol: 0.04, attackMs: 20 });
+                break;
+            case 'pedro': case 'ombra': case 'modello':
+                for (let i = 0; i < 6; i++) this.tone(120 + Math.random() * 1800, 45, { type: 'square', vol: 0.03, delayMs: i * 38 });
+                this.noise(200, { freq: 3000, q: 0.6, vol: 0.05 });
+                break;
+            case 'pedrino': case 'riba': case 'ticummi':
+                [880, 1320, 990].forEach((f, i) => this.tone(f, 70, { type: 'square', vol: 0.02, delayMs: i * 90 }));
+                break;
+            case 'lochef':
+                // la risata, a scatti
+                [0, 140, 280].forEach((d, i) => this.tone(330 - i * 20, 110, { type: 'sawtooth', to: 260, vol: 0.035, delayMs: d, attackMs: 10 }));
+                break;
+            case 'limite': case 'teorema': case 'trentatre':
+                this.noise(260, { freq: 4500, q: 4, vol: 0.05, to: 2500 });
+                this.chime(0, 1.6);
+                break;
+            case 'dei': case 'custode':
+                [261.6, 329.6, 392, 523.3].forEach((f) => this.tone(f, 1300, { type: 'sine', vol: 0.025, attackMs: 180 }));
+                break;
+            case 'formicona':
+                for (let i = 0; i < 5; i++) this.noise(30, { freq: 3800, q: 5, vol: 0.06, delayMs: i * 50 });
+                break;
+            case 'flauto':
+                this.tone(1900, 300, { type: 'sine', vol: 0.03 });
+                this.tone(110, 400, { type: 'sawtooth', to: 80, vol: 0.04, delayMs: 200, attackMs: 40 });
+                break;
+            case 'smela': case 'danjilo':
+                this.noise(500, { freq: 700, q: 0.8, vol: 0.08, to: 300, attackMs: 60 });
+                this.bubble(0, 1.5);
+                break;
+            case 'maranza': case 'maranzone':
+                this.tone(150, 260, { type: 'sawtooth', to: 120, vol: 0.05, attackMs: 20 });
+                this.noise(240, { freq: 700, q: 6, vol: 0.04, attackMs: 20 });
+                break;
+            case 'istruttore':
+                this.tone(2800, 380, { type: 'sine', vol: 0.03, attackMs: 10 });
+                this.tone(2950, 380, { type: 'sine', vol: 0.02, attackMs: 10 });
+                break;
+            case 'annascrivania':
+                this.noise(90, { freq: 260, q: 0.8, vol: 0.18, type: 'lowpass' });
+                this.tone(90, 120, { type: 'sine', to: 50, vol: 0.08 });
+                break;
+            case 'walter':
+                for (let i = 0; i < 5; i++) this.tone(3000 + Math.random() * 2000, 90, { type: 'triangle', vol: 0.02, delayMs: i * 45 });
+                break;
+            case 'breccio':
+                this.noise(220, { freq: 2200, q: 0.8, vol: 0.06, to: 800 });
+                break;
+            case 'notino':
+                this.tone(300, 400, { type: 'square', to: 1400, vol: 0.03 });
+                break;
+            default:
+                // i rimpianti del void sussurrano prima di colpire
+                this.whisper(0, 1.4);
+        }
+    }
+
     /* ---------- passi e atterraggi ---------- */
 
     /** un passo: il materiale decide il colore, un filo di caso il resto */

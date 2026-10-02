@@ -175,6 +175,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     private execute(attack: BossAttack, player: Phaser.GameObjects.Sprite, phase: Phase): void {
+        // non a ogni colpo: la voce resta un segnale, non un rumore di fondo
+        if (Math.random() < 0.55) sfx.bossVoice(this.def.texture);
         switch (attack) {
             case 'dive': return this.dive(player, 700);
             case 'charge': return this.charge(player);
