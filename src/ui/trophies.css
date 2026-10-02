@@ -238,6 +238,20 @@
   filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.55));
 }
 
+/* assistita: i trofei bloccati portano la X */
+.cabinet.assisted .medal:not(.have) .disc::before {
+  content: '×';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  line-height: 1;
+  color: #f87171;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.8);
+  z-index: 1;
+}
+
 .medal .medal-name {
   max-width: 100%;
   padding: 0 2px;

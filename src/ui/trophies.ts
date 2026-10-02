@@ -49,7 +49,8 @@ function fmtTime(ms: number): string {
 export function buildTrophyCabinet(root: HTMLElement, opts: { wide?: boolean } = {}): void {
     const got = new Set(state.save.achievements);
     const total = ACHIEVEMENTS.length;
-    const cab = node('div', `cabinet${opts.wide ? ' wide' : ''}`);
+    const blocked = achievementsBlocked();
+    const cab = node('div', `cabinet${opts.wide ? ' wide' : ''}${blocked ? ' assisted' : ''}`);
 
     const head = node('div', 'cab-head');
     head.append(ring(got.size, total));
@@ -62,8 +63,8 @@ export function buildTrophyCabinet(root: HTMLElement, opts: { wide?: boolean } =
     head.append(intro);
     cab.append(head);
 
-    if (achievementsBlocked()) {
-        cab.append(node('div', 'cab-warn', 'partita assistita: la freccia guida è stata accesa, quindi trofei e punteggio restano spenti fino alla fine. quelli già presi restano tuoi.'));
+    if (blocked) {
+        cab.append(node('div', 'cab-warn', 'hai usato la modalità assistita.'));
     }
 
     const tabs = node('div', 'cab-tabs');
