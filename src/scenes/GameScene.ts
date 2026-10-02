@@ -2178,7 +2178,8 @@ export class GameScene extends Phaser.Scene {
         const boss = this.boss;
         const fighting = !!boss?.active && boss.engaged && !boss.frenzy && !this.player.dead;
         if (this.arenaRoom) {
-            if (!fighting) this.unlockArena();
+            // le scenette a metà scontro (ivan) fermano il boss ma non riaprono l'arena
+            if (!boss?.active || this.player.dead) this.unlockArena();
             else this.drawArenaBars(time);
             return;
         }
