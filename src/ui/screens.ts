@@ -13,6 +13,7 @@ import { music } from '../engine/music';
 import type { ZoneColor } from '../types';
 import { el, ui } from './dom';
 import { phoneBanner } from './banner';
+import './souls.css';
 
 export interface GameController {
     newGame(): void;
@@ -42,12 +43,31 @@ const CONTROLS: [string, string][] = [
     ['pausa', 'ESC'],
 ];
 
+interface MenuItem {
+    label: string;
+    onPick: () => void;
+    sub?: string;
+    danger?: boolean;
+    small?: boolean;
+    /** suono di ritorno invece di quello di scelta */
+    back?: boolean;
+}
+
+/* il menu e le pagine come un codice a inchiostro: serif da stampa antica,
+   voci di testo con la fiammella, tastiera ovunque (frecce, invio, esc).
+   la voce del gioco (battute a pennarello) resta dentro la cornice */
+
 export class Screens {
     private controller!: GameController;
     private overlay: HTMLElement | null = null;
     private bg: HTMLElement;
     private blobs: HTMLElement[] = [];
+    private navHandler: ((e: KeyboardEvent) => void) | null = null;
     private escHandler: ((e: KeyboardEvent) => void) | null = null;
+    /** la scena del falò dietro al menu: la accende e la spegne main */
+    private backdrop: (on: boolean) => void = () => {};
+    /** il primo menu dopo l'avvio chiede un tasto: sblocca l'audio ed è un ingresso */
+    private awake = false;
 
     constructor() {
         this.bg = el('div');
@@ -59,6 +79,13 @@ export class Screens {
             this.bg.append(blob);
         }
         document.body.prepend(this.bg);
+        // il filtro che fa sbavare l'inchiostro dei titoli
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        defs.setAttribute('width', '0');
+        defs.setAttribute('height', '0');
+        defs.style.position = 'absolute';
+        defs.innerHTML = '<filter id="sx-ink" x="-5%" y="-20%" width="110%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>';
+        document.body.append(defs);
         // oro all'avvio: coerente col menu, niente flash verde prima del boot
         this.setZone('yellow');
 
@@ -82,18 +109,22 @@ export class Screens {
         this.controller = controller;
     }
 
+    setBackdrop(fn: (on: boolean) => void): void {
+        this.backdrop = fn;
+    }
+
     /* ---------- atmosfera ---------- */
 
     setZone(color: ZoneColor): void {
         const css = ZONE_CSS[color];
         document.documentElement.style.setProperty('--accent', css);
-        this.bg.style.background = `radial-gradient(ellipse 110% 80% at 50% 110%, ${css}14, transparent 60%), #000`;
+        this.bg.style.background = `radial-gradient(ellipse 110% 80% at 50% 110%, ${css}10, transparent 60%), #000`;
         this.blobs.forEach((b, i) => {
             b.style.background = css + (i ? '12' : '1a');
         });
     }
 
-    /* ---------- helpers ---------- */
+    /* ---------- mattoni ---------- */
 
     private openOverlay(cls = 'screen'): HTMLElement {
         this.closeOverlay();
@@ -105,10 +136,9 @@ export class Screens {
     closeOverlay(): void {
         this.overlay?.remove();
         this.overlay = null;
-        if (this.escHandler) {
-            window.removeEventListener('keydown', this.escHandler);
-            this.escHandler = null;
-        }
+        for (const h of [this.escHandler, this.navHandler]) if (h) window.removeEventListener('keydown', h);
+        this.escHandler = null;
+        this.navHandler = null;
     }
 
     get overlayOpen(): boolean {
@@ -119,135 +149,250 @@ export class Screens {
         return this.overlay?.classList.contains('menu-screen') ?? false;
     }
 
-    private onEsc(fn: () => void): void {
-        this.escHandler = (e) => {
-            if (e.code === 'Escape') {
-                e.preventDefault();
-                fn();
-            }
-        };
-        window.addEventListener('keydown', this.escHandler);
+    /** ornamento tracciato a mano: due tratti, un rombo, due riccioli */
+    private orn(): HTMLElement {
+        const wrap = el('div', '');
+        wrap.innerHTML = `<svg class="sx-orn" viewBox="0 0 420 18" aria-hidden="true"><path d="M8 9 C70 9, 120 8, 186 9"/><path d="M234 9 C300 10, 350 9, 412 9"/><path d="M186 9 c6 -7 12 -7 16 0"/><path d="M234 9 c-6 7 -12 7 -16 0"/><rect class="gem" x="205" y="4" width="10" height="10" transform="rotate(45 210 9)"/><circle class="gem" cx="8" cy="9" r="1.6"/><circle class="gem" cx="412" cy="9" r="1.6"/></svg>`;
+        return wrap.firstElementChild as HTMLElement;
     }
 
-    private btn(label: string, tilt: number, onClick: () => void, acid = ''): HTMLElement {
-        const b = el('button', `btn sticker ${acid}`);
-        b.textContent = label;
-        b.style.transform = `rotate(${tilt}deg)`;
+    private heading(title: string, sub?: string): HTMLElement[] {
+        const out: HTMLElement[] = [el('h2', 'sx-h', title), this.orn()];
+        if (sub) {
+            const s = el('div', 'sx-sub');
+            s.textContent = sub;
+            out.splice(1, 0, s);
+        }
+        return out;
+    }
+
+    private item(o: MenuItem): HTMLElement {
+        const b = el('button', `sx-item${o.danger ? ' danger' : ''}${o.small ? ' small' : ''}`);
+        b.dataset.nav = '1';
+        const label = el('span', 'sx-label');
+        label.textContent = o.label;
+        b.append(label);
+        if (o.sub) {
+            const s = el('span', 'sx-subline');
+            s.textContent = o.sub;
+            b.append(s);
+        }
         b.addEventListener('click', () => {
             sfx.init();
-            sfx.ui();
-            onClick();
+            if (o.back) sfx.menuBack();
+            else sfx.menuSelect();
+            o.onPick();
         });
         return b;
     }
 
-    private kicker(text: string, acid: string, color: string, showDot = true): HTMLElement {
-        const k = el('span', `kicker sticker ${acid}`);
-        const label = el('span', 'label');
-        label.textContent = text;
-        label.style.color = color;
-        if (showDot) {
-            k.append(el('span', 'dot'), label);
-        } else {
-            k.append(label);
-        }
-        return k;
+    private menu(items: MenuItem[], cls = ''): HTMLElement {
+        const m = el('nav', `sx-menu ${cls}`);
+        items.forEach((it, i) => {
+            const b = this.item(it);
+            b.style.animationDelay = `${0.08 * i}s`;
+            m.append(b);
+        });
+        return m;
+    }
+
+    /** frecce e invio su tutto ciò che ha data-nav; sinistra e destra cambiano i valori */
+    private bindNav(root: HTMLElement, onBack?: () => void): void {
+        const list = () => [...root.querySelectorAll<HTMLElement>('[data-nav]')].filter((e) => e.offsetParent !== null && !e.hasAttribute('disabled'));
+        let idx = -1;
+        const focus = (i: number, sound = true) => {
+            const items = list();
+            if (!items.length) return;
+            idx = (i + items.length) % items.length;
+            items.forEach((e, k) => e.classList.toggle('on', k === idx));
+            items[idx].scrollIntoView({ block: 'nearest' });
+            if (sound) sfx.menuMove();
+        };
+        root.addEventListener('mouseover', (e) => {
+            const t = (e.target as HTMLElement).closest<HTMLElement>('[data-nav]');
+            if (!t) return;
+            const k = list().indexOf(t);
+            if (k >= 0 && k !== idx) focus(k);
+        });
+        this.navHandler = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement && e.code !== 'Enter' && e.code !== 'Escape') return;
+            const cur = list()[idx];
+            const inRow = !!cur?.closest('.sx-menu.row');
+            switch (e.code) {
+                case 'ArrowUp': case 'KeyW':
+                    focus(idx - 1); break;
+                case 'ArrowDown': case 'KeyS':
+                    focus(idx + 1); break;
+                case 'ArrowLeft': case 'KeyA':
+                    if (inRow) focus(idx - 1);
+                    else cur?.dispatchEvent(new CustomEvent('nav-left'));
+                    break;
+                case 'ArrowRight': case 'KeyD':
+                    if (inRow) focus(idx + 1);
+                    else cur?.dispatchEvent(new CustomEvent('nav-right'));
+                    break;
+                case 'Enter': case 'Space': case 'KeyE':
+                    if (e.target instanceof HTMLInputElement) return;
+                    cur?.click(); break;
+                case 'Escape': case 'Backspace':
+                    if (!onBack || e.target instanceof HTMLInputElement) return;
+                    sfx.menuBack();
+                    onBack();
+                    break;
+                default:
+                    return;
+            }
+            e.preventDefault();
+        };
+        window.addEventListener('keydown', this.navHandler);
+        requestAnimationFrame(() => focus(0, false));
+    }
+
+    /** cambia passo nella forgia senza chiudere la schermata */
+    private closeNavOnly(): void {
+        if (this.navHandler) window.removeEventListener('keydown', this.navHandler);
+        this.navHandler = null;
     }
 
     /* ---------- menu principale ---------- */
 
     showMenu(): void {
-        const s = this.openOverlay('screen opaque menu-screen');
+        this.backdrop(true);
+        const s = this.openOverlay('screen sx sx-clear sx-title-screen menu-screen');
         this.setZone('yellow');
 
-        s.append(this.kicker('the flux of coscience', 'glass-acid-gold', '#dfb15b', false));
+        const col = el('div', 'sx-col');
+        col.append(el('h1', 'sx-logo', 'Geco<span class="w">wave</span>'));
+        col.append(el('div', 'sx-tagline', 'the flux of coscience'));
 
-        const title = el('h1', 'menu-title font-crisis', 'GECO<span class="font-marker" style="color:#dfb15b;display:inline-block;transform:rotate(-3deg);text-transform:lowercase">wave</span>');
-        s.append(title);
-        const sub = el('div', 'menu-sub');
-        s.append(sub);
-
-        const stack = el('div', 'menu-stack');
-        stack.append(this.btn('nuova partita', -1.5, () => this.controller.newGame(), 'glass-acid-gold'));
-        if (state.hasSave || state.godMode) {
-            if (state.hasSave) {
-                stack.append(this.btn('continua', 1.2, () => this.controller.continueGame()));
-            }
-            stack.append(this.btn('capitoli', -1.2, () => this.showChapters(() => this.showMenu())));
+        const items: MenuItem[] = [];
+        if (state.hasSave) {
+            const lv = LEVELS[state.save.levelId];
+            const min = Math.floor(state.save.record.playMs / 60000);
+            const time = min >= 60 ? `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m` : `${min}m`;
+            items.push({ label: 'continua', sub: `${state.save.playerName.toLowerCase()} · ${lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : state.save.levelId} · ${time}`, onPick: () => this.controller.continueGame() });
         }
-        stack.append(this.btn('trofei', 1, () => this.showTrophies(() => this.showMenu())));
-        stack.append(this.btn('comandi', -1, () => this.showControls(() => this.showMenu())));
-        stack.append(this.btn('impostazioni', 1.4, () => this.showSettings(() => this.showMenu())));
-        s.append(stack);
+        items.push({ label: 'nuova partita', onPick: () => (state.hasSave ? this.confirmNewGame() : this.controller.newGame()) });
+        if (state.hasSave || state.godMode) items.push({ label: 'capitoli', onPick: () => this.showChapters(() => this.showMenu()) });
+        items.push({ label: 'bacheca', onPick: () => this.showTrophies(() => this.showMenu()) });
+        items.push({ label: 'comandi', onPick: () => this.showControls(() => this.showMenu()) });
+        items.push({ label: 'impostazioni', onPick: () => this.showSettings(() => this.showMenu()) });
+        col.append(this.menu(items, 'left'));
+        col.append(el('div', 'sx-foot', 'sviluppato da <b>emqnuele</b> · musica dei <b>gecowave</b>'));
+        s.append(col);
 
-        s.append(el('div', 'menu-foot', 'developed by emqnuele - music by gecowave'));
+        if (!this.awake) {
+            // il titolo aspetta un tasto: è l'ingresso, e il browser sblocca l'audio
+            col.classList.add('waiting');
+            const splash = el('div', 'sx-splash');
+            splash.append(el('h1', 'sx-logo', 'Geco<span class="w">wave</span>'), el('div', 'sx-tagline', 'the flux of coscience'), el('div', 'sx-press', 'premi un tasto'));
+            s.append(splash);
+            const wake = (e: Event) => {
+                if (e instanceof KeyboardEvent && (e.repeat || e.code === 'Tab')) return;
+                window.removeEventListener('keydown', wake, true);
+                splash.removeEventListener('pointerdown', wake);
+                e.preventDefault();
+                e.stopPropagation();
+                this.awake = true;
+                sfx.init();
+                sfx.awaken();
+                music.playMenu();
+                splash.classList.add('gone');
+                col.classList.remove('waiting');
+                setTimeout(() => splash.remove(), 1200);
+                this.bindNav(col);
+            };
+            window.addEventListener('keydown', wake, true);
+            splash.addEventListener('pointerdown', wake);
+            return;
+        }
+        this.bindNav(col);
     }
 
-    /* ---------- trofei ---------- */
+    private confirmNewGame(): void {
+        const s = this.openOverlay('screen sx menu-screen');
+        const page = el('div', 'sx-page');
+        page.append(...this.heading('nuova partita', 'il viaggio salvato andrà perduto: nome, wave, barre, scelte. il realm non ricorda due volte.'));
+        page.append(this.menu([
+            { label: 'ricomincia da capo', danger: true, onPick: () => this.controller.newGame() },
+            { label: 'torna indietro', back: true, onPick: () => this.showMenu() },
+        ]));
+        s.append(page);
+        this.bindNav(page, () => this.showMenu());
+    }
+
+    /* ---------- bacheca ---------- */
 
     private showTrophies(back: () => void): void {
-        const s = this.openOverlay('screen opaque trophies-screen');
-        s.append(el('h2', 'font-crisis', 'TROFEI'));
-        const box = el('div', 'trophies-box');
-        buildTrophyCabinet(box, { wide: true });
-        s.append(box);
+        const s = this.openOverlay('screen sx menu-screen');
+        const page = el('div', 'sx-page');
+        page.append(...this.heading('bacheca', 'medaglie, record e il conto di ogni capitolo chiuso'));
+        const body = el('div', 'sx-body');
+        buildTrophyCabinet(body, { wide: true });
+        page.append(body);
         const goBack = () => { this.closeOverlay(); back(); };
-        s.append(this.btn('indietro', 0, goBack));
-        this.onEsc(goBack);
+        page.append(this.menu([{ label: 'indietro', back: true, onPick: goBack }]));
+        s.append(page);
+        this.bindNav(page, goBack);
     }
 
     /* ---------- viaggio tra i capitoli ---------- */
 
     private showChapters(back: () => void): void {
-        const s = this.openOverlay('screen opaque');
-        s.append(el('h2', 'font-crisis', 'CAPITOLI'));
-        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">torna dove sei già stato: maschere, cuori e conti in sospeso.</span>'));
+        const s = this.openOverlay('screen sx menu-screen');
+        const page = el('div', 'sx-page');
+        page.append(...this.heading('capitoli', 'torna dove sei già stato: maschere, cuori e conti in sospeso'));
 
         const reachedIdx = Math.max(0, LEVEL_ORDER.indexOf(state.save.levelId));
         let maxVisitedIdx = -1;
         LEVEL_ORDER.forEach((id, idx) => {
-            if (state.hasFlag(`visto-${id}`)) {
-                maxVisitedIdx = Math.max(maxVisitedIdx, idx);
-            }
+            if (state.hasFlag(`visto-${id}`)) maxVisitedIdx = Math.max(maxVisitedIdx, idx);
         });
         const maxUnlockedIdx = Math.max(reachedIdx, maxVisitedIdx);
 
-        const stack = el('div', 'menu-stack chapters-scroll');
+        const body = el('div', 'sx-body narrow');
+        const items: MenuItem[] = [];
         LEVEL_ORDER.forEach((id, i) => {
             const unlocked = state.godMode || state.save.endingSeen !== null || i <= maxUnlockedIdx;
             if (!unlocked) return;
             const def = LEVELS[id];
-            const label = `${i + 1}. ${def.title.toLowerCase()} ${def.accentWord}`;
-            stack.append(this.btn(label, i % 2 ? 1 : -1, () => {
-                state.save.levelId = id;
-                state.save.checkpointId = null;
-                state.persist();
-                this.controller.travel(id);
-            }));
-        });
-
-        // capitoli segreti: appaiono solo una volta scoperti dal loro varco
-        const secrets = ['barrato', 'custode', 'galliate', 'marcetti'].filter(
-            (id) => state.godMode || state.hasFlag(`visto-${id}`),
-        );
-        if (secrets.length) {
-            stack.append(el('div', 'chapters-secret-head font-marker', '※ capitoli segreti'));
-            secrets.forEach((id, j) => {
-                const def = LEVELS[id];
-                const label = `✦ ${def.title.toLowerCase()} ${def.accentWord}`;
-                stack.append(this.btn(label, j % 2 ? 1 : -1, () => {
-                    state.portalReturn = null;
+            items.push({
+                label: `${def.title.toLowerCase()} ${def.accentWord}`,
+                sub: `capitolo ${i + 1}`,
+                small: true,
+                onPick: () => {
                     state.save.levelId = id;
                     state.save.checkpointId = null;
                     state.persist();
                     this.controller.travel(id);
-                }));
+                },
             });
-        }
+        });
+        body.append(this.menu(items));
 
-        s.append(stack);
-        s.append(this.btn('indietro', 0, back));
-        this.onEsc(back);
+        // capitoli segreti: appaiono solo una volta scoperti dal loro varco
+        const secrets = ['barrato', 'custode', 'galliate', 'marcetti'].filter((id) => state.godMode || state.hasFlag(`visto-${id}`));
+        if (secrets.length) {
+            body.append(el('div', 'sx-group', 'capitoli segreti'));
+            body.append(this.menu(secrets.map((id) => {
+                const def = LEVELS[id];
+                return {
+                    label: `${def.title.toLowerCase()} ${def.accentWord}`,
+                    small: true,
+                    onPick: () => {
+                        state.portalReturn = null;
+                        state.save.levelId = id;
+                        state.save.checkpointId = null;
+                        state.persist();
+                        this.controller.travel(id);
+                    },
+                };
+            })));
+        }
+        page.append(body);
+        page.append(this.menu([{ label: 'indietro', back: true, onPick: back }]));
+        s.append(page);
+        this.bindNav(page, back);
     }
 
     /* ---------- pausa ---------- */
@@ -255,100 +400,118 @@ export class Screens {
     showPause(): void {
         if (this.overlayOpen) return;
         this.controller.pause();
-        const s = this.openOverlay();
-        s.append(el('h2', 'font-crisis', 'PAUSA'));
-        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">il gioco aspetta. pedro no.</span>'));
-        const stack = el('div', 'menu-stack');
+        const s = this.openOverlay('screen sx');
+        const page = el('div', 'sx-page');
+        page.append(...this.heading('pausa'));
         const resume = () => {
             this.closeOverlay();
             this.controller.resume();
         };
-        stack.append(this.btn('riprendi', -1.2, resume, 'glass-acid-green'));
-        stack.append(this.btn('comandi', 1, () => this.showControls(() => this.showPause(), true)));
-        stack.append(this.btn('impostazioni', -1, () => this.showSettings(() => this.showPause(), true)));
-        stack.append(this.btn('esci al menu', 1.3, () => {
-            this.closeOverlay();
-            this.controller.quitToMenu();
-        }));
-        s.append(stack);
-        this.onEsc(resume);
+        page.append(this.menu([
+            { label: 'riprendi', onPick: resume },
+            { label: 'comandi', onPick: () => this.showControls(() => this.showPause(), true) },
+            { label: 'impostazioni', onPick: () => this.showSettings(() => this.showPause(), true) },
+            { label: 'esci al menu', danger: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
+        ]), el('div', 'sx-note', 'il gioco aspetta. pedro no.'));
+        s.append(page);
+        this.bindNav(page, resume);
     }
 
     /* ---------- impostazioni ---------- */
 
     showSettings(back: () => void, fromPause = false): void {
-        const s = this.openOverlay(fromPause ? 'screen' : 'screen opaque');
-        s.append(el('h2', 'font-crisis', 'IMPOSTAZIONI'));
+        const s = this.openOverlay(`screen sx${fromPause ? '' : ' menu-screen'}`);
+        const page = el('div', 'sx-page');
+        page.append(...this.heading('impostazioni'));
+        const body = el('div', 'sx-body narrow');
 
-        const vol = el('div', 'settings-row glass-chip');
-        const volName = el('span', 'name');
-        volName.textContent = 'volume';
-        vol.append(volName);
-        const slider = el('input');
+        const vol = el('div', 'sx-row');
+        vol.dataset.nav = '1';
+        vol.append(el('span', 'name', 'volume'));
+        const slider = el('input', 'sx-range');
         slider.type = 'range';
         slider.min = '0';
         slider.max = '1';
         slider.step = '0.05';
         slider.value = String(state.settings.volume);
-        slider.addEventListener('input', () => {
-            state.settings.volume = Number(slider.value);
+        const paintVol = () => slider.style.setProperty('--v', `${Number(slider.value) * 100}%`);
+        const setVol = (v: number) => {
+            state.settings.volume = Math.max(0, Math.min(1, Math.round(v * 20) / 20));
+            slider.value = String(state.settings.volume);
+            paintVol();
             state.persistSettings();
             sfx.setVolume(state.settings.volume);
             music.setVolume(state.settings.volume);
-            sfx.ui();
-        });
+            sfx.menuMove();
+        };
+        paintVol();
+        slider.addEventListener('input', () => setVol(Number(slider.value)));
+        vol.addEventListener('nav-left', () => setVol(state.settings.volume - 0.05));
+        vol.addEventListener('nav-right', () => setVol(state.settings.volume + 0.05));
         vol.append(slider);
-        s.append(vol);
+        body.append(vol);
 
-        const shake = el('div', 'settings-row glass-chip');
-        const shakeName = el('span', 'name');
-        shakeName.textContent = 'screen shake';
-        shake.append(shakeName);
-        const toggle = el('button', `toggle sticker ${state.settings.screenShake ? 'on' : ''}`);
-        toggle.textContent = state.settings.screenShake ? 'attivo' : 'spento';
-        toggle.addEventListener('click', () => {
+        const shake = el('div', 'sx-row');
+        shake.append(el('span', 'name', 'scossa dello schermo'));
+        const toggle = el('button', `toggle ${state.settings.screenShake ? 'on' : ''}`);
+        toggle.dataset.nav = '1';
+        const paintShake = () => {
+            toggle.classList.toggle('on', state.settings.screenShake);
+            toggle.textContent = state.settings.screenShake ? 'attiva' : 'spenta';
+        };
+        const flipShake = () => {
             state.settings.screenShake = !state.settings.screenShake;
             state.persistSettings();
-            toggle.classList.toggle('on', state.settings.screenShake);
-            toggle.textContent = state.settings.screenShake ? 'attivo' : 'spento';
-            sfx.ui();
-        });
+            paintShake();
+            sfx.menuMove();
+        };
+        paintShake();
+        toggle.addEventListener('click', flipShake);
+        toggle.addEventListener('nav-left', flipShake);
+        toggle.addEventListener('nav-right', flipShake);
         shake.append(toggle);
-        s.append(shake);
-        s.append(assistToggle({ rowClass: 'settings-row glass-chip' }));
+        body.append(shake);
 
-        const danger = el('div', 'settings-row glass-chip glass-acid-red');
-        const dangerName = el('span', 'name');
-        dangerName.textContent = 'cancella salvataggio';
-        danger.append(dangerName);
-        const reset = el('button', 'toggle sticker');
+        const assist = assistToggle({ rowClass: 'sx-row' });
+        assist.querySelector<HTMLElement>('.toggle')?.setAttribute('data-nav', '1');
+        body.append(assist);
+
+        const danger = el('div', 'sx-row danger');
+        danger.append(el('span', 'name', 'cancella il salvataggio'));
+        const reset = el('button', 'toggle');
+        reset.dataset.nav = '1';
         reset.textContent = 'cancella';
         reset.style.color = ZONE_CSS.red;
         reset.addEventListener('click', () => {
             if (reset.textContent === 'cancella') {
                 reset.textContent = 'sicuro?';
+                sfx.menuMove();
                 return;
             }
             state.reset();
-            sfx.ui();
+            sfx.menuBack();
             this.toast('fatto. come se niente fosse mai successo.');
             this.showMenu();
         });
         danger.append(reset);
-        s.append(danger);
+        body.append(danger);
+        page.append(body);
 
         // chiudi prima di tornare: showPause ha una guardia su overlay aperto
         const goBack = () => { this.closeOverlay(); back(); };
-        s.append(this.btn('indietro', -1, goBack));
-        this.onEsc(goBack);
+        page.append(this.menu([{ label: 'indietro', back: true, onPick: goBack }]));
+        s.append(page);
+        this.bindNav(page, goBack);
     }
 
     /* ---------- comandi ---------- */
 
     showControls(back: () => void, fromPause = false): void {
-        const s = this.openOverlay(fromPause ? 'screen' : 'screen opaque');
-        s.append(el('h2', 'font-crisis', 'COMANDI'));
-        const grid = el('div', 'controls-grid glass-panel');
+        const s = this.openOverlay(`screen sx${fromPause ? '' : ' menu-screen'}`);
+        const page = el('div', 'sx-page');
+        page.append(...this.heading('comandi'));
+        const body = el('div', 'sx-body narrow');
+        const grid = el('div', 'sx-keys');
         for (const [action, key] of CONTROLS) {
             const a = el('span');
             a.textContent = action;
@@ -356,51 +519,49 @@ export class Screens {
             k.textContent = key;
             grid.append(a, k);
         }
-        s.append(grid);
-        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.55)">le wave si sbloccano giocando. tranquillo.</span>'));
+        body.append(grid, el('div', 'sx-note', 'le wave si sbloccano giocando. tranquillo.'));
+        page.append(body);
         const goBack = () => { this.closeOverlay(); back(); };
-        s.append(this.btn('indietro', 1, goBack));
-        this.onEsc(goBack);
+        page.append(this.menu([{ label: 'indietro', back: true, onPick: goBack }]));
+        s.append(page);
+        this.bindNav(page, goBack);
     }
 
     /* ---------- morte ---------- */
 
     private showDeath(lost: number, score: number | null): void {
-        const s = this.openOverlay();
-        const punch = DEATH_PUNCHLINES[Math.floor(Math.random() * DEATH_PUNCHLINES.length)];
-        s.append(el('h1', 'death-title', 'SEI MORTO'));
-        const p = el('div', 'death-punch');
-        p.textContent = punch;
-        s.append(p);
+        const s = this.openOverlay('screen sx sx-death');
+        const band = el('div', 'sx-death-band');
+        band.append(el('h1', 'sx-death-title', 'sei morto'));
+        const p = el('div', 'sx-death-punch');
+        p.textContent = DEATH_PUNCHLINES[Math.floor(Math.random() * DEATH_PUNCHLINES.length)];
+        band.append(p);
         if (lost > 0) {
-            const loss = el('div', 'death-loss');
-            loss.textContent = `hai lasciato ${lost} barre a terra — torna a riprendertele`;
-            s.append(loss);
+            const loss = el('div', 'sx-death-loss');
+            loss.textContent = `${lost} barre giacciono dove sei caduto. torna a riprendertele.`;
+            band.append(loss);
         }
-        s.append(this.scoreBadge(score, 'punteggio della partita'));
-        const stack = el('div', 'menu-stack');
-        stack.append(this.btn('riprova dal microfono', -1.3, () => {
-            this.closeOverlay();
-            this.controller.retry();
-        }, 'glass-acid-green'));
-        stack.append(this.btn('esci al menu', 1, () => {
-            this.closeOverlay();
-            this.controller.quitToMenu();
-        }));
-        s.append(stack);
+        band.append(this.scoreBadge(score, 'punteggio della partita'));
+        band.append(this.menu([
+            { label: 'rialzati al microfono', onPick: () => { this.closeOverlay(); this.controller.retry(); } },
+            { label: 'esci al menu', back: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
+        ], 'row'));
+        s.append(band);
+        // le scelte arrivano dopo il titolo: prima si incassa
+        setTimeout(() => { if (this.overlay === s) this.bindNav(band); }, 2400);
     }
 
     /** il punteggio della partita, con il record della classifica locale accanto */
     private scoreBadge(score: number | null, label: string, rank = 0): HTMLElement {
-        const box = el('div', `run-score${score === null ? ' off' : ''}`);
+        const box = el('div', `sx-run${score === null ? ' off' : ''}`);
         if (score === null) {
-            box.append(el('span', 'rs-label', 'partita assistita'), el('b', 'rs-value', 'niente punteggio'));
+            box.append(el('span', '', 'partita assistita'), el('b', '', 'senza punteggio'));
             return box;
         }
         const best = loadBoard()[0]?.score ?? 0;
-        box.append(el('span', 'rs-label', label), el('b', 'rs-value', score.toLocaleString('it-IT')));
+        box.append(el('span', '', label), el('b', '', score.toLocaleString('it-IT')));
         const note = rank === 1 ? 'nuovo record della classifica!' : rank > 1 ? `${rank}° nella classifica` : best > 0 ? `record: ${best.toLocaleString('it-IT')}` : '';
-        if (note) box.append(el('span', 'rs-note font-marker', note));
+        if (note) box.append(el('span', 'note', note));
         return box;
     }
 
@@ -408,72 +569,89 @@ export class Screens {
 
     private choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
         this.controller.pause();
-        const s = this.openOverlay();
-        const panel = el('div', 'story-card glass-panel glass-acid-green');
-        const t = el('div', 'font-marker choice-title');
+        const s = this.openOverlay('screen sx');
+        const page = el('div', 'sx-page');
+        const box = el('div', 'sx-announce');
+        box.append(el('div', 'sx-kick', 'una scelta'));
+        const t = el('div', 'sx-name');
         t.textContent = title;
-        panel.append(t);
-        s.append(panel);
-        const stack = el('div', 'menu-stack');
-        options.forEach((opt, i) => {
-            stack.append(this.btn(opt.label, i % 2 ? 1.2 : -1.2, () => {
+        box.append(t, this.orn());
+        page.append(box);
+        page.append(this.menu(options.map((opt, i) => ({
+            label: opt.label,
+            danger: opt.danger,
+            onPick: () => {
                 this.closeOverlay();
                 this.controller.resume();
                 onPick(i);
-            }, opt.danger ? 'glass-acid-red' : 'glass-acid-green'));
-        });
-        s.append(stack);
+            },
+        }))));
+        s.append(page);
+        this.bindNav(page);
     }
 
-    /* ---------- card di zona, toast, wavesung, abilità ---------- */
+    /* ---------- annunci: area, toast, wavesung, abilità ---------- */
 
     private zoneCard(title: string, accent: string, color: ZoneColor, punchline: string): void {
         document.getElementById('zonecard')?.remove();
         const card = el('div');
         card.id = 'zonecard';
+        const line = el('div', 'zc-line');
         const h1 = el('h1');
-        h1.textContent = title + ' ';
+        h1.textContent = `${title.toLowerCase()} `;
         const span = el('span', 'accent');
         span.textContent = accent;
         span.style.color = ZONE_CSS[color];
         h1.append(span);
-        const p = el('div', 'font-marker');
-        p.style.cssText = 'color:rgba(255,255,255,.75);font-size:17px;transform:rotate(-1deg)';
+        line.append(h1);
+        const p = el('div', 'zc-punch');
         p.textContent = punchline;
-        card.append(h1, p);
+        card.append(line, p);
         ui().append(card);
-        setTimeout(() => card.remove(), 3300);
+        setTimeout(() => card.remove(), 4300);
     }
 
     /** il tabellone della fermata: tutte le fermate scoperte, capitolo per capitolo */
     private travelBoard(p: { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void }): void {
         this.controller.pause();
-        const s = this.openOverlay('screen');
-        s.append(el('h2', 'font-crisis', 'CITELIS'));
-        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">prossima partenza: adesso. quella dopo: sempre.</span>'));
+        const s = this.openOverlay('screen sx');
+        const page = el('div', 'sx-page');
+        page.append(...this.heading('citelis', 'prossima partenza: adesso. quella dopo: sempre.'));
         const close = () => {
             this.closeOverlay();
             this.controller.resume();
         };
-        const stack = el('div', 'menu-stack chapters-scroll');
+        const body = el('div', 'sx-body narrow');
         let lastLevel = '';
-        p.stops.forEach((stop, i) => {
+        let group: MenuItem[] = [];
+        const flush = () => {
+            if (group.length) body.append(this.menu(group));
+            group = [];
+        };
+        for (const stop of p.stops) {
             if (stop.levelId !== lastLevel) {
+                flush();
                 lastLevel = stop.levelId;
                 const lv = LEVELS[stop.levelId];
-                stack.append(el('div', 'chapters-secret-head font-marker', `${lv.title.toLowerCase()} ${lv.accentWord}`));
+                body.append(el('div', 'sx-group', `${lv.title.toLowerCase()} ${lv.accentWord}`));
             }
             const here = stop.key === p.current;
-            const b = this.btn(here ? `● ${stop.label} (sei qui)` : stop.label, i % 2 ? 1 : -1, () => {
-                if (here) return;
-                close();
-                p.onPick(stop.key);
-            }, here ? 'glass-acid-yellow' : 'glass-acid-green');
-            stack.append(b);
-        });
-        s.append(stack);
-        s.append(this.btn('resto qui', 0, close));
-        this.onEsc(close);
+            group.push({
+                label: stop.label,
+                sub: here ? 'sei qui' : undefined,
+                small: true,
+                onPick: () => {
+                    if (here) return;
+                    close();
+                    p.onPick(stop.key);
+                },
+            });
+        }
+        flush();
+        page.append(body);
+        page.append(this.menu([{ label: 'resto qui', back: true, onPick: close }]));
+        s.append(page);
+        this.bindNav(page, close);
     }
 
     /** trofeo sbloccato: medaglia dorata in alto a sinistra, non ferma il gioco */
@@ -519,59 +697,46 @@ export class Screens {
         phoneBanner({ app: 'wavesung', title: sender, body: text, accent: 'blue', wrap: true, ms: 5200 });
     }
 
-    private abilityCard(ability: keyof typeof ABILITY_CARDS): void {
+    /** un oggetto ottenuto: il nome inciso al centro, la descrizione sotto */
+    private announce(kick: string, name: string, lines: string[], extra: HTMLElement | null, ok: string, color: string): void {
         this.controller.pause();
-        const card = ABILITY_CARDS[ability];
-        const s = this.openOverlay();
-        s.append(this.kicker('frammento della gecowave — rec', 'glass-acid-green', ZONE_CSS.green));
-        const panel = el('div', 'story-card glass-panel glass-acid-green');
-        const name = el('div', 'font-marker');
-        name.style.cssText = 'font-size:30px;color:var(--green);transform:rotate(-2deg);margin-bottom:14px';
-        name.textContent = card.name;
-        const desc = el('p');
-        desc.textContent = card.desc;
-        const key = el('div');
-        key.style.marginTop = '16px';
-        const kbd = el('kbd');
-        kbd.style.cssText = 'font-size:12px;padding:6px 14px;border:1px solid rgba(255,255,255,.25);border-radius:8px';
-        kbd.textContent = card.key;
-        key.append(kbd);
-        panel.append(name, desc, key);
-        s.append(panel);
+        const s = this.openOverlay('screen sx');
+        const page = el('div', 'sx-page');
+        const box = el('div', 'sx-announce');
+        box.append(el('div', 'sx-kick', kick));
+        const n = el('div', 'sx-name');
+        n.textContent = name;
+        n.style.color = color;
+        box.append(n, this.orn());
+        for (const l of lines) {
+            const d = el('p', 'sx-desc');
+            d.textContent = l;
+            box.append(d);
+        }
+        if (extra) box.append(extra);
+        page.append(box);
         const close = () => {
             this.closeOverlay();
             this.controller.resume();
         };
-        const stack = el('div', 'menu-stack');
-        stack.append(this.btn('bella', -1.5, close, 'glass-acid-green'));
-        s.append(stack);
-        this.onEsc(close);
+        page.append(this.menu([{ label: ok, onPick: close }]));
+        s.append(page);
+        sfx.unlock();
+        this.bindNav(page, close);
+    }
+
+    private abilityCard(ability: keyof typeof ABILITY_CARDS): void {
+        const card = ABILITY_CARDS[ability];
+        const kbd = el('kbd');
+        kbd.textContent = card.key;
+        this.announce('frammento della gecowave', card.name, [card.desc], kbd, 'bella', 'var(--sx-bone)');
     }
 
     private charmCard(id: string): void {
         const item = ITEMS[id];
         if (!item) return;
-        this.controller.pause();
-        const s = this.openOverlay();
-        s.append(this.kicker('amuleto trovato — rec', 'glass-acid-purple', ZONE_CSS.purple));
-        const panel = el('div', 'story-card glass-panel glass-acid-purple');
-        const name = el('div', 'font-marker');
-        name.style.cssText = 'font-size:30px;color:var(--purple);transform:rotate(-2deg);margin-bottom:14px';
-        name.textContent = `${item.icon} ${item.name}`;
-        const desc = el('p');
-        desc.textContent = item.desc;
-        const how = el('p', 'punch');
-        how.textContent = `costa ${item.cost} ${item.cost === 1 ? 'tacca' : 'tacche'}. si indossa dal telefono (tab), vicino a un microfono.`;
-        panel.append(name, desc, how);
-        s.append(panel);
-        const close = () => {
-            this.closeOverlay();
-            this.controller.resume();
-        };
-        const stack = el('div', 'menu-stack');
-        stack.append(this.btn('in tasca', -1.5, close, 'glass-acid-purple'));
-        s.append(stack);
-        this.onEsc(close);
+        const how = `costa ${item.cost} ${item.cost === 1 ? 'tacca' : 'tacche'}. si indossa dal telefono (tab), vicino a un microfono.`;
+        this.announce('amuleto trovato', `${item.icon} ${item.name}`, [item.desc, how], null, 'in tasca', 'var(--sx-gold)');
     }
 
     /* ---------- sequenze narrative ---------- */
@@ -579,54 +744,50 @@ export class Screens {
     storySequence(cards: { text: string; punch?: string }[], onDone: () => void): void {
         let i = 0;
         const showCard = () => {
-            const s = this.openOverlay('screen opaque narration-screen');
-            const panel = el('div', 'narration');
-            const orn = el('div', 'narration-orn', '✦');
-            const p = el('p', 'narration-text');
-            const hint = el('div', 'narration-hint label', 'clic per continuare');
-            panel.append(orn, p);
-            s.append(panel, hint);
+            const s = this.openOverlay('screen sx narration-screen');
+            const panel = el('div', 'sx-narration');
+            const p = el('p');
+            panel.append(this.orn(), p);
+            s.append(panel, el('div', 'sx-hint', 'premi per continuare'));
 
             const full = cards[i].text;
             const punch = cards[i].punch;
             let typing: number | null = null;
             let allDone = false;
 
-            const punchEl = punch ? el('span', 'narration-punch') : null;
+            const punchEl = punch ? el('span', 'punch') : null;
             if (punchEl) panel.append(punchEl);
 
-            // digita una stringa su un elemento col ritmo sonoro dei dialoghi npc
+            // digita una stringa col ritmo sonoro dei dialoghi
             const typeInto = (target: HTMLElement, str: string, onComplete: () => void) => {
                 let typed = 0;
                 typing = window.setInterval(() => {
                     typed++;
                     target.textContent = str.slice(0, typed);
-                    if (typed % 3 === 0) sfx.ui();
+                    if (typed % 4 === 0) sfx.ui();
                     if (typed >= str.length) {
                         clearInterval(typing!);
                         typing = null;
                         onComplete();
                     }
-                }, 28);
+                }, 30);
             };
 
-            const finishPunch = () => { allDone = true; };
             const startPunch = () => {
-                if (punchEl && punch) typeInto(punchEl, punch, finishPunch);
+                if (punchEl && punch) typeInto(punchEl, punch, () => (allDone = true));
                 else allDone = true;
             };
-            const startTyping = () => typeInto(p, full, startPunch);
 
             const advance = () => {
                 if (!allDone) {
-                    // primo input: completa tutto istantaneamente, secondo input: avanza
+                    // primo input: completa tutto, secondo input: avanza
                     if (typing) { clearInterval(typing); typing = null; }
                     p.textContent = full;
                     if (punchEl && punch) punchEl.textContent = punch;
                     allDone = true;
                     return;
                 }
-                sfx.ui();
+                sfx.menuMove();
                 i++;
                 if (i < cards.length) showCard();
                 else {
@@ -643,7 +804,7 @@ export class Screens {
                 }
             };
             window.addEventListener('keydown', this.escHandler);
-            startTyping();
+            typeInto(p, full, startPunch);
         };
         showCard();
     }
@@ -656,17 +817,17 @@ export class Screens {
 
     private showCredits(opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number }, onDone: () => void): void {
         const win = opts.outcome === 'win';
-        const s = this.openOverlay(`screen opaque credits-screen ${win ? 'credits-win' : 'credits-lose'}`);
+        const s = this.openOverlay(`screen sx opaque credits-screen sx-credits ${win ? 'credits-win' : 'credits-lose'}`);
 
         const end = el('h1', 'credits-end');
-        end.textContent = 'THE END';
-        const sub = el('div', 'credits-sub font-marker');
-        sub.textContent = opts.title;
+        end.textContent = 'fine';
+        const sub = el('div', 'credits-sub');
+        sub.textContent = opts.title.toLowerCase();
 
         const roll = el('div', 'credits-roll');
         const inner = el('div', 'credits-inner');
         const game = el('div', 'credits-game');
-        game.textContent = 'GECOWAVE';
+        game.textContent = 'gecowave';
         inner.append(game);
         for (const c of CREDITS) {
             if (c.role) {
@@ -691,7 +852,7 @@ export class Screens {
             this.closeOverlay();
             onDone();
         };
-        const back = this.btn('torna al menu', 1, finish, win ? 'glass-acid-gold' : 'glass-acid-red');
+        const back = this.menu([{ label: 'torna al menu', onPick: finish }]);
         back.classList.add('credits-btn');
         s.append(back);
 
@@ -707,301 +868,202 @@ export class Screens {
                 setTimeout(() => f.remove(), 1100);
             }, 420);
         }
-        this.onEsc(finish);
+        this.bindNav(s, finish);
     }
 
+    /* ---------- forgia del personaggio ---------- */
+
     showCharacterCreation(onConfirm: () => void): void {
-        const s = this.openOverlay('screen opaque char-forge');
+        const s = this.openOverlay('screen sx sx-forge menu-screen');
         this.setZone('yellow');
 
-        // atmosfera souls-like: vignetta, brace fluttuante, emblema
-        s.append(el('div', 'forge-vignette'));
-        const embers = el('div', 'forge-embers');
-        for (let i = 0; i < 16; i++) {
-            const e = el('div', 'forge-ember');
-            e.style.cssText = `left:${(Math.random() * 100).toFixed(1)}%;animation-delay:${(-Math.random() * 14).toFixed(2)}s;animation-duration:${(9 + Math.random() * 9).toFixed(2)}s;--drift:${(Math.random() * 50 - 25).toFixed(0)}px`;
-            embers.append(e);
-        }
-        s.append(embers);
-        s.append(el('div', 'forge-emblem font-crisis', '✦'));
+        // ogni nuova run parte non assistita: la freccia è opt-in,
+        // mai ereditata dalle impostazioni o dalla partita precedente
+        state.settings.guide = false;
+        state.persistSettings();
 
         let finalName = 'Geco';
         let doomsdayMode = false;
         let availablePoints = 10;
         const stats = { forza: 0, costituzione: 0, flusso: 0 };
 
-        // --- STEP 1: NOME ---
-        const step1 = el('div', 'forge-step active');
-        step1.append(el('div', 'forge-eyebrow font-martian', 'capitolo zero — il custode provvisorio'));
-        step1.append(el('h1', 'forge-title font-crisis', 'COME TI CHIAMI?'));
-        step1.append(el('div', 'forge-rule'));
-        step1.append(el('div', 'forge-hint font-marker', 'incidi il tuo nome nella memoria del flusso'));
+        const backs = new Map<HTMLElement, (() => void) | undefined>();
+        const show = (from: HTMLElement, to: HTMLElement) => {
+            from.classList.remove('active');
+            to.classList.add('active');
+            this.closeNavOnly();
+            this.bindNav(to, backs.get(to));
+            if (to === step1) setTimeout(() => input.focus(), 60);
+        };
 
-        const nameWrap = el('div', 'forge-nameplate');
-        const input = el('input', 'forge-name-input font-crisis') as HTMLInputElement;
+        // --- il nome ---
+        const step1 = el('div', 'sx-step active');
+        step1.append(el('div', 'sx-kick', 'capitolo zero · il custode provvisorio'));
+        step1.append(...this.heading('come ti chiami?', 'incidi il tuo nome nella memoria del flusso'));
+        const input = el('input', 'sx-name-input');
         input.type = 'text';
         input.value = '';
         input.maxLength = 12;
         input.placeholder = 'Geco';
         input.spellcheck = false;
-        nameWrap.append(input);
-        step1.append(nameWrap);
-
-        const nextBtn = this.btn('continua →', 0, () => goToStep2(), 'glass-acid-gold');
-        nextBtn.classList.add('forge-btn');
-        step1.append(nextBtn);
-        s.append(step1);
-
-        input.addEventListener('keydown', (e) => {
-            if (e.code === 'Enter') goToStep2();
-        });
-        setTimeout(() => input.focus(), 140);
-
-        // --- STEP 2: PUNTI ---
-        const step2 = el('div', 'forge-step');
-        s.append(step2);
-
         const goToStep2 = () => {
             finalName = input.value.trim() || 'Geco';
-            sfx.ui();
-            step1.classList.remove('active');
-            setTimeout(() => {
-                step1.style.display = 'none';
-                step2.style.display = 'flex';
-                step2.classList.add('active');
-                title2.textContent = `forgia di ${finalName.toLowerCase()}`;
-                updateAll();
-            }, 220);
+            title2.textContent = `la forgia di ${finalName.toLowerCase()}`;
+            updateAll();
+            show(step1, step2);
         };
-
-        const header = el('div', 'forge-header');
-        header.append(el('div', 'forge-eyebrow font-martian', 'capitolo zero — allocazione del flusso'));
-        const title2 = el('h1', 'forge-title forge-title-sm font-crisis', 'forgia del geco');
-        header.append(title2);
-        header.append(el('div', 'forge-rule'));
-        step2.append(header);
-
-        const layout = el('div', 'forge-body');
-        step2.append(layout);
-
-        const leftCol = el('div', 'forge-stats-col');
-        const rightCol = el('div', 'forge-aside');
-        layout.append(leftCol, rightCol);
-
-        const pointsEl = el('div', 'forge-points');
-        const pointsNum = el('span', 'forge-points-num font-martian', String(availablePoints));
-        pointsEl.append(el('span', 'forge-points-lbl font-martian', 'punti da assegnare'), pointsNum);
-        leftCol.append(pointsEl);
-
-        // radar chart svg
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        // viewBox allargato: lascia spazio alle label ai vertici, così non sbordano
-        svg.setAttribute('viewBox', '-48 -16 305 230');
-        svg.classList.add('char-radar-chart');
-        rightCol.append(svg);
-
-        const cx = 110, cy = 110;
-        const getPoint = (d: number, index: number) => {
-            const angle = -Math.PI / 2 + (index * 2 * Math.PI) / 3;
-            return {
-                x: cx + d * Math.cos(angle),
-                y: cy + d * Math.sin(angle)
-            };
-        };
-
-        const drawGridTriangle = (d: number) => {
-            const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-            const p0 = getPoint(d, 0);
-            const p1 = getPoint(d, 1);
-            const p2 = getPoint(d, 2);
-            poly.setAttribute('points', `${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
-            poly.setAttribute('class', 'radar-grid');
-            svg.appendChild(poly);
-        };
-        drawGridTriangle(20);
-        drawGridTriangle(50);
-        drawGridTriangle(80);
-
-        for (let i = 0; i < 3; i++) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            const pOuter = getPoint(80, i);
-            line.setAttribute('x1', String(cx));
-            line.setAttribute('y1', String(cy));
-            line.setAttribute('x2', String(pOuter.x));
-            line.setAttribute('y2', String(pOuter.y));
-            line.setAttribute('class', 'radar-axis');
-            svg.appendChild(line);
-        }
-
-        const statPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        statPoly.setAttribute('class', 'radar-value');
-        svg.appendChild(statPoly);
-
-        const createRadarLabel = (index: number, text: string, textAnchor: string, dy: number, dx = 0) => {
-            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            const p = getPoint(95, index);
-            label.setAttribute('x', String(p.x + dx));
-            label.setAttribute('y', String(p.y + dy));
-            label.setAttribute('text-anchor', textAnchor);
-            label.setAttribute('class', 'radar-label font-marker');
-            label.textContent = text;
-            svg.appendChild(label);
-            return label;
-        };
-
-        const labelForza = createRadarLabel(0, 'FORZA', 'middle', -6);
-        const labelCost = createRadarLabel(1, 'COST', 'start', 10, 4);
-        const labelFlus = createRadarLabel(2, 'FLUSSO', 'end', 10, -4);
-
-        const createStatSelector = (key: 'forza' | 'costituzione' | 'flusso', label: string, desc: string) => {
-            const row = el('div', 'forge-stat');
-
-            const head = el('div', 'forge-stat-head');
-            head.append(el('span', 'forge-stat-name font-marker', label));
-            const valEl = el('span', 'forge-stat-val font-martian', '00');
-            head.append(valEl);
-            row.append(head);
-
-            row.append(el('div', 'forge-stat-desc font-martian', desc));
-
-            const ctl = el('div', 'forge-stat-ctl');
-            const minus = el('button', 'forge-step-btn', '−');
-            const plus = el('button', 'forge-step-btn', '+');
-            const segmentsWrap = el('div', 'forge-segments');
-            const segments: HTMLElement[] = [];
-            for (let i = 1; i <= 10; i++) {
-                const seg = el('div', 'forge-segment');
-                segmentsWrap.append(seg);
-                segments.push(seg);
-                seg.addEventListener('click', () => {
-                    const valToSet = (i === 1 && stats[key] === 1) ? 0 : i;
-                    const diff = valToSet - stats[key];
-                    if (diff > 0) {
-                        const alloc = Math.min(diff, availablePoints);
-                        if (alloc <= 0) return;
-                        stats[key] += alloc; availablePoints -= alloc;
-                    } else if (diff < 0) {
-                        stats[key] += diff; availablePoints -= diff;
-                    } else return;
-                    sfx.ui();
-                    updateAll();
-                });
+        step1.append(input);
+        step1.append(this.menu([
+            { label: 'incidi', onPick: goToStep2 },
+            { label: 'torna al titolo', back: true, onPick: () => this.showMenu() },
+        ]));
+        input.addEventListener('keydown', (e) => {
+            if (e.code === 'Enter') {
+                e.preventDefault();
+                sfx.menuSelect();
+                goToStep2();
             }
-            minus.addEventListener('click', () => {
+        });
+        s.append(step1);
+        backs.set(step1, () => this.showMenu());
+
+        // --- gli attributi ---
+        const step2 = el('div', 'sx-step');
+        step2.append(el('div', 'sx-kick', 'capitolo zero · allocazione del flusso'));
+        const [title2, ...rest2] = this.heading('la forgia');
+        step2.append(title2, ...rest2);
+        const grid = el('div', 'sx-forge-grid');
+        const left = el('div', '');
+        const right = el('div', 'sx-portrait');
+        grid.append(left, right);
+        step2.append(grid);
+
+        const pointsEl = el('div', 'sx-points', 'punti del flusso da assegnare');
+        const pointsNum = el('b', '', '10');
+        pointsEl.append(pointsNum);
+        left.append(pointsEl);
+
+        const attr = (key: 'forza' | 'costituzione' | 'flusso', label: string, desc: string) => {
+            const row = el('div', 'sx-attr');
+            row.dataset.nav = '1';
+            row.append(el('div', 'an', label), el('div', 'ad', desc));
+            const pips = el('div', 'sx-pips');
+            const pipEls: HTMLElement[] = [];
+            for (let i = 0; i < 10; i++) {
+                const pip = el('i');
+                pipEls.push(pip);
+                pips.append(pip);
+            }
+            row.append(pips);
+            const av = el('div', 'av');
+            const minus = el('button', '', '‹');
+            const num = el('span', 'num', '0');
+            const plus = el('button', '', '›');
+            av.append(minus, num, plus);
+            row.append(av);
+            const dec = () => {
                 if (stats[key] <= 0) return;
-                stats[key]--; availablePoints++; sfx.ui(); updateAll();
-            });
-            plus.addEventListener('click', () => {
+                stats[key]--;
+                availablePoints++;
+                sfx.menuMove();
+                updateAll();
+            };
+            const inc = () => {
                 if (availablePoints <= 0 || stats[key] >= 10) return;
-                stats[key]++; availablePoints--; sfx.ui(); updateAll();
+                stats[key]++;
+                availablePoints--;
+                sfx.menuMove();
+                updateAll();
+            };
+            minus.addEventListener('click', dec);
+            plus.addEventListener('click', inc);
+            row.addEventListener('nav-left', dec);
+            row.addEventListener('nav-right', inc);
+            // invio sulla riga: un punto in più, come la destra
+            row.addEventListener('click', (e) => {
+                if (e.target === row) inc();
             });
-            ctl.append(minus, segmentsWrap, plus);
-            row.append(ctl);
-            leftCol.append(row);
+            left.append(row);
 
             return () => {
-                valEl.textContent = String(stats[key]).padStart(2, '0');
-                segments.forEach((seg, idx) => seg.classList.toggle('filled', idx < stats[key]));
+                num.textContent = String(stats[key]);
+                pipEls.forEach((pg, i) => pg.classList.toggle('full', i < stats[key]));
                 minus.classList.toggle('disabled', stats[key] <= 0);
                 plus.classList.toggle('disabled', availablePoints <= 0 || stats[key] >= 10);
             };
         };
+        const updForza = attr('forza', 'forza', 'il danno dei colpi: +10% a punto');
+        const updCost = attr('costituzione', 'costituzione', 'i cuori che reggi: +1 a punto');
+        const updFlus = attr('flusso', 'flusso', 'flusso massimo +10 e risonante +10% a punto');
 
-        const updSelForza = createStatSelector('forza', 'forza', 'danno fisico +10% a punto');
-        const updSelCost = createStatSelector('costituzione', 'costituzione', 'punti vita massimi +1 a punto');
-        const updSelFlus = createStatSelector('flusso', 'flusso', 'flusso max +10 e risonante +10% a punto');
+        right.append(el('div', 'sx-geco'));
+        const derived = el('div', 'sx-derived');
+        right.append(derived);
+        const dRow = (label: string) => {
+            const d = el('div');
+            const v = el('b');
+            d.append(el('span', '', label), v);
+            derived.append(d);
+            return v;
+        };
+        const dHp = dRow('cuori');
+        const dDmg = dRow('danno');
+        const dFlow = dRow('flusso massimo');
+        const dRes = dRow('colpo risonante');
 
         const updateAll = () => {
-            updSelForza();
-            updSelCost();
-            updSelFlus();
-
+            updForza();
+            updCost();
+            updFlus();
             pointsNum.textContent = String(availablePoints);
             pointsEl.classList.toggle('spent', availablePoints === 0);
-
-            const dForza = 20 + (stats.forza / 10) * 60;
-            const dCost = 20 + (stats.costituzione / 10) * 60;
-            const dFlus = 20 + (stats.flusso / 10) * 60;
-
-            const p0 = getPoint(dForza, 0);
-            const p1 = getPoint(dCost, 1);
-            const p2 = getPoint(dFlus, 2);
-            statPoly.setAttribute('points', `${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
-
-            labelForza.textContent = `FORZA · ${stats.forza}`;
-            labelCost.textContent = `COST · ${stats.costituzione}`;
-            labelFlus.textContent = `FLUSSO · ${stats.flusso}`;
+            dHp.textContent = String(5 + stats.costituzione);
+            dHp.classList.toggle('up', stats.costituzione > 0);
+            dDmg.textContent = `×${(1 + stats.forza * 0.1).toFixed(1)}`;
+            dDmg.classList.toggle('up', stats.forza > 0);
+            dFlow.textContent = String(99 + stats.flusso * 10);
+            dFlow.classList.toggle('up', stats.flusso > 0);
+            dRes.textContent = `×${(1 + stats.flusso * 0.1).toFixed(1)}`;
+            dRes.classList.toggle('up', stats.flusso > 0);
         };
 
-        const actions = el('div', 'forge-actions');
-        const backBtn = this.btn('← nome', 0, () => {
-            sfx.ui();
-            step2.classList.remove('active');
-            setTimeout(() => {
-                step2.style.display = 'none';
-                step1.style.display = 'flex';
-                step1.classList.add('active');
-                input.focus();
-            }, 200);
-        });
-        backBtn.classList.add('forge-btn', 'forge-btn-ghost');
-        const confirmBtn = this.btn('conferma attributi →', 0, () => {
-            sfx.ui();
-            step2.classList.remove('active');
-            setTimeout(() => {
-                step2.style.display = 'none';
-                step3.style.display = 'flex';
-                step3.classList.add('active');
-                selectMode(false);
-            }, 200);
-        }, 'glass-acid-gold');
-        confirmBtn.classList.add('forge-btn');
-        actions.append(backBtn, confirmBtn);
-        step2.append(actions);
+        const back2 = () => show(step2, step1);
+        step2.append(this.menu([
+            { label: 'indietro', back: true, onPick: back2 },
+            { label: 'conferma', onPick: () => { selectMode(doomsdayMode, false); show(step2, step3); } },
+        ], 'row'));
+        s.append(step2);
+        backs.set(step2, back2);
 
-        // --- STEP 3: MODALITÀ DI GIOCO ---
-        const step3 = el('div', 'forge-step');
-        s.append(step3);
+        // --- il destino ---
+        const step3 = el('div', 'sx-step');
+        step3.append(el('div', 'sx-kick', 'capitolo zero · la scelta del destino'));
+        step3.append(...this.heading('scegli il tuo destino'));
+        const fates = el('div', 'sx-fates');
+        const fate = (cls: string, svg: string, name: string, desc: string) => {
+            const c = el('div', `sx-fate ${cls}`);
+            c.dataset.nav = '1';
+            c.innerHTML = svg;
+            c.append(el('div', 'fn', name), el('div', 'fd', desc));
+            fates.append(c);
+            return c;
+        };
+        // una candela: il cammino senza fretta
+        const standardCard = fate('', '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M48 14c-6 8-8 13-5 18 2 4 8 4 10 0 3-5 1-10-5-18Z"/><path d="M48 26c-2 3-2 5 0 6"/><rect x="38" y="38" width="20" height="40" rx="2"/><path d="M38 46c4 2 8-2 10 2s6 0 10-2"/><path d="M26 82h44"/><path d="M30 78c0-4 6-4 8-4M66 78c0-4-6-4-8-4"/></svg>',
+            'il cammino', 'l\'esperienza classica. nessun orologio: i boss e la storia aspettano te.');
+        // una clessidra che si svuota: il doomsday
+        const doomsdayCard = fate('doom', '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M28 12h40M28 84h40"/><path d="M32 12c0 22 16 26 16 36S32 62 32 84M64 12c0 22-16 26-16 36s16 14 16 36"/><path d="M40 30c4 4 12 4 16 0"/><path d="M48 52v14"/><path d="M38 80c4-6 16-6 20 0"/><path d="M20 20l-6-6M76 20l6-6"/></svg>',
+            'doomsday', 'il tempo vero scorre. se ti attardi troppo, pedro ti raggiunge e ti cancella.');
+        step3.append(fates);
+        const assist = assistToggle({ rowClass: 'sx-row', newGame: true });
+        assist.querySelector<HTMLElement>('.toggle')?.setAttribute('data-nav', '1');
+        step3.append(assist);
 
-        const header3 = el('div', 'forge-header');
-        header3.append(el('div', 'forge-eyebrow font-martian', 'capitolo zero — scelta del destino'));
-        const title3 = el('h1', 'forge-title forge-title-sm font-crisis', 'SCEGLI IL TUO DESTINO');
-        header3.append(title3);
-        header3.append(el('div', 'forge-rule'));
-        step3.append(header3);
-
-        const choiceContainer = el('div', 'doomsday-choices');
-        
-        const standardCard = el('div', 'mode-card standard-card');
-        standardCard.append(el('div', 'card-glow'));
-        standardCard.append(el('div', 'card-icon', '🧭'));
-        standardCard.append(el('div', 'card-title font-marker', 'Standard'));
-        standardCard.append(el('div', 'card-desc font-martian', 'L\'esperienza classica di gioco. Nessun timer: affronta i boss e vivi la storia al tuo ritmo.'));
-        
-        const doomsdayCard = el('div', 'mode-card doomsday-card');
-        doomsdayCard.append(el('div', 'card-glow'));
-        doomsdayCard.append(el('div', 'card-icon', '☠'));
-        doomsdayCard.append(el('div', 'card-title font-marker', 'Doomsday'));
-        doomsdayCard.append(el('div', 'card-desc font-martian', 'Il doomsday si avvicina col tempo reale. Se perdi troppo tempo, Pedro ti raggiunge e ti cancella.'));
-        
-        choiceContainer.append(standardCard, doomsdayCard);
-        step3.append(choiceContainer);
-        step3.append(assistToggle({ rowClass: 'settings-row glass-chip', newGame: true }));
-
-        const actions3 = el('div', 'forge-actions');
-        const backToStep2Btn = this.btn('← attributi', 0, () => {
-            sfx.ui();
-            s.classList.remove('doomsday-active');
-            step3.classList.remove('active');
-            setTimeout(() => {
-                step3.style.display = 'none';
-                step2.style.display = 'flex';
-                step2.classList.add('active');
-            }, 200);
-        });
-        backToStep2Btn.classList.add('forge-btn', 'forge-btn-ghost');
-
-        const confirmRunBtn = this.btn('inizia la run →', 0, () => {
+        const back3 = () => {
+            s.classList.remove('doom');
+            show(step3, step2);
+        };
+        const start = () => {
             state.save.playerName = finalName;
             state.save.stats.forza = stats.forza;
             state.save.stats.costituzione = stats.costituzione;
@@ -1014,25 +1076,28 @@ export class Screens {
             state.resetRun();
             this.closeOverlay();
             onConfirm();
-        });
-        confirmRunBtn.classList.add('forge-btn');
+        };
+        step3.append(this.menu([
+            { label: 'indietro', back: true, onPick: back3 },
+            { label: 'inizia il viaggio', onPick: start },
+        ], 'row'));
+        s.append(step3);
+        backs.set(step3, back3);
 
-        actions3.append(backToStep2Btn, confirmRunBtn);
-        step3.append(actions3);
-
-        const selectMode = (isDoomsday: boolean) => {
+        const selectMode = (isDoomsday: boolean, sound = true) => {
             doomsdayMode = isDoomsday;
-            standardCard.classList.toggle('selected', !isDoomsday);
-            doomsdayCard.classList.toggle('selected', isDoomsday);
-            s.classList.toggle('doomsday-active', isDoomsday);
-            sfx.ui();
-            
-            // preserva le classi base sticker; cambia solo l'accento
-            confirmRunBtn.className = 'btn sticker forge-btn';
-            confirmRunBtn.classList.add(isDoomsday ? 'doomsday-confirm' : 'glass-acid-gold');
+            standardCard.classList.toggle('chosen', !isDoomsday);
+            doomsdayCard.classList.toggle('chosen', isDoomsday);
+            s.classList.toggle('doom', isDoomsday);
+            if (sound) sfx.menuSelect();
         };
 
         standardCard.addEventListener('click', () => selectMode(false));
         doomsdayCard.addEventListener('click', () => selectMode(true));
+
+        this.bindNav(step1, () => this.showMenu());
+        setTimeout(() => input.focus(), 140);
+        updateAll();
+        selectMode(false, false);
     }
 }

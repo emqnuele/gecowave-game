@@ -35,25 +35,6 @@ function make(scene: Phaser.Scene, key: string, w: number, h: number, draw: (g: 
 
 function objects(scene: Phaser.Scene): void {
     // microfono checkpoint
-    make(scene, 'mic', 24, 58, (m) => {
-        m.lineStyle(2.5, 0x222228, 1);
-        m.beginPath();
-        m.moveTo(12, 18); m.lineTo(12, 50);
-        m.strokePath();
-        m.lineStyle(2, 0x222228, 1);
-        m.beginPath();
-        m.moveTo(4, 56); m.lineTo(12, 48); m.lineTo(20, 56);
-        m.strokePath();
-        m.fillStyle(0x18181c, 1);
-        m.fillCircle(12, 11, 8);
-        m.lineStyle(1, 0x3a3a42, 1);
-        m.strokeCircle(12, 11, 8);
-        m.beginPath();
-        m.moveTo(6, 8); m.lineTo(18, 8);
-        m.moveTo(5, 11); m.lineTo(19, 11);
-        m.moveTo(6, 14); m.lineTo(18, 14);
-        m.strokePath();
-    });
 
     // porta-teorema: lastra di enunciato che blocca i corridoi della mente
     make(scene, 'porta-teorema', 36, 128, (p) => {

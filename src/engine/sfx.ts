@@ -193,6 +193,28 @@ class Sfx {
         this.noise(800, { freq: 180, q: 0.6, vol: 0.25 });
     }
     ui(): void { this.tone(520, 60, { type: 'square', vol: 0.04 }); }
+    /** menu: spostarsi è un tocco di campana lontana */
+    menuMove(): void {
+        this.tone(1318, 140, { type: 'sine', vol: 0.018, attackMs: 4 });
+        this.tone(659, 220, { type: 'sine', vol: 0.012, attackMs: 4 });
+    }
+    /** menu: scegliere è un colpo sordo e una nota che resta */
+    menuSelect(): void {
+        this.tone(110, 260, { type: 'sine', to: 70, vol: 0.09, attackMs: 3 });
+        this.noise(90, { freq: 500, q: 0.8, vol: 0.05, type: 'lowpass' });
+        this.tone(440, 900, { type: 'sine', vol: 0.022, attackMs: 8 });
+        this.tone(660, 700, { type: 'sine', vol: 0.012, attackMs: 8, delayMs: 30 });
+    }
+    /** menu: tornare indietro scende */
+    menuBack(): void {
+        this.tone(523, 260, { type: 'sine', to: 392, vol: 0.022, attackMs: 4 });
+    }
+    /** il risveglio dal titolo: un colpo grave e un coro che sale */
+    awaken(): void {
+        this.tone(55, 1800, { type: 'sine', to: 48, vol: 0.14, attackMs: 10 });
+        this.noise(1400, { freq: 160, q: 0.7, vol: 0.08, type: 'lowpass', attackMs: 30 });
+        [220, 277.2, 329.6, 440].forEach((f, i) => this.tone(f, 2600, { type: 'sine', vol: 0.016, attackMs: 600, delayMs: 200 + i * 160 }));
+    }
     clang(): void {
         this.tone(1800, 120, { type: 'square', to: 1200, vol: 0.06 });
         this.noise(80, { freq: 4200, q: 4, vol: 0.12 });

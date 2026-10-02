@@ -1380,7 +1380,7 @@ export class GameScene extends Phaser.Scene {
 
     private spawnCheckpoints(): void {
         for (const cp of this.level.checkpoints) {
-            const mic = this.add.sprite(cp.x, cp.y - 12, 'mic').setDepth(4).setPipeline('Light2D');
+            const mic = this.castSprite(cp.x, cp.y - 12, 'mic').setDepth(4);
             this.checkpointSprites.set(cp.id, mic);
             const used = state.save.collectedLore.includes(this.micKey(cp.id));
             if (state.save.checkpointId === cp.id) {
@@ -2793,7 +2793,7 @@ export class GameScene extends Phaser.Scene {
             const y = (sp[1] + 1) * TILE - 18;
             if (this.interactables.some((it) => Math.abs(it.x - x) < 200 && Math.abs(it.y - y) < 140)) continue;
             const won = state.hasFlag(`arena-vinta-${this.def.id}`);
-            const mic = this.add.sprite(x, y - 12, 'mic').setDepth(4).setPipeline('Light2D').setTint(won ? 0x64748b : 0xef4444);
+            const mic = this.castSprite(x, y - 12, 'mic').setDepth(4).setTint(won ? 0x64748b : 0xef4444);
             if (!won) this.lighting.static(x, y - 30, 0xef4444, 170, 0.9);
             this.challengeSpot = { room: cand.room, x, y, mic };
             this.interactables.push({ x, y, range: 60, onInteract: () => this.offerChallenge() });

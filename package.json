@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "@fontsource/climate-crisis": "^5.2.12",
+    "@fontsource/im-fell-english": "^5.3.0",
+    "@fontsource/im-fell-english-sc": "^5.3.0",
     "@fontsource/martian-mono": "^5.2.7",
     "@fontsource/permanent-marker": "^5.2.7",
     "phaser": "^3.90.0"

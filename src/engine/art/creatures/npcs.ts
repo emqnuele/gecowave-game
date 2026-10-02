@@ -339,6 +339,31 @@ const mamma: CreatureSpec = {
     },
 };
 
+/** il microfono dei checkpoint: il falò del realm, a stelo con la griglia calda */
+const mic: CreatureSpec = {
+    key: 'mic', w: 24, h: 58,
+    draw(p, t, f) {
+        // treppiede e asta
+        p.limb([{ x: 12, y: 50 }, { x: 4, y: 57 }], 1.8, 1.4, 0x3f3f46, { hatch: 0 });
+        p.limb([{ x: 12, y: 50 }, { x: 20, y: 57 }], 1.8, 1.4, 0x3f3f46, { hatch: 0 });
+        p.limb([{ x: 12, y: 22 }, { x: 12, y: 51 }], 2.4, 2.6, 0x52525b, { hatch: 0, rim: 0xd4d4d8 });
+        p.line(p.curve({ x: 12, y: 30 }, { x: 18, y: 44 + sin(t) * 0.5 }, { x: 15, y: 57 }, 8), 0.9, 0x18181b);
+        // capsula vintage con l'anello dorato
+        p.shape(p.rrect(5, 1, 14, 21, 7), 0x71717a, {
+            smooth: 0, hatch: 0.35, rim: 0xf4f4f5,
+            detail: (pp) => {
+                for (let y = 4; y < 20; y += 2.2) pp.line([{ x: 5, y }, { x: 19, y }], 0.45, INK, 0.55);
+                for (let x = 7; x < 18; x += 2.2) pp.line([{ x, y: 2 }, { x, y: 21 }], 0.35, INK, 0.35);
+            },
+        });
+        p.shape(p.rect(4.5, 10.5, 15, 2.6), 0xd4a017, { smooth: 0, hatch: 0, rim: 0xfff1a8 });
+        // la griglia trattiene il calore della wave
+        p.glow(12, 8, 3.6 + (f % 2) * 0.4, 0xfbbf24, 0.35);
+        // led "in onda" che respira
+        p.glow(12, 26, 0.9, 0xef4444, f % 2 ? 0.95 : 0.5);
+    },
+};
+
 export const NPC_ART: CreatureSpec[] = [
-    markolino, ivan, smela, filippus, piemaNpc, ticummi, lochef, samatt, guastalla, studente, romero, vavleeh, lamettaNpc, walter, notino, mamma,
+    mic, markolino, ivan, smela, filippus, piemaNpc, ticummi, lochef, samatt, guastalla, studente, romero, vavleeh, lamettaNpc, walter, notino, mamma,
 ];

@@ -4,6 +4,8 @@ import '@fontsource/climate-crisis/400.css';
 import '@fontsource/permanent-marker/400.css';
 import '@fontsource/martian-mono/400.css';
 import '@fontsource/martian-mono/700.css';
+import '@fontsource/im-fell-english-sc/400.css';
+import '@fontsource/im-fell-english/400-italic.css';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL, LEVELS, TOTAL_FRAGMENTS } from './content/levels';
@@ -17,6 +19,7 @@ import { checkAchievements } from './engine/achievements';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { GalleryScene } from './scenes/GalleryScene';
+import { MenuScene } from './scenes/MenuScene';
 import { DialogueBox } from './ui/dialogue';
 import { Phone } from './ui/phone';
 import { Hud } from './ui/hud';
@@ -54,13 +57,23 @@ async function boot(): Promise<void> {
                 tileBias: 48,
             },
         },
-        scene: [BootScene, GameScene, GalleryScene],
+        scene: [BootScene, GameScene, GalleryScene, MenuScene],
     });
 
     // handle di debug in sviluppo, mai nel build
     if (import.meta.env.DEV) Object.assign(window, { __game: game, __bus: bus, __state: state, __music: music, __acoustics: acoustics, __sfx: sfx });
 
+    // il falò del titolo: vive solo mentre il menu è aperto
+    screens.setBackdrop((on) => {
+        if (on) {
+            if (!game.scene.isActive('MenuScene')) game.scene.start('MenuScene', { levelId: state.hasSave ? state.save.levelId : undefined });
+        } else if (game.scene.isActive('MenuScene')) {
+            game.scene.stop('MenuScene');
+        }
+    });
+
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
+        game.scene.stop('MenuScene');
         inGame = true;
         sfx.init();
         music.playLevel(levelId);
