@@ -46,6 +46,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private pathAt = -99999;
     private flight: NavEdge | null = null;
     private flightAt = 0;
+    /** l'arco in corso ha già lasciato terra: si chiude al primo appoggio dopo */
+    private flightAir = false;
     private flyRoute: { x: number; y: number }[] = [];
     private flyRouteAt = -99999;
     private stuckX = 0;
@@ -269,11 +271,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
         // in volo su un arco: si tiene la velocità finché non si tocca terra
         if (this.flight) {
-            if (this.ground && now - this.flightAt > 90) {
+            if (!this.ground) this.flightAir = true;
+            if ((this.ground && this.flightAir) || now - this.flightAt > 1600) {
                 this.flight = null;
                 this.pathAt = -99999;
             } else {
-                body.setVelocityX(this.flight.vx);
+                // in caduta dal bordo si spinge finché il pavimento non finisce
+                const vx = this.flight.kind === 'drop' && !this.flightAir ? Math.sign(this.flight.vx) * Math.max(120, Math.abs(this.flight.vx)) : this.flight.vx;
+                body.setVelocityX(vx);
                 return false;
             }
         }
@@ -310,6 +315,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.path!.shift();
         this.flight = edge;
         this.flightAt = now;
+        this.flightAir = false;
         this.x = launchX;
         if (edge.kind === 'jump') {
             body.setVelocity(edge.vx, -edge.vy);
@@ -327,7 +333,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             return;
         }
         const dir = Math.sign(d);
-        if (this.arch.behavior === 'hopper') {
+        // vicino al punto di stacco anche chi saltella cammina: col saltello lo scavalcherebbe
+        if (this.arch.behavior === 'hopper' && Math.abs(d) > 56) {
             if (now >= this.nextActionAt) {
                 body.setVelocity(dir * Math.min(speed, Math.abs(d) * 3 + 60), -320);
                 this.nextActionAt = now + 420 + Math.random() * 300;
