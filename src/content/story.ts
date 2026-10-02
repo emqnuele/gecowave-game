@@ -1,4 +1,5 @@
 import type { AbilityId, DialogueLine } from '../types';
+import { ARC_DIALOGUES } from './arcs';
 
 /* la voce del realm: minuscolo, demenziale, mai tecnico.
    pedro parla glitchato, riba coi refusi, piema corretto da professore. */
@@ -35,6 +36,7 @@ export const DEATH_PUNCHLINES = [
 ];
 
 export const DIALOGUES: Record<string, DialogueLine[]> = {
+    ...ARC_DIALOGUES,
     /* ---------- capitolo 1: la wave perduta ---------- */
     'markolino-intro': [
         { speaker: 'markolino', color: 'green', text: 'oh. oh! sei sveglio. senti, non c\'è tempo: pedro è abbandonato a sé stesso, piema è sparito e lametta sembra impazzito. sono l\'unico che se n\'è accorto, ovviamente.' },
@@ -1140,6 +1142,40 @@ export function endingCards(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'ri
     const extra: { text: string; punch?: string }[] = [];
     if (flags.includes('dei-arrestati')) {
         extra.push({ text: 'piema e lametta scontano la pena alla ruhra: lui corregge compiti senza mai mettere 18, lei dipinge le aule. a matita. pedro passa a trovarli il giovedì. lametta piange sempre. piema dice che è allergia.' });
+    }
+    if (flags.includes('lametta-arrestato')) {
+        extra.push({ text: 'lametta sconta la pena alla ruhra e dipinge le aule. a matita. piema è libero: nessuna riga originale, nessuna prova. ogni tanto guarda il geco come chi sa di dovere un favore a qualcuno che ha fatto il suo stesso errore. nessuno dei due ne parla. è il loro modo di essere soci.' });
+    } else if (flags.includes('pensiero-cancellato')) {
+        extra.push({ text: 'nella testa di piema c\'è un cassetto vuoto. lui non sa perché, lì dentro, si sente più leggero. tu sì.' });
+    }
+    if (flags.includes('pensiero-portato')) {
+        extra.push({ text: 'il pensiero sepolto di piema è agli atti, in questura: fascicolo "analisi 1", pagina 1. romero l\'ha incorniciato. dice che è la prima riga vera mai scritta da un dio.' });
+    }
+    if (flags.includes('quaderno-completo')) {
+        extra.push(flags.includes('pedro-redento')
+            ? { text: 'pedro e il geco del muro si vedono ogni sera, alle quattro, in piazza. pedro parla, il geco fa il verso. si capiscono benissimo. si sono sempre capiti.' }
+            : { text: 'il quaderno di pedro sta in piazza, sotto vetro, accanto alla targa di ivan. ogni sera alle quattro il geco del muro passa e dice ciao. nessuno risponde. è la conversazione migliore della giornata.' });
+    }
+    if (flags.includes('notino-a-casa')) {
+        extra.push({ text: 'notino fa ancora gli agguati, ma dopo cena. sua madre lo aspetta sulla porta col mestolo. il server ha cambiato nome: "tecnokill (solo nel weekend)".' });
+    }
+    if (flags.includes('notino-disarmato')) {
+        extra.push({ text: 'notino non ti ha mai perdonato lo sparacchino. ha aperto un server tutto per te: "il geco ladro". ha un iscritto. è sua madre, per controllarlo.' });
+    }
+    if (flags.includes('lochef-arrestato')) {
+        extra.push({ text: 'lochef85 cucina per la mensa del carcere. i detenuti non hanno mai mangiato così bene né così a disagio. il brodo è tiepido. sempre.' });
+    }
+    if (flags.includes('lochef-libero')) {
+        extra.push({ text: 'la trattoria di lochef in piazza ha quattro stelle. la quinta l\'ha tolta un ispettore che non è più tornato a casa. indagini in corso.' });
+    }
+    if (flags.includes('caffe-romero')) {
+        extra.push({ text: 'romero ha preso l\'abitudine del caffè al bar, ogni mattina, con lo zucchero. dice che quarant\'anni di arretrati non si recuperano. ma si addolciscono.' });
+    }
+    if (flags.filter((f) => f.startsWith('corsa-vinta-')).length >= 3) {
+        extra.push({ text: 'guastalla ha preso la patente del citelis, in tre settimane, autoscuole marcetti gestione anna. guida la linea della piazza. va piano e si ferma a tutte le fermate. anche a quelle che non esistono.' });
+    }
+    if (flags.includes('storie-del-realm')) {
+        extra.push({ text: 'qualcuno ha raccolto in un libro le note sparse del realm: herbert, il pendolare delle 7:39, franceschini, l\'ospite n.11. lo vendono al mercato del crollo. il primo capitolo si intitola "chi c\'era".' });
     }
     if (flags.includes('pedro-redento') && id !== 'riscatto') {
         extra.push({ text: 'pedro, ripulito dal glitch, ha aperto un piccolo laboratorio al cratere. aggiusta le cose rotte. solo quelle. le storte le lascia stare.' });

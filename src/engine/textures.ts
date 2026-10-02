@@ -684,6 +684,51 @@ function npcs(scene: Phaser.Scene): void {
         glow(g, 16, 14, 1.3, 0x86efac, 0.4);
         glow(g, 24, 14, 1.3, 0x86efac, 0.4);
     });
+
+    // notino a casa: niente sparacchino, cappellino storto e una forchetta
+    make(scene, 'npc-notino', 28, 38, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(14, 27, 16, 18);
+        g.fillCircle(14, 11, 7);
+        // cappellino girato all'indietro
+        g.fillStyle(0x7f1d1d, 1);
+        g.fillRect(7, 4, 13, 4);
+        g.fillRect(3, 6, 6, 2);
+        g.lineStyle(2, 0x9ca3af, 1);
+        g.beginPath();
+        g.moveTo(23, 22); g.lineTo(26, 14);
+        g.strokePath();
+        g.lineStyle(2.5, INK, 1);
+        g.beginPath();
+        g.moveTo(10, 34); g.lineTo(9, 38);
+        g.moveTo(18, 34); g.lineTo(19, 38);
+        g.strokePath();
+        glow(g, 11, 11, 1.4, 0xf87171, 0.45);
+        glow(g, 17, 11, 1.4, 0xf87171, 0.45);
+    });
+
+    // la mamma di notino: grembiule, mestolo, la porta sempre aperta
+    make(scene, 'npc-mamma', 34, 52, (g) => {
+        g.fillStyle(INK, 1);
+        g.fillEllipse(17, 34, 24, 32);
+        g.fillCircle(17, 12, 8);
+        // crocchia
+        g.fillCircle(17, 3, 4);
+        // grembiule a quadretti, appena visibile
+        g.fillStyle(0x3f1d1d, 1);
+        g.fillRect(11, 26, 12, 16);
+        g.lineStyle(1, 0x7f1d1d, 0.8);
+        for (let k = 0; k < 4; k++) g.lineBetween(11, 28 + k * 4, 23, 28 + k * 4);
+        // mestolo
+        g.lineStyle(2, 0x9ca3af, 1);
+        g.beginPath();
+        g.moveTo(28, 26); g.lineTo(31, 40);
+        g.strokePath();
+        g.fillStyle(0x9ca3af, 1);
+        g.fillCircle(31, 41, 3);
+        glow(g, 14, 12, 1.3, 0xfca5a5, 0.4);
+        glow(g, 20, 12, 1.3, 0xfca5a5, 0.4);
+    });
 }
 
 /* ---------- boss ---------- */

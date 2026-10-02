@@ -25,6 +25,7 @@ import { FolkManager } from '../engine/FolkManager';
 import { TrapManager } from '../engine/TrapManager';
 import { HazardManager } from '../engine/HazardManager';
 import { TimeTrial } from '../engine/TimeTrial';
+import { StoryManager } from '../engine/StoryManager';
 import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
@@ -169,6 +170,7 @@ export class GameScene extends Phaser.Scene {
     private traps!: TrapManager;
     private hazards!: HazardManager;
     private trial: TimeTrial | null = null;
+    private story: StoryManager | null = null;
     private quests!: QuestManager;
     private atmosphere!: Atmosphere;
     private nextTrophyCheckAt = 0;
@@ -388,6 +390,7 @@ export class GameScene extends Phaser.Scene {
         this.challengeSpot = null;
 
         this.spawnEntities();
+        if (this.def.hub) this.spawnPiazzaGuests();
         this.spawnCheckpoints();
         this.spawnBusStops();
         this.folk = new FolkManager(this, this.nav, (lines) => this.startLines(lines));
@@ -409,6 +412,19 @@ export class GameScene extends Phaser.Scene {
         this.interactables.push(...this.quests.talkables);
         this.spawnChallenge();
         this.spawnTrial();
+        this.story = new StoryManager(this, this.lighting, {
+            dialogue: (id, onEnd) => this.startDialogue(id, onEnd),
+            choice: (title, options, onPick) => bus.emit('choice-show', { title, options, onPick }),
+            forget: (t) => {
+                this.interactables = this.interactables.filter((it) => it !== t);
+            },
+        });
+        this.story.setup(this.def.id, this.layout, [
+            sp,
+            ...this.interactables.map((it) => ({ x: it.x, y: it.y })),
+            ...this.level.entities.filter((e) => e.spec.type !== 'enemy').map((e) => ({ x: e.x, y: e.y })),
+        ]);
+        this.interactables.push(...this.story.talkables);
         this.traps = new TrapManager(this, this.nav);
         this.traps.populate({
             seed: this.def.id,
@@ -914,6 +930,19 @@ export class GameScene extends Phaser.Scene {
                     });
                 });
                 break;
+            case 'romero-piazza':
+                this.interactRomeroPiazza();
+                break;
+            case 'romero-caso': {
+                const pre = state.hasFlag('lochef-arrestato') ? 'romero-lochef' : state.hasFlag('lochef-libero') ? 'romero-lochef-libero' : null;
+                if (pre && !state.hasFlag('romero-lochef-detto')) {
+                    state.setFlag('romero-lochef-detto');
+                    this.startDialogue(pre, () => this.startDialogue(id));
+                } else {
+                    this.startDialogue(id);
+                }
+                break;
+            }
             case 'indizio-1':
             case 'indizio-2':
             case 'indizio-3':
@@ -953,6 +982,38 @@ export class GameScene extends Phaser.Scene {
     }
 
     /* ---------- la piazza ---------- */
+
+    /** chi torna in piazza dipende da cosa hai scelto per strada */
+    private spawnPiazzaGuests(): void {
+        const feet = 26 * TILE + TILE / 2;
+        if (state.hasFlag('notino-a-casa')) {
+            this.spawnNpc('mamma-notino-piazza', 116 * TILE, feet);
+            this.spawnNpc('notino-piazza', 119 * TILE + 8, feet);
+        }
+        if (state.hasFlag('lochef-libero') && state.hasFlag('boss-down-lochef')) this.spawnNpc('lochef-trattoria', 58 * TILE, feet);
+        if (state.hasFlag('caso-risolto')) this.spawnNpc('romero-piazza', 18 * TILE, feet);
+    }
+
+    private interactRomeroPiazza(): void {
+        if (state.hasFlag('caffe-romero')) {
+            this.startDialogue('romero-caffe-dopo');
+            return;
+        }
+        this.startDialogue('romero-piazza', () => {
+            if (!state.save.collectedLore.includes('nota-caso-4') || state.count('caffe-mensa') <= 0) return;
+            bus.emit('choice-show', {
+                title: 'hai un caffè della mensa nello zaino. e ti ricordi un biglietto.',
+                options: [{ label: 'offrigli il caffè' }, { label: 'tienilo' }],
+                onPick: (i) => {
+                    if (i !== 0) return;
+                    state.removeItem('caffe-mensa');
+                    state.setFlag('caffe-romero');
+                    bus.emit('inventory-changed', {});
+                    this.startDialogue('romero-caffe');
+                },
+            });
+        });
+    }
 
     /** l'oracolo legge quanto hai esplorato di ogni regione vista */
     private oracleLines(): DialogueLine[] {
@@ -2771,7 +2832,9 @@ export class GameScene extends Phaser.Scene {
             this.pedroChoiceShown = true;
             // se hai camminato nei suoi ricordi, pedro lo sa. e gli pesa.
             const incontro = state.hasFlag('ricordi-visti') ? 'pedro-incontro-ricordi' : 'pedro-incontro';
-            this.startDialogue(incontro, () => {
+            // chi ha ricomposto il quaderno gli mostra le pagine prima di rispondere
+            const prima = (next: () => void) => (state.hasFlag('quaderno-completo') ? this.startDialogue(incontro, () => this.startDialogue('pedro-quaderno', next)) : this.startDialogue(incontro, next));
+            prima(() => {
                 // chi ha camminato nei ricordi ha una terza strada: la cartella del giorno 30
                 const options = [{ label: 'seguilo: stats raddoppiate', danger: true }, { label: 'contrastalo' }];
                 if (state.hasFlag('ricordi-visti')) options.push({ label: 'ricordagli il giorno 30' });
@@ -2794,6 +2857,9 @@ export class GameScene extends Phaser.Scene {
             introId = state.run.trenbolone ? 'flauto-fatto-rabbia' : 'flauto-sveglio-rabbia';
         }
         if (this.boss.def.kind === 'ombra' && !state.hasFlag('tommasorveglianza')) introId = 'ombra-intro-scarsa';
+        // il pensiero sepolto: il garante sa cosa ne hai fatto
+        if (this.boss.def.kind === 'garante' && state.hasFlag('pensiero-cancellato')) introId = 'garante-cancellato';
+        if (this.boss.def.kind === 'garante' && state.hasFlag('pensiero-portato')) introId = 'garante-prova';
         if (this.boss.def.kind === 'ticummi' && state.hasFlag('tommasorveglianza')) introId = 'ticummi-intro-cliente';
         if (introId && !this.bossIntroShown) {
             this.bossIntroShown = true;
@@ -3382,8 +3448,12 @@ export class GameScene extends Phaser.Scene {
                 const dialogueId = state.hasFlag('tommasorveglianza')
                     ? TOMMASO_BLOCCA[i % TOMMASO_BLOCCA.length]
                     : a.intro;
+                // la scelta della tecnokill si sente al primo agguato dopo
+                const variant = state.hasFlag('tommasorveglianza') || state.hasFlag('notino-variante-detta') ? null
+                    : state.hasFlag('notino-a-casa') ? 'notino-agguato-casa' : state.hasFlag('notino-disarmato') ? 'notino-agguato-vendetta' : null;
+                if (variant) state.setFlag('notino-variante-detta');
 
-                this.startDialogue(dialogueId, () => {
+                this.startDialogue(variant ?? dialogueId, () => {
                     if (state.hasFlag('tommasorveglianza')) {
                         spawned.forEach((e, idx) => {
                             (e.body as Phaser.Physics.Arcade.Body).enable = false;
@@ -3421,7 +3491,8 @@ export class GameScene extends Phaser.Scene {
         for (let i = 0; i < count; i++) {
             const dir = i % 2 === 0 ? 1 : -1;
             const at = this.openSpotNear(this.player.x + dir * (300 + i * 60), this.player.y - 140);
-            const e = this.spawnEnemy('notino-mini', at.x, at.y, { hunting: true });
+            // con lo sparacchino di papà il primo notino è un osso duro
+            const e = this.spawnEnemy('notino-mini', at.x, at.y, { hunting: true, elite: i === 0 && state.hasFlag('notino-disarmato') });
             this.physics.add.collider(e, this.level.layer);
             spawned.push(e);
         }
@@ -3653,6 +3724,26 @@ export class GameScene extends Phaser.Scene {
             case 'notino':
                 this.startDialogue('notino-sconfitto', () => {
                     this.spawnFragment(x, y + 40, 'risonante', true);
+                    if (state.hasFlag('notino-a-casa') || state.hasFlag('notino-disarmato')) return;
+                    const letto = state.save.collectedLore.includes('nota-tecnokill-4');
+                    bus.emit('choice-show', {
+                        title: letto
+                            ? 'notino è a terra, lo sparacchino accanto. in tasca hai il post-it di sua madre.'
+                            : 'notino è a terra, lo sparacchino accanto. piagnucola qualcosa su una pasta che si fredda.',
+                        options: [{ label: 'rimandalo a casa' }, { label: 'sequestra lo sparacchino', danger: true }],
+                        onPick: (i) => {
+                            if (i === 0) {
+                                state.setFlag('notino-a-casa');
+                                this.startDialogue('notino-casa');
+                            } else {
+                                state.setFlag('notino-disarmato');
+                                this.startDialogue('notino-disarmato', () => {
+                                    state.giveCharm('sparacchino');
+                                    bus.emit('charm-found', { id: 'sparacchino' });
+                                });
+                            }
+                        },
+                    });
                 });
                 break;
             case 'riba':
@@ -3664,6 +3755,29 @@ export class GameScene extends Phaser.Scene {
             case 'lochef':
                 this.startDialogue('lochef-sconfitto', () => {
                     this.spawnCuore(x, y + 40, 'cuore-lochef', true);
+                    if (state.hasFlag('lochef-arrestato') || state.hasFlag('lochef-libero')) return;
+                    bus.emit('choice-show', {
+                        title: 'lochef85 è a terra, tra le statue. dodici ospiti prima di te.',
+                        options: [{ label: 'chiama la questura' }, { label: 'lascialo andare' }],
+                        onPick: (i) => {
+                            if (i === 0) {
+                                state.setFlag('lochef-arrestato');
+                                this.startDialogue('lochef-consegna', () => {
+                                    state.save.barre += 200;
+                                    state.persist();
+                                    bus.emit('barre-changed', { barre: state.save.barre, gained: true });
+                                    bus.emit('toast', { text: 'taglia della questura: +200 barre.' });
+                                });
+                            } else {
+                                state.setFlag('lochef-libero');
+                                this.startDialogue('lochef-libero', () => {
+                                    state.addItem('brodo-lochef', 3);
+                                    bus.emit('inventory-changed', {});
+                                    bus.emit('toast', { text: '🍲 brodo tiepido di lochef ×3 nello zaino' });
+                                });
+                            }
+                        },
+                    });
                 });
                 break;
             case 'formicona':
@@ -3784,7 +3898,7 @@ export class GameScene extends Phaser.Scene {
                 this.onVeritaRivelata(VOID_REGRETS.indexOf(kind));
                 break;
             case 'pedro':
-                this.startDialogue('pedro-sconfitto', () => this.sceltaFinale(x, y, false));
+                this.startDialogue(state.hasFlag('quaderno-completo') ? 'pedro-sconfitto-quaderno' : 'pedro-sconfitto', () => this.sceltaFinale(x, y, false));
                 break;
             case 'glitchpedro': {
                 // il glitch si strappa via: pedro torna in sé
@@ -3863,7 +3977,13 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         this.startDialogue('dei-processo', () => {
-            if (state.hasFlag('caso-risolto')) {
+            if (state.hasFlag('caso-risolto') && state.hasFlag('pensiero-cancellato')) {
+                // la riga originale l'hai cancellata tu: piema resta libero
+                this.startDialogue('dei-processo-romero-solo', () => {
+                    state.setFlag('lametta-arrestato');
+                    this.startDialogue('dei-scelta-wave', after);
+                });
+            } else if (state.hasFlag('caso-risolto')) {
                 this.startDialogue('dei-processo-romero', () => {
                     state.setFlag('dei-arrestati');
                     this.startDialogue('dei-scelta-wave', after);

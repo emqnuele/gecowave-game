@@ -2,6 +2,8 @@
    condiviso tra il gioco (GameScene) e l'editor di livelli. */
 export function npcTexture(id: string): string {
     if (id.startsWith('ivan')) return 'npc-ivan';
+    if (id.startsWith('mamma-notino')) return 'npc-mamma';
+    if (id.startsWith('notino')) return 'npc-notino';
     if (id.startsWith('ticummi')) return 'npc-ticummi';
     if (id.startsWith('smela') || id.startsWith('venditore')) return 'npc-smela';
     if (id.startsWith('filippus')) return 'npc-filippus';

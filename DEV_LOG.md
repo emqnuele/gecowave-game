@@ -77,6 +77,17 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 **Decisione**: `simReach` ora registra per ogni arco i fotogrammi del macro più rapido (`frames`). `computeTrials` fa un Dijkstra tra microfoni consecutivi sul percorso e salva `layout.trials` (`from`, `to` come `cp-colonna-riga`, `frames`). A runtime `TimeTrial` sceglie la tratta più lunga tra 9 e 70 s e dà `1.35 × tempo simulato + 5 s`. Palo con l'orologio accanto alla fermata, luce gialla e scintille sulla fermata d'arrivo, timer nell'HUD. Prima vittoria: 150 barre e flag `corsa-vinta-<id>`; record in `SaveData.trials`; trofeo "più veloce del citelis" a cinque.
 **Strumento**: `scripts/world/run.sh trials [id]` aggiunge le tratte ai JSON già generati senza rigenerarli; `build-regions` le calcola da sé.
 
+### ADR-013 — la trama sotto la trama (fase 5)
+**Contesto**: la storia principale c'era, ma mancavano archi dei personaggi, scelte a metà gioco con conseguenze e lore nelle stanze enormi.
+**Decisione**: i testi stanno in `src/content/arcs.ts` (uniti a `DIALOGUES`), il piazzamento in `src/engine/StoryManager.ts`, solo su `layout.spots` delle stanze laterali, ordinate per avanzamento così le note si leggono in ordine.
+- **note ambientali**: 4 per regione (80), ognuna una piccola storia (herbert del cratere, il pendolare delle 7:39, i post-it della mamma di notino, franceschini nel bagno infinito, l'ospite n.11...). A 40 lette: flag `storie-del-realm`.
+- **il quaderno strappato di pedro** (mistero e colpo di scena): 5 pagine in bus, santuario, rio, ruhra, ricordi, nelle stanze segrete se ci sono. Rivelano che il custode l'ha scelto pedro. Ricomposte: amuleto `quaderno-pedro`, dialogo `pedro-quaderno` al nucleo, sconfitta e finali diversi.
+- **il pensiero sepolto di piema** (scelta a metà gioco): in mente, cancellarlo (`pensiero-cancellato`, come fece piema) o portarlo fuori (`pensiero-portato`). Cambia il garante nel void e il processo: con il pensiero cancellato romero arresta solo lametta (`lametta-arrestato`).
+- **notino** dopo la tecnokill: a casa (agguati più umani, lui e sua madre in piazza) o sparacchino sequestrato (amuleto, primo notino di ogni agguato élite).
+- **lochef** dopo la tana: arrestato (taglia, romero ne parla nel caso) o libero (brodo tiepido, trattoria in piazza).
+- **romero in piazza** dopo il caso: chi ha letto il suo biglietto può offrirgli il caffè.
+- **finali estesi**: una riga per ognuna di queste conseguenze, più guastalla autista con tre corse vinte.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -104,6 +115,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
 - Lastre che crollano sopra i pozzi e allagamenti periodici (tossici in rio, tecnokill, trenbolone, stabilimento), ADR-010.
+- Fase 5: note ambientali, quaderno di pedro, pensiero sepolto, scelte su notino e lochef, ospiti della piazza, finali estesi (ADR-013).
 - Sfide a tempo: corsa contro il citelis in ogni regione (ADR-012).
 - Ricordi rigenerata e verificata col simulatore corretto (ADR-011).
 - Arene opzionali: un microfono rosso per regione in una stanza laterale larga (scelta deterministica dall'id), tre ondate con i nemici della regione (l'ultima con un'élite), stanza chiusa con le sbarre dei boss; vittoria = flag `arena-vinta-<id>`, 180 barre, trofeo "gladiatore" a cinque. Morire annulla la sfida.
@@ -114,7 +126,6 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
 ### Da fare
-- Trame secondarie per personaggio, più scelte a metà gioco.
 
 ---
 
@@ -130,4 +141,5 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **arene opzionali**: il microfono rosso.
 - **pericoli**: lastre che crollano, allagamenti; ricordi sbloccata; trappole e passanti sulla pipeline di luce.
 - **sfide a tempo**: la corsa contro il citelis.
+- **trama**: archi secondari, scelte a metà gioco, lore ambientale, finali estesi.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.

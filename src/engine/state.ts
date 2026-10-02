@@ -116,7 +116,7 @@ class GameState {
     }
 
     get risonanteDamage(): number {
-        return COMBAT.risonanteDamage * (1 + this.save.stats.flusso * 0.1);
+        return COMBAT.risonanteDamage * (1 + this.save.stats.flusso * 0.1) * this.mods.risonante;
     }
 
     get damageMult(): number {

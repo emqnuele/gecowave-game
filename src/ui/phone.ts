@@ -1,4 +1,5 @@
 import { ZONE_CSS } from '../config';
+import { TOTAL_NOTES, TOTAL_PAGES } from '../content/arcs';
 import { ITEMS, NOTCH_PRICES, BASE_NOTCHES, type ItemDef } from '../content/items';
 import { LEVELS, LEVEL_ORDER, TOTAL_FRAGMENTS } from '../content/levels';
 import { CONTACTS, OBJECTIVES, POSTS, RADIO, type Contact } from '../content/phone';
@@ -803,6 +804,8 @@ export class Phone {
             { name: 'le maschere del primo custode', done: lore.filter((k) => k.startsWith('maschera-')).length, total: TOTAL_MASCHERE, show: true },
             { name: 'il caso analisi 1', done: ['indizio-1', 'indizio-2', 'indizio-3'].filter((f) => state.hasFlag(f)).length, total: 3, show: state.hasFlag('visto-caso') },
             { name: 'la quest di walter baruffoni', done: ['boss-down-maranza', 'boss-down-maranzone', 'boss-down-istruttore', 'boss-down-annascrivania', 'boss-down-walter'].filter((f) => state.hasFlag(f)).length, total: 5, show: state.hasFlag('visto-galliate') },
+            { name: 'il quaderno strappato di pedro', done: lore.filter((k) => k.startsWith('pagina-pedro-')).length, total: TOTAL_PAGES, show: lore.some((k) => k.startsWith('pagina-pedro-')) },
+            { name: 'storie sparse del realm', done: lore.filter((k) => k.startsWith('nota-')).length, total: TOTAL_NOTES, show: lore.some((k) => k.startsWith('nota-')) },
             { name: 'amuleti collezionati', done: state.save.charms.length, total: Object.values(ITEMS).filter((i) => i.kind === 'amuleto').length, show: true },
         ];
         // le missioni dei passanti accettate, con lo stato

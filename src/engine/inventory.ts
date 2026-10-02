@@ -6,7 +6,7 @@ import { state } from './state';
 /* usare un oggetto dello zaino: ritorna la frase da mostrare.
    se l'oggetto non serve (vita già piena) non viene consumato */
 
-const HEALS: Record<string, number> = { crocchetta: 1, 'panino-nonna': 3, rubinetto: 1 };
+const HEALS: Record<string, number> = { crocchetta: 1, 'panino-nonna': 3, rubinetto: 1, 'brodo-lochef': 99 };
 
 function emitVitals(): void {
     bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });

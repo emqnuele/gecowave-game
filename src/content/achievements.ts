@@ -41,6 +41,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     { id: 'finale-riscatto', icon: '📁', name: 'cartella importante', desc: 'il finale vero: affida le wave a pedro, quello del giorno 30.', secret: true, check: flag('finale-riscatto') },
     { id: 'finale-pedro', icon: '🌀', name: 'il patto', desc: 'segui pedro fino alla fine.', secret: true, check: flag('finale-pedro') },
     // segreti e scelte
+    { id: 'geco-del-muro', icon: '📒', name: 'il geco del muro', desc: 'ricomponi il quaderno strappato di pedro.', secret: true, check: flag('quaderno-completo') },
+    { id: 'come-piema', icon: '🫥', name: 'come piema', desc: 'cancella il pensiero sepolto.', secret: true, check: flag('pensiero-cancellato') },
+    { id: 'la-riga-vera', icon: '🧾', name: 'la riga vera', desc: 'porta fuori dalla testa di piema il pensiero sepolto.', secret: true, check: flag('pensiero-portato') },
+    { id: 'polpette', icon: '🍝', name: 'è pronto in tavola', desc: 'rimanda notino da sua madre.', secret: true, check: flag('notino-a-casa') },
+    { id: 'zucchero', icon: '☕', name: 'con lo zucchero', desc: 'offri a romero il caffè che aspettava da quarant\'anni.', secret: true, check: flag('caffe-romero') },
+    { id: 'storie', icon: '📜', name: 'chi c\'era', desc: 'leggi quaranta note sparse per il realm.', check: flag('storie-del-realm') },
     { id: 'il-33', icon: '3️⃣', name: 'il numero ti rispetta', desc: 'batti il 33 nel void.', secret: true, check: flag('boss-down-trentatre') },
     { id: 'capolinea', icon: '🚏', name: 'ultima corsa', desc: 'trova la 14 barrato e il suo passeggero.', secret: true, check: flag('boss-down-settequaranta') },
     { id: 'sul-beat', icon: '🥁', name: 'sul beat', desc: 'batti il primo custode.', secret: true, check: flag('boss-down-custode') },

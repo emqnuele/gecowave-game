@@ -47,6 +47,11 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'ridà 1 vita e lava via la sete di smela. dichiarata come tale, per legge.',
         punch: 'finalmente un\'etichetta onesta.',
     },
+    'brodo-lochef': {
+        id: 'brodo-lochef', name: 'brodo tiepido di lochef', icon: '🍲', kind: 'consumabile',
+        desc: 'ridà tutta la vita. tiepido. sempre tiepido. non chiederti chi l\'ha assaggiato prima.',
+        punch: '"come piace a te".',
+    },
     santino: {
         id: 'santino', name: 'santino di guggu', icon: '🃏', kind: 'consumabile', price: 60,
         desc: 'il prossimo colpo che ricevi viene assorbito dal santo. guggu benedice chi paga il biglietto.',
@@ -127,6 +132,16 @@ export const ITEMS: Record<string, ItemDef> = {
         id: 'tesi-dottorando', name: 'tesi del dottorando', icon: '📚', kind: 'amuleto', cost: 1,
         desc: 'ogni colpo dà il 25% di flow in più. 400 pagine, nessuna conclusione.',
     },
+    'quaderno-pedro': {
+        id: 'quaderno-pedro', name: 'il quaderno ricomposto di pedro', icon: '📒', kind: 'amuleto', cost: 2,
+        desc: 'il flow torna da solo e ti curi più in fretta. cinque pagine tenute insieme col nastro adesivo.',
+        punch: 'c\'è scritto il tuo nome. cioè: "geco". vale lo stesso.',
+    },
+    sparacchino: {
+        id: 'sparacchino', name: 'lo sparacchino di notino', icon: '🔫', kind: 'amuleto', cost: 1,
+        desc: 'il colpo risonante fa il 50% di danno in più. sequestrato a un bambino, quindi tecnicamente è una prova.',
+        punch: 'sul calcio, a pennarello: "BUM".',
+    },
     'catenina-maranza': {
         id: 'catenina-maranza', name: 'catenina del maranza', icon: '🪙', kind: 'amuleto', cost: 1,
         desc: 'i fendenti arrivano un po\' più lontano. finto oro, vera arroganza.',
@@ -197,12 +212,14 @@ export interface CharmMods {
     damageTaken: number;
     /** flow al secondo */
     flowRegen: number;
+    /** moltiplicatore del colpo risonante */
+    risonante: number;
 }
 
 export function charmMods(equipped: readonly string[]): CharmMods {
     const m: CharmMods = {
         damage: 1, speed: 1, magnet: 1, flowPerHit: 1, healTime: 1, range: 1,
-        dashCooldown: 1, maxHp: 0, abilityCost: 1, barre: 1, damageTaken: 1, flowRegen: 0,
+        dashCooldown: 1, maxHp: 0, abilityCost: 1, barre: 1, damageTaken: 1, flowRegen: 0, risonante: 1,
     };
     for (const id of equipped) {
         switch (id) {
@@ -225,6 +242,8 @@ export function charmMods(equipped: readonly string[]): CharmMods {
             case 'casco-operaio': m.damageTaken *= 0.75; break;
             case 'tesi-dottorando': m.flowPerHit *= 1.25; break;
             case 'catenina-maranza': m.range *= 1.15; break;
+            case 'quaderno-pedro': m.flowRegen += 3; m.healTime *= 0.85; break;
+            case 'sparacchino': m.risonante *= 1.5; break;
         }
     }
     return m;
