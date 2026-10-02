@@ -178,6 +178,9 @@ export class GameScene extends Phaser.Scene {
     private arenaBars!: Phaser.Physics.Arcade.StaticGroup;
     private arenaGfx: Phaser.GameObjects.Graphics | null = null;
     private arenaRoom: Room | null = null;
+    /** sfida a ondate in una stanza laterale: il microfono rosso */
+    private challenge: { room: Room; wave: number; enemies: Enemy[]; nextAt: number; x: number; y: number } | null = null;
+    private challengeSpot: { room: Room; x: number; y: number; mic: Phaser.GameObjects.Sprite } | null = null;
     private busStops: { key: string; x: number; y: number }[] = [];
     private homing: { obj: Phaser.Physics.Arcade.Sprite; at: number; moving: boolean }[] = [];
     private bossIntroShown = false;
@@ -377,6 +380,8 @@ export class GameScene extends Phaser.Scene {
         this.arenaBars = this.physics.add.staticGroup();
         this.arenaGfx = null;
         this.arenaRoom = null;
+        this.challenge = null;
+        this.challengeSpot = null;
 
         this.spawnEntities();
         this.spawnCheckpoints();
@@ -398,6 +403,7 @@ export class GameScene extends Phaser.Scene {
             ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y })),
         ]);
         this.interactables.push(...this.quests.talkables);
+        this.spawnChallenge();
         this.traps = new TrapManager(this, this.nav);
         this.traps.populate({
             seed: this.def.id,
@@ -410,6 +416,7 @@ export class GameScene extends Phaser.Scene {
                 ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y })),
                 ...this.busStops,
                 ...this.quests.talkables.map((t) => ({ x: t.x, y: t.y })),
+                ...this.challengePoints(),
             ],
         });
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -977,6 +984,8 @@ export class GameScene extends Phaser.Scene {
         const lore = state.save.collectedLore.filter((k) => k.startsWith('lore-')).length;
         if (lore < 30) pool.push('sui tetti della piazza ci sono scritte vecchie. nessuno sale a leggerle. tu hai le gambe da geco, no?');
         pool.push('il microfono della fontana salva come gli altri. ma qui almeno muori in compagnia.');
+        const arene = state.save.flags.filter((f) => f.startsWith('arena-vinta-')).length;
+        if (arene < 5) pool.push(`in ogni regione c'è un microfono rosso in una stanza fuori strada. ci sali e ti chiudono dentro con le bestie. paga bene. ne hai vinti ${arene}.`);
         pool.push('di notte nelle regioni girano bestie più grosse, con l\'aura. lasciano un sacco di barre. e un sacco di vedove.');
         pool.push('guastalla adesso sta seduto lì a guardare il citelis. da fuori. dice che è bellissimo. io ci credo poco.');
         const pick = Phaser.Utils.Array.Shuffle([...pool]).slice(0, 2);
@@ -2510,6 +2519,10 @@ export class GameScene extends Phaser.Scene {
 
     /** l'arena si chiude a scontro iniziato col player dentro, si riapre a boss caduto */
     private updateArenaLock(time: number): void {
+        if (this.challenge) {
+            this.updateChallenge(time);
+            return;
+        }
         const boss = this.boss;
         const fighting = !!boss?.active && boss.engaged && !boss.frenzy && !this.player.dead;
         if (this.arenaRoom) {
@@ -2573,6 +2586,105 @@ export class GameScene extends Phaser.Scene {
             bus.emit('toast', { text: 'l\'arena si riapre.' });
         }
         this.arenaRoom = null;
+    }
+
+    /* ---------- sfide a ondate ---------- */
+
+    /** una per regione, in una stanza laterale larga: sempre la stessa, scelta dall'id */
+    private spawnChallenge(): void {
+        const L = this.layout;
+        if (!L?.spots?.length || this.def.hub) return;
+        const rooms = L.rooms.filter((o) => o.pathIndex < 0 && (o.kind === 'hall' || o.kind === 'cave') && o.rect.w >= 18);
+        const cands = rooms
+            .map((room) => ({ room, spots: L.spots!.filter((sp) => sp[2] === room.id) }))
+            .filter((o) => o.spots.length >= 3);
+        if (!cands.length) return;
+        const pickFrom = cands.slice().sort((a, b) => hashString(`${this.def.id}-${a.room.id}`) - hashString(`${this.def.id}-${b.room.id}`));
+        for (const cand of pickFrom) {
+            const sp = cand.spots[Math.floor(cand.spots.length / 2)];
+            const x = sp[0] * TILE + TILE / 2;
+            const y = (sp[1] + 1) * TILE - 18;
+            if (this.interactables.some((it) => Math.abs(it.x - x) < 200 && Math.abs(it.y - y) < 140)) continue;
+            const won = state.hasFlag(`arena-vinta-${this.def.id}`);
+            const mic = this.add.sprite(x, y - 12, 'mic').setDepth(4).setPipeline('Light2D').setTint(won ? 0x64748b : 0xef4444);
+            if (!won) this.lighting.static(x, y - 30, 0xef4444, 170, 0.9);
+            this.challengeSpot = { room: cand.room, x, y, mic };
+            this.interactables.push({ x, y, range: 60, onInteract: () => this.offerChallenge() });
+            return;
+        }
+    }
+
+    private challengePoints(): { x: number; y: number }[] {
+        return this.challengeSpot ? [{ x: this.challengeSpot.x, y: this.challengeSpot.y }] : [];
+    }
+
+    private offerChallenge(): void {
+        const spot = this.challengeSpot;
+        if (!spot || this.challenge || this.boss?.engaged) return;
+        if (state.hasFlag(`arena-vinta-${this.def.id}`)) {
+            bus.emit('toast', { text: 'il microfono rosso tace. questa arena l\'hai già vinta.' });
+            return;
+        }
+        bus.emit('choice-show', {
+            title: 'microfono rosso: tre ondate, porte chiuse, niente fuga. il pubblico vuole sangue.',
+            options: [{ label: 'sali sul palco', danger: true }, { label: 'non ora' }],
+            onPick: (i) => {
+                if (i !== 0) return;
+                this.challenge = { room: spot.room, wave: 0, enemies: [], nextAt: this.time.now + 900, x: spot.x, y: spot.y };
+                this.lockArena(spot.room);
+                bus.emit('toast', { text: 'sfida accettata. prima ondata.' });
+            },
+        });
+    }
+
+    private updateChallenge(time: number): void {
+        const ch = this.challenge!;
+        if (this.player.dead) {
+            // chi muore sul palco perde la sfida: il pubblico se ne va, i mostri pure
+            for (const e of ch.enemies) if (e.active) e.destroy();
+            this.challenge = null;
+            this.unlockArena();
+            return;
+        }
+        this.drawArenaBars(time);
+        ch.enemies = ch.enemies.filter((e) => e.active);
+        if (ch.enemies.length || time < ch.nextAt) return;
+        if (ch.wave === 3) {
+            this.winChallenge();
+            return;
+        }
+        ch.wave++;
+        const kinds = [...new Set(this.level.entities.filter((e) => e.spec.type === 'enemy').map((e) => (e.spec as { kind: EnemyKind }).kind))];
+        const pool: EnemyKind[] = kinds.length ? kinds : ['glitchetto'];
+        const spots = (this.layout?.spots ?? []).filter((sp) => sp[2] === ch.room.id);
+        const n = 2 + ch.wave;
+        for (let k = 0; k < n; k++) {
+            const sp = spots[(k * 7 + ch.wave * 3) % spots.length];
+            const x = sp ? sp[0] * TILE + TILE / 2 : ch.x + (k - n / 2) * 60;
+            const y = sp ? (sp[1] + 1) * TILE - 20 : ch.y;
+            // mai addosso al geco: chi nasce troppo vicino si sposta dall'altra parte del palco
+            const fx = Math.abs(x - this.player.x) < 160 ? ch.x * 2 - x : x;
+            const elite = ch.wave === 3 && k === 0;
+            this.spawnEnemy(pool[(k + ch.wave) % pool.length], fx, y, { hunting: true, elite });
+            ch.enemies.push(this.enemies.getLast(true) as Enemy);
+        }
+        this.shake(160, 0.004);
+        bus.emit('toast', { text: ch.wave === 3 ? 'ultima ondata. c\'è anche uno grosso.' : `ondata ${ch.wave} di 3.` });
+        ch.nextAt = time + 1400;
+    }
+
+    private winChallenge(): void {
+        this.challenge = null;
+        this.unlockArena();
+        state.setFlag(`arena-vinta-${this.def.id}`);
+        state.save.barre += 180;
+        state.addItem('panino-nonna', 2);
+        state.persist();
+        sfx.unlock();
+        bus.emit('barre-changed', { barre: state.save.barre, gained: true });
+        bus.emit('toast', { text: 'il pubblico impazzisce. +180 barre e due panini della nonna.' });
+        this.challengeSpot?.mic.setTint(0x64748b);
+        checkAchievements();
     }
 
     /** sbarre d'inchiostro che vibrano col colore del boss */

@@ -90,6 +90,7 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - Fase 5: finale vero "riscatto" (giorno 30, il glitch, romero arresta gli dei).
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
+- Arene opzionali: un microfono rosso per regione in una stanza laterale larga (scelta deterministica dall'id), tre ondate con i nemici della regione (l'ultima con un'élite), stanza chiusa con le sbarre dei boss; vittoria = flag `arena-vinta-<id>`, 180 barre, trofeo "gladiatore" a cinque. Morire annulla la sfida.
 - Musica per ora del giorno: passa-basso WebAudio condiviso (`music.setNight`), da 20 kHz a 1,6 kHz su scala logaritmica; spento durante i boss. Se WebAudio fallisce la musica suona senza filtro.
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
@@ -98,7 +99,7 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 
 ### Da fare
 - Piattaforme che crollano, allagamenti.
-- Sfide a tempo e arene opzionali.
+- Sfide a tempo.
 - Trame secondarie per personaggio, più scelte a metà gioco.
 
 ---
@@ -112,4 +113,5 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - **hub**: la piazza col citelis, npc di servizio, folla.
 - **trappole**: seghe, presse, vapore per bioma.
 - **audio**: musica ovattata di notte.
+- **arene opzionali**: il microfono rosso.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.
