@@ -191,3 +191,43 @@ Ogni blocco di contenuto chiude con una battuta in `font-marker`, bianca all'85�
 - [ ] Punchline a pennarello in chiusura
 - [ ] Stati loading/errore/vuoto con la voce giusta
 - [ ] Nessun `overflow-x: hidden` sopra elementi sticky
+
+---
+
+## 11. Il gioco — "codice a inchiostro" (souls-like)
+
+> Il vecchio menu acid-glass è morto (con `mainmenu.png` e le sezioni CSS annesse, rimosse). Le schermate del gioco — titolo, pagine, morte, annunci, narrazione, credits, forgia — sono un **codice miniato a inchiostro**: stampa antica che sbava, braci, buio pieno. La voce a pennarello non si tocca, si incornicia.
+
+Tutto sta in tre file: `src/ui/souls.css` (il linguaggio, classi `sx-*`), `src/ui/screens.ts` (tutte le schermate), `src/scenes/MenuScene.ts` (il fondale vivo). Font bundlati: IM Fell English SC + IM Fell English italic.
+
+### 11.1 Il falò dietro al menu
+
+Niente fondale finto: dietro al titolo gira la stessa pipeline del gioco. `MenuScene` monta il `ParallaxManager` del **capitolo del salvataggio** (dipinto + sagome + foschia + nebbia), o del **bus** se non c'è salvataggio (`perduta` non ha dipinto e ricade sul fondale legacy). Sopra una cresta d'inchiostro ridisegnata al resize stanno il **microfono che arde** (stesso foglio dei checkpoint, luce che respira col rumore) e il **geco di veglia** in idle. `main.ts` accende la scena con `setBackdrop(true)` solo mentre il menu è aperto e la spegne a `startLevel`. Il primo avvio aspetta un tasto (splash): è l'ingresso e sblocca l'audio con `sfx.awaken()`.
+
+### 11.2 Tipografia: tre voci, come prima, in altri panni
+
+| Ruolo | Font | Uso |
+|---|---|---|
+| **Inciso** | IM Fell English SC (`--font-fell`) | Titoli, nomi, voci di menu, valori. Maiuscoletto naturale, sempre con `filter: url(#sx-ink)` che fa sbavare i bordi (filtro SVG iniettato da `Screens`). |
+| **Corsivo** | IM Fell English italic (`--font-fell-it`) | Sottotitoli, descrizioni, note, narrazione. La voce che spiega. |
+| **Pennarello** | Permanent Marker | SOLO punchline e battute (`sx-note`, battute di morte, `zc-punch`). La voce del gioco resta a pennarello, storta di −1°. |
+| **Micro** | Martian Mono | Kicker (`sx-kick`, tracking 0.35em), subline delle voci, `kbd`, piedini. Maiuscolo minuto. |
+
+### 11.3 Colore e materia
+
+Osso `#e8dfc8`, cenere `#9a917e`, ombra `#5d574b`, oro `#cfa75c`, brace `#ff9a4a`, sangue `#a3221c`, linee `rgba(232,223,200,.16)`. Fondo: nero con vignetta radiale + **grana di carta animata a scatti** (`.screen.sx::after`). Niente blur, niente bordi tratteggiati, niente sticker: le superfici sono linee d'inchiostro sottili e corsivi. Il rosso sangue è riservato a morte (`sx-death-title`), doomsday e `danger`. La X dei trofei bloccati in assistita è `#f87171`.
+
+### 11.4 Componenti
+
+- **Voci di menu** (`.sx-item`): solo testo inciso, cursore a **fiammella** a sinistra + tratto d'inchiostro sotto la voce a fuoco. Tastiera ovunque (`bindNav`: frecce/WASD, invio, esc/backspace); i valori si cambiano con sinistra/destra (`nav-left`/`nav-right`).
+- **Ornamento** (`orn()`): SVG tracciato a mano — due tratti, riccioli, rombo centrale. Sotto ogni titolo.
+- **Righe** (`.sx-row`): nome inciso a sinistra, valore a destra come `‹ attiva ›` in corsivo. Con nota lunga la riga va `flex-start` e il valore sta accanto al nome.
+- **Volume**: linea d'inchiostro con riempimento oro (`--v`) + rombo d'osso, non più slider verde.
+- **Forgia** (3 passi: nome → attributi → destino): attributi a tacche romboidali con effetti reali scritti accanto (cuori `5+cost`, danno `×1+forza·0.1`, flusso `99+flusso·10`), ritratto del geco dallo sprite sheet, carte del destino incise (candela vs clessidra). Ogni run parte con la **freccia guida spenta**: è opt-in, mai ereditata.
+- **Morte**: fascia nera, titolo sangue che si allarga (`sx-died`), battuta dopo 1.6s, scelte dopo 2.4s — prima si incassa, poi si decide.
+- **Zone card**: titolo inciso + accento in corsivo colorato di zona, battuta a pennarello sotto.
+- **Suoni menu** (`sfx.ts`): spostarsi è un tocco di campana, scegliere un colpo sordo, indietro scende, il risveglio è un coro che sale.
+
+### 11.5 Cosa resta acid
+
+Il telefono (frame, chat, widget), HUD, popup trofei e banner: lì il vetro sporco resta, ma parlano già a inchiostro (header app in Fell, bacheca con X sangue in assistita). Regola: **il telefono è un oggetto nel mondo** (vetro), **i menu sono il mondo** (inchiostro).
