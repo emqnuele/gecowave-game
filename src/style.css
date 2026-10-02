@@ -1828,7 +1828,7 @@ input[type='range']::-webkit-slider-thumb {
 
 .credits-roll {
   position: relative;
-  width: min(560px, 86vw);
+  width: min(440px, 80vw);
   height: 44vh;
   overflow: hidden;
   -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
@@ -2008,3 +2008,47 @@ input[type='range']::-webkit-slider-thumb {
   transform: rotate(-1.5deg);
 }
 
+
+/* ---------- trofei nel menu principale ---------- */
+
+.trophies-screen {
+  justify-content: flex-start;
+  padding: 36px 16px 24px;
+}
+
+.trophies-box {
+  width: min(880px, 100%);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 22px 22px;
+  border-radius: 24px;
+  background: #0b0b0e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85);
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* ---------- la freccia guida ---------- */
+
+.assist-row {
+  align-items: center;
+  gap: 16px;
+  width: min(440px, 80vw);
+}
+
+.assist-words {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.assist-note {
+  font-family: var(--font-martian);
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+}

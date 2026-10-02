@@ -10,8 +10,8 @@ import { music } from '../engine/music';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import { regionView } from '../engine/regionView';
-import { achievementsBlocked } from '../engine/achievements';
-import { ACHIEVEMENTS } from '../content/achievements';
+import { realmClock } from '../engine/Atmosphere';
+import { buildTrophyCabinet } from './trophies';
 import { QUESTS } from '../content/quests';
 import { TOTAL_MASCHERE } from '../scenes/GameScene';
 import type { ZoneColor } from '../types';
@@ -53,6 +53,16 @@ const APPS: AppDef[] = [
     { id: 'impostazioni', name: 'impostazioni', icon: '⚙️', tint: 'cyan', title: 'IMPOSTAZIONI', sub: 'per chi vuole il realm più basso' },
 ];
 
+/** le app fisse nel dock in basso */
+const DOCK: AppId[] = ['messaggi', 'mappa', 'zaino', 'trofei'];
+
+/** i capitoli che hanno un dipinto loro: lo sfondo della home è il posto dove sei */
+const PAINTED = new Set(['bus', 'cantina', 'caso', 'galliate', 'marcetti', 'mente', 'nucleo', 'ricordi', 'rio', 'ruhra', 'santuario', 'sorveglianza', 'stabilimento', 'tana', 'tecnokill', 'trenbolone']);
+
+function wallpaperFor(levelId: string): string {
+    return PAINTED.has(levelId) ? `assets/backgrounds/${levelId}.png` : 'assets/background.png';
+}
+
 const SHOP_STOCK = ['crocchetta', 'rubinetto', 'energetico', 'caffe-mensa', 'panino-nonna', 'santino', 'scarpe-markolino', 'rosario-riba', 'geco-portafortuna'];
 
 const CRACK_SVG = `<svg class="phone-crack" viewBox="0 0 356 736" preserveAspectRatio="none" aria-hidden="true">
@@ -82,7 +92,10 @@ export class Phone {
     private host: PhoneHost;
     private root: HTMLElement | null = null;
     private screen: HTMLElement | null = null;
+    private view: HTMLElement | null = null;
     private body: HTMLElement | null = null;
+    /** da dove si è aperta l'app: l'animazione parte dall'icona */
+    private origin: { x: number; y: number } | null = null;
     private hint: HTMLElement;
     private app: AppId | null = null;
     private stack: (() => void)[] = [];
@@ -134,16 +147,23 @@ export class Phone {
         phone.setAttribute('aria-label', 'telefono');
         phone.append(text('span', 'phone-sticker geco', 'geco'), text('span', 'phone-sticker brand', 'wavesung'));
         const screen = el('div', 'phone-screen', CRACK_SVG);
-        screen.append(text('div', 'phone-watermark', '🦎'));
+
+        // status bar: l'ora è quella del realm, l'operatore è la zona, la batteria è il flow
         const status = el('div', 'phone-status');
-        const time = el('span', 'time');
+        const left = el('span', 'left');
+        const time = text('span', 'time', '');
+        const level = LEVELS[state.save.levelId];
+        left.append(time, text('span', 'carrier', level ? level.accentWord : 'gecowave 5g'));
+        const right = el('span', 'right');
         const battery = el('span', 'battery');
-        battery.append(text('span', '', 'flow'), el('i'));
-        status.append(time, el('span', 'notch'), battery);
-        const body = el('div', 'phone-body');
-        const bar = el('div', 'phone-home-bar', '<span></span>');
+        right.append(el('span', 'bars', '<i></i><i></i><i></i><i></i>'), battery);
+        status.append(left, el('span', 'island'), right);
+
+        const view = el('div', 'phone-view');
+        const bar = el('button', 'phone-home-bar', '<span></span>');
+        bar.setAttribute('aria-label', 'home');
         bar.addEventListener('click', () => this.home());
-        screen.append(status, body, bar);
+        screen.append(view, status, bar);
         phone.append(screen);
 
         const wrap = el('div');
@@ -152,16 +172,16 @@ export class Phone {
         ui().append(wrap);
         this.root = wrap;
         this.screen = screen;
-        this.body = body;
+        this.view = view;
 
         const tick = () => {
-            const d = new Date();
-            time.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-            const level = Math.round((state.run.flow / Math.max(1, state.maxFlow)) * 100);
-            battery.style.setProperty('--level', `${Math.max(6, level)}%`);
+            time.textContent = realmClock();
+            const lv = Math.round((state.run.flow / Math.max(1, state.maxFlow)) * 100);
+            battery.style.setProperty('--level', `${Math.max(8, lv)}%`);
+            battery.classList.toggle('low', lv < 20);
         };
         tick();
-        this.clock = window.setInterval(tick, 5000);
+        this.clock = window.setInterval(tick, 2000);
 
         if (app) this.openApp(app);
         else this.home();
@@ -172,6 +192,7 @@ export class Phone {
         const root = this.root;
         this.root = null;
         this.screen = null;
+        this.view = null;
         this.body = null;
         this.app = null;
         this.stack = [];
@@ -234,32 +255,61 @@ export class Phone {
     /* ---------- home ---------- */
 
     private home(): void {
-        if (!this.body) return;
+        if (!this.view) return;
+        const fromApp = this.app !== null;
         this.app = null;
         this.stack = [];
         this.setTint(null);
-        const b = this.body;
-        b.replaceChildren();
-        const d = new Date();
-        b.append(text('div', 'phone-clock', `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`));
+        const v = this.view;
+        v.className = `phone-view home${fromApp ? ' back' : ''}`;
+        v.replaceChildren();
+        const wall = el('div', 'home-wall');
+        wall.style.backgroundImage = `url('${wallpaperFor(state.save.levelId)}')`;
+        const b = el('div', 'phone-body home-body');
+        this.body = b;
+        v.append(wall, b);
+
+        b.append(text('div', 'phone-clock', realmClock()));
         const level = LEVELS[state.save.levelId];
         b.append(text('div', 'phone-greet', level ? `${level.title.toLowerCase()} ${level.accentWord}` : 'segnale: gecowave 5g'));
+
+        // il widget dell'obiettivo apre il diario
+        const widget = el('button', 'home-widget');
+        widget.append(
+            text('span', 'w-kick', 'adesso'),
+            text('span', 'w-waves', `✦ ${state.abilities.length}/${TOTAL_FRAGMENTS}`),
+            text('span', 'w-text', OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.'),
+        );
+        widget.addEventListener('click', (e) => this.launch('diario', e.currentTarget as HTMLElement));
+        b.append(widget);
+
         const grid = el('div', 'phone-grid');
-        for (const app of APPS) {
-            const btn = el('button', 'phone-app');
-            const icon = el('span', `icon sticker glass-acid-${app.tint}`);
-            icon.textContent = app.icon;
-            const badge = this.badgeFor(app.id);
-            if (badge > 0) icon.append(text('span', 'badge', String(badge)));
-            btn.append(icon, text('span', '', app.name));
-            btn.addEventListener('click', () => {
-                sfx.ui();
-                this.openApp(app.id);
-            });
-            grid.append(btn);
-        }
-        b.append(grid);
+        const dock = el('div', 'phone-dock');
+        for (const app of APPS) (DOCK.includes(app.id) ? dock : grid).append(this.appIcon(app));
+        b.append(grid, dock);
         (grid.firstElementChild as HTMLElement | null)?.focus();
+    }
+
+    private appIcon(app: AppDef): HTMLElement {
+        const btn = el('button', 'phone-app');
+        btn.setAttribute('aria-label', app.name);
+        const icon = el('span', 'icon');
+        icon.style.setProperty('--app', ZONE_CSS[app.tint]);
+        icon.textContent = app.icon;
+        const badge = this.badgeFor(app.id);
+        if (badge > 0) icon.append(text('span', 'badge', String(badge)));
+        btn.append(icon, text('span', '', app.name));
+        btn.addEventListener('click', () => this.launch(app.id, icon));
+        return btn;
+    }
+
+    /** apre un'app partendo dal punto toccato */
+    private launch(id: AppId, from: HTMLElement): void {
+        sfx.ui();
+        const s = this.screen?.getBoundingClientRect();
+        const r = from.getBoundingClientRect();
+        this.origin = s ? { x: r.left + r.width / 2 - s.left, y: r.top + r.height / 2 - s.top } : null;
+        this.openApp(id);
     }
 
     private badgeFor(id: AppId): number {
@@ -268,22 +318,32 @@ export class Phone {
     }
 
     private openApp(id: AppId, keepScroll = false): void {
-        if (!this.body) return;
-        const scroll = keepScroll ? this.body.scrollTop : 0;
+        if (!this.view) return;
+        const scroll = keepScroll && this.body ? this.body.scrollTop : 0;
+        const fresh = this.app !== id;
         this.app = id;
         const def = APPS.find((a) => a.id === id)!;
         this.setTint(def.tint);
-        const b = this.body;
-        b.replaceChildren();
+        const v = this.view;
+        v.className = `phone-view app${fresh ? '' : ' still'}`;
+        if (this.origin) {
+            v.style.setProperty('--ox', `${this.origin.x}px`);
+            v.style.setProperty('--oy', `${this.origin.y}px`);
+        }
+        this.origin = null;
+        v.replaceChildren();
+        const b = el('div', 'phone-body');
+        this.body = b;
+        v.append(b);
         const head = el('div', 'phone-head');
-        const back = el('button', 'phone-back sticker');
-        back.textContent = '‹ home';
+        const back = el('button', 'phone-back');
+        back.append(text('b', '', '‹'), text('span', '', 'home'));
         back.addEventListener('click', () => {
             sfx.ui();
             this.home();
         });
-        head.append(back, text('div', 'phone-title', def.title));
-        b.append(head, text('div', 'phone-sub', def.sub));
+        head.append(back, text('span', 'app-icon', def.icon));
+        b.append(head, text('div', 'phone-title', def.title), text('div', 'phone-sub', def.sub));
         const content = el('div');
         b.append(content);
         switch (id) {
@@ -295,7 +355,7 @@ export class Phone {
             case 'mappa': this.renderMap(content); break;
             case 'diario': this.renderJournal(content); break;
             case 'radio': this.renderRadio(content); break;
-            case 'trofei': this.renderTrophies(content); break;
+            case 'trofei': buildTrophyCabinet(content); break;
             case 'profilo': this.renderProfile(content); break;
             case 'impostazioni': this.renderSettings(content); break;
         }
@@ -881,43 +941,6 @@ export class Phone {
 
     /* ---------- profilo ---------- */
 
-    /** trofei presi, quelli da prendere (i segreti restano ???) e i record per capitolo */
-    private renderTrophies(root: HTMLElement): void {
-        const got = new Set(state.save.achievements);
-        if (achievementsBlocked()) {
-            root.append(text('div', 'phone-note trophy-warn', 'modalità assistita attiva: con la freccia accesa i trofei non si sbloccano. si spegne dalle impostazioni.'));
-        }
-        root.append(text('div', 'phone-section', `trofei · ${got.size}/${ACHIEVEMENTS.length}`));
-        for (const a of ACHIEVEMENTS) {
-            const have = got.has(a.id);
-            const hidden = a.secret && !have;
-            const row = el('div', `phone-row glass-chip ${have ? 'glass-acid-yellow' : 'locked'}`);
-            row.append(text('span', 'lead', hidden ? '❔' : a.icon));
-            const main = el('div', 'main');
-            main.append(text('div', 'name', hidden ? '???' : a.name), text('div', 'preview', hidden ? 'un segreto del realm.' : a.desc));
-            row.append(main, text('span', 'meta', have ? '✓' : ''));
-            if (!have) row.style.opacity = '0.55';
-            root.append(row);
-        }
-        root.append(text('div', 'phone-section', 'record per capitolo'));
-        let total = 0;
-        for (const id of [...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k))]) {
-            const sc = state.save.scores[id];
-            if (!sc) continue;
-            total += sc.score;
-            const lv = LEVELS[id];
-            const line = el('div', 'stat-line');
-            const mm = Math.floor(sc.timeMs / 60000);
-            const ss = Math.floor((sc.timeMs / 1000) % 60);
-            line.append(text('span', '', `${lv?.accentWord ?? id} · ${mm}:${String(ss).padStart(2, '0')} · ${Math.round(sc.explored * 100)}%${sc.assisted ? ' · assistito' : ''}`), text('b', '', sc.score.toLocaleString('it-IT')));
-            root.append(line);
-        }
-        const tot = el('div', 'stat-line');
-        tot.append(text('span', '', 'totale'), text('b', '', total.toLocaleString('it-IT')));
-        root.append(tot);
-        if (state.save.assisted) root.append(text('div', 'phone-note', 'questa partita ha usato la modalità assistita.'));
-    }
-
     private renderProfile(root: HTMLElement): void {
         const card = el('div', 'player-card glass-panel glass-acid-green');
         const who = el('div');
@@ -937,6 +960,8 @@ export class Phone {
             ['boss sconfitti', String(r.bosses)],
             ['morti', String(r.deaths)],
             ['tempo nel realm', `${hours} h ${mins} min`],
+            ['punteggio totale', Object.values(state.save.scores).reduce((n, sc) => n + sc.score, 0).toLocaleString('it-IT')],
+            ['trofei', `${state.save.achievements.length}`],
         ];
         for (const [k, v] of lines) {
             const line = el('div', 'stat-line');
@@ -991,9 +1016,9 @@ export class Phone {
         root.append(shake);
 
         const guide = el('div', 'phone-row glass-chip');
-        guide.append(text('span', 'name', 'modalità assistita (freccia)'));
+        guide.append(text('span', 'name', 'freccia guida (modalità assistita)'));
         const gt = el('button', `toggle sticker ${state.settings.guide ? 'on' : ''}`);
-        gt.textContent = state.settings.guide ? 'attiva' : 'spenta';
+        gt.textContent = state.settings.guide ? 'accesa' : 'spenta';
         gt.addEventListener('click', () => {
             state.settings.guide = !state.settings.guide;
             // la partita resta segnata: i record fatti con la freccia lo dicono
@@ -1003,12 +1028,12 @@ export class Phone {
             }
             state.persistSettings();
             gt.classList.toggle('on', state.settings.guide);
-            gt.textContent = state.settings.guide ? 'attiva' : 'spenta';
+            gt.textContent = state.settings.guide ? 'accesa' : 'spenta';
             sfx.ui();
         });
         guide.append(gt);
         root.append(guide);
-        root.append(text('div', 'phone-note', 'modalità facile: con la freccia accesa i trofei non si sbloccano e i record restano segnati come assistiti.'));
+        root.append(text('div', 'phone-note', 'una freccia ti indica il prossimo varco. finché è accesa i trofei non si sbloccano e i record restano segnati come assistiti.'));
 
         root.append(text('div', 'phone-section', 'comandi del telefono'));
         for (const [k, v] of [['apri e chiudi', 'TAB / P'], ['indietro', 'ESC'], ['mangia al volo', 'C']]) {

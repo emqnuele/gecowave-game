@@ -1,5 +1,6 @@
 import { ZONE_CSS } from '../config';
 import { ACHIEVEMENTS } from '../content/achievements';
+import { buildTrophyCabinet } from './trophies';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { ITEMS } from '../content/items';
 import { ABILITY_CARDS, CREDITS, DEATH_PUNCHLINES } from '../content/story';
@@ -171,11 +172,57 @@ export class Screens {
             }
             stack.append(this.btn('capitoli', -1.2, () => this.showChapters(() => this.showMenu())));
         }
+        stack.append(this.btn('trofei', 1, () => this.showTrophies(() => this.showMenu())));
         stack.append(this.btn('comandi', -1, () => this.showControls(() => this.showMenu())));
         stack.append(this.btn('impostazioni', 1.4, () => this.showSettings(() => this.showMenu())));
         s.append(stack);
 
         s.append(el('div', 'menu-foot', 'developed by emqnuele - music by gecowave'));
+    }
+
+    /* ---------- trofei ---------- */
+
+    private showTrophies(back: () => void): void {
+        const s = this.openOverlay('screen opaque trophies-screen');
+        s.append(el('h2', 'font-crisis', 'TROFEI'));
+        const box = el('div', 'trophies-box');
+        buildTrophyCabinet(box, { wide: true });
+        s.append(box);
+        const goBack = () => { this.closeOverlay(); back(); };
+        s.append(this.btn('indietro', 0, goBack));
+        this.onEsc(goBack);
+    }
+
+    /** la freccia guida: si vede ovunque si scelga come giocare, e dice cosa costa */
+    private assistRow(): HTMLElement {
+        const row = el('div', 'settings-row glass-chip assist-row');
+        const words = el('div', 'assist-words');
+        const name = el('span', 'name');
+        name.textContent = 'freccia guida (modalità assistita)';
+        const note = el('span', 'assist-note');
+        note.textContent = 'una freccia ti indica il prossimo varco. comoda, ma finché è accesa i trofei non si sbloccano e i record restano segnati come assistiti.';
+        words.append(name, note);
+        const t = el('button', `toggle sticker ${state.settings.guide ? 'on' : ''}`);
+        t.setAttribute('aria-pressed', String(state.settings.guide));
+        const paint = () => {
+            t.classList.toggle('on', state.settings.guide);
+            t.textContent = state.settings.guide ? 'accesa' : 'spenta';
+            t.setAttribute('aria-pressed', String(state.settings.guide));
+        };
+        paint();
+        t.addEventListener('click', () => {
+            state.settings.guide = !state.settings.guide;
+            // la partita resta segnata: i record fatti con la freccia lo dicono
+            if (state.settings.guide && state.hasSave) {
+                state.save.assisted = true;
+                state.persist();
+            }
+            state.persistSettings();
+            paint();
+            sfx.ui();
+        });
+        row.append(words, t);
+        return row;
     }
 
     /* ---------- viaggio tra i capitoli ---------- */
@@ -297,6 +344,7 @@ export class Screens {
         });
         shake.append(toggle);
         s.append(shake);
+        s.append(this.assistRow());
 
         const danger = el('div', 'settings-row glass-chip glass-acid-red');
         const dangerName = el('span', 'name');
@@ -968,6 +1016,7 @@ export class Screens {
         
         choiceContainer.append(standardCard, doomsdayCard);
         step3.append(choiceContainer);
+        step3.append(this.assistRow());
 
         const actions3 = el('div', 'forge-actions');
         const backToStep2Btn = this.btn('← attributi', 0, () => {
@@ -989,6 +1038,8 @@ export class Screens {
             state.save.stats.flusso = stats.flusso;
             state.save.doomsdayMode = doomsdayMode;
             state.save.doomsday = 0;
+            // chi parte con la freccia accesa gioca assistito dal primo passo
+            state.save.assisted = state.settings.guide;
             state.persist();
             state.resetRun();
             this.closeOverlay();
