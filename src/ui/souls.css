@@ -1244,49 +1244,14 @@ input.sx-range::-moz-range-thumb {
   .glass-ambient { animation: none !important; }
 }
 
-/* ---------- dialoghi: fascia bassa, nome inciso, voce in corsivo ---------- */
+/* ---------- dialoghi: la bubble di prima, con la voce a inchiostro ---------- */
 
-#dialogue {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transform: none;
-  width: auto;
-  padding: 22px min(6vw, 64px) 26px;
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.88) 32%);
-  border-top: 1px solid var(--sx-line);
-  animation: sx-fade 0.3s ease both;
-}
-
-#dialogue .sx-speaker {
-  position: static;
-  padding: 0;
-  transform: none;
+#dialogue .speaker {
   font-family: var(--font-fell);
-  font-size: 15px;
-  letter-spacing: 0.18em;
-  margin-bottom: 8px;
-  filter: url(#sx-ink);
+  font-size: 14px;
+  letter-spacing: 0.14em;
 }
 
 #dialogue .text {
-  font-family: var(--font-fell-it);
-  font-style: italic;
-  font-size: 17px;
-  line-height: 1.6;
-  color: var(--sx-bone);
-  min-height: 3.2em;
-  max-width: 720px;
-}
-
-#dialogue .hint {
-  margin-top: 10px;
-  text-align: right;
-  font-family: var(--font-martian);
-  font-size: 9px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--sx-dim);
-  animation: sx-breathe 2.8s ease-in-out infinite;
+  color: #d8d2c2;
 }

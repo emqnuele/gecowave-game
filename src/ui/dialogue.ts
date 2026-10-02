@@ -33,10 +33,11 @@ export class DialogueBox {
         this.index = 0;
         this.onEnd = onEnd;
 
-        this.box = el('div', 'sx-dialogue');
+        this.box = el('div', 'glass-panel');
         this.box.id = 'dialogue';
-        const speaker = el('div', 'sx-speaker');
-        const text = el('div', 'text');
+        this.box.dataset.anim = '1';
+        const speaker = el('div', 'speaker sticker');
+        const text = el('div', 'text font-martian');
         const hint = el('div', 'hint', 'E / clic per continuare');
         this.box.append(speaker, text, hint);
         this.box.addEventListener('click', () => this.advance());
@@ -48,10 +49,10 @@ export class DialogueBox {
     private showLine(): void {
         if (!this.box) return;
         const line = this.lines[this.index];
-        const speaker = this.box.querySelector<HTMLElement>('.sx-speaker')!;
+        const speaker = this.box.querySelector<HTMLElement>('.speaker')!;
         speaker.textContent = line.speaker;
         speaker.style.color = ZONE_CSS[line.color];
-        this.box.className = 'sx-dialogue';
+        this.box.className = `glass-panel glass-acid-${line.color}`;
 
         const text = this.box.querySelector<HTMLElement>('.text')!;
         text.textContent = '';
