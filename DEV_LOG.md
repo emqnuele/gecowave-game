@@ -123,7 +123,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **musica**: ovattata in proporzione a roccia sopra, profondità e chiusura (scala logaritmica 20 kHz → 650 Hz, tetto a 0.85; ×0.75 nei capitoli tutti sotterranei, dove l'ovattato è la normalità e deve restare godibile; meno nel void e nella mente, che sono sogni), con riverbero ed eco del posto; sott'acqua 420 Hz; in pausa e col telefono 800 Hz, come da un'altra stanza; nei dialoghi si abbassa; coi boss resta piena e quasi asciutta. Vince sempre il filtro più chiuso tra notte, roccia, acqua, pausa e pericolo.
 - **ambiente**: letti continui sintetici per bioma (vento, respiro della roccia, ronzio di macchine, server, acqua, droni del void, cristalli, città, brace, pioggia sul tetto) mescolati tra superficie e sottosuolo; suoni sporadici pesati per bioma e per giorno/notte (gocce, pietruzze, clangori lontani, bip, grilli, uccelli, corvi, sussurri, bolle, cristalli, clacson, traffico, topi, scricchiolii, scariche, un respiro grosso sotto), con pan casuale: passano per riverbero ed eco, quindi in grotta le gocce ritornano.
 - **passi e atterraggi** sul materiale del bioma (pietra, cemento, mattoni, metallo, cristallo, fango, radici, circuiti, void) o in acqua; tonfo proporzionale alla caduta.
-- **situazioni**: ultimo cuore = battito e mondo che si stringe; cambio di fase del boss = ruggito, scossa e un respiro del riverbero (`acoustics.swell`); boss sconfitto = coda lunga; arena che si chiude = porta che sbatte; morte = la musica rallenta come un nastro (`music.tapeStop`) e torna normale alla ripartenza.
+- **situazioni**: ultimo cuore = battito e mondo che si stringe; cambio di fase del boss = ruggito, scossa e un respiro del riverbero (`acoustics.swell`); boss sconfitto = coda lunga; arena che si chiude = porta che sbatte; morte = la musica rallenta come un nastro (`music.tapeStop`) e torna normale alla ripartenza; ogni nemico muore col suo materiale (`sfx.death`: vetro, plastica, carta, ferro, lamiera, vernice, chitina, gesso, nastro, carne); ogni boss si annuncia con la sua voce prima di un attacco su due (`sfx.bossVoice`: clacson, glitch, risata di lochef, gesso, coro degli dei, chiavi di walter, timbro di anna...).
 - **taratura**: misurata nel browser con `acoustics.meter()` (solo sviluppo): ogni letto a livello 1 sta attorno a 0.008 rms (`BED_TRIM`), sotto la pioggia (0.024) e vicino alla musica (0.003–0.008); i passi a metà di un salto.
 **Vincoli**: se WebAudio manca, musica ed effetti suonano asciutti (nessun crash). Hook di sviluppo `__acoustics` e `__sfx`.
 **Verifica**: giro di fumo su tutti i 21 capitoli (caricamento, 300 fotogrammi, nessun errore; fogli del capitolo in 40–165 ms con swiftshader). L'editor disegna i fogli a inchiostro per le anteprime (primo fotogramma).
@@ -148,6 +148,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 ## 4. Stato
 
 ### Completato
+- Fase 6: nemici (19), boss (30), personaggi (16) e passanti (14 tipi) rifatti a inchiostro, animati, con normal map e occhi emissivi (ADR-017); acustica per spazio con musica ovattata ed eco sottoterra, ambienti per bioma, passi per materiale, morti e voci dei boss, effetti di situazione (ADR-018).
 - Fase 1 (motore a inchiostro), Fase 2 (telefono, zaino, amuleti), Fase 4b (trofei, punteggi, modalità assistita).
 - Fase 3: regioni a stanze 10× il gioco vecchio, verificate; mappa che si rivela; fermate del citelis e viaggio rapido; passanti; nemici con stati e inseguimento; meteo e giorno/notte; arene.
 - Fase 4: aggrappo (wave nuova, dalla formicona), élite, missioni dei passanti con amuleti nuovi, cancelli d'abilità nei primi capitoli.
@@ -166,8 +167,6 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
 ### In corso / aperto
-- **fase 6, audio**: acustica per spazio (ovattato ed eco sottoterra), letti e suoni d'ambiente per bioma, passi per materiale, effetti di situazione (ADR-018).
-- **fase 6, grafica del cast**: nemici (19), boss (30) e personaggi (16) rifatti a inchiostro, animati, con normal map (ADR-017).
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
 ### Da fare
