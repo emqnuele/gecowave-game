@@ -20,6 +20,7 @@ import { npcTexture } from '../engine/npcTexture';
 import { NavGraph } from '../engine/nav/NavGraph';
 import { RegionGuide } from '../engine/RegionGuide';
 import { FolkManager } from '../engine/FolkManager';
+import { Atmosphere } from '../engine/Atmosphere';
 import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
@@ -156,6 +157,7 @@ export class GameScene extends Phaser.Scene {
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
     private guide: RegionGuide | null = null;
     private folk!: FolkManager;
+    private atmosphere!: Atmosphere;
     private guideGfx!: Phaser.GameObjects.Graphics;
     private guideText!: Phaser.GameObjects.Text;
     private lastRoom = -1;
@@ -373,6 +375,8 @@ export class GameScene extends Phaser.Scene {
         this.setupCamera();
         this.parallax.build(this.def.color, this.def.id, this.biome, this.layout ? this.layout.horizonRow * TILE : this.level.heightPx);
         this.parallax.resize();
+        this.atmosphere = new Atmosphere(this);
+        this.atmosphere.build(this.biome, this.def.id);
         this.buildPrompt();
         this.buildGuide();
 
@@ -1726,6 +1730,8 @@ export class GameScene extends Phaser.Scene {
         this.folk.update(time, delta, this.player, this.threats(), !!this.boss?.engaged);
         this.updateArenaLock(time);
         this.updateExplore();
+        const here = this.layout ? this.roomAt(this.player.x, this.player.y) : null;
+        this.atmosphere.update(time, delta, this.layout ? !!here?.surface : !this.biome.indoor);
         this.updateGuide(time);
         this.updateAnalisi(time);
         this.updateScudo(time);

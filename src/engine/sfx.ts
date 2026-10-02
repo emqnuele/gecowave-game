@@ -5,6 +5,7 @@ class Sfx {
     private ctx: AudioContext | null = null;
     private master: GainNode | null = null;
     private noiseBuffer: AudioBuffer | null = null;
+    private rain: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
     private padNodes: { osc: OscillatorNode; gain: GainNode }[] = [];
 
     /** va chiamato dopo un gesto utente per sbloccare l'audio */
@@ -121,6 +122,32 @@ class Sfx {
         this.noise(800, { freq: 180, q: 0.6, vol: 0.25 });
     }
     ui(): void { this.tone(520, 60, { type: 'square', vol: 0.04 }); }
+
+    /** tuono lontano: rombo basso e lungo, poi la coda */
+    thunder(): void {
+        this.noise(2600, { freq: 90, q: 0.5, vol: 0.32 });
+        this.noise(900, { freq: 260, q: 0.8, vol: 0.12 });
+    }
+
+    /** pioggia continua: rumore filtrato con un volume che segue l'intensità */
+    setRain(level: number): void {
+        if (!this.ctx || !this.master || !this.noiseBuffer) return;
+        if (!this.rain && level <= 0) return;
+        if (!this.rain) {
+            const src = this.ctx.createBufferSource();
+            src.buffer = this.noiseBuffer;
+            src.loop = true;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.value = 1400;
+            const gain = this.ctx.createGain();
+            gain.gain.value = 0;
+            src.connect(filter).connect(gain).connect(this.master);
+            src.start();
+            this.rain = { src, gain };
+        }
+        this.rain.gain.gain.setTargetAtTime(Math.max(0, Math.min(1, level)) * 0.06, this.ctx.currentTime, 0.8);
+    }
 
     /** drone ambientale per zona, due oscillatori detunati */
     startPad(baseFreq: number): void {
