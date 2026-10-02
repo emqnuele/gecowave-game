@@ -12,6 +12,7 @@ import { state } from '../engine/state';
 import { music } from '../engine/music';
 import type { ZoneColor } from '../types';
 import { el, ui } from './dom';
+import { phoneBanner } from './banner';
 
 export interface GameController {
     newGame(): void;
@@ -493,23 +494,16 @@ export class Screens {
         setTimeout(() => t.remove(), 5300);
     }
 
-    /** fine capitolo: il conto, a pennarello */
-    private chapterScore(p: { id: string; score: number; best: boolean; assisted: boolean; lines: [string, string][] }): void {
-        document.getElementById('chapter-score')?.remove();
-        const card = el('div', 'glass-panel glass-acid-yellow');
-        card.id = 'chapter-score';
+    /** fine capitolo: una notifica del telefono, discreta; il conto intero sta nella bacheca */
+    private chapterScore(p: { id: string; score: number; best: boolean; assisted: boolean; timeMs: number }): void {
         const lv = LEVELS[p.id];
-        card.append(el('div', 'cs-kicker font-marker', `capitolo completato${p.assisted ? ' · assistito' : ''}`));
-        card.append(el('div', 'cs-title', lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : p.id));
-        for (const [k, v] of p.lines) {
-            const row = el('div', 'cs-row');
-            row.append(el('span', '', k), el('b', '', v));
-            card.append(row);
-        }
-        card.append(el('div', 'cs-score font-marker', p.assisted ? 'partita assistita: niente punteggio' : `${p.score.toLocaleString('it-IT')} punti${p.best ? ' — record!' : ''}`));
-        ui().append(card);
-        setTimeout(() => card.classList.add('fade-out'), 5600);
-        setTimeout(() => card.remove(), 6100);
+        const name = lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : p.id;
+        const m = Math.floor(p.timeMs / 60000);
+        const sec = String(Math.floor((p.timeMs / 1000) % 60)).padStart(2, '0');
+        const body = p.assisted
+            ? `capitolo chiuso · ${m}:${sec} · assistita, senza punteggio`
+            : `capitolo chiuso · ${p.score.toLocaleString('it-IT')} punti · ${m}:${sec}${p.best ? ' · record' : ''}`;
+        phoneBanner({ app: 'bacheca', title: name, body, accent: p.best && !p.assisted ? 'gold' : 'plain' });
     }
 
     private toast(text: string): void {
@@ -522,18 +516,7 @@ export class Screens {
     }
 
     private wavesung(sender: string, text: string): void {
-        document.getElementById('wavesung')?.remove();
-        const w = el('div', 'glass-panel glass-acid-blue');
-        w.id = 'wavesung';
-        const head = el('div', 'wavesung-head font-marker', '');
-        head.textContent = `📱 wavesung — ${sender}`;
-        const body = el('div', 'wavesung-body');
-        body.textContent = text;
-        w.append(head, body);
-        ui().append(w);
-        sfx.pickup();
-        setTimeout(() => w.classList.add('fade-out'), 4600);
-        setTimeout(() => w.remove(), 5100);
+        phoneBanner({ app: 'wavesung', title: sender, body: text, accent: 'blue', wrap: true, ms: 5200 });
     }
 
     private abilityCard(ability: keyof typeof ABILITY_CARDS): void {

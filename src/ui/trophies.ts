@@ -142,30 +142,56 @@ export function buildTrophyCabinet(root: HTMLElement, opts: { wide?: boolean } =
     cab.append(tabs, grid, sheet);
     renderGrid();
 
-    // i record dei capitoli finiti: tempo, esplorazione, punteggio
-    const rows: [string, string][] = [];
+    // i capitoli finiti: record, e al tocco il conto dell'ultima uscita voce per voce
     const recs = node('div', 'records');
-    recs.append(node('div', 'records-title', 'record per capitolo'));
+    recs.append(node('div', 'records-title', 'capitoli'));
     let sum = 0;
+    let rows = 0;
     for (const id of [...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k))]) {
         const sc = state.save.scores[id];
-        if (!sc) continue;
-        sum += sc.score;
-        const r = node('div', `rec${sc.assisted ? ' assisted' : ''}`);
+        const log = state.save.chapterLog?.[id];
+        if (!sc && !log) continue;
+        rows++;
+        if (sc) sum += sc.score;
+        const assistedOnly = !sc && !!log?.assisted;
+        const r = node('button', `rec rec-open${assistedOnly ? ' assisted' : ''}`) as HTMLButtonElement;
+        r.type = 'button';
+        r.setAttribute('aria-expanded', 'false');
+        const meta = sc ? `${fmtTime(sc.timeMs)}  ${Math.round(sc.explored * 100)}%` : log ? `${fmtTime(log.timeMs)}  assistito` : '';
         r.append(
             node('span', 'rec-name', LEVELS[id]?.accentWord ?? id),
-            node('span', 'rec-meta', `${fmtTime(sc.timeMs)}  ${Math.round(sc.explored * 100)}%${sc.assisted ? '  assistito' : ''}`),
-            node('b', 'rec-score', sc.score.toLocaleString('it-IT')),
+            node('span', 'rec-meta', meta),
+            node('b', 'rec-score', sc ? sc.score.toLocaleString('it-IT') : '—'),
         );
-        recs.append(r);
-        rows.push([id, String(sc.score)]);
+        const detail = node('div', 'rec-detail');
+        detail.hidden = true;
+        if (log) {
+            const d = new Date(log.at);
+            detail.append(node('div', 'rec-detail-head', `ultima uscita · ${fmtTime(log.timeMs)} · ${d.getDate()}/${d.getMonth() + 1}${log.best ? ' · record' : ''}${log.assisted ? ' · assistita' : ''}`));
+            for (const [k, v] of log.lines) {
+                const line = node('div', 'rec-line');
+                line.append(node('span', '', k), node('b', '', v));
+                detail.append(line);
+            }
+            const tot = node('div', 'rec-line total');
+            tot.append(node('span', '', 'totale'), node('b', '', log.assisted ? 'senza punteggio' : log.score.toLocaleString('it-IT')));
+            detail.append(tot);
+        } else {
+            detail.append(node('div', 'rec-detail-head', 'il conto voce per voce arriva alla prossima uscita dal capitolo.'));
+        }
+        r.addEventListener('click', () => {
+            detail.hidden = !detail.hidden;
+            r.setAttribute('aria-expanded', String(!detail.hidden));
+            sfx.ui();
+        });
+        recs.append(r, detail);
     }
-    if (rows.length) {
+    if (rows) {
         const tot = node('div', 'rec total');
         tot.append(node('span', 'rec-name', 'totale'), node('span', 'rec-meta', ''), node('b', 'rec-score', sum.toLocaleString('it-IT')));
         recs.append(tot);
     } else {
-        recs.append(node('div', 'medals-empty', 'nessun capitolo finito. i record si scrivono all\'uscita.'));
+        recs.append(node('div', 'medals-empty', 'nessun capitolo finito. il conto si scrive all\'uscita.'));
     }
     cab.append(recs);
 

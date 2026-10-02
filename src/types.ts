@@ -146,8 +146,20 @@ export interface SaveData {
     scores: Record<string, ChapterScore>;
     /** punteggi dei capitoli finiti in questa partita: si sommano nel punteggio finale */
     runScores: Record<string, number>;
+    /** l'ultima uscita da ogni capitolo, voce per voce: si legge nella bacheca */
+    chapterLog: Record<string, ChapterLog>;
     /** il capitolo in corso: da quando, con quante morti e uccisioni all'ingresso */
     chapterRun: { id: string; startMs: number; deaths0: number; kills0: number; noHitBosses: number } | null;
+}
+
+export interface ChapterLog {
+    score: number;
+    best: boolean;
+    assisted: boolean;
+    timeMs: number;
+    /** voci del conto: [nome, valore] */
+    lines: [string, string][];
+    at: number;
 }
 
 export interface ChapterScore {

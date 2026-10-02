@@ -128,6 +128,10 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 **Vincoli**: se WebAudio manca, musica ed effetti suonano asciutti (nessun crash). Hook di sviluppo `__acoustics` e `__sfx`.
 **Verifica**: giro di fumo su tutti i 21 capitoli (caricamento, 300 fotogrammi, nessun errore; fogli del capitolo in 40–165 ms con swiftshader). L'editor disegna i fogli a inchiostro per le anteprime (primo fotogramma).
 
+### ADR-019 — il conto del capitolo è una notifica, non un cartellone
+**Contesto**: a fine capitolo un riquadro in sovrimpressione al centro dello schermo con tutte le voci del punteggio; l'utente lo trovava invasivo e brutto.
+**Decisione**: a schermo solo una **notifica del telefono** che entra da destra (`src/ui/banner.ts`, superfici piene come il telefono, si chiude da sola o al tocco, si impila). Anche i messaggi wavesung passano di lì, così non si sovrappongono. Il conto voce per voce dell'ultima uscita da ogni capitolo si salva in `SaveData.chapterLog` e si legge nella **bacheca** (telefono e menu): ogni capitolo è una riga che si apre; compaiono anche i capitoli chiusi in modalità assistita.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 

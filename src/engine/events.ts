@@ -25,7 +25,7 @@ export interface GameEvents {
     'achievement': { id: string };
     'travel-show': { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void };
     'trial-timer': { left: number; total: number } | null;
-    'chapter-score': { id: string; score: number; best: boolean; assisted: boolean; lines: [string, string][] };
+    'chapter-score': { id: string; score: number; best: boolean; assisted: boolean; timeMs: number };
 }
 
 type Handler<T> = (payload: T) => void;

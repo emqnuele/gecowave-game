@@ -491,30 +491,6 @@ body {
   white-space: nowrap;
 }
 
-/* ---------- wavesung (il telefono del realm) ---------- */
-
-#wavesung {
-  position: absolute;
-  top: 70px;
-  right: 18px;
-  width: min(340px, calc(100vw - 36px));
-  padding: 14px 18px;
-  transform: rotate(0.8deg);
-  animation: screen-in 0.3s ease both;
-}
-
-#wavesung .wavesung-head {
-  font-size: 13px;
-  color: var(--blue);
-  margin-bottom: 6px;
-}
-
-#wavesung .wavesung-body {
-  font-size: 11px;
-  line-height: 1.6;
-  color: var(--zinc-300);
-}
-
 /* ---------- scelte ---------- */
 
 .choice-title {
@@ -1973,45 +1949,6 @@ input[type='range']::-webkit-slider-thumb {
   color: var(--zinc-400, #a1a1aa);
   line-height: 1.4;
 }
-
-#chapter-score {
-  position: absolute;
-  top: 120px;
-  left: calc(50% - min(180px, 50vw - 18px));
-  width: min(360px, calc(100vw - 36px));
-  padding: 16px 20px;
-  transform: rotate(0.6deg);
-  animation: screen-in 0.35s ease both;
-  z-index: 40;
-}
-
-#chapter-score .cs-kicker {
-  font-size: 12px;
-  color: var(--yellow);
-}
-
-#chapter-score .cs-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 4px 0 10px;
-}
-
-#chapter-score .cs-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--zinc-300);
-  padding: 2px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
-}
-
-#chapter-score .cs-score {
-  margin-top: 10px;
-  font-size: 22px;
-  color: var(--yellow);
-  transform: rotate(-1.5deg);
-}
-
 
 /* ---------- trofei nel menu principale ---------- */
 

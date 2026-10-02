@@ -2609,14 +2609,12 @@ export class GameScene extends Phaser.Scene {
         if (best) state.save.scores[id] = { score, timeMs, deaths, kills, explored, secrets, assisted };
         if (!assisted) state.save.runScores[id] = Math.max(state.save.runScores[id] ?? 0, score);
         if (id === 'perduta' && minutes < 6) unlockAchievement('speedrun');
+        const lines = parts.filter(([, v]) => v !== 0).map(([k, v]) => [k, (v > 0 ? '+' : '') + v] as [string, string]);
+        // il conto voce per voce resta nella bacheca: a schermo solo una notifica
+        state.save.chapterLog = { ...state.save.chapterLog, [id]: { score, best, assisted, timeMs, lines, at: Date.now() } };
         state.save.chapterRun = null;
         state.persist();
-        const mm = Math.floor(minutes);
-        const ss = Math.floor((timeMs / 1000) % 60);
-        bus.emit('chapter-score', {
-            id, score, best, assisted,
-            lines: [[`tempo ${mm}:${String(ss).padStart(2, '0')}`, ''], ...parts.filter(([, v]) => v !== 0).map(([k, v]) => [k, (v > 0 ? '+' : '') + v] as [string, string])],
-        });
+        bus.emit('chapter-score', { id, score, best, assisted, timeMs });
     }
 
     /** il capitolo in corso, stimato come se finisse adesso (senza il bonus del tempo) */

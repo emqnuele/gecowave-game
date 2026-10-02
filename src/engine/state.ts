@@ -55,6 +55,7 @@ const defaultSave = (): SaveData => ({
     assisted: false,
     scores: {},
     runScores: {},
+    chapterLog: {},
     chapterRun: null,
 });
 
