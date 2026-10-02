@@ -56,6 +56,8 @@ await page.evaluate((choiceMode) => {
         acted = true;
         continue;
       }
+      // il tabellone del citelis: si resta dove si è
+      if (stack && document.querySelector('.screen h2')?.textContent === 'CITELIS') { const all = [...document.querySelectorAll('.screen button')]; all[all.length - 1]?.click(); acted = true; continue; }
       if (stack) { const b = stack.querySelector('button') ?? stack.firstElementChild; ev('  -> chiudo una card'); b?.click(); acted = true; continue; }
       break;
     }
