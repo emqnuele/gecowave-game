@@ -917,7 +917,7 @@ export class GameScene extends Phaser.Scene {
 
     /** le ricompense dei boss, dopo un attimo, vengono a cercarti: non si perdono */
     private homeIn(obj: Phaser.Physics.Arcade.Sprite): void {
-        this.homing.push({ obj, at: this.time.now + 1800, moving: false });
+        this.homing.push({ obj, at: this.time.now + 1200, moving: false });
     }
 
     private updateHoming(delta: number): void {
@@ -933,7 +933,7 @@ export class GameScene extends Phaser.Scene {
                 h.moving = true;
                 this.tweens.killTweensOf(h.obj);
             }
-            const v = Math.min(d, (260 + d * 0.4) * (delta / 1000));
+            const v = Math.min(d, (420 + d * 0.9) * (delta / 1000));
             h.obj.x += (dx / d) * v;
             h.obj.y += (dy / d) * v;
         }
