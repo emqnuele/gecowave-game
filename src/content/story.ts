@@ -235,7 +235,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     /* ---------- capitolo 5: il trenbolone e il rio merdone ---------- */
     'ticummi-offerta': [
         { speaker: 'ticummi', color: 'blue', text: 'psst. ehi. tu. quello col trenbolone in circolo. ho visto tutto, io vedo sempre tutto. notino ti sta cercando per rubarti i frammenti.' },
-        { speaker: 'ticummi', color: 'blue', text: 'per soli 133 barre ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
+        { speaker: 'ticummi', color: 'blue', text: 'per soli 0,09€ ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. al cambio del realm fanno 133 barre, ma il cambio lo decido io. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
     ],
     'spaccino-offerta': [
         { speaker: 'spaccino del rio', color: 'orange', text: 'ehi, geco. ti vedo smunto. ti serve la spinta. la forza vera.' },
@@ -1122,6 +1122,9 @@ export function endingCards(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'ri
     }
     if (flags.includes('boss-down-settequaranta')) {
         extra.push({ text: 'la 14 barrato è stata dissepolta. samatt ci ha fatto un giro per nostalgia. il 7:40 ora è un monumento: morde ancora, ma solo i turisti senza biglietto.' });
+    }
+    if (flags.includes('boss-down-walter')) {
+        extra.push({ text: 'a galliate hanno messo una targa sul capolinea: "guggu, re dei bus. teneva aperto". i maranza la puliscono a turno. le autoscuole marcetti ora le gestisce la signora anna. la patente si prende in tre settimane.' });
     }
     if (flags.includes('boss-down-custode')) {
         extra.push({ text: 'il disco postumo del primo custode, "Trovati una Fidanzata", è tornato in classifica nel realm. seconda copia venduta: la tua. lui, da qualche parte, batte il tempo soddisfatto.' });
