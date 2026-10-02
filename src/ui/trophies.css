@@ -522,3 +522,80 @@
 .rec.board.first .rec-name {
   color: var(--gold);
 }
+
+/* ---------- inchiostro nel telefono: la bacheca parla come i menu ---------- */
+
+.phone .cab-title {
+  font-family: var(--font-fell);
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  color: var(--sx-bone);
+}
+
+.phone .cab-line {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
+}
+
+.phone .cab-ring .count b {
+  font-family: var(--font-fell);
+  font-weight: 400;
+}
+
+.phone .cab-warn {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(163, 34, 28, 0.65);
+  border-radius: 4px;
+  color: var(--sx-bone);
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.phone .cab-tab {
+  font-family: var(--font-fell);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.phone .medal .medal-name {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 11px;
+  color: #b8b0a0;
+}
+
+.phone .medal.have .medal-name {
+  color: var(--sx-bone);
+}
+
+.phone .sheet-name {
+  font-family: var(--font-fell);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--sx-bone);
+}
+
+.phone .sheet-desc {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cfc6b0;
+}
+
+.phone .records-title {
+  font-family: var(--font-fell);
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  color: var(--sx-bone);
+  transform: none;
+}
+
+.phone .medals-empty {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  transform: none;
+}
