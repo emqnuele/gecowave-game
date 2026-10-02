@@ -151,6 +151,7 @@ export class GameScene extends Phaser.Scene {
     private analisiUntil = 0;
     private nextAnalisiTick = 0;
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
+    private homing: { obj: Phaser.Physics.Arcade.Sprite; at: number; moving: boolean }[] = [];
     private bossIntroShown = false;
     private exitLockToastAt = 0;
     // arena di lametta
@@ -240,6 +241,7 @@ export class GameScene extends Phaser.Scene {
         this.mirror = null;
         this.interactables = [];
         this.analisiGlyphs = [];
+        this.homing = [];
         this.checkpointSprites.clear();
         this.lamettaCenter = null;
         this.lamettaActive = false;
@@ -445,12 +447,14 @@ export class GameScene extends Phaser.Scene {
     }
 
     /** sacchetto o amuleto a terra: si raccoglie una volta sola per salvataggio */
-    private spawnItemPickup(x: number, y: number, item: string, amount: number, persistKey: string): void {
+    private spawnItemPickup(x: number, y: number, item: string, amount: number, persistKey: string, loose = false): void {
         if (!ITEMS[item] || state.save.collectedLore.includes(persistKey)) return;
         const isCharm = ITEMS[item].kind === 'amuleto';
         if (isCharm && state.hasCharm(item)) return;
         ensurePickupTextures(this);
+        if (loose) ({ x, y } = this.rewardSpot(x, y));
         const pickup = this.physics.add.sprite(x, y, isCharm ? 'pickup-charm' : 'pickup-item').setDepth(5);
+        if (loose) this.homeIn(pickup);
         (pickup.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.lighting.follow(pickup, isCharm ? 0xc084fc : 0xfacc15, 150, 0.8);
         this.tweens.add({ targets: pickup, y: y - 7, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -472,7 +476,7 @@ export class GameScene extends Phaser.Scene {
     private dropBossCharm(kind: BossKind, x: number, y: number): void {
         const id = BOSS_CHARMS[kind];
         if (!id || state.hasCharm(id)) return;
-        this.spawnItemPickup(x + 40, y + 30, id, 1, `charm-${id}`);
+        this.spawnItemPickup(x + 40, y + 30, id, 1, `charm-${id}`, true);
     }
 
     /** se sei morto tra la vittoria e la ricompensa, la ricompensa ti aspetta */
@@ -486,16 +490,16 @@ export class GameScene extends Phaser.Scene {
             smela: 'acquatossica',
         };
         const ability = fragmentByBoss[kind];
-        if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability);
+        if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability, true);
         this.dropBossCharm(kind, x, y);
         if (kind === 'riba' && !state.hasFlag('dispositivo')) state.setFlag('dispositivo');
-        if (kind === 'lochef') this.spawnCuore(x, y + 50, 'cuore-lochef');
-        if (kind === 'formicona') this.spawnCuore(x, y + 50, 'cuore-formicona');
-        if (kind === 'settequaranta') this.spawnCuore(x, y + 50, 'cuore-barrato');
-        if (kind === 'custode') this.spawnCuore(x, y + 50, 'cuore-custode');
+        if (kind === 'lochef') this.spawnCuore(x, y + 50, 'cuore-lochef', true);
+        if (kind === 'formicona') this.spawnCuore(x, y + 50, 'cuore-formicona', true);
+        if (kind === 'settequaranta') this.spawnCuore(x, y + 50, 'cuore-barrato', true);
+        if (kind === 'custode') this.spawnCuore(x, y + 50, 'cuore-custode', true);
         if (kind === 'limite') {
             state.setFlag('caso-risolto');
-            this.spawnCuore(x, y + 50, 'cuore-limite');
+            this.spawnCuore(x, y + 50, 'cuore-limite', true);
         }
         if (kind === 'furgone' || kind === 'smela') state.setFlag('stabilimento-chiuso');
         if (kind === 'pedrino') state.setFlag('ricordi-visti');
@@ -836,12 +840,58 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    private spawnFragment(x: number, y: number, ability: AbilityId): void {
+    /** un posto calpestabile vicino a dove è morto il boss: mai in aria o nella roccia */
+    private rewardSpot(x: number, y: number): { x: number; y: number } {
+        const c0 = Math.floor(x / TILE);
+        const r0 = Math.floor(y / TILE);
+        const room = this.roomAt(x, y);
+        for (let d = 0; d <= 16; d++) {
+            for (let dy = -d; dy <= d; dy++) {
+                for (let dx = -d; dx <= d; dx++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dy)) !== d) continue;
+                    const c = c0 + dx;
+                    const r = r0 + dy;
+                    if (this.nav.segmentAt(c, r) < 0) continue;
+                    if (room && this.roomAt(c * TILE, r * TILE) !== room) continue;
+                    return { x: c * TILE + TILE / 2, y: r * TILE + 6 };
+                }
+            }
+        }
+        return { x: this.player.x, y: this.player.y - 30 };
+    }
+
+    /** le ricompense dei boss, dopo un attimo, vengono a cercarti: non si perdono */
+    private homeIn(obj: Phaser.Physics.Arcade.Sprite): void {
+        this.homing.push({ obj, at: this.time.now + 1800, moving: false });
+    }
+
+    private updateHoming(delta: number): void {
+        const now = this.time.now;
+        this.homing = this.homing.filter((h) => h.obj.active);
+        for (const h of this.homing) {
+            if (now < h.at || this.player.dead) continue;
+            const dx = this.player.x - h.obj.x;
+            const dy = this.player.y - h.obj.y;
+            const d = Math.hypot(dx, dy);
+            if (d < 30) continue;
+            if (!h.moving) {
+                h.moving = true;
+                this.tweens.killTweensOf(h.obj);
+            }
+            const v = Math.min(d, (260 + d * 0.4) * (delta / 1000));
+            h.obj.x += (dx / d) * v;
+            h.obj.y += (dy / d) * v;
+        }
+    }
+
+    private spawnFragment(x: number, y: number, ability: AbilityId, loose = false): void {
+        if (loose) ({ x, y } = this.rewardSpot(x, y));
         const shard = this.physics.add.sprite(x, y, 'fragment').setDepth(5);
         (shard.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.lighting.follow(shard, 0x4ade80, 200, 1.0);
         this.tweens.add({ targets: shard, y: y - 10, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.tweens.add({ targets: shard, angle: { from: -8, to: 8 }, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        if (loose) this.homeIn(shard);
         this.physics.add.overlap(this.player, shard, () => {
             shard.destroy();
             state.unlockAbility(ability);
@@ -929,9 +979,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     /** cuore del realm: +1 vita massima, per sempre */
-    private spawnCuore(x: number, y: number, persistKey: string): void {
+    private spawnCuore(x: number, y: number, persistKey: string, loose = false): void {
         if (state.save.collectedLore.includes(persistKey)) return;
+        if (loose) ({ x, y } = this.rewardSpot(x, y));
         const heart = this.physics.add.sprite(x, y, 'cuore').setDepth(5);
+        if (loose) this.homeIn(heart);
         (heart.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.lighting.follow(heart, 0xf87171, 170, 0.9);
         this.tweens.add({ targets: heart, y: y - 8, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -1634,6 +1686,7 @@ export class GameScene extends Phaser.Scene {
         this.updateBossTrigger();
         this.magnetBarre();
         this.updateClone(time, delta);
+        this.updateHoming(delta);
         this.updateAnalisi(time);
         this.updateScudo(time);
         this.updateAcquaTossica(time);
@@ -2523,7 +2576,7 @@ export class GameScene extends Phaser.Scene {
         if (!state.hasFlag('rio-curato')) {
             state.setFlag('rio-curato');
             this.startDialogue('rio-cura', () => {
-                this.spawnFragment(this.player.x, this.player.y - 50, 'rigenerazione');
+                this.spawnFragment(this.player.x, this.player.y - 50, 'rigenerazione', true);
             });
         } else {
             bus.emit('toast', { text: 'il fiume ti ripulisce. di nuovo. senza giudicare. quasi.' });
@@ -2866,16 +2919,16 @@ export class GameScene extends Phaser.Scene {
         }
         switch (kind) {
             case 'guggu':
-                this.spawnFragment(x, y + 60, 'rimbalzo');
+                this.spawnFragment(x, y + 60, 'rimbalzo', true);
                 break;
             case 'breccio':
                 this.startDialogue('breccio-morte', () => {
-                    this.spawnFragment(x, y + 40, 'riflesso');
+                    this.spawnFragment(x, y + 40, 'riflesso', true);
                 });
                 break;
             case 'notino':
                 this.startDialogue('notino-sconfitto', () => {
-                    this.spawnFragment(x, y + 40, 'risonante');
+                    this.spawnFragment(x, y + 40, 'risonante', true);
                 });
                 break;
             case 'riba':
@@ -2886,12 +2939,12 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'lochef':
                 this.startDialogue('lochef-sconfitto', () => {
-                    this.spawnCuore(x, y + 40, 'cuore-lochef');
+                    this.spawnCuore(x, y + 40, 'cuore-lochef', true);
                 });
                 break;
             case 'formicona':
                 this.startDialogue('formicona-sconfitta', () => {
-                    this.spawnCuore(x, y + 40, 'cuore-formicona');
+                    this.spawnCuore(x, y + 40, 'cuore-formicona', true);
                 });
                 break;
             case 'furgone':
@@ -2906,19 +2959,19 @@ export class GameScene extends Phaser.Scene {
             case 'smela':
                 this.startDialogue('smela-sconfitta', () => {
                     state.setFlag('stabilimento-chiuso');
-                    this.spawnFragment(x, y + 40, 'acquatossica');
+                    this.spawnFragment(x, y + 40, 'acquatossica', true);
                     this.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.smelaRecensione));
                 });
                 break;
             case 'limite':
                 this.startDialogue('romero-verdetto', () => {
                     state.setFlag('caso-risolto');
-                    this.spawnCuore(x, y + 40, 'cuore-limite');
+                    this.spawnCuore(x, y + 40, 'cuore-limite', true);
                 });
                 break;
             case 'teorema':
                 this.startDialogue('mente-ordine', () => {
-                    this.spawnFragment(x, y + 40, 'analisi');
+                    this.spawnFragment(x, y + 40, 'analisi', true);
                 });
                 break;
             case 'pedrino':
@@ -2928,7 +2981,7 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'ombra':
                 this.startDialogue('ombra-sconfitta', () => {
-                    this.spawnFragment(x, y + 40, 'scudo');
+                    this.spawnFragment(x, y + 40, 'scudo', true);
                 });
                 break;
             case 'ticummi':
@@ -2950,13 +3003,13 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'settequaranta':
                 this.startDialogue('settequaranta-morte', () => {
-                    this.spawnCuore(x, y + 40, 'cuore-barrato');
+                    this.spawnCuore(x, y + 40, 'cuore-barrato', true);
                     this.returnFromSecret(4500);
                 });
                 break;
             case 'custode':
                 this.startDialogue('custode-morte', () => {
-                    this.spawnCuore(x, y + 40, 'cuore-custode');
+                    this.spawnCuore(x, y + 40, 'cuore-custode', true);
                     this.returnFromSecret(4500);
                 });
                 break;
@@ -2968,7 +3021,7 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'walter':
                 this.startDialogue('walter-morte', () => {
-                    this.spawnCuore(x, y + 40, 'cuore-walter');
+                    this.spawnCuore(x, y + 40, 'cuore-walter', true);
                     bus.emit('toast', { text: 'walter, spirando: "...comprate verisure. il primo mese è scontato."' });
                     this.returnFromSecret(5000);
                 });

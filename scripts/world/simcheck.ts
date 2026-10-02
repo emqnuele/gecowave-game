@@ -1,17 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { LEVELS, LEVEL_ORDER } from '../../src/content/levels';
+import { LEVELS } from '../../src/content/levels';
 import { decodeGrid, type RegionFile } from '../../src/world/codec';
-import { BODY_H, BODY_W, SimMap, type SimAbilities } from '../../src/world/sim';
+import { BODY_H, BODY_W, SimMap } from '../../src/world/sim';
 import { canFinish, keyOf, settleAt, simReach } from '../../src/world/simreach';
 
-// uso: simcheck <id|all> [old]  -> raggiungibilità col geco simulato
-export function abilitiesFor(id: string): SimAbilities {
-    const idx = LEVEL_ORDER.indexOf(id);
-    if (idx === 0) return { dash: false, double: false };
-    if (idx === 1) return { dash: true, double: false };
-    return { dash: true, double: true };
-}
+import { abilitiesFor } from './abilities';
 
+// uso: simcheck <id|all> [old]  -> raggiungibilità col geco simulato
 function check(id: string, useOld: boolean): void {
     const def = LEVELS[id];
     const grid = useOld ? def.grid : decodeGrid(JSON.parse(readFileSync(`public/regions/${id}.json`, 'utf8')) as RegionFile);
