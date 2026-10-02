@@ -178,6 +178,32 @@ export const FOLK: Record<string, FolkKind[]> = {
             ['sono stato troppo vicino al nucleo.', 'adesso esisto un po\' a scatti. ma pago meno tasse.'],
         ]),
     ],
+    /* la piazza: chi è scappato dalle regioni che crollano */
+    piazza: [
+        C('nonna', 'nonna della fontana', 'yellow', 24, ['hai mangiato?', 'la fontana era più bella prima del crollo.', 'non correre che sudi.'], [
+            ['abitavo al rio. poi è arrivata la formica.', 'adesso abito qui. la formica no. per ora.'],
+            ['mio nipote fa il custode come te.', 'cioè, fa il custode di un parcheggio. ma con lo stesso impegno.'],
+        ]),
+        C('cuoco', 'profugo della tana', 'yellow', 46, ['niente pesto qui. niente!', 'sento ancora l\'odore della pentola.', 'lochef? non ne parliamo.'], [
+            ['lavoravo per lochef.', 'paga in assaggi. ho assaggiato tutto. anche il contratto.'],
+        ]),
+        C('operaio', 'ex operaio dello stabilimento', 'yellow', 50, ['turno di notte, turno di giorno, turno di piazza.', 'il casco lo tengo, non si sa mai.'], [
+            ['mi hanno licenziato via loop.', 'ogni volta che rientro mi rilicenziano. almeno è un lavoro fisso.'],
+        ]),
+        C('studente', 'fuorisede in piazza', 'yellow', 62, ['qualcuno ha visto il wifi?', 'la ruhra mi deve tre esami.', 'birra a 1 barra, chi ci sta?'], [
+            ['sono scappato dalla ruhra.', 'piema mi ha messo 18 sulla fiducia. sulla MIA fiducia.'],
+        ]),
+        C('bimbo', 'bimbo col pallone', 'yellow', 78, ['passa! passa!', 'sei il custode? fai un tiro!', 'il pallone è finito nel realm di sotto.'], [
+            ['il mio pallone è caduto in una crepa.', 'adesso è un frammento. dice la mamma.'],
+        ]),
+        C('ubriaco', 'cliente fisso del bar', 'yellow', 22, ['un altro giro, samatt!', 'il realm gira. o sono io.', 'io pedro lo conoscevo. prima.'], [
+            ['pedro veniva qui tutti i sabati.', 'beveva acqua. ACQUA. già allora si vedeva che non stava bene.'],
+            ['il bar non chiude mai.', 'perché nessuno ha mai trovato la chiave. o la porta.'],
+        ]),
+        C('maranza', 'maranza in trasferta', 'yellow', 64, ['fra la piazza è nostra', 'oh, tu, sì tu', 'zio passami una barra'], [
+            ['siamo scesi da galliate col citelis.', 'senza biglietto. il controllore ci ha guardato e ha pianto.'],
+        ]),
+    ],
     province: [
         C('maranza', 'maranza di galliate', 'red', 66, ['oh frate', 'che guardi?', 'fra mi presti il telefono?', 'zio questa è la mia zona'], [
             ['qua comandiamo noi, fra.', 'cioè, il maranzone. io porto l\'acqua.'],

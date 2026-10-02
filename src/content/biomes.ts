@@ -205,6 +205,15 @@ export const BIOMES: Record<string, BiomeDef> = {
         ambience: ['dust', 'ash'], props: ['cone', 'tire', 'signpost', 'busstop', 'crate', 'chair'],
         spikes: 'glass', ambient: 0.11, lightShafts: false, foreground: 'cables',
     },
+    /* la piazza: tufo caldo, lampioni, sedie dei bar. l'unico posto sereno */
+    piazza: {
+        ...base, id: 'piazza', material: 'concrete',
+        rock: 0x6e5d48, rim: 0xf2d39a, accent: 0xfbbf24,
+        surface: ['rubble'], ceiling: ['cables'],
+        skyline: 'depot', skyTop: 0x0f0d16, skyBottom: 0x2a2030, haze: 0x4a3a35,
+        ambience: ['dust'], props: ['lantern', 'chair', 'busstop', 'signpost', 'crate'],
+        spikes: 'metal', ambient: 0.16, lightShafts: false, foreground: 'cables',
+    },
 };
 
 const LEVEL_BIOME: Record<string, string> = {

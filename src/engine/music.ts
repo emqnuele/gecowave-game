@@ -63,6 +63,8 @@ class MusicManager {
                 return 'assets/music/GECOWAVE.mp3';
             case 'bus':
                 return "assets/music/Ivan Maggini's OST 1.mp3";
+            case 'piazza':
+                return "assets/music/Until Here's OST.mp3";
             case 'galliate':
                 return 'assets/music/Altra #4 (Novara).mp3';
             case 'marcetti':

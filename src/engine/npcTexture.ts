@@ -14,6 +14,8 @@ export function npcTexture(id: string): string {
     if (id.startsWith('romero')) return 'npc-romero';
     if (id.startsWith('walter')) return 'npc-walter';
     if (id.startsWith('vavleeh')) return 'npc-vavleeh';
-    if (id.startsWith('indizio')) return 'lore-tablet';
+    if (id.startsWith('indizio') || id.endsWith('-targa') || id.startsWith('bacheca')) return 'lore-tablet';
+    if (id.startsWith('bottega')) return 'npc-smela';
+    if (id.startsWith('oracolo')) return 'npc-filippus';
     return 'npc-markolino';
 }

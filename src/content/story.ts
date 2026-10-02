@@ -1008,6 +1008,51 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-marcetti-4': [
         { speaker: 'targa sulla scrivania', color: 'orange', text: '«WALTER BARUFFONI — TITOLARE». sotto, graffiato di fresco: "di nuovo". il geco non era il primo a fare il lavoro sporco. era solo l\'ultimo.' },
     ],
+
+    /* ---------- la piazza: l'hub ---------- */
+    'piazza-arrivo': [
+        { speaker: 'autista del citelis', color: 'yellow', text: 'capolinea. piazza. l\'unico posto del realm dove il cielo non ti cade in testa. di solito.' },
+        { speaker: 'markolino', color: 'green', text: 'eccoti. benvenuto in piazza: qui non si mena nessuno, è zona franca. c\'è il bar, la bottega, la bacheca delle commissioni e quello strano che legge le mappe.' },
+        { speaker: 'markolino', color: 'green', text: 'da qualsiasi fermata del citelis ora puoi tornare qui. riposati, compra, ascolta le voci al bar. poi torna a lavorare, eh.' },
+    ],
+    'piazza-fermata': [
+        { speaker: 'citelis', color: 'yellow', text: 'nuova linea attiva: CAPOLINEA PIAZZA. il tabellone di ogni fermata ora porta anche lì.' },
+    ],
+    'oracolo-mappa': [
+        { speaker: 'l\'oracolo delle mappe', color: 'cyan', text: 'io non leggo il futuro. leggo le mappe. che è peggio, perché le mappe non mentono.' },
+    ],
+    'bottega-wavezon': [
+        { speaker: 'commesso wavezon', color: 'yellow', text: 'punto ritiro wavezon, filiale piazza. consegna in giornata, se la giornata finisce.' },
+    ],
+    'bacheca-missioni': [
+        { speaker: 'bacheca delle commissioni', color: 'yellow', text: 'fogli appesi con le puntine, uno sopra l\'altro. qualcuno ha scritto "AIUTO" in ogni angolo libero.' },
+    ],
+    'samatt-bar': [
+        { speaker: 'samatt', color: 'yellow', text: 'oh, il geco! siediti. qui al bar si sentono tutte le voci del realm. offro io, tanto non pago mai.' },
+    ],
+    'markolino-piazza': [
+        { speaker: 'markolino', color: 'green', text: 'la piazza è l\'ultimo posto dove la gente si ricorda com\'era prima. tienila d\'occhio. e non rompere la fontana, è del seicento. credo.' },
+    ],
+    'markolino-piazza-dopo': [
+        { speaker: 'markolino', color: 'green', text: 'stanno arrivando tutti qui. scappano dalle regioni che crollano. più frammenti trovi, più gente torna a casa. niente pressione.' },
+    ],
+    'markolino-piazza-fine': [
+        { speaker: 'markolino', color: 'green', text: 'manca poco, vero? lo sento. la fontana ha ripreso a buttare acqua. o è il realm che piange. una delle due.' },
+    ],
+    'guastalla-piazza': [
+        { speaker: 'guastalla', color: 'yellow', text: 'sono sceso. alla prossima. dopo 851 giri, sono sceso. non so cosa si fa adesso, a terra. si cammina? tutti camminano?' },
+        { speaker: 'guastalla', color: 'yellow', text: 'mi siedo qui e guardo passare il citelis. da fuori. è bellissimo da fuori.' },
+    ],
+    'ivan-targa': [
+        { speaker: 'targa sotto il lampione', color: 'yellow', text: '«a IVAN MAGGINI, che ha rotto il loop con la sola furia. il citelis si ferma qui, per rispetto.»' },
+        { speaker: 'targa sotto il lampione', color: 'yellow', text: 'qualcuno ci ha lasciato un biglietto convalidato. un gesto enorme, da queste parti.' },
+    ],
+    'lore-piazza-1': [
+        { speaker: 'graffito sul tetto', color: 'yellow', text: '«PRIMA DEL CROLLO QUI C\'ERA IL MERCATO DEL SABATO. ADESSO C\'È IL MERCATO DEL CROLLO. SEMPRE DI SABATO.»' },
+    ],
+    'lore-piazza-2': [
+        { speaker: 'quaderno dimenticato', color: 'yellow', text: 'la grafia è di pedro, ma pulita, ordinata. "giorno 1 della wave. oggi la piazza era piena. ho deciso: la proteggo io." le pagine dopo sono strappate.' },
+    ],
 };
 
 export const ENDING_CONSEGNA: { text: string; punch?: string }[] = [

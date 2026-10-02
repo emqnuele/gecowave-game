@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { LEVELS } from '../../src/content/levels';
+import { LEVELS, REGION_IDS } from '../../src/content/levels';
 import { decodeGrid, type RegionFile } from '../../src/world/codec';
 import { BODY_H, BODY_W, SimMap } from '../../src/world/sim';
 import { settleAt, simReach } from '../../src/world/simreach';
@@ -7,7 +7,7 @@ import { abilitiesFor } from './abilities';
 
 // uso: waypoints <id,id|all> <out.json> : tappe per il bot, solo posizioni dove il geco simulato sta in piedi
 const [which, outPath] = process.argv.slice(2);
-const ids = which === 'all' ? Object.keys(LEVELS) : which.split(',');
+const ids = which === 'all' ? REGION_IDS : which.split(',');
 const out: Record<string, unknown> = {};
 for (const id of ids) {
     const f = JSON.parse(readFileSync(`public/regions/${id}.json`, 'utf8')) as RegionFile;

@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { COMBAT, TILE, ZONE_HEX } from '../config';
 import { DIALOGUES, NOTINO_FUGHE, TOASTS, TRABOCCHETTI, WAVESUNG } from '../content/story';
-import { LEVEL_ORDER, LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
+import { HUB_STOP, LEVEL_ORDER, LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
+import { QUESTS } from '../content/quests';
 import { propArt } from '../engine/art/props';
 import { bus } from '../engine/events';
 import { biomeFor, type BiomeDef } from '../content/biomes';
@@ -386,6 +387,7 @@ export class GameScene extends Phaser.Scene {
             layout: this.layout,
             avoid: this.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'boss').map((e) => ({ x: e.x, y: e.y })),
             widthPx: this.level.widthPx,
+            crowd: this.def.hub ? 18 : undefined,
         });
         this.interactables.push(...this.folk.talkables);
         this.quests = new QuestManager(this, this.lighting, (lines, onEnd) => this.startLines(lines, onEnd));
@@ -883,9 +885,119 @@ export class GameScene extends Phaser.Scene {
                 music.playCustom("assets/music/lochef85's OST 1.mp3");
                 this.startDialogue(id);
                 break;
+            case 'oracolo-mappa':
+                this.startDialogue(id, () => this.startLines(this.oracleLines()));
+                break;
+            case 'bottega-wavezon':
+                this.startDialogue(id, () => this.openPiazzaShop());
+                break;
+            case 'bacheca-missioni':
+                this.startDialogue(id, () => this.startLines(this.boardLines()));
+                break;
+            case 'samatt-bar':
+                this.startDialogue(id, () => this.startLines(this.barRumors()));
+                break;
+            case 'markolino-piazza': {
+                const n = state.abilities.length;
+                this.startDialogue(n >= TOTAL_FRAGMENTS - 1 ? 'markolino-piazza-fine' : n >= 4 ? 'markolino-piazza-dopo' : id);
+                break;
+            }
             default:
                 this.startDialogue(id);
         }
+    }
+
+    /* ---------- la piazza ---------- */
+
+    /** l'oracolo legge quanto hai esplorato di ogni regione vista */
+    private oracleLines(): DialogueLine[] {
+        const say = (text: string): DialogueLine => ({ speaker: 'l\'oracolo delle mappe', color: 'cyan', text });
+        const rows: string[] = [];
+        let worst: { name: string; pct: number } | null = null;
+        for (const id of [...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k) && !LEVELS[k].hub)]) {
+            if (!state.hasFlag(`visto-${id}`)) continue;
+            const rooms = loadRegion(this, id)?.layout.rooms.length;
+            if (!rooms) continue;
+            const pct = Math.min(100, Math.round(((state.save.explored[id]?.length ?? 0) / rooms) * 100));
+            rows.push(`${LEVELS[id].accentWord} ${pct}%`);
+            if (pct < 100 && (!worst || pct < worst.pct)) worst = { name: LEVELS[id].accentWord, pct };
+        }
+        if (!rows.length) return [say('non hai visto niente. torna quando avrai almeno sbagliato strada una volta.')];
+        const out = [say(`le tue mappe: ${rows.join(' · ')}.`)];
+        out.push(worst
+            ? say(`${worst.name} ti nasconde ancora parecchio. le stanze che non vedi sono quelle che ti guardano.`)
+            : say('hai visto tutto quello che c\'era da vedere. adesso sei tu la mappa. inquietante, eh?'));
+        return out;
+    }
+
+    /** la bacheca: le commissioni prese e quelle da riscuotere */
+    private boardLines(): DialogueLine[] {
+        const say = (text: string): DialogueLine => ({ speaker: 'bacheca delle commissioni', color: 'yellow', text });
+        const open = QUESTS.filter((q) => state.save.quests[q.id] && state.save.quests[q.id].s !== 'fatta');
+        const done = QUESTS.filter((q) => state.save.quests[q.id]?.s === 'fatta').length;
+        const lines = [say(`commissioni chiuse: ${done} su ${QUESTS.length}.`)];
+        for (const q of open.slice(0, 4)) {
+            const st = state.save.quests[q.id];
+            lines.push(say(`${st.s === 'pronta' ? '✓ da riscuotere' : '· in corso'}: "${q.title}" (${LEVELS[q.region]?.accentWord ?? q.region}).`));
+        }
+        const fresh = QUESTS.filter((q) => !state.save.quests[q.id] && state.hasFlag(`visto-${q.region}`));
+        if (fresh.length) lines.push(say(`qualcuno chiede aiuto anche a ${[...new Set(fresh.map((q) => LEVELS[q.region]?.accentWord ?? q.region))].slice(0, 3).join(', ')}. cerca chi ha il punto esclamativo in testa.`));
+        else if (!open.length) lines.push(say('nessuna richiesta aperta. il realm per una volta non ha bisogno di te. godetela.'));
+        return lines;
+    }
+
+    /** il bar: voci vere, calcolate su quello che ti manca */
+    private barRumors(): DialogueLine[] {
+        const say = (text: string): DialogueLine => ({ speaker: 'samatt', color: 'yellow', text });
+        const pool: string[] = [];
+        const missing = TOTAL_FRAGMENTS - state.abilities.length;
+        if (missing > 0) pool.push(`dicono che in giro ci siano ancora ${missing} frammenti della wave. uno lo tiene sempre il più grosso della zona, ovvio.`);
+        if (!state.hasAbility('aggrappo')) pool.push('al rio c\'è una formica enorme che si arrampica sui muri. se la batti, magari ti insegna. o ti mangia.');
+        if (!state.hasFlag('tommasorveglianza')) pool.push('ticummi vende una cosa chiamata tommasorveglianza. io non la comprerei. tu sì, scommetto.');
+        if (state.save.notches < 6) pool.push('la bottega qui accanto vende tacche per gli amuleti. care, ma le tacche non si mangiano, durano.');
+        const lore = state.save.collectedLore.filter((k) => k.startsWith('lore-')).length;
+        if (lore < 30) pool.push('sui tetti della piazza ci sono scritte vecchie. nessuno sale a leggerle. tu hai le gambe da geco, no?');
+        pool.push('il microfono della fontana salva come gli altri. ma qui almeno muori in compagnia.');
+        pool.push('di notte nelle regioni girano bestie più grosse, con l\'aura. lasciano un sacco di barre. e un sacco di vedove.');
+        pool.push('guastalla adesso sta seduto lì a guardare il citelis. da fuori. dice che è bellissimo. io ci credo poco.');
+        const pick = Phaser.Utils.Array.Shuffle([...pool]).slice(0, 2);
+        return pick.map(say);
+    }
+
+    /** la bottega della piazza: ricarica e pacco a sorpresa, roba che il telefono non vende */
+    private openPiazzaShop(): void {
+        const pacco = 40;
+        const ricarica = 25;
+        bus.emit('choice-show', {
+            title: `bottega wavezon · hai ${state.save.barre} barre`,
+            options: [{ label: `ricarica completa (${ricarica} barre)` }, { label: `pacco a sorpresa (${pacco} barre)` }, { label: 'solo guardare' }],
+            onPick: (i) => {
+                const pay = (n: number): boolean => {
+                    if (state.save.barre < n) {
+                        bus.emit('toast', { text: 'commesso: "senza barre si guarda e basta, campione."' });
+                        return false;
+                    }
+                    state.save.barre -= n;
+                    bus.emit('barre-changed', { barre: state.save.barre, gained: false });
+                    return true;
+                };
+                if (i === 0 && pay(ricarica)) {
+                    state.run.hp = state.maxHp;
+                    state.run.flow = state.maxFlow;
+                    bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
+                    bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
+                    sfx.pickup();
+                    bus.emit('toast', { text: 'ricaricato. vita e flow al massimo.' });
+                } else if (i === 1 && pay(pacco)) {
+                    const pool = Object.values(ITEMS).filter((it) => it.kind === 'consumabile' && it.price);
+                    const it = pool[Math.floor(Math.random() * pool.length)];
+                    state.addItem(it.id, 2);
+                    sfx.pickup();
+                    bus.emit('toast', { text: `nel pacco: ${it.icon} ${it.name} ×2. il resto era polistirolo.` });
+                }
+                state.persist();
+            },
+        });
     }
 
     private interactPiema(): void {
@@ -1048,7 +1160,9 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         if (!state.save.stops.includes(current)) state.save.stops.push(current);
-        const order = [...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k))];
+        // dopo guggu il citelis porta anche in piazza, da qualsiasi fermata
+        if (state.hasFlag('boss-down-guggu') && !state.save.stops.includes(HUB_STOP)) state.save.stops.push(HUB_STOP);
+        const order = [...Object.keys(LEVELS).filter((k) => LEVELS[k].hub), ...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k) && !LEVELS[k].hub)];
         const stops = state.save.stops
             .map((key) => {
                 const [levelId, cpId] = key.split(':');
@@ -1058,7 +1172,8 @@ export class GameScene extends Phaser.Scene {
             .sort((a, b) => order.indexOf(a.levelId) - order.indexOf(b.levelId) || Number(a.cpId.split('-')[1]) - Number(b.cpId.split('-')[1]))
             .map((s, i, all) => {
                 const n = all.filter((o, j) => o.levelId === s.levelId && j <= i).length;
-                return { key: s.key, levelId: s.levelId, label: `${LEVELS[s.levelId].accentWord} · fermata ${n}` };
+                const label = LEVELS[s.levelId].hub ? `capolinea ${LEVELS[s.levelId].accentWord}` : `${LEVELS[s.levelId].accentWord} · fermata ${n}`;
+                return { key: s.key, levelId: s.levelId, label };
             });
         bus.emit('travel-show', { stops, current, onPick: (key) => this.travelTo(key) });
     }

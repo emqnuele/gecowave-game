@@ -54,6 +54,11 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 ### ADR-006 — modalità assistita
 **Decisione**: la freccia guida è spenta di default; accesa blocca i trofei e segna i record come assistiti (`SaveData.assisted`). Niente testi in sovrimpressione accanto al geco.
 
+### ADR-008 — hub costruito a mano, fuori dalla pipeline delle regioni
+**Contesto**: serviva un posto sicuro e vivo dove tornare (negozio, voci, riepiloghi), raggiungibile da tutto il mondo.
+**Decisione**: `LevelDef.hub` marca un livello disegnato da codice (`level00-piazza.ts`), senza regione generata. `REGION_IDS` esclude gli hub da `npm run regions`, dal BootScene e dagli script del mondo. La fermata `HUB_STOP` entra nel tabellone del citelis dopo guggu. La raggiungibilità si verifica con `scripts/world/run.sh hubcheck piazza` (stampa le celle raggiunte dal geco simulato).
+**Vincolo trovato**: una mensola a una riga dal marciapiede è un muro (il corpo è alto 55 px, serve una luce di almeno 2 righe sotto): i primi gradini vanno pieni fino a terra.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -78,10 +83,10 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - Fase 4: aggrappo (wave nuova, dalla formicona), élite, missioni dei passanti con amuleti nuovi, cancelli d'abilità nei primi capitoli.
 - Fase 5: finale vero "riscatto" (giorno 30, il glitch, romero arresta gli dei).
 - Bot: campagna completa fino al finale e capitoli segreti.
+- Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
 ### In corso
 - Rigenerazione completa delle regioni con simulatore corretto (bug del blocco del salto dal muro non azzerato) e controllo dei boss per stanza.
-- Hub-città raggiungibile col citelis.
 
 ### Da fare
 - Trappole meccaniche (presse, seghe, piattaforme che crollano), allagamenti, musica per ora del giorno.
@@ -96,4 +101,5 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - **orientamento**: mappa che si rivela, fermate e viaggio rapido, freccia assistita.
 - **gameplay**: aggrappo, missioni, cancelli d'abilità, trofei e punteggi.
 - **trama**: finale vero, coerenza di prezzi ed epiloghi.
+- **hub**: la piazza col citelis, npc di servizio, folla.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.

@@ -73,7 +73,7 @@ export class FolkManager {
     }
 
     /** popola la regione: stanze tranquille, pavimenti larghi, lontano dai nemici */
-    populate(opts: { seed: string; biomeId: string; eye: number; layout: RegionLayout | null; avoid: { x: number; y: number }[]; widthPx: number }): void {
+    populate(opts: { seed: string; biomeId: string; eye: number; layout: RegionLayout | null; avoid: { x: number; y: number }[]; widthPx: number; crowd?: number }): void {
         this.biomeId = opts.biomeId;
         const cast = FOLK[opts.biomeId] ?? FOLK.crater;
         let h = 0;
@@ -93,11 +93,12 @@ export class FolkManager {
             if (opts.layout && (!room || !quiet.has(room.kind))) return false;
             return opts.avoid.every((a) => Math.abs(a.x - x) > 260 || Math.abs(a.y - y) > 160);
         });
-        const target = opts.layout ? Math.max(8, Math.min(30, Math.round(opts.layout.rooms.length * 0.45))) : Math.max(5, Math.round(opts.widthPx / 1400));
+        const target = opts.crowd ?? (opts.layout ? Math.max(8, Math.min(30, Math.round(opts.layout.rooms.length * 0.45))) : Math.max(5, Math.round(opts.widthPx / 1400)));
         const used = new Set<number>();
         for (let n = 0; n < target && candidates.length; n++) {
             const s = candidates[Math.floor(rnd() * candidates.length)];
-            if (used.has(s.id)) continue;
+            // in una piazza affollata più passanti dividono lo stesso marciapiede
+            if (used.has(s.id) && !opts.crowd) continue;
             used.add(s.id);
             const pair = rnd() < 0.3 && s.c1 - s.c0 >= 7;
             const count = pair ? 2 : 1;

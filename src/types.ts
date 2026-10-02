@@ -78,6 +78,8 @@ export interface LevelDef {
     next?: string;
     /** capitolo segreto: non entra nella progressione né nella schermata viaggio */
     secret?: boolean;
+    /** hub: costruito a mano, senza regione generata, si raggiunge col citelis */
+    hub?: boolean;
     /** dove sputa l'uscita di un capitolo segreto se manca il portale d'origine */
     returnTo?: string;
     /** dialogo lanciato al primo ingresso */

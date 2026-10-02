@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { LEVELS } from '../../src/content/levels';
+import { LEVELS, REGION_IDS } from '../../src/content/levels';
 import { decodeGrid, type RegionFile } from '../../src/world/codec';
 import { BODY_H, BODY_W, SimMap } from '../../src/world/sim';
 import { canFinish, keyOf, settleAt, simReach } from '../../src/world/simreach';
@@ -48,5 +48,5 @@ function check(id: string, useOld: boolean): void {
 }
 
 const [which, old] = process.argv.slice(2);
-const ids = which === 'all' ? Object.keys(LEVELS) : which.split(',');
+const ids = which === 'all' ? REGION_IDS : which.split(',');
 for (const id of ids) check(id, old === 'old');

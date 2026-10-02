@@ -2,7 +2,7 @@ import { fork } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { LEVEL_ORDER, LEVELS } from '../../src/content/levels';
+import { LEVEL_ORDER, LEVELS, REGION_IDS } from '../../src/content/levels';
 import { addGates } from '../../src/world/gates';
 import type { SimAbilities } from '../../src/world/sim';
 import { encodeRegion } from '../../src/world/codec';
@@ -93,7 +93,7 @@ if (only) {
     process.exit(buildOne(only) ? 0 : 1);
 } else {
     // un processo per regione, quanti ne regge la macchina
-    const ids = Object.keys(LEVELS);
+    const ids = REGION_IDS;
     const self = fileURLToPath(import.meta.url);
     const failures: string[] = [];
     let next = 0;

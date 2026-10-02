@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { LEVELS } from '../../src/content/levels';
+import { LEVELS, REGION_IDS } from '../../src/content/levels';
 import { decodeGrid, type RegionFile } from '../../src/world/codec';
 import { Grid } from '../../src/world/grid';
 import { analyze, FULL } from '../../src/world/moves';
@@ -15,7 +15,7 @@ function walkable(rows: string[]): number {
 }
 let oldT = 0;
 let newT = 0;
-for (const def of Object.values(LEVELS)) {
+for (const def of REGION_IDS.map((id) => LEVELS[id])) {
     const f = JSON.parse(readFileSync(`public/regions/${def.id}.json`, 'utf8')) as RegionFile;
     const a = walkable(def.grid);
     const b = walkable(decodeGrid(f));
