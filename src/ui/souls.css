@@ -419,6 +419,12 @@
   max-width: 470px;
 }
 
+/* la riga vecchia è stretta (440px): nel contesto nuovo va larga come le altre */
+.sx-row.assist-row {
+  width: 100%;
+  gap: 18px;
+}
+
 /* con la nota lunga il valore sta in alto, accanto al nome */
 .sx-row:has(.assist-words) {
   align-items: flex-start;
