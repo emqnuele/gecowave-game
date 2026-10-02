@@ -50,6 +50,7 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 **stato fase 4**: aggrappo (presa e salto dai muri, lo lascia la formicona) ✅; élite ✅; nuovi comportamenti nemici: scudati (si colpiscono alle spalle o col pogo), appesi al soffitto che ti piombano addosso, kamikaze che scoppiano ✅; missioni dei passanti (cerca, caccia, consegna) con 7 amuleti nuovi ✅; cancelli d'abilità (mensola per il doppio salto, camino per aggrappo) nei capitoli fino a rio ✅; arene opzionali del microfono rosso ✅; sfide a tempo: la corsa contro il citelis in ogni regione, tempi misurati dal geco simulato ✅.
 
 ### Fase 4b — trofei, punteggi e modalità assistita ✅
+(bacheca dei trofei nel telefono e nel menu principale, record per capitolo e totale, freccia guida nelle impostazioni di menu, pausa, telefono e nella creazione della partita)
 - **achievement** (trofei) per le imprese: boss senza danni, regioni esplorate al 100%, segreti, maschere, finali, sfide a tempo, scelte di trama
 - **punteggio** per capitolo e totale: tempo, morti, uccisioni, esplorazione, segreti; classifica locale nel profilo del telefono
 - **modalità assistita**: la freccia guida che indica il prossimo varco verso l'obiettivo è un'impostazione (spenta di default). chi la accende gioca in modalità facile e **non sblocca achievement** (la partita resta segnata come assistita)

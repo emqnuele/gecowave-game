@@ -95,6 +95,11 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **kamikaze** (saltatori e volanti): luce rossa, a 80 px innesca la miccia (650 ms, lampeggia, ticchetta) e scoppia in un raggio di 96 px che ferisce anche gli altri nemici.
 **Perché a runtime**: come le trappole, non toccano la griglia verificata.
 
+### ADR-015 — il telefono è opaco
+**Contesto**: l'utente trovava il telefono brutto e l'app trofei laggava; la modalità assistita era introvabile e il menu principale non aveva i trofei.
+**Decisione**: dentro lo schermo niente `backdrop-filter` (decine di righe sfocate che scorrono erano la causa del lag): superfici piene, righe dritte. Il guscio è un telefono vero: isola, status bar con l'ora del realm (`realmClock`), la zona come operatore, il flow come batteria, il dipinto della zona come sfondo della home, widget dell'obiettivo, griglia a 4 colonne e dock, app che si aprono zoomando dall'icona toccata. La bacheca dei trofei è un modulo condiviso (`src/ui/trophies.ts`) usato dal telefono e dalla schermata **trofei** del menu principale: anello di progresso, filtro tutti/presi/mancanti, medaglie, scheda che sale dal basso, record per capitolo. La **freccia guida** si accende e spegne dalle impostazioni del menu, della pausa, del telefono e già nella creazione della partita, sempre con la spiegazione di cosa costa.
+**Vincolo trovato**: la classe globale `.label` di `style.css` mette tutto in maiuscolo: nei componenti nuovi usare nomi di classe specifici.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -122,6 +127,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
 - Lastre che crollano sopra i pozzi e allagamenti periodici (tossici in rio, tecnokill, trenbolone, stabilimento), ADR-010.
+- UI: telefono ridisegnato, bacheca trofei nel telefono e nel menu, freccia guida visibile ovunque (ADR-015).
 - Nemici: tratti scudo, soffitto, kamikaze (ADR-014).
 - Fase 5: note ambientali, quaderno di pedro, pensiero sepolto, scelte su notino e lochef, ospiti della piazza, finali estesi (ADR-013).
 - Sfide a tempo: corsa contro il citelis in ogni regione (ADR-012).
