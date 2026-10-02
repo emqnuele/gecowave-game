@@ -406,6 +406,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .sx-row .assist-note {
@@ -417,6 +419,15 @@
   max-width: 470px;
 }
 
+/* con la nota lunga il valore sta in alto, accanto al nome */
+.sx-row:has(.assist-words) {
+  align-items: flex-start;
+}
+
+.sx-row:has(.assist-words) .toggle {
+  margin-top: 4px;
+}
+
 /* il valore a frecce: ‹ attivo › */
 .sx-row .toggle,
 .sx-pick {
@@ -424,6 +435,11 @@
   min-width: 132px;
   background: none;
   border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   cursor: pointer;
   font-family: var(--font-fell-it);
   font-style: italic;
@@ -456,37 +472,41 @@
   color: #d58b82;
 }
 
-/* cursore del volume: una linea d'inchiostro e un rombo */
-.sx-range {
+/* cursore del volume: una linea d'inchiostro e un rombo.
+   qualificato con input: batte le regole vecchie input[type='range'] */
+input.sx-range {
   -webkit-appearance: none;
   appearance: none;
   width: min(260px, 42vw);
   height: 18px;
   background: transparent;
+  border-radius: 0;
   cursor: pointer;
 }
 
-.sx-range::-webkit-slider-runnable-track {
+input.sx-range::-webkit-slider-runnable-track {
   height: 2px;
   background: linear-gradient(90deg, var(--sx-gold) var(--v, 70%), var(--sx-line) var(--v, 70%));
 }
 
-.sx-range::-moz-range-track {
+input.sx-range::-moz-range-track {
   height: 2px;
   background: linear-gradient(90deg, var(--sx-gold) var(--v, 70%), var(--sx-line) var(--v, 70%));
 }
 
-.sx-range::-webkit-slider-thumb {
+input.sx-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
   margin-top: -5px;
   background: var(--sx-bone);
+  border: none;
+  border-radius: 0;
   transform: rotate(45deg);
   box-shadow: 0 0 10px rgba(255, 154, 74, 0.6);
 }
 
-.sx-range::-moz-range-thumb {
+input.sx-range::-moz-range-thumb {
   width: 10px;
   height: 10px;
   border: none;
