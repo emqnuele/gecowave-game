@@ -76,3 +76,6 @@ musica ovattata + eco quando si è sottoterra.
 molto importante queste cose !!!
 
 in generale migliore le texture dei nemici, boss ecc.. e gli sfx
+
+**stato fase 6**: cast vivo rifatto ✅: 19 nemici e 30 boss disegnati a inchiostro come il geco (colori pieni, ombra tratteggiata, contorno spesso, occhi accesi che il buio non spegne), 4 fotogrammi ciascuno, normal map per le luci 2d, i boss di profilo si girano verso di te. suono dei posti ✅: musica ovattata ed eco sottoterra in proporzione a roccia e profondità, riverbero diverso per grotta, caverna, fogna, fabbrica, cristallo, biblioteca, void, sott'acqua; ambienti continui e suoni sporadici per ogni bioma, giorno e notte; passi sul materiale; situazioni (ultimo cuore, fasi del boss, arena, morte a nastro, pausa e telefono attutiti, dialoghi).
+

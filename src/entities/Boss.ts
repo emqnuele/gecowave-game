@@ -5,6 +5,7 @@ import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { BossKind } from '../types';
 import { ensureCreature } from '../engine/art/creatures';
+import { acoustics } from '../engine/audio/acoustics';
 import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 
 type Phase = 1 | 2 | 3;
@@ -343,6 +344,13 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         body.velocity.x += Math.sign(this.x - fromX) * 40;
         bus.emit('boss-hp', { hp: Math.max(0, this.hp), maxHp: this.maxHp, name: this.def.name });
         if (this.hp <= 0) this.die();
+        else if (this.phase !== this.heardPhase) {
+            // cambio di fase: un ruggito e la stanza che trattiene il fiato
+            this.heardPhase = this.phase;
+            sfx.bossRoar();
+            acoustics.swell(1300, 0.7);
+            this.scene.cameras.main.shake(350, 0.008);
+        }
         return true;
     }
 
@@ -351,6 +359,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             this.shieldGraphics.destroy();
         }
         bus.emit('boss-hp', null);
+        acoustics.swell(3200, 1);
         const { x, y } = this;
         const scene = this.scene;
         const kind = this.def.kind;
@@ -373,6 +382,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     private animT = 0;
+    private heardPhase: Phase = 1;
 
     /** ciclo dei fotogrammi (più rapido a ogni fase) e strato emissivo che pulsa con la rabbia */
     private syncLook(_time: number, delta: number): void {

@@ -29,6 +29,7 @@ import { StoryManager } from '../engine/StoryManager';
 import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { Soundscape } from '../engine/audio/Soundscape';
+import { acoustics } from '../engine/audio/acoustics';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
 import { REGION_COUNT } from '../content/achievements';
 import { chapterParts, ENDING_BONUS, pushBoard, runScore, sumParts } from '../engine/score';
@@ -2752,6 +2753,7 @@ export class GameScene extends Phaser.Scene {
         }
         this.arenaGfx = this.add.graphics().setDepth(6);
         this.shake(220, 0.006);
+        sfx.gate();
         sfx.bossRoar();
         bus.emit('toast', { text: 'le uscite si chiudono. o lui o te.' });
     }
@@ -4125,6 +4127,8 @@ export class GameScene extends Phaser.Scene {
         this.player.setTint(0xf87171);
         this.tweens.add({ targets: this.player, alpha: 0, angle: 180, duration: 600 });
         sfx.stopPad();
+        music.tapeStop();
+        acoustics.swell(1800, 0.8);
         this.time.delayedCall(900, () => {
             this.scene.pause();
             if (this.pattoActive) {

@@ -37,6 +37,27 @@ class MusicManager {
         }
     }
 
+    /** nastro che rallenta: la musica scende di tono e si spegne (morte, collasso) */
+    tapeStop(ms = 1400): void {
+        const a = this.currentAudio;
+        if (!a) return;
+        const t0 = performance.now();
+        (a as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = false;
+        const tick = () => {
+            if (this.currentAudio !== a) return;
+            const k = Math.min(1, (performance.now() - t0) / ms);
+            a.playbackRate = Math.max(0.35, 1 - 0.65 * k * k);
+            if (k < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }
+
+    /** di nuovo a velocità normale, col tono giusto */
+    private normalRate(a: HTMLAudioElement): void {
+        a.playbackRate = 1;
+        (a as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+    }
+
     setVolume(vol: number): void {
         if (this.currentAudio) {
             this.currentAudio.volume = vol * MUSIC_VOLUME_MULT;
@@ -195,6 +216,7 @@ class MusicManager {
 
     private transitionTo(path: string, loop = true): void {
         if (this.currentPath === path) {
+            if (this.currentAudio) this.normalRate(this.currentAudio);
             if (this.currentAudio && this.currentAudio.paused) {
                 this.currentAudio.play().catch(() => {});
             }

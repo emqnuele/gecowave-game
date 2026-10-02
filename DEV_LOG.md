@@ -114,6 +114,17 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **costo**: i fogli si disegnano al primo uso (`ensureCreature` nei costruttori di `Enemy` e `Boss`); `prewarmCreatures` all'apertura del capitolo prepara la legenda e gli evocati dei boss. Le vecchie sagome `Graphics` di nemici e boss sono state tolte da `textures.ts`.
 - **galleria**: `?gallery` (solo sviluppo, filtro con `?gallery=boss-`, `&cell=230`) mostra tutto il cast sotto una luce che segue il mouse.
 
+### ADR-018 — il suono prende la forma del posto (fase 6)
+**Contesto**: musica ed effetti suonavano uguali ovunque (solo un passa-basso di notte); l'utente voleva musica ovattata ed eco sottoterra ed effetti per ogni scenario e situazione.
+**Decisione**: un solo `AudioContext` condiviso (`src/engine/audio/acoustics.ts`) con una catena per musica ed effetti: passa-basso, **riverbero a convoluzione** con risposte all'impulso sintetiche per tipo di spazio (`open`, `street`, `cave`, `cavern`, `sewer`, `metal`, `crystal`, `void`, `library`, `room`, `arena`, `water`: coda, smorzamento, riflessioni vicine), **eco** con feedback che perde gli alti a ogni giro, compressore finale. Due convolutori in dissolvenza: cambiare spazio non fa click. Tutto si muove con `setTargetAtTime`.
+- **cosa decide lo spazio** (`Soundscape.ts`, ogni 220 ms): 16 raggi nella roccia dal geco (distanza media delle pareti = grandezza, quanti colpiscono = chiusura, soffitto sopra la testa), stanza di superficie o no, profondità sotto `horizonRow`, testa sott'acqua (piene e vasche fisse), boss in corso nell'arena. Ogni bioma ha la sua acustica sotterranea (grotta che diventa caverna se è grande, fogne a rio e nel deposito, metallo in fabbrica e nucleo, cristallo al santuario e nella mente, biblioteca nella ruhra, void enorme) e in superficie i biomi di città rimbalzano sui palazzi (`street`).
+- **musica**: ovattata in proporzione a roccia sopra, profondità e chiusura (fino a ~650 Hz; meno nel void e nella mente, che sono sogni), con riverbero ed eco del posto; sott'acqua 420 Hz; in pausa e col telefono 800 Hz, come da un'altra stanza; nei dialoghi si abbassa; coi boss resta piena e quasi asciutta. Vince sempre il filtro più chiuso tra notte, roccia, acqua, pausa e pericolo.
+- **ambiente**: letti continui sintetici per bioma (vento, respiro della roccia, ronzio di macchine, server, acqua, droni del void, cristalli, città, brace, pioggia sul tetto) mescolati tra superficie e sottosuolo; suoni sporadici pesati per bioma e per giorno/notte (gocce, pietruzze, clangori lontani, bip, grilli, uccelli, corvi, sussurri, bolle, cristalli, clacson, traffico, topi, scricchiolii, scariche, un respiro grosso sotto), con pan casuale: passano per riverbero ed eco, quindi in grotta le gocce ritornano.
+- **passi e atterraggi** sul materiale del bioma (pietra, cemento, mattoni, metallo, cristallo, fango, radici, circuiti, void) o in acqua; tonfo proporzionale alla caduta.
+- **situazioni**: ultimo cuore = battito e mondo che si stringe; cambio di fase del boss = ruggito, scossa e un respiro del riverbero (`acoustics.swell`); boss sconfitto = coda lunga; arena che si chiude = porta che sbatte; morte = la musica rallenta come un nastro (`music.tapeStop`) e torna normale alla ripartenza.
+- **taratura**: misurata nel browser con `acoustics.meter()` (solo sviluppo): ogni letto a livello 1 sta attorno a 0.008 rms (`BED_TRIM`), sotto la pioggia (0.024) e vicino alla musica (0.003–0.008); i passi a metà di un salto.
+**Vincoli**: se WebAudio manca, musica ed effetti suonano asciutti (nessun crash). Hook di sviluppo `__acoustics` e `__sfx`.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -152,6 +163,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
 ### In corso / aperto
+- **fase 6, audio**: acustica per spazio (ovattato ed eco sottoterra), letti e suoni d'ambiente per bioma, passi per materiale, effetti di situazione (ADR-018).
 - **fase 6, grafica del cast**: nemici (19) e boss (30) rifatti a inchiostro, animati, con normal map (ADR-017).
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
@@ -173,4 +185,5 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **sfide a tempo**: la corsa contro il citelis.
 - **trama**: archi secondari, scelte a metà gioco, lore ambientale, finali estesi.
 - **nemici**: scudati, appesi al soffitto, kamikaze.
+- **fase 6**: nemici e boss a inchiostro animati con normal map; acustica dei posti, ambienti per bioma, passi, situazioni.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.

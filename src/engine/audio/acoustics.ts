@@ -282,6 +282,20 @@ class Acoustics {
         this.musicDuck.gain.setTargetAtTime(this.duck, now, tau);
     }
 
+    /** un respiro del posto: il riverbero si gonfia e il filtro della musica affonda, poi torna */
+    swell(ms = 1600, depth = 1): void {
+        const ctx = this.ctx;
+        if (!ctx || !this.musicIn) return;
+        const now = ctx.currentTime;
+        const p = SPACES[this.applied ?? 'open'];
+        const wet = Math.max(0.35, p.sfxWet) * (1 + depth);
+        this.musicRevSend.gain.cancelScheduledValues(now);
+        this.musicRevSend.gain.setTargetAtTime(Math.min(1.2, wet), now, 0.08);
+        this.musicLP.frequency.cancelScheduledValues(now);
+        this.musicLP.frequency.setTargetAtTime(500 + 1500 * (1 - depth * 0.6), now, 0.1);
+        window.setTimeout(() => this.apply(false), ms);
+    }
+
     /** di nuovo all'aperto: menu, titoli, cambio di capitolo */
     reset(): void {
         this.target = { ...DEFAULT };
