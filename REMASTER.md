@@ -36,6 +36,9 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 - **hub** centrale e **bus** come stagways tra regioni
 - mappa che si rivela esplorando (si compra/si trova, come da cornifer)
 - ricostruzione dei capitoli, a partire dal capitolo 1 come vetrina
+- importante: il mondo deve essere **vivo**: npc che camminano, parlano, fanno cose, reagiscono a pedro e al giocatore; nemici che pattugliano, dormono, si radunano, scappano; eventi ambientali (pioggia, vento, temporali, nebbia, allagamenti); musica che cambia in base alla zona e all'ora del giorno.
+- importante: il mondo deve essere **pericoloso**: nemici che ti inseguono, ti attaccano, ti uccidono; boss che pattugliano le regioni; trappole ambientali; zone in cui non puoi tornare indietro senza morire.
+- IMPORTANTISSIMO: il mondo deve essere ENORME. almeno 10 volte piu grande di adesso. fatto BENE. 
 
 ### Fase 4 — gameplay
 - wall-jump/aggrappo (nuova wave), nuovi comportamenti nemici, nemici d'élite

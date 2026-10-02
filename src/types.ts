@@ -50,6 +50,8 @@ export type EntitySpec =
     | { type: 'cuore' }
     | { type: 'maschera' }
     | { type: 'boss'; kind: BossKind }
+    /** oggetto dello zaino o amuleto (vedi content/items.ts) */
+    | { type: 'item'; item: string; amount?: number }
     /** varco verso un capitolo segreto; appare solo se needsFlag è attivo */
     | { type: 'portal'; to: string; needsFlag?: string; label?: string };
 
@@ -111,6 +113,27 @@ export interface SaveData {
         costituzione: number;
         flusso: number;
     };
+    /** zaino: id oggetto -> quantità */
+    inventory: Record<string, number>;
+    /** amuleti posseduti */
+    charms: string[];
+    /** amuleti indossati, cambiabili solo ai microfoni */
+    equipped: string[];
+    /** tacche totali per gli amuleti */
+    notches: number;
+    /** storico dei messaggi wavesung */
+    messages: PhoneMessage[];
+    /** contatori per il profilo */
+    record: { deaths: number; kills: number; bosses: number; playMs: number };
+    /** traccia scelta dalla radio, null = musica del capitolo */
+    radio: string | null;
+}
+
+export interface PhoneMessage {
+    sender: string;
+    text: string;
+    at: number;
+    read: boolean;
 }
 
 export interface DroppedBarre {

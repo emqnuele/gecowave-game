@@ -34,7 +34,19 @@ class MusicManager {
     }
 
     playLevel(levelId: string): void {
-        this.transitionTo(this.getLevelTrack(levelId));
+        // la radio del telefono vince sulla traccia del capitolo, non sui boss
+        this.transitionTo(state.save.radio ? `assets/music/${state.save.radio}` : this.getLevelTrack(levelId));
+    }
+
+    /** sintonizza la radio su un file della colonna sonora, null = musica del capitolo */
+    setRadio(file: string | null): void {
+        state.save.radio = file;
+        state.persist();
+        this.playLevel(state.save.levelId);
+    }
+
+    get nowPlaying(): string | null {
+        return this.currentPath;
     }
 
     playBoss(bossName: string): void {

@@ -1,5 +1,6 @@
 import { ZONE_CSS } from '../config';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
+import { ITEMS } from '../content/items';
 import { ABILITY_CARDS, CREDITS, DEATH_PUNCHLINES } from '../content/story';
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
@@ -31,6 +32,8 @@ const CONTROLS: [string, string][] = [
     ['tommasoscudo', 'R'],
     ['cura (tieni premuto)', 'Q'],
     ['interagisci', 'E'],
+    ['telefono: zaino, amuleti, mappa', 'TAB / P'],
+    ['mangia al volo', 'C'],
     ['pausa', 'ESC'],
 ];
 
@@ -62,6 +65,7 @@ export class Screens {
         bus.on('wavesung', ({ sender, text }) => this.wavesung(sender, text));
         bus.on('player-died', ({ lost }) => this.showDeath(lost));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
+        bus.on('charm-found', ({ id }) => this.charmCard(id));
         bus.on('choice-show', ({ title, options, onPick }) => this.choice(title, options, onPick));
         bus.on('request-pause', () => this.showPause());
     }
@@ -452,6 +456,32 @@ export class Screens {
         };
         const stack = el('div', 'menu-stack');
         stack.append(this.btn('bella', -1.5, close, 'glass-acid-green'));
+        s.append(stack);
+        this.onEsc(close);
+    }
+
+    private charmCard(id: string): void {
+        const item = ITEMS[id];
+        if (!item) return;
+        this.controller.pause();
+        const s = this.openOverlay();
+        s.append(this.kicker('amuleto trovato — rec', 'glass-acid-purple', ZONE_CSS.purple));
+        const panel = el('div', 'story-card glass-panel glass-acid-purple');
+        const name = el('div', 'font-marker');
+        name.style.cssText = 'font-size:30px;color:var(--purple);transform:rotate(-2deg);margin-bottom:14px';
+        name.textContent = `${item.icon} ${item.name}`;
+        const desc = el('p');
+        desc.textContent = item.desc;
+        const how = el('p', 'punch');
+        how.textContent = `costa ${item.cost} ${item.cost === 1 ? 'tacca' : 'tacche'}. si indossa dal telefono (tab), vicino a un microfono.`;
+        panel.append(name, desc, how);
+        s.append(panel);
+        const close = () => {
+            this.closeOverlay();
+            this.controller.resume();
+        };
+        const stack = el('div', 'menu-stack');
+        stack.append(this.btn('in tasca', -1.5, close, 'glass-acid-purple'));
         s.append(stack);
         this.onEsc(close);
     }

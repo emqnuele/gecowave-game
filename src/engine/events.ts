@@ -18,6 +18,9 @@ export interface GameEvents {
     'ending': { id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' };
     'doomsday-changed': { value: number; active: boolean };
     'request-pause': {};
+    'inventory-changed': {};
+    'messages-changed': {};
+    'charm-found': { id: string };
 }
 
 type Handler<T> = (payload: T) => void;

@@ -15,6 +15,7 @@ import { music } from './engine/music';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { DialogueBox } from './ui/dialogue';
+import { Phone } from './ui/phone';
 import { Hud } from './ui/hud';
 import { Screens, type GameController } from './ui/screens';
 import { ui } from './ui/dom';
@@ -25,8 +26,10 @@ async function boot(): Promise<void> {
 
     const screens = new Screens();
     const hud = new Hud();
-    new DialogueBox();
+    const dialogue = new DialogueBox();
     ui().append(hud.root);
+    // vero solo mentre un capitolo è in corso: il telefono non esce dai menu
+    let inGame = false;
 
     const game = new Phaser.Game({
         type: Phaser.AUTO,
@@ -55,6 +58,7 @@ async function boot(): Promise<void> {
     if (import.meta.env.DEV) Object.assign(window, { __game: game });
 
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
+        inGame = true;
         sfx.init();
         music.playLevel(levelId);
         state.resetRun();
@@ -89,6 +93,7 @@ async function boot(): Promise<void> {
             game.scene.resume('GameScene');
         },
         quitToMenu() {
+            inGame = false;
             sfx.stopPad();
             game.scene.stop('GameScene');
             hud.hide();
@@ -102,7 +107,16 @@ async function boot(): Promise<void> {
     };
     screens.bind(controller);
 
+    const phone = new Phone({
+        pause: () => controller.pause(),
+        resume: () => controller.resume(),
+        canOpen: () => inGame && !screens.overlayOpen && !dialogue.open && game.scene.isActive('GameScene'),
+    });
+    hud.root.append(phone.hintElement);
+
     bus.on('ending', ({ id }) => {
+        inGame = false;
+        if (phone.isOpen) phone.close();
         sfx.stopPad();
         music.playEnding();
         hud.hide();

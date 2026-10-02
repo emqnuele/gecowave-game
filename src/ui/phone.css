@@ -1,0 +1,881 @@
+/* ===========================================================
+   wavesung galaxy — il telefono del custode (acid glass)
+   =========================================================== */
+
+.phone-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  padding: 7px 13px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: var(--zinc-300);
+  transform: rotate(1.5deg);
+  cursor: pointer;
+}
+
+.phone-hint kbd {
+  font-family: var(--font-martian);
+  font-size: 9px;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+}
+
+.phone-hint .unread {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--red);
+  color: #000;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
+}
+
+.phone-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 90% at 85% 60%, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.62));
+  animation: screen-in 0.25s ease both;
+}
+
+.phone {
+  --tint: var(--accent);
+  position: absolute;
+  right: clamp(16px, 6vw, 90px);
+  bottom: 50%;
+  width: min(380px, calc(100vw - 32px));
+  height: min(760px, calc(100vh - 40px));
+  transform: translateY(50%) rotate(-2.5deg);
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  animation: phone-up 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+  padding: 12px;
+  border-radius: 46px;
+  background: linear-gradient(160deg, #1b1b20, #050506 55%, #121216);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.9), 0 30px 80px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.08);
+}
+
+.phone:hover,
+.phone:focus-within {
+  transform: translateY(50%) rotate(0deg);
+}
+
+.phone.closing {
+  animation: phone-down 0.28s ease-in both;
+}
+
+@keyframes phone-up {
+  from { transform: translateY(130%) rotate(6deg); }
+  to { transform: translateY(50%) rotate(-2.5deg); }
+}
+
+@keyframes phone-down {
+  from { transform: translateY(50%) rotate(-2.5deg); }
+  to { transform: translateY(140%) rotate(8deg); }
+}
+
+/* adesivi sulla cornice: il telefono è di un geco, si vede */
+.phone-sticker {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  padding: 4px 9px;
+  font-family: var(--font-marker);
+  font-size: 12px;
+  color: #000;
+  border-radius: 8px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
+}
+
+.phone-sticker.geco {
+  left: -14px;
+  bottom: 70px;
+  background: var(--green);
+  transform: rotate(-14deg);
+}
+
+.phone-sticker.brand {
+  right: -10px;
+  top: 92px;
+  background: #dfb15b;
+  transform: rotate(9deg);
+}
+
+.phone-screen {
+  position: relative;
+  height: 100%;
+  border-radius: 36px;
+  overflow: hidden;
+  background: radial-gradient(ellipse 120% 70% at 50% 0%, color-mix(in srgb, var(--tint) 16%, transparent), transparent 65%), #050507;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+.phone-crack {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.22;
+}
+
+.phone-watermark {
+  position: absolute;
+  right: -60px;
+  bottom: -40px;
+  font-size: 260px;
+  line-height: 1;
+  opacity: 0.05;
+  filter: grayscale(1);
+  transform: rotate(-24deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.phone-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 6px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: var(--zinc-300);
+  z-index: 1;
+}
+
+.phone-status .notch {
+  width: 84px;
+  height: 22px;
+  border-radius: 12px;
+  background: #000;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.phone-status .battery {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.phone-status .battery i {
+  display: inline-block;
+  width: 22px;
+  height: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+  position: relative;
+}
+
+.phone-status .battery i::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  width: var(--level, 50%);
+  background: var(--green);
+  border-radius: 1px;
+}
+
+.phone-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: clip;
+  padding: 8px 18px 22px;
+  z-index: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.phone-body::-webkit-scrollbar { width: 4px; }
+.phone-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+
+.phone-home-bar {
+  height: 22px;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+
+.phone-home-bar span {
+  width: 110px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- home ---------- */
+
+.phone-clock {
+  margin: 22px 0 4px;
+  font-family: var(--font-crisis);
+  font-size: 54px;
+  line-height: 1;
+  color: #fff;
+}
+
+.phone-greet {
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: var(--tint);
+  transform: rotate(-1.5deg);
+  margin-bottom: 26px;
+}
+
+.phone-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px 12px;
+}
+
+.phone-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--zinc-300);
+  font-family: var(--font-marker);
+  font-size: 12px;
+  text-transform: lowercase;
+}
+
+.phone-app .icon {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  border-radius: 18px;
+  transition: transform 0.18s ease;
+}
+
+.phone-app:nth-child(odd) .icon { transform: rotate(-3deg); }
+.phone-app:nth-child(even) .icon { transform: rotate(2.5deg); }
+
+.phone-app:hover .icon,
+.phone-app:focus-visible .icon {
+  transform: rotate(0deg) scale(1.08);
+}
+
+.phone-app:focus-visible {
+  outline: none;
+}
+
+.phone-app:focus-visible .icon {
+  box-shadow: 0 0 0 2px var(--tint), 3px 3px 0 rgba(0, 0, 0, 0.85);
+}
+
+.phone-app .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--red);
+  color: #000;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
+}
+
+/* ---------- testata delle app ---------- */
+
+.phone-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 4px;
+}
+
+.phone-back {
+  cursor: pointer;
+  padding: 6px 11px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: var(--zinc-300);
+  transform: rotate(-2deg);
+}
+
+.phone-back:hover,
+.phone-back:focus-visible {
+  transform: rotate(0deg) scale(1.05);
+  outline: none;
+  color: #fff;
+}
+
+.phone-title {
+  font-family: var(--font-crisis);
+  font-size: 26px;
+  line-height: 1;
+  color: #fff;
+}
+
+.phone-sub {
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: var(--tint);
+  transform: rotate(-1deg);
+  margin: 2px 0 16px;
+}
+
+.phone-empty {
+  margin-top: 40px;
+  text-align: center;
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.6);
+  transform: rotate(-1.5deg);
+}
+
+.phone-section {
+  margin: 18px 0 8px;
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.phone-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px;
+  margin-bottom: 9px;
+  text-align: left;
+  color: var(--zinc-300);
+  font-family: var(--font-martian);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+button.phone-row {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.phone-row:nth-child(odd) { transform: rotate(-0.6deg); }
+.phone-row:nth-child(even) { transform: rotate(0.5deg); }
+
+.phone-row:hover,
+.phone-row:focus-visible {
+  transform: rotate(0deg);
+  outline: none;
+  border-color: color-mix(in srgb, var(--tint) 45%, transparent);
+}
+
+.phone-row .lead {
+  font-size: 22px;
+  width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.phone-row .main {
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-row .name {
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: #fff;
+}
+
+.phone-row .preview {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phone-row .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.phone-row .meta {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* ---------- chat ---------- */
+
+.phone-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.phone-tab {
+  cursor: pointer;
+  padding: 6px 13px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.phone-tab.active {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--tint) 55%, transparent);
+}
+
+.bubble {
+  max-width: 86%;
+  padding: 10px 13px;
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--zinc-300);
+  border-radius: 16px 16px 16px 4px;
+}
+
+.bubble.me {
+  margin-left: auto;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.bubble .when {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.call-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding-top: 30px;
+}
+
+.call-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 46px;
+  transform: rotate(-4deg);
+}
+
+.call-name {
+  font-family: var(--font-crisis);
+  font-size: 24px;
+}
+
+.call-state {
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: var(--tint);
+}
+
+.call-ring {
+  animation: call-ring 0.9s ease-in-out infinite;
+}
+
+@keyframes call-ring {
+  0%, 100% { transform: rotate(-4deg); }
+  25% { transform: rotate(4deg); }
+  50% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+/* ---------- pulsanti dentro il telefono ---------- */
+
+.phone-btn {
+  cursor: pointer;
+  padding: 9px 18px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #fff;
+  transition: transform 0.15s ease;
+}
+
+.phone-btn:hover,
+.phone-btn:focus-visible {
+  transform: rotate(0deg) scale(1.05) !important;
+  outline: none;
+}
+
+.phone-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.phone-note {
+  margin: 10px 0;
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  transform: rotate(-1deg);
+}
+
+.phone-note.bad { color: var(--red); }
+.phone-note.good { color: var(--green); }
+
+/* ---------- zaino e amuleti ---------- */
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.slot {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.slot:nth-child(3n) { transform: rotate(2deg); }
+.slot:nth-child(3n + 1) { transform: rotate(-2deg); }
+
+.slot:hover,
+.slot:focus-visible,
+.slot.selected {
+  transform: rotate(0deg) scale(1.06);
+  outline: none;
+  border-color: color-mix(in srgb, var(--tint) 70%, transparent);
+}
+
+.slot .qty {
+  position: absolute;
+  right: 5px;
+  bottom: 3px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: #fff;
+}
+
+.slot.equipped::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  border: 2px solid var(--purple);
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.55);
+  pointer-events: none;
+}
+
+.slot .pips {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  display: flex;
+  gap: 2px;
+}
+
+.slot .pips i,
+.notches i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(192, 132, 252, 0.85);
+}
+
+.notches {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+
+.notches i {
+  width: 14px;
+  height: 14px;
+  border: 1.5px dashed rgba(192, 132, 252, 0.6);
+  background: transparent;
+}
+
+.notches i.used {
+  background: var(--purple);
+  border-style: solid;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+.detail {
+  margin-top: 16px;
+  padding: 14px 16px;
+}
+
+.detail .name {
+  font-family: var(--font-marker);
+  font-size: 17px;
+  color: #fff;
+  transform: rotate(-1deg);
+}
+
+.detail p {
+  margin: 8px 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--zinc-300);
+}
+
+.detail .punch {
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail .actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* ---------- negozio ---------- */
+
+.price {
+  font-family: var(--font-martian);
+  font-size: 11px;
+  color: var(--yellow);
+  flex-shrink: 0;
+}
+
+.wallet {
+  display: inline-flex;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  font-family: var(--font-martian);
+  font-size: 11px;
+  color: var(--yellow);
+  transform: rotate(1.5deg);
+}
+
+/* ---------- mappa ---------- */
+
+.realm-map {
+  position: relative;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.realm-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.realm-map .node {
+  cursor: pointer;
+}
+
+.realm-map .node text {
+  font-family: var(--font-marker);
+  font-size: 13px;
+  fill: rgba(255, 255, 255, 0.8);
+}
+
+.realm-map .node.locked text {
+  fill: rgba(255, 255, 255, 0.28);
+}
+
+.realm-map .node:focus-visible circle,
+.realm-map .node:hover circle {
+  stroke: #fff;
+  outline: none;
+}
+
+.realm-map .here {
+  animation: map-pulse 1.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes map-pulse {
+  50% { transform: scale(1.35); opacity: 0.6; }
+}
+
+/* ---------- diario e profilo ---------- */
+
+.objective {
+  padding: 16px 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #fff;
+  transform: rotate(-0.8deg);
+}
+
+.objective .where {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: var(--tint);
+}
+
+.progress {
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--tint);
+}
+
+.stat-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 2px;
+  font-size: 11px;
+  color: var(--zinc-300);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.stat-line b {
+  color: #fff;
+  font-weight: 700;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 8px;
+  transform: rotate(-1deg);
+}
+
+.player-card .avatar {
+  font-size: 42px;
+  transform: rotate(-12deg);
+}
+
+.player-card .pname {
+  font-family: var(--font-crisis);
+  font-size: 22px;
+  color: #fff;
+}
+
+/* ---------- radio ---------- */
+
+.now-playing {
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  transform: rotate(-1deg);
+}
+
+.now-playing .freq {
+  font-family: var(--font-crisis);
+  font-size: 30px;
+  color: var(--yellow);
+  line-height: 1;
+}
+
+.now-playing .track {
+  margin-top: 8px;
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: #fff;
+}
+
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.eq i {
+  width: 3px;
+  background: var(--yellow);
+  animation: eq 0.8s ease-in-out infinite;
+}
+
+.eq i:nth-child(2) { animation-delay: -0.3s; }
+.eq i:nth-child(3) { animation-delay: -0.55s; }
+
+@keyframes eq {
+  0%, 100% { height: 3px; }
+  50% { height: 14px; }
+}
+
+/* ---------- wavegram ---------- */
+
+.post {
+  padding: 14px 15px;
+  margin-bottom: 12px;
+}
+
+.post:nth-child(odd) { transform: rotate(-0.7deg); }
+.post:nth-child(even) { transform: rotate(0.6deg); }
+
+.post .who {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.post .author {
+  font-family: var(--font-marker);
+  font-size: 15px;
+}
+
+.post .handle {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.post p {
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--zinc-300);
+}
+
+.post .like {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.post .like.on { color: var(--red); }
+
+@media (prefers-reduced-motion: reduce) {
+  .phone,
+  .phone.closing,
+  .phone-scrim,
+  .call-ring,
+  .realm-map .here,
+  .eq i {
+    animation: none !important;
+    transition: none !important;
+  }
+}

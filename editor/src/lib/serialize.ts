@@ -35,6 +35,10 @@ function spec(s: EntitySpec): string {
             if (s.needsFlag) parts.push(`needsFlag: ${q(s.needsFlag)}`);
             if (s.label) parts.push(`label: ${q(s.label)}`);
             break;
+        case 'item':
+            parts.push(`item: ${q(s.item)}`);
+            if (s.amount) parts.push(`amount: ${s.amount}`);
+            break;
     }
     return `{ ${parts.join(', ')} }`;
 }

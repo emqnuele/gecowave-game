@@ -8,6 +8,8 @@ import { AmbienceManager } from '../engine/AmbienceManager';
 import { DecorationManager } from '../engine/DecorationManager';
 import { TerrainRenderer } from '../engine/TerrainRenderer';
 import { WaterRenderer } from '../engine/WaterRenderer';
+import { ensurePickupTextures } from '../engine/art/pickups';
+import { BOSS_CHARMS, ITEMS } from '../content/items';
 import { LightingManager } from '../engine/LightingManager';
 import { loadLevel, type LoadedLevel } from '../engine/LevelLoader';
 import { ParallaxManager } from '../engine/ParallaxManager';
@@ -389,6 +391,9 @@ export class GameScene extends Phaser.Scene {
                 case 'portal':
                     this.spawnPortal(x, y, spec.to, spec.needsFlag, spec.label);
                     break;
+                case 'item':
+                    this.spawnItemPickup(x, y, spec.item, spec.amount ?? 1, `item-${this.def.id}-${Math.round(x)}-${Math.round(y)}`);
+                    break;
                 case 'boss': {
                     // i boss sconfitti restano sconfitti, regola souls
                     if (state.hasFlag(`boss-down-${spec.kind}`)) {
@@ -413,6 +418,37 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    /** sacchetto o amuleto a terra: si raccoglie una volta sola per salvataggio */
+    private spawnItemPickup(x: number, y: number, item: string, amount: number, persistKey: string): void {
+        if (!ITEMS[item] || state.save.collectedLore.includes(persistKey)) return;
+        const isCharm = ITEMS[item].kind === 'amuleto';
+        if (isCharm && state.hasCharm(item)) return;
+        ensurePickupTextures(this);
+        const pickup = this.physics.add.sprite(x, y, isCharm ? 'pickup-charm' : 'pickup-item').setDepth(5);
+        (pickup.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+        this.lighting.follow(pickup, isCharm ? 0xc084fc : 0xfacc15, 150, 0.8);
+        this.tweens.add({ targets: pickup, y: y - 7, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.physics.add.overlap(this.player, pickup, () => {
+            pickup.destroy();
+            state.save.collectedLore.push(persistKey);
+            state.addItem(item, amount);
+            sfx.pickup();
+            if (isCharm) {
+                bus.emit('charm-found', { id: item });
+            } else {
+                bus.emit('toast', { text: `${ITEMS[item].icon} ${ITEMS[item].name}${amount > 1 ? ` ×${amount}` : ''} nello zaino` });
+                bus.emit('inventory-changed', {});
+            }
+        });
+    }
+
+    /** ogni boss lascia il suo amuleto, una volta sola */
+    private dropBossCharm(kind: BossKind, x: number, y: number): void {
+        const id = BOSS_CHARMS[kind];
+        if (!id || state.hasCharm(id)) return;
+        this.spawnItemPickup(x + 40, y + 30, id, 1, `charm-${id}`);
+    }
+
     /** se sei morto tra la vittoria e la ricompensa, la ricompensa ti aspetta */
     private recoverBossReward(kind: BossKind, x: number, y: number): void {
         const fragmentByBoss: Partial<Record<BossKind, AbilityId>> = {
@@ -425,6 +461,7 @@ export class GameScene extends Phaser.Scene {
         };
         const ability = fragmentByBoss[kind];
         if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability);
+        this.dropBossCharm(kind, x, y);
         if (kind === 'riba' && !state.hasFlag('dispositivo')) state.setFlag('dispositivo');
         if (kind === 'lochef') this.spawnCuore(x, y + 50, 'cuore-lochef');
         if (kind === 'formicona') this.spawnCuore(x, y + 50, 'cuore-formicona');
@@ -1511,6 +1548,8 @@ export class GameScene extends Phaser.Scene {
         this.water.update(time);
 
         this.trackSafePosition(delta);
+        state.save.record.playMs += delta;
+        state.run.nearMic = this.level.checkpoints.some((cp) => Math.abs(cp.x - this.player.x) < 110 && Math.abs(cp.y - this.player.y) < 110);
         this.checkExits();
         this.updatePrompt();
         this.updateBossTrigger();
@@ -1916,7 +1955,7 @@ export class GameScene extends Phaser.Scene {
             const note = obj as Phaser.Physics.Arcade.Sprite;
             const dx = this.player.x - note.x;
             const dy = this.player.y - note.y;
-            if (Math.hypot(dx, dy) < 130) {
+            if (Math.hypot(dx, dy) < 130 * state.mods.magnet) {
                 const body = note.body as Phaser.Physics.Arcade.Body;
                 body.setAllowGravity(false);
                 body.setVelocity(dx * 6, dy * 6);
@@ -2646,10 +2685,12 @@ export class GameScene extends Phaser.Scene {
                 this.physics.add.collider(mini, this.level.layer);
             }
         }
-        const pieces = Math.max(1, Math.round(barre / 5));
+        state.save.record.kills++;
+        const total = Math.round(barre * state.mods.barre);
+        const pieces = Math.max(1, Math.round(total / 5));
         for (let i = 0; i < pieces; i++) {
             const note = this.barreGroup.create(x, y, 'barra') as Phaser.Physics.Arcade.Sprite;
-            note.setData('value', Math.round(barre / pieces));
+            note.setData('value', Math.round(total / pieces));
             note.setDepth(4);
             note.setVelocity((Math.random() - 0.5) * 220, -150 - Math.random() * 130);
             note.setBounce(0.5);
@@ -2689,6 +2730,8 @@ export class GameScene extends Phaser.Scene {
         }
         if (kind !== 'pedro' && kind !== 'dei') {
             state.setFlag(`boss-down-${kind}`);
+            state.save.record.bosses++;
+            this.dropBossCharm(kind, x, y);
         }
         const waveBosses: BossKind[] = ['guggu', 'breccio', 'notino', 'smela', 'teorema', 'ombra'];
         if (waveBosses.includes(kind) && state.save.doomsdayMode) {
@@ -2895,6 +2938,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     private onPlayerDead(): void {
+        state.save.record.deaths++;
         const lost = state.save.barre;
         // le barre restano dove sei morto, stile souls
         state.dropped = lost > 0 ? { levelId: this.def.id, x: this.lastSafe.x, y: this.lastSafe.y, amount: lost } : null;

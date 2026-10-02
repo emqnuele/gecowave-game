@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
 import { bus } from '../engine/events';
+import { quickHeal } from '../engine/inventory';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 
@@ -15,7 +16,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     /** colpo della combo in corso: 0,1,2 — il terzo spacca */
     comboStep = 0;
 
-    private keys!: Record<'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'dash' | 'dash2' | 'heal' | 'risonante' | 'riflesso' | 'analisi' | 'scudo' | 'acqua', Phaser.Input.Keyboard.Key>;
+    private keys!: Record<'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'dash' | 'dash2' | 'heal' | 'risonante' | 'riflesso' | 'analisi' | 'scudo' | 'acqua' | 'eat', Phaser.Input.Keyboard.Key>;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 
     private coyoteUntil = 0;
@@ -83,6 +84,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             analisi: kb.addKey('H'),
             scudo: kb.addKey('R'),
             acqua: kb.addKey('V'),
+            eat: kb.addKey('C'),
         };
 
         scene.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
@@ -134,6 +136,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const body = this.body as Phaser.Physics.Arcade.Body;
 
         this.updateMalusERigenerazione(now);
+        this.updateBuffs(delta);
         if (this.stunned) {
             body.setAccelerationX(0);
             body.setVelocityX(body.velocity.x * 0.8);
@@ -176,7 +179,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             body.setAccelerationX(0);
             body.setVelocityX(body.velocity.x * (this.grounded ? 0.8 : 0.96));
         }
-        body.setMaxVelocityX(PHYSICS.runSpeed);
+        body.setMaxVelocityX(PHYSICS.runSpeed * state.mods.speed);
 
         // salto: buffer + coyote + rimbalzo
         if (Phaser.Input.Keyboard.JustDown(this.keys.jump) || Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
@@ -212,8 +215,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.updateRisonante(now);
 
+        if (Phaser.Input.Keyboard.JustDown(this.keys.eat)) bus.emit('toast', { text: quickHeal() });
+
         if (Phaser.Input.Keyboard.JustDown(this.keys.riflesso) && state.hasAbility('riflesso') && now >= this.riflessoReadyAt) {
-            if (this.spendFlow(COMBAT.riflessoCost)) {
+            if (this.spendFlow(COMBAT.riflessoCost * state.mods.abilityCost)) {
                 this.riflessoReadyAt = now + COMBAT.riflessoCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-riflesso', { x: this.x, y: this.y, facing: this.facing });
@@ -221,7 +226,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.analisi) && state.hasAbility('analisi') && now >= this.analisiReadyAt) {
-            if (this.spendFlow(COMBAT.analisiCost)) {
+            if (this.spendFlow(COMBAT.analisiCost * state.mods.abilityCost)) {
                 this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-analisi', {});
@@ -229,7 +234,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.scudo) && state.hasAbility('scudo') && now >= this.scudoReadyAt) {
-            if (this.spendFlow(COMBAT.scudoCost)) {
+            if (this.spendFlow(COMBAT.scudoCost * state.mods.abilityCost)) {
                 this.scudoReadyAt = now + COMBAT.scudoCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-scudo', {});
@@ -237,7 +242,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.acqua) && state.hasAbility('acquatossica') && now >= this.acquaReadyAt) {
-            if (this.spendFlow(COMBAT.acquaCost)) {
+            if (this.spendFlow(COMBAT.acquaCost * state.mods.abilityCost)) {
                 this.acquaReadyAt = now + COMBAT.acquaCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-acqua', { x: this.x, y: this.y });
@@ -310,6 +315,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
+    /** caffè della mensa e sim di pedro: effetti a tempo e rigenerazione del flow */
+    private updateBuffs(delta: number): void {
+        if (state.run.caffeMs > 0) state.run.caffeMs = Math.max(0, state.run.caffeMs - delta);
+        const regen = state.mods.flowRegen;
+        if (regen > 0 && state.run.flow < state.maxFlow) {
+            state.run.flow = Math.min(state.maxFlow, state.run.flow + (regen * delta) / 1000);
+            bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
+        }
+    }
+
     /* ---------- azioni ---------- */
 
     private startDash(): void {
@@ -321,7 +336,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
         this.dashing = true;
         this.dashUntil = this.scene.time.now + PHYSICS.dashMs;
-        this.dashCooldownUntil = this.scene.time.now + PHYSICS.dashCooldownMs;
+        this.dashCooldownUntil = this.scene.time.now + PHYSICS.dashCooldownMs * state.mods.dashCooldown;
         body.setAllowGravity(false);
         body.setMaxVelocityX(PHYSICS.dashSpeed);
         body.setVelocity(PHYSICS.dashSpeed * this.facing, 0);
@@ -344,7 +359,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const now = this.scene.time.now;
         if (this.dead || this.dashing || this.stunned || this.charging || now < this.attackCooldownUntil) return;
         // tutte le maschere: il ritmo perfetto, si mena più veloce
-        const cooldown = state.hasFlag('maschera-completa') ? COMBAT.attackCooldownMs * 0.7 : COMBAT.attackCooldownMs;
+        const rhythm = state.hasFlag('maschera-completa') ? 0.7 : 1;
+        const caffe = state.run.caffeMs > 0 ? 0.6 : 1;
+        const cooldown = COMBAT.attackCooldownMs * rhythm * caffe;
         this.attackCooldownUntil = now + cooldown;
         this.attackActiveUntil = now + COMBAT.attackActiveMs;
         // fallback: se animationcomplete non scatta (anim interrotta da dash/atterraggio)
@@ -370,7 +387,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     private updateRisonante(now: number): void {
         if (!state.hasAbility('risonante')) return;
-        if (this.keys.risonante.isDown && !this.charging && state.run.flow >= COMBAT.risonanteCost) {
+        const risonanteCost = COMBAT.risonanteCost * state.mods.abilityCost;
+        if (this.keys.risonante.isDown && !this.charging && state.run.flow >= risonanteCost) {
             this.charging = true;
             this.chargeStart = now;
             this.chargeEmitter = this.scene.add.particles(0, 0, 'p-spark', {
@@ -387,7 +405,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.chargeEmitter?.destroy();
             this.chargeEmitter = null;
             this.charging = false;
-            if (charged && this.spendFlow(COMBAT.risonanteCost)) {
+            if (charged && this.spendFlow(risonanteCost)) {
                 sfx.shoot();
                 this.scene.cameras.main.flash(80, 168, 85, 247);
                 this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing });
@@ -413,7 +431,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (canHeal) {
             this.healHeldMs += delta;
             this.setTint(0x4ade80);
-            if (this.healHeldMs >= COMBAT.healHoldMs) {
+            if (this.healHeldMs >= COMBAT.healHoldMs * state.mods.healTime) {
                 this.healHeldMs = 0;
                 state.run.flow -= COMBAT.healCost;
                 state.run.hp += 1;
@@ -432,7 +450,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     onAttackHit(): void {
         const body = this.body as Phaser.Physics.Arcade.Body;
         sfx.hit();
-        state.run.flow = Math.min(state.maxFlow, state.run.flow + COMBAT.flowPerHit);
+        state.run.flow = Math.min(state.maxFlow, state.run.flow + COMBAT.flowPerHit * state.mods.flowPerHit);
         this.emitVitals(false);
         if (this.attackDir === 'down') {
             // pogo: rimbalzo sul colpo dal basso
@@ -445,7 +463,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     hurt(amount: number, fromX?: number): boolean {
         if (this.dead || this.invulnerable) return false;
-        state.run.hp = Math.max(0, state.run.hp - amount);
+        if (state.run.santino) {
+            // il santo incassa al posto tuo, una volta
+            state.run.santino = false;
+            this.invulnUntil = this.scene.time.now + COMBAT.invulnMs;
+            this.burst(0xfacc15, 14);
+            sfx.checkpoint();
+            bus.emit('toast', { text: 'il santino di guggu si brucia al posto tuo. capolinea per lui.' });
+            return true;
+        }
+        state.run.hp = Math.max(0, state.run.hp - amount * state.mods.damageTaken);
         this.invulnUntil = this.scene.time.now + COMBAT.invulnMs;
         this.lastDamageAt = this.scene.time.now;
         sfx.hurt();
@@ -508,14 +535,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private updateHitbox(): void {
         const hb = this.attackHitbox.body as Phaser.Physics.Arcade.Body;
         if (this.attackDir === 'up') {
-            hb.setSize(52, COMBAT.attackRange);
+            hb.setSize(52, COMBAT.attackRange * state.mods.range);
             this.attackHitbox.setPosition(this.x, this.y - 48);
         } else if (this.attackDir === 'down') {
-            hb.setSize(52, COMBAT.attackRange);
+            hb.setSize(52, COMBAT.attackRange * state.mods.range);
             this.attackHitbox.setPosition(this.x, this.y + 48);
         } else {
-            hb.setSize(COMBAT.attackRange, 52);
-            this.attackHitbox.setPosition(this.x + this.facing * 44, this.y);
+            const range = COMBAT.attackRange * state.mods.range;
+            hb.setSize(range, 52);
+            this.attackHitbox.setPosition(this.x + this.facing * (44 + (range - COMBAT.attackRange) / 2), this.y);
         }
         hb.position.set(this.attackHitbox.x - hb.width / 2, this.attackHitbox.y - hb.height / 2);
     }

@@ -1,4 +1,5 @@
 import { COMBAT } from '../config';
+import { BASE_NOTCHES, charmMods, ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
 
 const SAVE_KEY = 'gecowave-save-v2';
@@ -37,6 +38,13 @@ const defaultSave = (): SaveData => ({
         costituzione: 0,
         flusso: 0,
     },
+    inventory: { ...STARTING_ITEMS },
+    charms: [],
+    equipped: [],
+    notches: BASE_NOTCHES,
+    messages: [],
+    record: { deaths: 0, kills: 0, bosses: 0, playMs: 0 },
+    radio: null,
 });
 
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
@@ -47,7 +55,8 @@ class GameState {
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
     /** vita, flow e malus della run corrente: non si salvano, si vivono */
-    run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false };
+    run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false };
+    private modsCache: CharmMods | null = null;
     /** dove tornare uscendo da un capitolo segreto (transient, non persistito) */
     portalReturn: PortalReturn | null = null;
     private doomsdaySinceSave = 0;
@@ -57,7 +66,8 @@ class GameState {
             const raw = localStorage.getItem(SAVE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                this.save = { ...defaultSave(), ...parsed };
+                const fresh = defaultSave();
+                this.save = { ...fresh, ...parsed, record: { ...fresh.record, ...(parsed.record ?? {}) } };
                 if (typeof this.save.barre !== 'number' || isNaN(this.save.barre)) {
                     this.save.barre = 0;
                 }
@@ -82,7 +92,13 @@ class GameState {
     }
 
     get maxHp(): number {
-        return (5 + this.save.stats.costituzione) * (this.run.patto ? 2 : 1);
+        return (5 + this.save.stats.costituzione + this.mods.maxHp) * (this.run.patto ? 2 : 1);
+    }
+
+    /** effetti degli amuleti indossati, ricalcolati solo quando cambiano */
+    get mods(): CharmMods {
+        if (!this.modsCache) this.modsCache = charmMods(this.save.equipped);
+        return this.modsCache;
     }
 
     get maxFlow(): number {
@@ -94,11 +110,12 @@ class GameState {
     }
 
     get damageMult(): number {
-        return (this.run.trenbolone ? 2 : 1) * (this.run.patto ? 2 : 1);
+        return (this.run.trenbolone ? 2 : 1) * (this.run.patto ? 2 : 1) * this.mods.damage;
     }
 
     resetRun(): void {
-        this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false };
+        this.modsCache = null;
+        this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false };
         this.run.hp = this.maxHp;
         this.run.trenbolone = this.hasFlag('trenbolone-attivo');
     }
@@ -113,6 +130,7 @@ class GameState {
 
     reset(): void {
         this.save = defaultSave();
+        this.modsCache = null;
         this.dropped = null;
         this.resetRun();
         localStorage.removeItem(SAVE_KEY);
@@ -143,6 +161,79 @@ class GameState {
             this.save.abilities.push(a);
             this.persist();
         }
+    }
+
+    /* ---------- zaino e amuleti ---------- */
+
+    count(id: string): number {
+        return this.save.inventory[id] ?? 0;
+    }
+
+    addItem(id: string, n = 1): void {
+        if (ITEMS[id]?.kind === 'amuleto') {
+            this.giveCharm(id);
+            return;
+        }
+        if (id === 'tacca') {
+            this.save.notches += n;
+            this.persist();
+            return;
+        }
+        this.save.inventory[id] = this.count(id) + n;
+        this.persist();
+    }
+
+    removeItem(id: string, n = 1): boolean {
+        if (this.count(id) < n) return false;
+        this.save.inventory[id] = this.count(id) - n;
+        if (this.save.inventory[id] <= 0) delete this.save.inventory[id];
+        this.persist();
+        return true;
+    }
+
+    hasCharm(id: string): boolean {
+        return this.save.charms.includes(id);
+    }
+
+    giveCharm(id: string): void {
+        if (this.hasCharm(id)) return;
+        this.save.charms.push(id);
+        this.persist();
+    }
+
+    get usedNotches(): number {
+        return this.save.equipped.reduce((sum, id) => sum + (ITEMS[id]?.cost ?? 0), 0);
+    }
+
+    isEquipped(id: string): boolean {
+        return this.save.equipped.includes(id);
+    }
+
+    /** ritorna il motivo del rifiuto, o null se è andata */
+    toggleCharm(id: string): string | null {
+        if (!this.run.nearMic && !this.godMode) return 'gli amuleti si cambiano solo vicino a un microfono.';
+        if (this.isEquipped(id)) {
+            this.save.equipped = this.save.equipped.filter((e) => e !== id);
+        } else {
+            const cost = ITEMS[id]?.cost ?? 0;
+            if (this.usedNotches + cost > this.save.notches) return 'tacche finite. togline uno o trovane altre.';
+            this.save.equipped.push(id);
+        }
+        this.modsCache = null;
+        this.run.hp = Math.min(this.run.hp, this.maxHp);
+        this.persist();
+        return null;
+    }
+
+    pushMessage(sender: string, text: string): void {
+        this.save.messages.push({ sender, text, at: Date.now(), read: false });
+        // il telefono non è un archivio infinito
+        if (this.save.messages.length > 120) this.save.messages.splice(0, this.save.messages.length - 120);
+        this.persist();
+    }
+
+    get unreadMessages(): number {
+        return this.save.messages.filter((m) => !m.read).length;
     }
 
     hasFlag(f: string): boolean {
