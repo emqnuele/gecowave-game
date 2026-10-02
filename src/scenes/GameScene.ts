@@ -151,6 +151,10 @@ export class GameScene extends Phaser.Scene {
     private analisiUntil = 0;
     private nextAnalisiTick = 0;
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
+    /** sbarre che chiudono l'arena finché il boss è vivo */
+    private arenaBars!: Phaser.Physics.Arcade.StaticGroup;
+    private arenaGfx: Phaser.GameObjects.Graphics | null = null;
+    private arenaRoom: Room | null = null;
     private homing: { obj: Phaser.Physics.Arcade.Sprite; at: number; moving: boolean }[] = [];
     private bossIntroShown = false;
     private exitLockToastAt = 0;
@@ -332,6 +336,9 @@ export class GameScene extends Phaser.Scene {
         this.lametteGroup = this.physics.add.group({ allowGravity: false });
         this.barreGroup = this.physics.add.group();
         this.doorGroup = this.physics.add.staticGroup();
+        this.arenaBars = this.physics.add.staticGroup();
+        this.arenaGfx = null;
+        this.arenaRoom = null;
 
         this.spawnEntities();
         this.spawnCheckpoints();
@@ -1118,6 +1125,8 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.enemyProjectiles, layer, (proj) => this.popProjectile(proj as Phaser.Physics.Arcade.Sprite));
 
         this.physics.add.collider(this.player, this.doorGroup);
+        this.physics.add.collider(this.player, this.arenaBars);
+        this.physics.add.collider(this.enemies, this.arenaBars);
         this.physics.add.collider(this.enemies, this.doorGroup);
 
         this.physics.add.collider(this.player, this.level.breakableWalls);
@@ -1687,6 +1696,7 @@ export class GameScene extends Phaser.Scene {
         this.magnetBarre();
         this.updateClone(time, delta);
         this.updateHoming(delta);
+        this.updateArenaLock(time);
         this.updateAnalisi(time);
         this.updateScudo(time);
         this.updateAcquaTossica(time);
@@ -2059,11 +2069,115 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    /** l'arena si chiude a scontro iniziato col player dentro, si riapre a boss caduto */
+    private updateArenaLock(time: number): void {
+        const boss = this.boss;
+        const fighting = !!boss?.active && boss.engaged && !boss.frenzy && !this.player.dead;
+        if (this.arenaRoom) {
+            if (!fighting) this.unlockArena();
+            else this.drawArenaBars(time);
+            return;
+        }
+        if (!fighting || !this.layout) return;
+        const room = this.roomAt(boss!.x, boss!.y);
+        if (!room || room.kind !== 'arena' || this.roomAt(this.player.x, this.player.y) !== room) return;
+        // si chiude solo con il player ben dentro: mai sbarre addosso a chi sta sulla soglia
+        const R = room.rect;
+        const c = this.player.x / TILE;
+        const r = this.player.y / TILE;
+        if (c < R.x + 4 || c > R.x + R.w - 4 || r < R.y + 2 || r > R.y + R.h - 2) return;
+        this.lockArena(room);
+    }
+
+    /** i rettangoli dei varchi della stanza, in pixel */
+    private doorRects(room: Room): Phaser.Geom.Rectangle[] {
+        const L = this.layout!;
+        const out: Phaser.Geom.Rectangle[] = [];
+        for (const d of L.doors) {
+            if (d.a !== room.id && d.b !== room.id) continue;
+            const A = L.rooms[d.a];
+            const B = L.rooms[d.b];
+            if (d.axis === 'h') {
+                const right = A.rect.x < B.rect.x ? B : A;
+                const left = right === A ? B : A;
+                const bx = right.rect.x;
+                const top = left.surface && right.surface ? 0 : d.y - 4;
+                out.push(new Phaser.Geom.Rectangle((bx - 1) * TILE, top * TILE, TILE * 2, (d.y - top) * TILE));
+            } else {
+                const bottom = A.rect.y < B.rect.y ? B : A;
+                out.push(new Phaser.Geom.Rectangle(d.x * TILE, (bottom.rect.y - 1) * TILE, d.len * TILE, TILE * 2));
+            }
+        }
+        return out;
+    }
+
+    private lockArena(room: Room): void {
+        this.arenaRoom = room;
+        for (const r of this.doorRects(room)) {
+            const bar = this.add.zone(r.centerX, r.centerY, r.width, r.height);
+            this.physics.add.existing(bar, true);
+            this.arenaBars.add(bar);
+        }
+        this.arenaGfx = this.add.graphics().setDepth(6);
+        this.shake(220, 0.006);
+        sfx.bossRoar();
+        bus.emit('toast', { text: 'le uscite si chiudono. o lui o te.' });
+    }
+
+    private unlockArena(): void {
+        this.arenaBars.clear(true, true);
+        this.arenaGfx?.destroy();
+        this.arenaGfx = null;
+        if (this.arenaRoom && !this.player.dead) {
+            sfx.unlock();
+            bus.emit('toast', { text: 'l\'arena si riapre.' });
+        }
+        this.arenaRoom = null;
+    }
+
+    /** sbarre d'inchiostro che vibrano col colore del boss */
+    private drawArenaBars(time: number): void {
+        const g = this.arenaGfx;
+        if (!g || !this.arenaRoom) return;
+        g.clear();
+        const color = this.boss?.def.glowColor ?? 0xffffff;
+        for (const child of this.arenaBars.getChildren()) {
+            const z = child as Phaser.GameObjects.Zone;
+            const x0 = z.x - z.width / 2;
+            const y0 = z.y - z.height / 2;
+            const vertical = z.height >= z.width;
+            const n = Math.max(2, Math.round((vertical ? z.width : z.width) / 14));
+            g.fillStyle(0x05050a, 0.82);
+            g.fillRect(x0, y0, z.width, z.height);
+            g.lineStyle(3, color, 0.55 + Math.sin(time / 120) * 0.2);
+            if (vertical) {
+                for (let i = 0; i < n; i++) {
+                    const x = x0 + ((i + 0.5) * z.width) / n + Math.sin(time / 90 + i) * 1.5;
+                    g.lineBetween(x, y0, x, y0 + z.height);
+                }
+            } else {
+                for (let i = 0; i < n; i++) {
+                    const x = x0 + ((i + 0.5) * z.width) / n;
+                    g.lineBetween(x, y0, x + Math.sin(time / 90 + i) * 2, y0 + z.height);
+                }
+            }
+            g.lineStyle(2, 0x000000, 0.9);
+            g.strokeRect(x0, y0, z.width, z.height);
+        }
+    }
+
     private updateBossTrigger(): void {
         if (!this.boss || this.boss.engaged || this.player.dead || this.exiting) return;
         const dist = Math.abs(this.player.x - this.boss.x);
-        // nelle regioni il boss può stare sopra o sotto di te, dietro la roccia
-        if (dist >= 440 || Math.abs(this.player.y - this.boss.y) >= 380) return;
+        const near = dist < 440 && Math.abs(this.player.y - this.boss.y) < 380;
+        // nelle regioni il boss si sveglia quando entri nella sua stanza, non attraverso la roccia
+        const bossRoom = this.roomAt(this.boss.x, this.boss.y);
+        if (bossRoom) {
+            const inside = this.roomAt(this.player.x, this.player.y) === bossRoom;
+            if (!inside && !(near && this.nav.sight(this.player.x, this.player.y - 10, this.boss.x, this.boss.y))) return;
+        } else if (!near) {
+            return;
+        }
         // la formicona sta nella tana: non si sveglia se cammini sul soffitto
         if (this.boss.def.kind === 'formicona' && this.player.y < this.boss.y - 60) return;
 
