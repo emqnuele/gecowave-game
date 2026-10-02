@@ -22,6 +22,8 @@ export interface CreatureSpec {
     outline?: number;
     /** margine attorno al fotogramma: zampe e code possono uscire dalla misura logica */
     pad?: number;
+    /** disegnato di profilo verso sinistra: il boss si gira verso il giocatore */
+    faces?: boolean;
     draw: (p: Painter, t: number, f: number) => void;
 }
 
@@ -318,6 +320,13 @@ export class Painter {
         }
     }
 
+    /** coppia di occhi: la rabbia piega le palpebre a v verso il naso */
+    eyes(cx: number, y: number, gap: number, r: number, color: number, o: { angry?: number; pupil?: boolean; socket?: boolean; lid?: number } = {}): void {
+        const a = o.angry ?? 0;
+        this.eye(cx - gap / 2, y, r, color, { ...o, angry: -a });
+        this.eye(cx + gap / 2, y, r, color, { ...o, angry: a });
+    }
+
     /** luce propria: un punto acceso con alone, sia dipinto sia emissivo */
     glow(x: number, y: number, r: number, color: number, alpha = 0.8): void {
         for (const c of [this.ctx, this.glowCtx]) {
@@ -484,6 +493,11 @@ export function creatureRes(scene: Phaser.Scene, key: string): number {
     return (tex.customData as { creatureRes?: number }).creatureRes ?? 1;
 }
 
+/** true se il foglio guarda a sinistra e va girato verso il bersaglio */
+export function creatureFaces(scene: Phaser.Scene, key: string): boolean {
+    return !!(scene.textures.get(key).customData as { creatureFaces?: boolean }).creatureFaces;
+}
+
 /** misura del corpo in px di texture: quella logica, senza il margine del foglio */
 export function creatureBody(sprite: Phaser.GameObjects.Sprite): { w: number; h: number } {
     const d = sprite.texture.customData as { creatureW?: number; creatureH?: number; creatureRes?: number };
@@ -528,7 +542,7 @@ function register(scene: Phaser.Scene, spec: CreatureSpec, key: string, el: HTML
     const tex = scene.textures.addCanvas(key, el);
     if (!tex) return;
     for (let f = 0; f < frames; f++) tex.add(f, 0, f * fw, 0, fw, fh);
-    tex.customData = { ...tex.customData, creatureFrames: frames, creatureRes: CREATURE_RES, creatureW: spec.w, creatureH: spec.h };
+    tex.customData = { ...tex.customData, creatureFrames: frames, creatureRes: CREATURE_RES, creatureW: spec.w, creatureH: spec.h, creatureFaces: !!spec.faces };
     if (normals) tex.setDataSource(normals);
 }
 

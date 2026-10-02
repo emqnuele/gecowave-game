@@ -149,7 +149,7 @@ const pittura: CreatureSpec = {
     key: 'enemy-pittura', w: 38, h: 32,
     draw(p, t) {
         pitturaBody(p, t, 19, 18, 15, 10, [-8, 1, 9]);
-        p.eye(11, 15, 2.6, 0xc084fc, { angry: 0.3 });
+        p.eye(11, 15, 2.6, 0xc084fc, { angry: -0.3 });
         p.eye(18, 14, 2.2, 0xc084fc, { angry: 0.3 });
         p.teeth(9, 20, 9, 4, 4, 0xf5e9ff, 0.7 + sin(t) * 0.25);
         // bolla che sale
@@ -236,7 +236,7 @@ function tossicoArt(p: Painter, t: number, big: boolean): void {
     p.shape(p.ellipse(cx - 1, hy + 1, big ? 6.5 : 5.5, big ? 6 : 5.5), skin, { hatch: 0.35 });
     p.shape(p.ellipse(cx - 6, hy + 3, 3.4, 2.2), skin, { hatch: 0.2 });
     const eye = big ? 0xef4444 : 0x84cc16;
-    p.eye(cx - 4, hy, 1.5, eye, { angry: big ? 0.4 : 0, lid: big ? 0 : 0.55 });
+    p.eye(cx - 4, hy, 1.5, eye, { angry: big ? -0.4 : 0, lid: big ? 0 : 0.55 });
     p.eye(cx + 1, hy, 1.4, eye, { angry: big ? 0.4 : 0, lid: big ? 0 : 0.55 });
     if (big) p.teeth(cx - 6, hy + 4, 6, 2.6, 3, 0xe7e5d0, 0.8);
 }
@@ -278,8 +278,6 @@ const numero: CreatureSpec = {
     draw(p, t) {
         const y = sin(t) * 1.4;
         // cifre in orbita: i resti dell'analisi 1
-        const ctx = p.ctx;
-        ctx.font = 'bold 6px monospace';
         ['7', 'π', '∂'].forEach((d, k) => {
             const a = t * TAU + (k / 3) * TAU;
             const x = 15 + Math.cos(a) * 12;
@@ -348,7 +346,7 @@ const padella: CreatureSpec = {
             const u = (t + k / 3) % 1;
             p.glow(8 + k * 7, 12 - hop - u * 4, 0.8 + u * 0.6, 0xfb923c, 0.8 * (1 - u));
         }
-        p.eye(6.5, 16.5 - hop, 1.7, 0xf87171, { angry: 0.35 });
+        p.eye(6.5, 16.5 - hop, 1.7, 0xf87171, { angry: -0.35 });
         p.eye(12, 17 - hop, 1.6, 0xf87171, { angry: 0.35 });
     },
 };
@@ -399,7 +397,7 @@ const notinoMini: CreatureSpec = {
         p.shape(p.ellipse(14, 11, 8, 7.5), 0x3f6a46, { hatch: 0.4 });
         p.shape(p.ellipse(7.5, 13, 3.8, 2.7), 0x3f6a46, { hatch: 0.2 });
         p.shape([{ x: 11, y: 5 }, { x: 15, y: 0 }, { x: 19, y: 4 }, { x: 22, y: 2 }, { x: 20, y: 7 }], 0x2a1f3d, { hatch: 0.3 });
-        p.eye(10.5, 10.5, 1.8, 0xf87171, { angry: 0.5 });
+        p.eye(10.5, 10.5, 1.8, 0xf87171, { angry: -0.5 });
         p.eye(16, 10.5, 1.7, 0xf87171, { angry: 0.5 });
     },
 };
@@ -469,7 +467,7 @@ const bottiglia: CreatureSpec = {
         p.ctx.font = 'bold 2.6px monospace';
         p.ctx.fillStyle = '#0e7490';
         p.ctx.fillText('PREMIUM', 5.6, 18.7 - hop);
-        p.eye(9, 15 - hop, 1.2, 0x22d3ee, { angry: 0.45 });
+        p.eye(9, 15 - hop, 1.2, 0x22d3ee, { angry: -0.45 });
         p.eye(13, 15 - hop, 1.2, 0x22d3ee, { angry: 0.45 });
     },
 };

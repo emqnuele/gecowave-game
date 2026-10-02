@@ -103,6 +103,15 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 ### ADR-016 — punteggio di partita e assistita per sempre
 **Decisione**: accendere la freccia guida durante una partita la rende assistita fino alla fine (`SaveData.assisted`): `achievementsBlocked()` guarda anche il salvataggio, quindi spegnerla non riaccende trofei e punteggio. L'interruttore (`src/ui/assist.ts`, unico per menu, pausa, telefono e nuova partita) chiede conferma la prima volta. Il **punteggio della partita** (`src/engine/score.ts`) somma i capitoli finiti (`SaveData.runScores`, il migliore per capitolo nella partita), la stima del capitolo in corso (stessa formula senza bonus del tempo), 250 per trofeo e il bonus del finale (`ENDING_BONUS`). Si vede alla morte e nei titoli di coda; a fine partita va nella **classifica locale** (`localStorage` `gecowave-classifica`, prime dieci, sopravvive alle partite nuove), mostrata nella bacheca. Nel ng+ il punteggio riparte da zero.
 
+### ADR-017 — il cast vivo a inchiostro (fase 6)
+**Contesto**: nemici e boss erano sagome quasi nere da 20–130 px disegnate con `Graphics`, i boss ingranditi 1.45–2.1× e quindi sfocati; sotto le luci 2d si vedevano solo gli occhi.
+**Decisione**: `src/engine/art/creatureKit.ts` disegna ogni creatura su canvas come il geco dei dipinti: forme piene a colori sporchi, ombra sfumata e tratteggiata dal lato lontano dalla luce (luce dall'alto a sinistra), filo di luce sul bordo, **un unico contorno d'inchiostro** attorno alla sagoma (silhouette dilatata), occhi e luci su uno **strato emissivo** separato (`<key>~glow`, sommato in ADD, fuori dalla Light2D: il buio non li spegne). Ogni foglio ha **4 fotogrammi** (camminata, bob, ali, ruote, fumo) e una **normal map** ricavata dalla sagoma (cupola sfocata più i solchi dell'inchiostro) passata come `dataSource` della texture: la Light2D modella le creature in rilievo. I disegni stanno in `src/engine/art/creatures/` e guardano tutti a sinistra (il codice gira con flipX quando il bersaglio è a destra).
+- **risoluzione**: fogli al doppio (`CREATURE_RES = 2`) con un margine di 5 px logici; `customData` della texture porta misura logica, fotogrammi e risoluzione. `Enemy` e `Boss` scalano di `1/res` e dimensionano il corpo fisico sulla misura logica (`creatureBody`), quindi collisioni e bilanciamento non cambiano.
+- **flip e normal map**: la Light2D di phaser ignora il flip nelle normali; `normalFlip.ts` lo mette nella stessa matrice di rotazione che phaser manda allo shader.
+- **luci**: la luce che segue nemici e boss sta sopra e un po' davanti alla testa (`lighting.follow` con offset, `lightBoss`), così le normal map li illuminano dall'alto come nei dipinti.
+- **animazione**: `syncLook` gira dopo la fisica (`POST_UPDATE`): fotogramma in base alla velocità (chi dorme respira piano), strato emissivo allineato, occhi smorzati a chi dorme o sta appeso.
+- **galleria**: `?gallery` (solo sviluppo, filtro con `?gallery=boss-`, `&cell=230`) mostra tutto il cast sotto una luce che segue il mouse.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -141,6 +150,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
 ### In corso / aperto
+- **fase 6, grafica del cast**: nemici fatti (19 fogli a inchiostro animati con normal map, ADR-017); boss in corso.
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
 ### Da fare

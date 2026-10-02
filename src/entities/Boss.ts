@@ -4,7 +4,7 @@ import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { BossKind } from '../types';
-import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
+import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 
 type Phase = 1 | 2 | 3;
 
@@ -33,6 +33,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     private look: CreatureGlow;
     private frames: number;
     private res: number;
+    /** di profilo: si gira verso chi combatte */
+    private faces: boolean;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: BossKind, hpOverride?: number) {
         super(scene, x, y, BOSSES[kind].texture);
@@ -48,6 +50,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         // la scala si decide sulla misura logica; i fogli a inchiostro sono disegnati al doppio
         this.res = creatureRes(scene, this.texture.key);
         this.frames = creatureFrames(scene, this.texture.key);
+        this.faces = creatureFaces(scene, this.texture.key);
         const frame = creatureBody(this);
         const big = Math.max(frame.w, frame.h) / this.res;
         this.baseScale = (big < 70 ? 2.1 : big < 100 ? 1.75 : 1.45) / this.res;
@@ -125,6 +128,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             const pulse = 1 + Math.sin(this.t / 300) * 0.03;
             this.setScale(this.baseScale * pulse);
         }
+
+        if (this.faces && player.active && Math.abs(player.x - this.x) > 24) this.setFlipX(player.x > this.x);
 
         if (!this.engaged || this.busy) return;
 
