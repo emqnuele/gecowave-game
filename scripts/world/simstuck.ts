@@ -6,7 +6,7 @@ import { abilitiesFor } from './abilities';
 
 // uso: simstuck <id> : dove sono le posizioni da cui l'uscita non si raggiunge più, con la mappa attorno
 const id = process.argv[2];
-const f = JSON.parse(readFileSync(`public/regions/${id}.json`, 'utf8')) as RegionFile;
+const f = JSON.parse(readFileSync(process.env.REGION_FILE ?? `public/regions/${id}.json`, 'utf8')) as RegionFile;
 const grid = decodeGrid(f);
 const m = new SimMap(grid, { breakablesOpen: true });
 const ab = abilitiesFor(id);

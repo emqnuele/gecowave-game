@@ -8,6 +8,10 @@ class MusicManager {
     private currentPath: string | null = null;
     private fadeInterval: ReturnType<typeof setInterval> | null = null;
     private unlockListener: (() => void) | null = null;
+    // grafo audio per il filtro della notte: un passa-basso condiviso da tutte le tracce
+    private ctx: AudioContext | null = null;
+    private lowpass: BiquadFilterNode | null = null;
+    private night = 0;
 
     init(): void {
         bus.on('boss-hp', (payload) => {
@@ -17,6 +21,43 @@ class MusicManager {
                 this.playLevel(state.save.levelId);
             }
         });
+    }
+
+    /** 0 giorno, 1 notte fonda: di notte la musica si fa ovattata */
+    setNight(n: number): void {
+        const v = Math.max(0, Math.min(1, n));
+        if (Math.abs(v - this.night) < 0.02) return;
+        this.night = v;
+        if (this.lowpass && this.ctx) this.lowpass.frequency.setTargetAtTime(this.cutoff(), this.ctx.currentTime, 1.5);
+    }
+
+    private cutoff(): number {
+        // scala logaritmica: da 20 khz (aperto) a 1,6 khz
+        return 20000 * Math.pow(1600 / 20000, this.night);
+    }
+
+    /** collega l'elemento al filtro; se il browser non lo permette la musica suona lo stesso, senza filtro */
+    private route(audio: HTMLAudioElement): void {
+        try {
+            if (!this.ctx) {
+                this.ctx = new AudioContext();
+                this.lowpass = this.ctx.createBiquadFilter();
+                this.lowpass.type = 'lowpass';
+                this.lowpass.Q.value = 0.4;
+                this.lowpass.frequency.value = this.cutoff();
+                this.lowpass.connect(this.ctx.destination);
+                const wake = () => {
+                    void this.ctx?.resume();
+                    window.removeEventListener('click', wake);
+                    window.removeEventListener('keydown', wake);
+                };
+                window.addEventListener('click', wake);
+                window.addEventListener('keydown', wake);
+            }
+            this.ctx.createMediaElementSource(audio).connect(this.lowpass!);
+        } catch {
+            // niente webaudio: si resta sull'uscita normale dell'elemento
+        }
     }
 
     setVolume(vol: number): void {
@@ -202,12 +243,14 @@ class MusicManager {
         const newAudio = new Audio(encodedPath);
         newAudio.loop = loop;
         newAudio.volume = 0;
+        this.route(newAudio);
 
         const playPromise = newAudio.play();
         if (playPromise !== undefined) {
             // browser security blocks autoplay before user gestures
             playPromise.catch(() => {
                 this.unlockListener = () => {
+                    void this.ctx?.resume();
                     newAudio.play().catch(() => {});
                     if (this.unlockListener) {
                         window.removeEventListener('click', this.unlockListener);

@@ -76,6 +76,7 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - **`GameScene.create` resetta a mano i campi**: ogni campo nuovo va azzerato lì.
 - **Rigenerazione regioni**: deterministica; dopo modifiche a generatore o simulatore rigenerare tutto e rifare le tappe del bot (`scripts/world/waypoints.ts`).
 - **Tempi**: `npm run regions` con cancelli e verifiche multiple richiede decine di minuti (parallelo su tutti i core).
+- **Dev hooks**: `window.__game`, `__bus`, `__state`, `__music` solo in sviluppo. Importare un modulo da `page.evaluate` crea un'istanza diversa: usare gli hook.
 - **Editor** (`editor/`): usa i tipi del gioco, va tenuto compilabile (`cd editor && npx tsc -b --noEmit`).
 
 ---
@@ -89,13 +90,14 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - Fase 5: finale vero "riscatto" (giorno 30, il glitch, romero arresta gli dei).
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
+- Musica per ora del giorno: passa-basso WebAudio condiviso (`music.setNight`), da 20 kHz a 1,6 kHz su scala logaritmica; spento durante i boss. Se WebAudio fallisce la musica suona senza filtro.
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
 ### In corso
 - Rigenerazione completa delle regioni con simulatore corretto (bug del blocco del salto dal muro non azzerato) e controllo dei boss per stanza.
 
 ### Da fare
-- Piattaforme che crollano, allagamenti, musica per ora del giorno.
+- Piattaforme che crollano, allagamenti.
 - Sfide a tempo e arene opzionali.
 - Trame secondarie per personaggio, più scelte a metà gioco.
 
@@ -109,4 +111,5 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - **trama**: finale vero, coerenza di prezzi ed epiloghi.
 - **hub**: la piazza col citelis, npc di servizio, folla.
 - **trappole**: seghe, presse, vapore per bioma.
+- **audio**: musica ovattata di notte.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.

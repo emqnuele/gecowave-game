@@ -1997,6 +1997,8 @@ export class GameScene extends Phaser.Scene {
         this.updateTrophies(time);
         const here = this.layout ? this.roomAt(this.player.x, this.player.y) : null;
         this.atmosphere.update(time, delta, this.layout ? !!here?.surface : !this.biome.indoor);
+        // la notte ovatta la musica, ma i boss si sentono sempre a pieno
+        music.setNight(this.boss?.engaged ? 0 : this.atmosphere.night * 0.85);
         this.updateGuide(time);
         this.updateAnalisi(time);
         this.updateScudo(time);

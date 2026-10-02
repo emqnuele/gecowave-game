@@ -84,6 +84,7 @@ function buildOne(id: string): boolean {
     );
     for (const line of gateLog) if (!line.includes('scartato') || process.env.GATE_DEBUG) console.log(`${id.padEnd(13)}${line}`);
     if (ok) writeFileSync(`${outDir}/${id}.json`, json);
+    else if (process.env.KEEP_FAIL) writeFileSync(`${process.env.TMPDIR ?? '/tmp'}/${id}.fail.json`, json);
     return ok;
 }
 
