@@ -24,6 +24,7 @@ import { RegionGuide } from '../engine/RegionGuide';
 import { FolkManager } from '../engine/FolkManager';
 import { TrapManager } from '../engine/TrapManager';
 import { HazardManager } from '../engine/HazardManager';
+import { TimeTrial } from '../engine/TimeTrial';
 import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
@@ -167,6 +168,7 @@ export class GameScene extends Phaser.Scene {
     private folk!: FolkManager;
     private traps!: TrapManager;
     private hazards!: HazardManager;
+    private trial: TimeTrial | null = null;
     private quests!: QuestManager;
     private atmosphere!: Atmosphere;
     private nextTrophyCheckAt = 0;
@@ -406,6 +408,7 @@ export class GameScene extends Phaser.Scene {
         ]);
         this.interactables.push(...this.quests.talkables);
         this.spawnChallenge();
+        this.spawnTrial();
         this.traps = new TrapManager(this, this.nav);
         this.traps.populate({
             seed: this.def.id,
@@ -437,6 +440,7 @@ export class GameScene extends Phaser.Scene {
             this.folk.destroy();
             this.traps.destroy();
             this.hazards.destroy();
+            this.trial?.stop();
         });
         this.spawnDroppedBarre();
         this.setupColliders();
@@ -2016,6 +2020,7 @@ export class GameScene extends Phaser.Scene {
         this.folk.update(time, delta, this.player, this.threats(), !!this.boss?.engaged);
         this.traps.update(time, delta, this.player);
         this.hazards.update(time, delta, this.player);
+        this.trial?.update(this.player);
         this.updateArenaLock(time);
         this.updateExplore();
         this.updateBusStops();
@@ -2631,7 +2636,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     private challengePoints(): { x: number; y: number }[] {
-        return this.challengeSpot ? [{ x: this.challengeSpot.x, y: this.challengeSpot.y }] : [];
+        const pts = this.challengeSpot ? [{ x: this.challengeSpot.x, y: this.challengeSpot.y }] : [];
+        if (this.trial?.post) pts.push(this.trial.post);
+        return pts;
+    }
+
+    /** la corsa contro il citelis: il palo con l'orario accanto a una fermata */
+    private spawnTrial(): void {
+        this.trial = null;
+        if (!this.layout?.trials?.length || this.def.hub) return;
+        const trial = new TimeTrial(this, this.lighting, this.def.id);
+        const it = trial.setup(this.busStops, this.layout.trials);
+        if (!it) return;
+        this.trial = trial;
+        this.interactables.push(it);
     }
 
     private offerChallenge(): void {

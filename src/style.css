@@ -347,6 +347,28 @@ body {
   color: var(--zinc-300);
 }
 
+.hud-trial {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1.5deg);
+  padding: 6px 18px;
+  font-family: var(--font-crisis);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  color: var(--yellow);
+}
+
+.hud-trial.critical {
+  color: #f87171;
+  animation: trial-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes trial-pulse {
+  0%, 100% { transform: translateX(-50%) rotate(-1.5deg) scale(1); }
+  50% { transform: translateX(-50%) rotate(1deg) scale(1.08); }
+}
+
 .hud-waves {
   position: absolute;
   bottom: 18px;

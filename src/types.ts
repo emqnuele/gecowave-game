@@ -136,6 +136,8 @@ export interface SaveData {
     stops: string[];
     /** missioni dei passanti: fase e contatore */
     quests: Record<string, { s: 'attiva' | 'pronta' | 'fatta'; n: number }>;
+    /** corse contro il citelis: miglior tempo per regione, in ms */
+    trials: Record<string, number>;
     /** trofei sbloccati */
     achievements: string[];
     /** la modalità assistita è stata accesa almeno una volta in questa partita */

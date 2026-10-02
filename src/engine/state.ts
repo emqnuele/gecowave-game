@@ -50,6 +50,7 @@ const defaultSave = (): SaveData => ({
     explored: {},
     stops: [],
     quests: {},
+    trials: {},
     achievements: [],
     assisted: false,
     scores: {},

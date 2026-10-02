@@ -36,6 +36,7 @@ export class Hud {
     private doomsday: HTMLElement;
     private doomsdayFill: HTMLElement;
     private bossBar: HTMLElement | null = null;
+    private trial: HTMLElement;
 
     constructor() {
         this.root = el('div');
@@ -62,7 +63,10 @@ export class Hud {
         this.doomsday.append(this.doomsdayFill, doomsdayLabel);
         this.doomsday.style.display = 'none';
 
-        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.doomsday, this.trenboBorder);
+        this.trial = el('div', 'hud-trial sticker glass-acid-yellow', '');
+        this.trial.style.display = 'none';
+
+        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.doomsday, this.trenboBorder, this.trial);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -90,6 +94,12 @@ export class Hud {
             this.zone.textContent = `${title.toLowerCase()} ${accentWord}`;
             this.zone.style.color = ZONE_CSS[color];
             this.updateDoomsdayColors(color);
+        });
+        bus.on('trial-timer', (t) => {
+            this.trial.style.display = t ? '' : 'none';
+            if (!t) return;
+            this.trial.textContent = `🚌 ${(t.left / 1000).toFixed(1)}`;
+            this.trial.classList.toggle('critical', t.left < 5000);
         });
         bus.on('abilities-changed', ({ abilities }) => this.setAbilities(abilities));
         bus.on('boss-hp', (payload) => this.setBoss(payload));

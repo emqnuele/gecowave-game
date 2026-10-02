@@ -8,6 +8,7 @@ import type { SimAbilities } from '../../src/world/sim';
 import { encodeRegion } from '../../src/world/codec';
 import { generateRegion } from '../../src/world/region';
 import { simRepair } from '../../src/world/simfix';
+import { computeTrials } from '../../src/world/trials';
 import { abilitiesFor } from './abilities';
 
 /* genera tutte le regioni in public/regions: il gioco le carica già pronte.
@@ -84,6 +85,7 @@ function buildAttempt(id: string, firstAttempt: number, last: boolean): { ok: bo
         }
     }
     region.layout.spots = spots;
+    if (ok) region.layout.trials = computeTrials(grid, region.layout, abilitiesFor(id));
     const file = encodeRegion(def, grid, entities, region.layout);
     const json = JSON.stringify(file);
     console.log(

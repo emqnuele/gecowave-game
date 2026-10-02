@@ -63,6 +63,16 @@ export interface RegionLayout {
     /** posizioni in piedi verificate col geco simulato (colonna, riga, stanza):
         missioni e oggetti messi qui sono sempre raggiungibili e mai trappole */
     spots?: [number, number, number][];
+    /** corse contro il citelis tra microfoni consecutivi, misurate col geco simulato */
+    trials?: TrialLeg[];
+}
+
+export interface TrialLeg {
+    /** id dei microfoni come li chiama il LevelLoader: cp-colonna-riga */
+    from: string;
+    to: string;
+    /** fotogrammi a 60 al secondo, sommando i macro più rapidi */
+    frames: number;
 }
 
 /** progresso sul percorso corrispondente a una x del vecchio capitolo lineare */

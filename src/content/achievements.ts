@@ -65,5 +65,6 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     { id: 'sterminatore', icon: '💀', name: 'sterminatore', desc: 'sconfiggi 300 nemici.', check: (s) => s.record.kills >= 300 },
     { id: 'flop', icon: '🪦', name: 'il flop è parte del processo', desc: 'muori 25 volte. succede.', check: (s) => s.record.deaths >= 25 },
     { id: 'gladiatore', icon: '🎤', name: 'gladiatore del realm', desc: 'vinci cinque sfide del microfono rosso.', check: (s) => s.flags.filter((f) => f.startsWith('arena-vinta-')).length >= 5 },
+    { id: 'lancette', icon: '🚌', name: 'più veloce del citelis', desc: 'vinci cinque corse contro il citelis.', check: (s) => s.flags.filter((f) => f.startsWith('corsa-vinta-')).length >= 5 },
     { id: 'speedrun', icon: '⏱️', name: 'di corsa', desc: 'completa la wave perduta in meno di 6 minuti.' },
 ];

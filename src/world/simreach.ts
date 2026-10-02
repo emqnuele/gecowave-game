@@ -12,6 +12,8 @@ export interface SimReach {
     reached: Map<number, SimBody>;
     /** archi trovati, per la visita all'indietro */
     edges: Map<number, number[]>;
+    /** fotogrammi del macro più rapido per ogni arco, allineati a edges */
+    frames: Map<number, number[]>;
 }
 
 export const keyOf = (m: { cols: number }, b: SimBody): number => {
@@ -203,6 +205,7 @@ function rest(b: SimBody): SimBody {
 export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { x0: number; x1: number; y0: number; y1: number }): SimReach {
     const reached = new Map<number, SimBody>();
     const edges = new Map<number, number[]>();
+    const frames = new Map<number, number[]>();
     const plain: SimAbilities = { ...ab, wall: false };
     const macros = [...buildMacros(1, ab), ...buildMacros(-1, ab)].map((mac) => (mac.ab ? mac : { ...mac, ab: plain }));
     const k0 = keyOf(m, start);
@@ -219,7 +222,8 @@ export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { 
     const queue = [k0];
     for (let qi = 0; qi < queue.length; qi++) {
         const k = queue[qi];
-        const outs = new Set<number>();
+        const outs = new Map<number, number>();
+        const out = (nk: number, f: number) => outs.set(nk, Math.min(outs.get(nk) ?? Infinity, f + 1));
         const bases = [reached.get(k)!, ...(alt.get(k) ?? [])];
         for (const base of bases) for (const mac of macros) {
             const b = base.clone();
@@ -237,7 +241,7 @@ export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { 
                 const nk = keyOf(m, b);
                 if (mac.walk && !airborne) {
                     if (nk !== k) {
-                        outs.add(nk);
+                        out(nk, f);
                         if (!reached.has(nk)) add(nk, b);
                         break;
                     }
@@ -246,15 +250,16 @@ export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { 
                 if (!airborne) continue;
                 // atterrato: un fotogramma fermo a terra per non contare i rimbalzi sui bordi
                 if (nk !== k) {
-                    outs.add(nk);
+                    out(nk, f);
                     if (!reached.has(nk) && (!limit || (b.x >= limit.x0 && b.x < limit.x1 && b.y >= limit.y0 && b.y < limit.y1))) add(nk, b);
                 }
                 break;
             }
         }
-        edges.set(k, [...outs]);
+        edges.set(k, [...outs.keys()]);
+        frames.set(k, [...outs.values()]);
     }
-    return { cols: m.cols, rows: m.rows, reached, edges };
+    return { cols: m.cols, rows: m.rows, reached, edges, frames };
 }
 
 /** chi da lì può ancora arrivare a una delle chiavi d'arrivo */

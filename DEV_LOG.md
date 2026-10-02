@@ -72,6 +72,11 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 ### ADR-011 — il simulatore sceglie il tentativo del generatore
 **Decisione**: `build-regions` prova il tentativo successivo di `generateRegion` (fino a 6 volte) quando il simulatore boccia la regione. Le regioni che passano al tentativo 0 restano identiche, quindi non serve rigenerare tutto. Così si è sbloccata ricordi (tentativo 1: 45 stanze, 7347 posizioni, zero trappole).
 
+### ADR-012 — corse contro il citelis misurate dal simulatore
+**Contesto**: le sfide a tempo devono essere sempre fattibili, ma il `NavGraph` dei nemici (senza dash, doppio salto pieno né muri rompibili) non trova quasi nessuna strada tra le fermate.
+**Decisione**: `simReach` ora registra per ogni arco i fotogrammi del macro più rapido (`frames`). `computeTrials` fa un Dijkstra tra microfoni consecutivi sul percorso e salva `layout.trials` (`from`, `to` come `cp-colonna-riga`, `frames`). A runtime `TimeTrial` sceglie la tratta più lunga tra 9 e 70 s e dà `1.35 × tempo simulato + 5 s`. Palo con l'orologio accanto alla fermata, luce gialla e scintille sulla fermata d'arrivo, timer nell'HUD. Prima vittoria: 150 barre e flag `corsa-vinta-<id>`; record in `SaveData.trials`; trofeo "più veloce del citelis" a cinque.
+**Strumento**: `scripts/world/run.sh trials [id]` aggiunge le tratte ai JSON già generati senza rigenerarli; `build-regions` le calcola da sé.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -99,6 +104,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
 - Lastre che crollano sopra i pozzi e allagamenti periodici (tossici in rio, tecnokill, trenbolone, stabilimento), ADR-010.
+- Sfide a tempo: corsa contro il citelis in ogni regione (ADR-012).
 - Ricordi rigenerata e verificata col simulatore corretto (ADR-011).
 - Arene opzionali: un microfono rosso per regione in una stanza laterale larga (scelta deterministica dall'id), tre ondate con i nemici della regione (l'ultima con un'élite), stanza chiusa con le sbarre dei boss; vittoria = flag `arena-vinta-<id>`, 180 barre, trofeo "gladiatore" a cinque. Morire annulla la sfida.
 - Musica per ora del giorno: passa-basso WebAudio condiviso (`music.setNight`), da 20 kHz a 1,6 kHz su scala logaritmica; spento durante i boss. Se WebAudio fallisce la musica suona senza filtro.
@@ -108,7 +114,6 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
 ### Da fare
-- Sfide a tempo.
 - Trame secondarie per personaggio, più scelte a metà gioco.
 
 ---
@@ -123,5 +128,6 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **trappole**: seghe, presse, vapore per bioma.
 - **audio**: musica ovattata di notte.
 - **arene opzionali**: il microfono rosso.
-- **pericoli**: lastre che crollano, allagamenti; ricordi sbloccata.
+- **pericoli**: lastre che crollano, allagamenti; ricordi sbloccata; trappole e passanti sulla pipeline di luce.
+- **sfide a tempo**: la corsa contro il citelis.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.

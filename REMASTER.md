@@ -47,7 +47,7 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 - quest secondarie con npc ricorrenti, ricompense, scelte
 - sfide opzionali (arene, prove a tempo)
 
-**stato fase 4**: aggrappo (presa e salto dai muri, lo lascia la formicona) ✅; élite ✅; missioni dei passanti (cerca, caccia, consegna) con 7 amuleti nuovi ✅. da fare: cancelli d'abilità veri nel generatore (zone di regioni vecchie raggiungibili solo con aggrappo), sfide a tempo, arene opzionali.
+**stato fase 4**: aggrappo (presa e salto dai muri, lo lascia la formicona) ✅; élite ✅; missioni dei passanti (cerca, caccia, consegna) con 7 amuleti nuovi ✅; cancelli d'abilità (mensola per il doppio salto, camino per aggrappo) nei capitoli fino a rio ✅; arene opzionali del microfono rosso ✅; sfide a tempo: la corsa contro il citelis in ogni regione, tempi misurati dal geco simulato ✅.
 
 ### Fase 4b — trofei, punteggi e modalità assistita ✅
 - **achievement** (trofei) per le imprese: boss senza danni, regioni esplorate al 100%, segreti, maschere, finali, sfide a tempo, scelte di trama
