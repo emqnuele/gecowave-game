@@ -28,6 +28,7 @@ import { TimeTrial } from '../engine/TimeTrial';
 import { StoryManager } from '../engine/StoryManager';
 import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
+import { Soundscape } from '../engine/audio/Soundscape';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
 import { REGION_COUNT } from '../content/achievements';
 import { chapterParts, ENDING_BONUS, pushBoard, runScore, sumParts } from '../engine/score';
@@ -177,6 +178,7 @@ export class GameScene extends Phaser.Scene {
     private story: StoryManager | null = null;
     private quests!: QuestManager;
     private atmosphere!: Atmosphere;
+    private soundscape!: Soundscape;
     private nextTrophyCheckAt = 0;
     /** lo scontro col boss in corso: se ti colpisce niente "intoccabile" */
     private bossFight: { hit: boolean; hp: number } | null = null;
@@ -471,6 +473,7 @@ export class GameScene extends Phaser.Scene {
         this.parallax.resize();
         this.atmosphere = new Atmosphere(this);
         this.atmosphere.build(this.biome, this.def.id);
+        this.soundscape = new Soundscape(this, this.biome, this.nav, this.layout ? this.layout.horizonRow : null);
         this.buildPrompt();
         this.buildGuide();
 
@@ -2165,6 +2168,9 @@ export class GameScene extends Phaser.Scene {
         this.atmosphere.update(time, delta, this.layout ? !!here?.surface : !this.biome.indoor);
         // la notte ovatta la musica, ma i boss si sentono sempre a pieno
         music.setNight(this.boss?.engaged ? 0 : this.atmosphere.night * 0.85);
+        // le vasche fisse del livello contano come le piene: testa sotto, mondo ovattato
+        if (!this.player.headUnder && this.level.water.some((r) => r.contains(this.player.x, this.player.y - 16))) this.player.headUnder = true;
+        this.soundscape.update(time, delta, { player: this.player, room: here, night: this.atmosphere.night, boss: !!this.boss?.engaged, rain: this.atmosphere.rainLevel });
         this.updateGuide(time);
         this.updateAnalisi(time);
         this.updateScudo(time);

@@ -95,6 +95,7 @@ export class DialogueBox {
         window.removeEventListener('keydown', this.keyHandler);
         this.box?.remove();
         this.box = null;
+        bus.emit('dialogue-end', {});
         if (fireEnd) {
             const cb = this.onEnd;
             this.onEnd = undefined;

@@ -71,6 +71,7 @@ export interface HazardTarget {
     x: number;
     y: number;
     submerged: boolean;
+    headUnder: boolean;
     body: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | null;
     hurt(amount: number, fromX?: number): boolean;
 }
@@ -315,6 +316,7 @@ export class HazardManager {
         }
         this.wasIn = !!inside;
         player.submerged = !!inside;
+        player.headUnder = !!inside && headUnder;
         if (inside?.toxic && headUnder && now >= this.nextBite) {
             this.nextBite = now + 1600;
             player.hurt(1);

@@ -47,6 +47,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private acquaReadyAt = 0;
     /** lo imposta la scena quando il geco è dentro un allagamento */
     submerged = false;
+    /** testa sott'acqua: il mondo si sente da dentro una vasca */
+    headUnder = false;
     private stunnedUntil = 0;
     private nextSmelaStun = 0;
     private nextTrenDrain = 0;

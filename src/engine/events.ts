@@ -9,6 +9,7 @@ export interface GameEvents {
     'zone-changed': { title: string; accentWord: string; color: ZoneColor; punchline: string; showCard: boolean };
     'abilities-changed': { abilities: AbilityId[] };
     'dialogue-start': { lines: DialogueLine[]; onEnd?: () => void };
+    'dialogue-end': {};
     'player-died': { lost: number; score: number | null };
     'toast': { text: string };
     'wavesung': { sender: string; text: string };

@@ -12,6 +12,7 @@ import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
 import { state } from './engine/state';
 import { music } from './engine/music';
+import { acoustics } from './engine/audio/acoustics';
 import { checkAchievements } from './engine/achievements';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
@@ -57,7 +58,7 @@ async function boot(): Promise<void> {
     });
 
     // handle di debug in sviluppo, mai nel build
-    if (import.meta.env.DEV) Object.assign(window, { __game: game, __bus: bus, __state: state, __music: music });
+    if (import.meta.env.DEV) Object.assign(window, { __game: game, __bus: bus, __state: state, __music: music, __acoustics: acoustics, __sfx: sfx });
 
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
         inGame = true;
@@ -90,13 +91,16 @@ async function boot(): Promise<void> {
         },
         pause() {
             game.scene.pause('GameScene');
+            acoustics.setPaused(true);
         },
         resume() {
             game.scene.resume('GameScene');
+            acoustics.setPaused(false);
         },
         quitToMenu() {
             inGame = false;
             sfx.stopPad();
+            acoustics.reset();
             game.scene.stop('GameScene');
             hud.hide();
             screens.showMenu();
@@ -122,6 +126,7 @@ async function boot(): Promise<void> {
         checkAchievements();
         if (phone.isOpen) phone.close();
         sfx.stopPad();
+        acoustics.reset();
         music.playEnding();
         hud.hide();
         game.scene.stop('GameScene');

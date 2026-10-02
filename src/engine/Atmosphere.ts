@@ -235,6 +235,12 @@ export class Atmosphere {
     }
 
     /** di notte le luci contano di più: un moltiplicatore per l'ambiente all'aperto */
+    /** 0..1: quanta pioggia sta cadendo adesso */
+    get rainLevel(): number {
+        const wet = this.weather === 'pioggia' || this.weather === 'temporale';
+        return wet ? this.amount * (this.weather === 'temporale' ? 1 : 0.6) : 0;
+    }
+
     get night(): number {
         const p = dayPhase();
         if (p >= 0.6) return 1;
