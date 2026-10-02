@@ -2,7 +2,9 @@ import { fork } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { LEVELS } from '../../src/content/levels';
+import { LEVEL_ORDER, LEVELS } from '../../src/content/levels';
+import { addGates } from '../../src/world/gates';
+import type { SimAbilities } from '../../src/world/sim';
 import { encodeRegion } from '../../src/world/codec';
 import { generateRegion } from '../../src/world/region';
 import { simRepair } from '../../src/world/simfix';
@@ -20,11 +22,44 @@ function buildOne(id: string): boolean {
     const t0 = performance.now();
     const region = generateRegion(def, 40);
     const r = region.report;
-    const fixed = simRepair(region.def.grid, region.def.entities, region.layout, abilitiesFor(id));
+    let fixed = simRepair(region.def.grid, region.def.entities, region.layout, abilitiesFor(id));
+    // chi torna più avanti con abilità nuove non deve trovare trappole: si ripara anche per loro
+    const idx0 = LEVEL_ORDER.indexOf(id);
+    if (idx0 >= 0 && idx0 <= LEVEL_ORDER.indexOf('rio')) {
+        let rounds = fixed.rounds;
+        for (const later of [{ dash: true, double: true }, { dash: true, double: true, wall: true }] as SimAbilities[]) {
+            const f2 = simRepair(fixed.grid, region.def.entities, region.layout, later);
+            rounds += f2.rounds;
+            if (f2.verdict.stuck.length) console.log(`${id.padEnd(13)} trappole rimaste con ${JSON.stringify(later)}: ${f2.verdict.stuck.length}`);
+            fixed = { ...f2, rounds };
+        }
+        // e il capitolo deve restare giocabile come prima
+        const back = simRepair(fixed.grid, region.def.entities, region.layout, abilitiesFor(id));
+        fixed = { ...back, rounds: rounds + back.rounds };
+    }
     const v = fixed.verdict;
     const ok = r.exitReached && r.lostBeats === 0 && v.exit && v.stuck.length === 0 && v.missing.length === 0;
+    // cancelli d'abilità nei primi capitoli: si torna col doppio salto o con aggrappo
+    let grid = fixed.grid;
+    let entities = region.def.entities;
+    const idx = LEVEL_ORDER.indexOf(id);
+    const gateLog: string[] = [];
+    if (ok && idx >= 0 && idx <= LEVEL_ORDER.indexOf('rio')) {
+        const now = abilitiesFor(id);
+        const passes: SimAbilities[] = [];
+        if (!now.double) passes.push({ dash: true, double: true });
+        passes.push({ dash: true, double: true, wall: true });
+        const gated: { c: number; r: number }[] = [];
+        for (const later of passes) {
+            const want = later.wall ? 2 : 1;
+            const g = addGates(grid, entities, region.layout, now, later, v.good, want, (s) => gateLog.push(s), gated);
+            grid = g.grid;
+            entities = g.entities;
+            gated.push(...g.gates);
+        }
+    }
     // fino a 4 posti per stanza, sparsi in larghezza, su aria libera con la testa libera
-    const rows = fixed.grid;
+    const rows = grid;
     const spots: [number, number, number][] = [];
     for (const room of region.layout.rooms) {
         const R = room.rect;
@@ -36,7 +71,7 @@ function buildOne(id: string): boolean {
         }
     }
     region.layout.spots = spots;
-    const file = encodeRegion(def, fixed.grid, region.def.entities, region.layout);
+    const file = encodeRegion(def, grid, entities, region.layout);
     const json = JSON.stringify(file);
     console.log(
         `${id.padEnd(13)} ${ok ? 'ok  ' : 'FAIL'} ${String(Math.round(performance.now() - t0)).padStart(6)}ms`,
@@ -47,6 +82,7 @@ function buildOne(id: string): boolean {
         `${Math.round(json.length / 1024)}kb`,
         ok ? '' : JSON.stringify({ ...r, simExit: v.exit, stuck: v.stuck.length, missing: v.missing }),
     );
+    for (const line of gateLog) if (!line.includes('scartato') || process.env.GATE_DEBUG) console.log(`${id.padEnd(13)}${line}`);
     if (ok) writeFileSync(`${outDir}/${id}.json`, json);
     return ok;
 }
