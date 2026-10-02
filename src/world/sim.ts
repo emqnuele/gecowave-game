@@ -13,6 +13,8 @@ const TILE_BIAS = 48;
 export interface SimAbilities {
     dash: boolean;
     double: boolean;
+    /** aggrappo: presa e salto dai muri */
+    wall?: boolean;
 }
 
 export interface Input {
@@ -61,6 +63,11 @@ export class SimBody {
     maxVx: number = PHYSICS.runSpeed;
     gravity = true;
     blockedDown = false;
+    blockedLeft = false;
+    blockedRight = false;
+    wallSide: -1 | 0 | 1 = 0;
+    wallUntil = 0;
+    wallLockUntil = 0;
     // stato del controllo, come in Player
     now = 0;
     coyoteUntil = 0;
@@ -86,6 +93,8 @@ function intersects(b: SimBody, l: number, t: number, r: number, bot: number): b
 /** un passo di arcade: velocità, posizione, separazione dalle tile del layer */
 function physicsStep(m: SimMap, b: SimBody): void {
     b.blockedDown = false;
+    b.blockedLeft = false;
+    b.blockedRight = false;
     const px = b.x;
     const py = b.y;
     let vx = b.vx;
@@ -143,6 +152,8 @@ function physicsStep(m: SimMap, b: SimBody): void {
                     }
                 }
                 if (ox !== 0) {
+                    if (ox < 0) b.blockedLeft = true;
+                    else b.blockedRight = true;
                     b.x -= ox;
                     b.vx = 0;
                 }
@@ -220,8 +231,19 @@ function control(b: SimBody, inp: Input, ab: SimAbilities): void {
             return;
         }
     }
+    const pressingWall = b.blockedLeft && inp.dir === -1 ? -1 : b.blockedRight && inp.dir === 1 ? 1 : 0;
+    if (!grounded && pressingWall && ab.wall && b.vy > -40) {
+        b.wallSide = pressingWall;
+        b.wallUntil = now + PHYSICS.wallCoyoteMs;
+        if (b.vy > PHYSICS.wallSlideSpeed) b.vy = PHYSICS.wallSlideSpeed;
+        b.airJumpUsed = false;
+    } else if (grounded) {
+        b.wallUntil = 0;
+    }
     const accel = grounded ? PHYSICS.runAccel : PHYSICS.airAccel;
-    if (inp.dir !== 0) {
+    if (now < b.wallLockUntil) {
+        b.ax = 0;
+    } else if (inp.dir !== 0) {
         b.ax = inp.dir * accel;
         b.facing = inp.dir;
     } else {
@@ -235,6 +257,14 @@ function control(b: SimBody, inp: Input, ab: SimAbilities): void {
             b.vy = -PHYSICS.jumpVelocity;
             b.bufferUntil = 0;
             b.coyoteUntil = 0;
+        } else if (now < b.wallUntil && b.wallSide !== 0) {
+            const away = -b.wallSide as 1 | -1;
+            b.vx = away * PHYSICS.wallJumpPush;
+            b.vy = -PHYSICS.wallJumpVelocity;
+            b.facing = away;
+            b.wallLockUntil = now + PHYSICS.wallJumpLockMs;
+            b.wallUntil = 0;
+            b.bufferUntil = 0;
         } else if (!b.airJumpUsed && ab.double) {
             b.vy = -PHYSICS.doubleJumpVelocity;
             b.airJumpUsed = true;

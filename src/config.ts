@@ -23,6 +23,12 @@ export const PHYSICS = {
     dashCooldownMs: 450,
     knockback: 330,
     pogoVelocity: 700,
+    /** aggrappo: si scivola piano lungo il muro e ci si stacca con un salto */
+    wallSlideSpeed: 150,
+    wallJumpVelocity: 760,
+    wallJumpPush: 300,
+    wallJumpLockMs: 110,
+    wallCoyoteMs: 110,
 } as const;
 
 export const COMBAT = {

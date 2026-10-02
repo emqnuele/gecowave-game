@@ -22,6 +22,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private coyoteUntil = 0;
     private jumpBufferedUntil = 0;
     private airJumpUsed = false;
+    /** aggrappo: muro a cui sei attaccato (-1 sinistra, 1 destra), ultimo contatto e blocco dopo il salto */
+    private wallSide: -1 | 0 | 1 = 0;
+    private wallUntil = 0;
+    private wallLockUntil = 0;
+    private wallDustAt = 0;
     private dashing = false;
     private dashUntil = 0;
     private dashCooldownUntil = 0;
@@ -165,9 +170,29 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        // movimento orizzontale
+        // aggrappo: in aria, spingendo contro un muro mentre si scende
+        const pressingWall = (body.blocked.left && left && !right) ? -1 : (body.blocked.right && right && !left) ? 1 : 0;
+        if (!this.grounded && pressingWall && state.hasAbility('aggrappo') && body.velocity.y > -40) {
+            this.wallSide = pressingWall;
+            this.wallUntil = now + PHYSICS.wallCoyoteMs;
+            if (body.velocity.y > PHYSICS.wallSlideSpeed) body.setVelocityY(PHYSICS.wallSlideSpeed);
+            this.airJumpUsed = false;
+            if (now >= this.wallDustAt) {
+                this.wallDustAt = now + 90;
+                this.scene.add.particles(this.x + pressingWall * 16, this.y + 10, 'p-dot', {
+                    speed: { min: 10, max: 40 }, angle: { min: 240, max: 300 }, scale: { start: 0.35, end: 0 },
+                    alpha: { start: 0.5, end: 0 }, lifespan: 260, quantity: 1, stopAfter: 1,
+                });
+            }
+        } else if (this.grounded) {
+            this.wallUntil = 0;
+        }
+
+        // movimento orizzontale (subito dopo un salto dal muro i comandi aspettano un attimo)
         const accel = this.grounded ? PHYSICS.runAccel : PHYSICS.airAccel;
-        if (left && !right) {
+        if (now < this.wallLockUntil) {
+            body.setAccelerationX(0);
+        } else if (left && !right) {
             body.setAccelerationX(-accel);
             this.facing = -1;
             this.setFlipX(true);
@@ -191,6 +216,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.jumpBufferedUntil = 0;
                 this.coyoteUntil = 0;
                 sfx.jump();
+            } else if (now < this.wallUntil && this.wallSide !== 0) {
+                // salto dal muro: su e via dal muro, i comandi tornano dopo un istante
+                const away = -this.wallSide as 1 | -1;
+                body.setVelocity(away * PHYSICS.wallJumpPush, -PHYSICS.wallJumpVelocity);
+                this.facing = away;
+                this.setFlipX(away < 0);
+                this.wallLockUntil = now + PHYSICS.wallJumpLockMs;
+                this.wallUntil = 0;
+                this.jumpBufferedUntil = 0;
+                sfx.jump();
+                this.burst(0x4ade80, 5);
             } else if (!this.airJumpUsed && state.hasAbility('rimbalzo')) {
                 body.setVelocityY(-PHYSICS.doubleJumpVelocity);
                 this.airJumpUsed = true;

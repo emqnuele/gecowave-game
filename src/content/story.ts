@@ -1083,6 +1083,11 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
         desc: 'premi SPAZIO a mezz\'aria per saltare di nuovo. il desiderio di ivan era far volare la gente fuori dai bus. ci sei andato vicino.',
         key: 'spazio ×2',
     },
+    aggrappo: {
+        name: 'frammento dell\'aggrappo',
+        desc: 'salta contro un muro e tieni la direzione: ti aggrappi e scivoli piano. premi SPAZIO per staccarti con un salto. la formicona si arrampicava sui muri del municipio per non pagare l\'affitto: adesso lo fai anche tu.',
+        key: 'spazio sul muro',
+    },
     riflesso: {
         name: 'riflesso distorto',
         desc: 'premi G per evocare un clone che attira i nemici e incassa al posto tuo. rubato agli specchi di lametta, non dirglielo.',

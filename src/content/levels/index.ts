@@ -41,4 +41,4 @@ export const LEVEL_ORDER: string[] = all.map((l) => l.id);
 
 export const FIRST_LEVEL = perduta.id;
 
-export const TOTAL_FRAGMENTS = 7;
+export const TOTAL_FRAGMENTS = 8;

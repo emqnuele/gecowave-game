@@ -158,6 +158,7 @@ class GameState {
             return [
                 'scivolata',
                 'rimbalzo',
+                'aggrappo',
                 'riflesso',
                 'risonante',
                 'rigenerazione',

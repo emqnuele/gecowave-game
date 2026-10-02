@@ -5,6 +5,7 @@ export type ZoneColor = 'green' | 'purple' | 'orange' | 'blue' | 'red' | 'yellow
 export type AbilityId =
     | 'scivolata'
     | 'rimbalzo'
+    | 'aggrappo'
     | 'riflesso'
     | 'risonante'
     | 'rigenerazione'

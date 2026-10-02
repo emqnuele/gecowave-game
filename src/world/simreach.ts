@@ -23,7 +23,7 @@ export const keyOf = (m: { cols: number }, b: SimBody): number => {
 interface Macro {
     frames: number;
     /** air = fotogrammi passati in aria dal primo distacco, -1 se ancora a terra */
-    input(f: number, air: number): Input;
+    input(f: number, air: number, b: SimBody): Input;
     /** la camminata si ferma appena cambia cella da terra */
     walk?: boolean;
 }
@@ -70,6 +70,34 @@ function buildMacros(d: -1 | 1, ab: SimAbilities): Macro[] {
                         // il secondo salto è un nuovo "premuto": un fotogramma di rilascio prima
                         const jump = f < dj - 1 || f >= dj;
                         return { dir, jump, dash: false };
+                    },
+                });
+            }
+        }
+    }
+    if (ab.wall) {
+        // arrampicata: contro il muro, salto dal muro appena attaccati, poi di nuovo verso il muro;
+        // dopo k salti si tiene la direzione per montare sul bordo, o si va dall'altra parte
+        for (const k of [1, 2, 3, 5]) {
+            for (const finish of ['wall', 'away'] as const) {
+                let jumps = 0;
+                let pressAt = -99;
+                out.push({
+                    frames: 300,
+                    input(f, _air, b) {
+                        if (f === 0) {
+                            jumps = 0;
+                            pressAt = -99;
+                        }
+                        const attached = b.wallSide !== 0 && b.now < b.wallUntil;
+                        let jump = f < 14;
+                        if (f >= 14 && attached && jumps < k && f - pressAt > 4) {
+                            pressAt = f;
+                            jumps++;
+                        }
+                        if (f >= 14 && f - pressAt <= 13) jump = f - pressAt >= 1;
+                        const back = jumps >= k && finish === 'away' ? -d : d;
+                        return { dir: back as -1 | 1, jump, dash: false };
                     },
                 });
             }
@@ -155,7 +183,7 @@ export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { 
             let airborne = false;
             let airAt = -1;
             for (let f = 0; f < mac.frames; f++) {
-                simFrame(m, b, mac.input(f, airAt < 0 ? -1 : f - airAt), ab);
+                simFrame(m, b, mac.input(f, airAt < 0 ? -1 : f - airAt, b), ab);
                 if (b.hitSpike) break;
                 if (b.y > m.rows * TILE) break;
                 if (!b.blockedDown) {

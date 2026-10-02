@@ -547,6 +547,7 @@ export class GameScene extends Phaser.Scene {
             ombra: 'scudo',
             teorema: 'analisi',
             smela: 'acquatossica',
+            formicona: 'aggrappo',
         };
         const ability = fragmentByBoss[kind];
         if (ability && !state.hasAbility(ability)) this.spawnFragment(x, y + 50, ability, true);
@@ -3368,6 +3369,7 @@ export class GameScene extends Phaser.Scene {
             case 'formicona':
                 this.startDialogue('formicona-sconfitta', () => {
                     this.spawnCuore(x, y + 40, 'cuore-formicona', true);
+                    this.spawnFragment(x + 60, y + 40, 'aggrappo', true);
                 });
                 break;
             case 'furgone':
