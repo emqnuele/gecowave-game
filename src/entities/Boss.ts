@@ -20,6 +20,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     /** insegue il player muovendo lentamente l'ancoraggio (es. il 33) */
     chase = false;
     private shieldGraphics?: Phaser.GameObjects.Graphics;
+    /** le sagome dei boss nascono piccole: nelle arene delle regioni devono incombere */
+    baseScale: number;
 
     private anchorX: number;
     private anchorY: number;
@@ -39,6 +41,9 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         this.setPipeline('Light2D');
+        const big = Math.max(this.width, this.height);
+        this.baseScale = big < 70 ? 2.1 : big < 100 ? 1.75 : 1.45;
+        this.setScale(this.baseScale);
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.setAllowGravity(false);
         body.setSize(this.width * (this.def.bodyScale ?? 0.75), this.height * (this.def.bodyScale ?? 0.75));
@@ -48,6 +53,14 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             this.shieldGraphics = scene.add.graphics();
             this.shieldGraphics.setDepth(6);
         }
+    }
+
+    /** spostato dalla scena dopo la nascita: sospeso sopra il pavimento dell'arena */
+    relocate(x: number, y: number): void {
+        this.setPosition(x, y);
+        this.anchorX = x;
+        this.anchorY = y;
+        (this.body as Phaser.Physics.Arcade.Body).reset(x, y);
     }
 
     get phase(): Phase {
@@ -87,6 +100,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         }
 
         if (this.def.glitchy) {
+            if (this.scaleX !== this.baseScale) this.setScale(this.baseScale);
             // scatti, tremori, niente movimenti morbidi: deve fare paura
             this.setDisplayOrigin(
                 this.width / 2 + (Math.random() > 0.85 ? (Math.random() - 0.5) * 8 : 0),
@@ -99,7 +113,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         } else {
             this.rotation = Math.sin(this.t / 1400) * 0.12;
             const pulse = 1 + Math.sin(this.t / 300) * 0.03;
-            this.setScale(pulse);
+            this.setScale(this.baseScale * pulse);
         }
 
         if (!this.engaged || this.busy) return;

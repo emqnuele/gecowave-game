@@ -467,7 +467,7 @@ export class GameScene extends Phaser.Scene {
                     }
                     // l'ombra senza abbonamento è addestrata su poco footage
                     const hpOverride = spec.kind === 'ombra' && !state.hasFlag('tommasorveglianza') ? 34 : undefined;
-                    this.boss = new Boss(this, x, y, spec.kind, hpOverride);
+                    this.boss = this.makeBoss(x, y, spec.kind, hpOverride);
                     // pedro finale forte come il pedro del doomsday: raffica e inseguimento
                     if (spec.kind === 'pedro') this.boss.frenzy = true;
                     // in ng+ ivan è già dei nostri: guggu si taglia subito
@@ -540,6 +540,23 @@ export class GameScene extends Phaser.Scene {
         }
         if (kind === 'furgone' || kind === 'smela') state.setFlag('stabilimento-chiuso');
         if (kind === 'pedrino') state.setFlag('ricordi-visti');
+    }
+
+    /** un boss nasce sospeso sopra il pavimento più vicino, con la testa sotto il soffitto */
+    private makeBoss(x: number, y: number, kind: BossKind, hpOverride?: number): Boss {
+        const boss = new Boss(this, x, y, kind, hpOverride);
+        const c = Math.floor(x / TILE);
+        let r = Math.floor(y / TILE);
+        while (r < this.level.heightPx / TILE - 1 && !this.nav.solid(c, r + 1)) r++;
+        const floor = (r + 1) * TILE;
+        let top = r;
+        while (top > 0 && !this.nav.solid(c, top - 1) && floor - top * TILE < 600) top--;
+        const ceil = top * TILE;
+        const half = boss.displayHeight / 2;
+        let by = floor - half - 70;
+        if (by - half < ceil + 16) by = (floor + ceil) / 2;
+        boss.relocate(x, by);
+        return boss;
     }
 
     private spawnEnemy(kind: EnemyKind, x: number, y: number, opts: { sleeping?: boolean; hunting?: boolean } = {}): Enemy {
@@ -1333,7 +1350,10 @@ export class GameScene extends Phaser.Scene {
 
     private setupCamera(): void {
         const cam = this.cameras.main;
-        cam.setBounds(0, 0, this.level.widthPx, this.level.heightPx);
+        const pad = this.layout ? 220 : 0;
+        cam.setBounds(0, -pad, this.level.widthPx, this.level.heightPx + pad * 2);
+        // sotto la mappa c'è solo roccia: il margine della camera non deve mostrare il parallasse
+        if (pad) this.add.rectangle(0, this.level.heightPx, this.level.widthPx, pad + 40, this.biome.deep).setOrigin(0, 0).setDepth(2);
         this.physics.world.setBounds(0, 0, this.level.widthPx, this.level.heightPx);
         cam.startFollow(this.player, true, 0.12, 0.12);
         cam.setDeadzone(50, 36);
@@ -1445,7 +1465,7 @@ export class GameScene extends Phaser.Scene {
             this.walterReveal(arena);
             return;
         }
-        this.boss = new Boss(this, arena.x, arena.y - 20, kind);
+        this.boss = this.makeBoss(arena.x, arena.y - 20, kind);
         this.bossIntroShown = false;
         this.lighting.follow(this.boss, this.boss.def.glowColor, 260, 1.0);
         this.setupBossColliders();
@@ -1487,8 +1507,9 @@ export class GameScene extends Phaser.Scene {
             this.companion?.destroy();
             this.companion = null;
             const wy = arena.y - 30;
-            const boss = new Boss(this, cx, wy, 'walter');
-            boss.setScale(0.35);
+            const boss = this.makeBoss(cx, wy, 'walter');
+            const full = boss.baseScale * 1.1;
+            boss.baseScale = 0.35;
             this.boss = boss;
             this.bossIntroShown = true; // l'ingaggio lo faccio io dopo la crescita
             this.lighting.follow(boss, boss.def.glowColor, 320, 1.1);
@@ -1497,7 +1518,7 @@ export class GameScene extends Phaser.Scene {
             this.cameras.main.flash(300, 22, 163, 74);
             this.tweens.add({
                 targets: boss,
-                scale: 1.15,
+                baseScale: full,
                 duration: 1500,
                 ease: 'Back.easeOut',
                 onComplete: () => boss.active && boss.engage(),
@@ -1564,7 +1585,7 @@ export class GameScene extends Phaser.Scene {
         const arena = this.voidArenas[idx];
         if (!arena) return;
         const kind = VOID_REGRETS[idx];
-        this.boss = new Boss(this, arena.x, arena.y - 20, kind);
+        this.boss = this.makeBoss(arena.x, arena.y - 20, kind);
         this.bossIntroShown = false;
         this.lighting.follow(this.boss, this.boss.def.glowColor, 260, 1.0);
         this.setupBossColliders();
@@ -1664,7 +1685,7 @@ export class GameScene extends Phaser.Scene {
                         bus.emit('boss-hp', null);
                     }
                     altar.destroy();
-                    this.boss = new Boss(this, altar.x, altar.y - 30, 'trentatre');
+                    this.boss = this.makeBoss(altar.x, altar.y - 30, 'trentatre');
                     this.boss.chase = true;
                     this.bossIntroShown = false;
                     this.lighting.follow(this.boss, this.boss.def.glowColor, 320, 1.1);
@@ -1832,7 +1853,7 @@ export class GameScene extends Phaser.Scene {
             this.startDialogue('doomsday-pedro', () => {
                 const px = Phaser.Math.Clamp(this.player.x + 220, 80, this.level.widthPx - 80);
                 const at = this.openSpotNear(px, this.player.y - 120);
-                this.boss = new Boss(this, at.x, at.y, 'pedro');
+                this.boss = this.makeBoss(at.x, at.y, 'pedro');
                 this.boss.frenzy = true;
                 this.lighting.follow(this.boss, this.boss.def.glowColor, 320, 1.1);
                 this.setupBossColliders();
@@ -2767,7 +2788,7 @@ export class GameScene extends Phaser.Scene {
         if (Math.abs(this.player.x - this.smelaArena.x) > 360 || Math.abs(this.player.y - this.smelaArena.y) > 380) return;
         const a = this.smelaArena;
         this.smelaArena = null;
-        this.boss = new Boss(this, a.x, a.y, 'smela');
+        this.boss = this.makeBoss(a.x, a.y, 'smela');
         this.bossIntroShown = false;
         this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
         this.setupBossColliders();
@@ -3030,7 +3051,7 @@ export class GameScene extends Phaser.Scene {
         this.startDialogue('dei-patto', () => {
             const x = this.player.x + 280;
             const y = Math.max(120, this.player.y - 160);
-            this.boss = new Boss(this, x, y, 'dei');
+            this.boss = this.makeBoss(x, y, 'dei');
             this.boss.invulnerable = true;
             this.boss.frenzy = true;
             this.lighting.follow(this.boss, 0xffffff, 340, 1.2);
@@ -3157,7 +3178,7 @@ export class GameScene extends Phaser.Scene {
             this.startDialogue('doomsday-respinto', () => {
                 if (replaced) {
                     const hpOverride = replaced === 'ombra' && !state.hasFlag('tommasorveglianza') ? 34 : undefined;
-                    this.boss = new Boss(this, rx, ry, replaced, hpOverride);
+                    this.boss = this.makeBoss(rx, ry, replaced, hpOverride);
                     if (replaced === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;
                     if (replaced === 'limite' && this.indiziRaccolti() >= 3) this.boss.invulnerable = false;
                     if (replaced === 'ticummi' && state.hasFlag('tommasorveglianza')) this.boss.summonOverride = 'eco';
@@ -3331,7 +3352,7 @@ export class GameScene extends Phaser.Scene {
                                 } else {
                                     this.startDialogue('dei-rifiuto', () => {
                                         this.finalGodsFight = true;
-                                        this.boss = new Boss(this, x, y - 40, 'dei');
+                                        this.boss = this.makeBoss(x, y - 40, 'dei');
                                         this.lighting.follow(this.boss, 0xffffff, 320, 1.1);
                                         this.setupBossColliders();
                                         this.boss.engage();

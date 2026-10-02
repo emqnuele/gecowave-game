@@ -22,7 +22,8 @@ export class LightingManager {
         this.scene.lights.enable();
         const rim = Phaser.Display.Color.IntegerToColor(biome.rim);
         // ambiente scurissimo ma tinto dal bioma: le sagome si leggono, i dettagli no
-        const k = biome.ambient * 2.2;
+        // nelle regioni si gioca anche sotto terra: un filo di luce in più, il buio resta buio
+        const k = biome.ambient * 3.4;
         const ambient = Phaser.Display.Color.GetColor(
             Math.round(6 + rim.red * k),
             Math.round(6 + rim.green * k),
@@ -32,7 +33,7 @@ export class LightingManager {
     }
 
     playerLight(target: Phaser.GameObjects.Sprite): Phaser.GameObjects.Light {
-        const light = this.scene.lights.addLight(target.x, target.y, 340, 0xaaffdd, 1.25);
+        const light = this.scene.lights.addLight(target.x, target.y, 400, 0xaaffdd, 1.35);
         this.tracked.push({ light, target });
         return light;
     }
