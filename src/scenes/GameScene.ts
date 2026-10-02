@@ -195,6 +195,7 @@ export class GameScene extends Phaser.Scene {
     private chaseStarts: number[] = [];
     private chaseEnds: number[] = [];
     private chaseZoneIdx = -1;
+    private chaseStartedAt = 0;
     private chaseDone: boolean[] = [];
     // ivan maggini nello scontro con guggu
     private ivanSprite: Phaser.GameObjects.Sprite | null = null;
@@ -2633,11 +2634,28 @@ export class GameScene extends Phaser.Scene {
             this.chaseZoneIdx = idx;
             const lines = GameScene.CHASE_LINES[Math.min(idx, GameScene.CHASE_LINES.length - 1)];
             const spawn = () => {
-                const chef = this.add.sprite(this.player.x - 420, this.player.y - 60, 'boss-lochef')
-                    .setDepth(5)
-                    .setPipeline('Light2D');
+                // arriva da dietro: dal lato opposto a dove ti porta la strada
+                const goal = this.currentObjective();
+                const next = goal && this.guide ? this.guide.nextPoint(this.player.x, this.player.y, goal.x, goal.y) : null;
+                const ahead = next ? Math.sign(next.x - this.player.x) || 1 : 1;
+                const cam = this.cameras.main.worldView;
+                const sx = ahead > 0 ? cam.x - 60 : cam.right + 60;
+                // fuori dalle luci: lochef si vede sempre, è lui la luce cattiva
+                const chef = this.add.sprite(sx, this.player.y - 70, 'boss-lochef').setDepth(7);
                 this.chaseSprite = chef;
-                this.lighting.follow(chef, 0xf87171, 260, 1.0);
+                this.chaseStartedAt = this.time.now;
+                this.lighting.follow(chef, 0xf87171, 300, 1.2);
+                this.add.particles(0, 0, 'p-dot', {
+                    follow: chef,
+                    speed: { min: 10, max: 40 },
+                    scale: { start: 0.6, end: 0 },
+                    alpha: { start: 0.5, end: 0 },
+                    tint: 0xf87171,
+                    lifespan: 600,
+                    frequency: 60,
+                }).setDepth(6);
+                this.cameras.main.flash(160, 120, 10, 10);
+                this.shake(260, 0.006);
                 music.playCustom("assets/music/lochef85's OST 2.mp3");
                 bus.emit('toast', { text: TOASTS.inseguimento });
             };
@@ -2654,9 +2672,9 @@ export class GameScene extends Phaser.Scene {
         const chef = this.chaseSprite;
         if (!chef?.active) return;
 
-        // fine corsa: lochef ti perde di vista. per ora.
+        // fine corsa: lochef ti perde di vista. per ora. (o si stufa: nemmeno lui corre per sempre)
         const endP = this.chaseEnds[this.chaseZoneIdx] ?? Infinity;
-        if (this.progressAt(this.player.x, this.player.y) >= endP) {
+        if (this.progressAt(this.player.x, this.player.y) >= endP || this.time.now - this.chaseStartedAt > 50000) {
             this.chaseDone[this.chaseZoneIdx] = true;
             this.chaseSprite = null;
             this.tweens.add({
@@ -2678,11 +2696,11 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
-        // fluttua verso di te, attraversa i muri: è casa sua
-        const speed = 235;
+        // fluttua verso di te, attraversa i muri: è casa sua. a elastico: lontano corre, vicino ti lascia un respiro
         const dx = this.player.x - chef.x;
         const dy = this.player.y - 30 - chef.y;
         const dist = Math.hypot(dx, dy) || 1;
+        const speed = dist > 620 ? 560 : dist > 320 ? 330 : 245;
         chef.x += (dx / dist) * speed * (delta / 1000);
         chef.y += (dy / dist) * speed * (delta / 1000);
         chef.setFlipX(dx < 0);
