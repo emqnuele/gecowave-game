@@ -115,7 +115,7 @@ async function boot(): Promise<void> {
     });
     hud.root.append(phone.hintElement);
 
-    bus.on('ending', ({ id }) => {
+    bus.on('ending', ({ id, score, rank }) => {
         inGame = false;
         state.setFlag(`finale-${id}`);
         checkAchievements();
@@ -137,7 +137,7 @@ async function boot(): Promise<void> {
             : id === 'dei' ? 'ORA IL GECOREALM È TUO'
             : id === 'pedro' ? 'GLI DEI TI HANNO RAGGIUNTO'
             : 'IL REALM CONTINUA. TU NO.';
-        screens.endingSequence(cards, { outcome: lose ? 'lose' : 'win', title }, () => {
+        screens.endingSequence(cards, { outcome: lose ? 'lose' : 'win', title, score, rank }, () => {
             if (lose) {
                 // hai perso: il salvataggio viene cancellato, si riparte da zero
                 state.reset();
@@ -145,6 +145,8 @@ async function boot(): Promise<void> {
                 state.save.endingSeen = id;
                 // ng+: si riparte dall'inizio con tutte le wave, ma boss e agguati tornano
                 state.save.levelId = FIRST_LEVEL;
+                // il ng+ è un'altra partita: il punteggio riparte da zero
+                state.save.runScores = {};
                 state.save.checkpointId = null;
                 state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-') && !f.startsWith('agguato-'));
                 state.persist();

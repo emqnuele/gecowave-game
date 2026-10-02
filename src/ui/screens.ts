@@ -1,6 +1,8 @@
 import { ZONE_CSS } from '../config';
 import { ACHIEVEMENTS } from '../content/achievements';
 import { buildTrophyCabinet } from './trophies';
+import { loadBoard } from '../engine/score';
+import { assistToggle } from './assist';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { ITEMS } from '../content/items';
 import { ABILITY_CARDS, CREDITS, DEATH_PUNCHLINES } from '../content/story';
@@ -65,7 +67,7 @@ export class Screens {
         });
         bus.on('toast', ({ text }) => this.toast(text));
         bus.on('wavesung', ({ sender, text }) => this.wavesung(sender, text));
-        bus.on('player-died', ({ lost }) => this.showDeath(lost));
+        bus.on('player-died', ({ lost, score }) => this.showDeath(lost, score));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('charm-found', ({ id }) => this.charmCard(id));
         bus.on('achievement', ({ id }) => this.trophy(id));
@@ -193,38 +195,6 @@ export class Screens {
         this.onEsc(goBack);
     }
 
-    /** la freccia guida: si vede ovunque si scelga come giocare, e dice cosa costa */
-    private assistRow(): HTMLElement {
-        const row = el('div', 'settings-row glass-chip assist-row');
-        const words = el('div', 'assist-words');
-        const name = el('span', 'name');
-        name.textContent = 'freccia guida (modalità assistita)';
-        const note = el('span', 'assist-note');
-        note.textContent = 'una freccia ti indica il prossimo varco. comoda, ma finché è accesa i trofei non si sbloccano e i record restano segnati come assistiti.';
-        words.append(name, note);
-        const t = el('button', `toggle sticker ${state.settings.guide ? 'on' : ''}`);
-        t.setAttribute('aria-pressed', String(state.settings.guide));
-        const paint = () => {
-            t.classList.toggle('on', state.settings.guide);
-            t.textContent = state.settings.guide ? 'accesa' : 'spenta';
-            t.setAttribute('aria-pressed', String(state.settings.guide));
-        };
-        paint();
-        t.addEventListener('click', () => {
-            state.settings.guide = !state.settings.guide;
-            // la partita resta segnata: i record fatti con la freccia lo dicono
-            if (state.settings.guide && state.hasSave) {
-                state.save.assisted = true;
-                state.persist();
-            }
-            state.persistSettings();
-            paint();
-            sfx.ui();
-        });
-        row.append(words, t);
-        return row;
-    }
-
     /* ---------- viaggio tra i capitoli ---------- */
 
     private showChapters(back: () => void): void {
@@ -344,7 +314,7 @@ export class Screens {
         });
         shake.append(toggle);
         s.append(shake);
-        s.append(this.assistRow());
+        s.append(assistToggle({ rowClass: 'settings-row glass-chip' }));
 
         const danger = el('div', 'settings-row glass-chip glass-acid-red');
         const dangerName = el('span', 'name');
@@ -394,7 +364,7 @@ export class Screens {
 
     /* ---------- morte ---------- */
 
-    private showDeath(lost: number): void {
+    private showDeath(lost: number, score: number | null): void {
         const s = this.openOverlay();
         const punch = DEATH_PUNCHLINES[Math.floor(Math.random() * DEATH_PUNCHLINES.length)];
         s.append(el('h1', 'death-title', 'SEI MORTO'));
@@ -406,6 +376,7 @@ export class Screens {
             loss.textContent = `hai lasciato ${lost} barre a terra — torna a riprendertele`;
             s.append(loss);
         }
+        s.append(this.scoreBadge(score, 'punteggio della partita'));
         const stack = el('div', 'menu-stack');
         stack.append(this.btn('riprova dal microfono', -1.3, () => {
             this.closeOverlay();
@@ -416,6 +387,20 @@ export class Screens {
             this.controller.quitToMenu();
         }));
         s.append(stack);
+    }
+
+    /** il punteggio della partita, con il record della classifica locale accanto */
+    private scoreBadge(score: number | null, label: string, rank = 0): HTMLElement {
+        const box = el('div', `run-score${score === null ? ' off' : ''}`);
+        if (score === null) {
+            box.append(el('span', 'rs-label', 'partita assistita'), el('b', 'rs-value', 'niente punteggio'));
+            return box;
+        }
+        const best = loadBoard()[0]?.score ?? 0;
+        box.append(el('span', 'rs-label', label), el('b', 'rs-value', score.toLocaleString('it-IT')));
+        const note = rank === 1 ? 'nuovo record della classifica!' : rank > 1 ? `${rank}° nella classifica` : best > 0 ? `record: ${best.toLocaleString('it-IT')}` : '';
+        if (note) box.append(el('span', 'rs-note font-marker', note));
+        return box;
     }
 
     /* ---------- scelte ---------- */
@@ -521,7 +506,7 @@ export class Screens {
             row.append(el('span', '', k), el('b', '', v));
             card.append(row);
         }
-        card.append(el('div', 'cs-score font-marker', `${p.score.toLocaleString('it-IT')} punti${p.best ? ' — record!' : ''}`));
+        card.append(el('div', 'cs-score font-marker', p.assisted ? 'partita assistita: niente punteggio' : `${p.score.toLocaleString('it-IT')} punti${p.best ? ' — record!' : ''}`));
         ui().append(card);
         setTimeout(() => card.classList.add('fade-out'), 5600);
         setTimeout(() => card.remove(), 6100);
@@ -682,11 +667,11 @@ export class Screens {
 
     /* ---------- finale: storia + titoli di coda ---------- */
 
-    endingSequence(cards: { text: string; punch?: string }[], opts: { outcome: 'win' | 'lose'; title: string }, onDone: () => void): void {
+    endingSequence(cards: { text: string; punch?: string }[], opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number }, onDone: () => void): void {
         this.storySequence(cards, () => this.showCredits(opts, onDone));
     }
 
-    private showCredits(opts: { outcome: 'win' | 'lose'; title: string }, onDone: () => void): void {
+    private showCredits(opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number }, onDone: () => void): void {
         const win = opts.outcome === 'win';
         const s = this.openOverlay(`screen opaque credits-screen ${win ? 'credits-win' : 'credits-lose'}`);
 
@@ -713,7 +698,9 @@ export class Screens {
             }
         }
         roll.append(inner);
-        s.append(end, sub, roll);
+        s.append(end, sub);
+        if (opts.score !== undefined) s.append(this.scoreBadge(opts.score, 'punteggio finale', opts.rank ?? 0));
+        s.append(roll);
 
         let fw: ReturnType<typeof setInterval> | null = null;
         const finish = () => {
@@ -1016,7 +1003,7 @@ export class Screens {
         
         choiceContainer.append(standardCard, doomsdayCard);
         step3.append(choiceContainer);
-        step3.append(this.assistRow());
+        step3.append(assistToggle({ rowClass: 'settings-row glass-chip', newGame: true }));
 
         const actions3 = el('div', 'forge-actions');
         const backToStep2Btn = this.btn('← attributi', 0, () => {

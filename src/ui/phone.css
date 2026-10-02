@@ -1170,3 +1170,7 @@ button.phone-row {
 .phone-view.app.still {
   animation: none;
 }
+
+.phone .assist-row {
+  width: 100%;
+}

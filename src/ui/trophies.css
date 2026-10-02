@@ -439,3 +439,7 @@
   .cab-ring .fill { transition: none; }
   .medal .disc { transition: none; }
 }
+
+.rec.board.first .rec-name {
+  color: var(--gold);
+}

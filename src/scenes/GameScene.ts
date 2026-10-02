@@ -30,6 +30,7 @@ import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
 import { REGION_COUNT } from '../content/achievements';
+import { chapterParts, ENDING_BONUS, pushBoard, runScore, sumParts } from '../engine/score';
 import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
@@ -2572,19 +2573,14 @@ export class GameScene extends Phaser.Scene {
         const id = this.def.id;
         const secrets = state.save.collectedLore.filter((k) => k.startsWith(`item-${id}-`) || k.startsWith(`cuore-${id}-`) || k === `maschera-${id}` || k.startsWith(`${id}-`)).length;
         const minutes = timeMs / 60000;
-        const parts: [string, number][] = [
-            ['esplorazione', Math.round(explored * 3000)],
-            ['segreti', secrets * 150],
-            ['nemici', kills * 10],
-            ['tempo', Math.max(0, Math.round(3000 - minutes * 120))],
-            ['boss senza un graffio', run.noHitBosses * 600],
-            ['morti', -deaths * 250],
-        ];
-        const score = Math.max(0, parts.reduce((s, [, v]) => s + v, 0));
+        const parts = chapterParts({ explored, secrets, kills, noHitBosses: run.noHitBosses, deaths, minutes });
+        const score = sumParts(parts);
+        // la partita assistita non fa punteggio: né record né somma della partita
         const assisted = achievementsBlocked();
         const prev = state.save.scores[id];
-        const best = !prev || score > prev.score;
+        const best = !assisted && (!prev || score > prev.score);
         if (best) state.save.scores[id] = { score, timeMs, deaths, kills, explored, secrets, assisted };
+        if (!assisted) state.save.runScores[id] = Math.max(state.save.runScores[id] ?? 0, score);
         if (id === 'perduta' && minutes < 6) unlockAchievement('speedrun');
         state.save.chapterRun = null;
         state.persist();
@@ -2594,6 +2590,27 @@ export class GameScene extends Phaser.Scene {
             id, score, best, assisted,
             lines: [[`tempo ${mm}:${String(ss).padStart(2, '0')}`, ''], ...parts.filter(([, v]) => v !== 0).map(([k, v]) => [k, (v > 0 ? '+' : '') + v] as [string, string])],
         });
+    }
+
+    /** il capitolo in corso, stimato come se finisse adesso (senza il bonus del tempo) */
+    private liveChapterScore(): number {
+        const run = state.save.chapterRun;
+        if (!run || run.id !== this.def.id) return 0;
+        const id = this.def.id;
+        const explored = this.layout ? (state.save.explored[id]?.length ?? 0) / this.layout.rooms.length : 0;
+        const secrets = state.save.collectedLore.filter((k) => k.startsWith(`item-${id}-`) || k.startsWith(`cuore-${id}-`) || k === `maschera-${id}` || k.startsWith(`${id}-`)).length;
+        return sumParts(chapterParts({
+            explored, secrets, kills: state.save.record.kills - run.kills0, noHitBosses: run.noHitBosses, deaths: state.save.record.deaths - run.deaths0,
+        }));
+    }
+
+    /** la partita finisce: il finale porta il suo bonus e il punteggio va in classifica */
+    private endGame(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto'): void {
+        this.scene.pause();
+        const base = runScore(this.liveChapterScore());
+        const score = base === null ? null : base + (ENDING_BONUS[id] ?? 0);
+        const rank = score === null ? 0 : pushBoard({ name: state.save.playerName, score, ending: id, at: Date.now() });
+        bus.emit('ending', { id, score, rank });
     }
 
     /** cosa serve adesso per andare avanti, in ordine di urgenza */
@@ -3972,8 +3989,7 @@ export class GameScene extends Phaser.Scene {
             }
             case 'dei':
                 this.time.delayedCall(800, () => {
-                    this.scene.pause();
-                    bus.emit('ending', { id: 'dei' });
+                    this.endGame('dei');
                 });
                 break;
         }
@@ -4017,11 +4033,9 @@ export class GameScene extends Phaser.Scene {
                 options,
                 onPick: (i) => {
                     if (i === 0) {
-                        this.scene.pause();
-                        bus.emit('ending', { id: 'consegna' });
+                        this.endGame('consegna');
                     } else if (i === 2) {
-                        this.scene.pause();
-                        bus.emit('ending', { id: 'riscatto' });
+                        this.endGame('riscatto');
                     } else {
                         this.startDialogue('dei-rifiuto', () => {
                             this.finalGodsFight = true;
@@ -4096,12 +4110,12 @@ export class GameScene extends Phaser.Scene {
             this.scene.pause();
             if (this.pattoActive) {
                 // il patto finisce come doveva finire: morte definitiva
-                bus.emit('ending', { id: 'pedro' });
+                this.endGame('pedro');
             } else if (this.finalGodsFight || this.collapsePedro) {
                 // hai sfidato gli dei (o il collasso ti ha raggiunto): game over
-                bus.emit('ending', { id: 'sconfitta' });
+                this.endGame('sconfitta');
             } else {
-                bus.emit('player-died', { lost });
+                bus.emit('player-died', { lost, score: runScore(this.liveChapterScore()) });
             }
         });
     }

@@ -12,6 +12,7 @@ import { state } from '../engine/state';
 import { regionView } from '../engine/regionView';
 import { realmClock } from '../engine/Atmosphere';
 import { buildTrophyCabinet } from './trophies';
+import { assistToggle } from './assist';
 import { QUESTS } from '../content/quests';
 import { TOTAL_MASCHERE } from '../scenes/GameScene';
 import type { ZoneColor } from '../types';
@@ -1015,25 +1016,7 @@ export class Phone {
         shake.append(toggle);
         root.append(shake);
 
-        const guide = el('div', 'phone-row glass-chip');
-        guide.append(text('span', 'name', 'freccia guida (modalità assistita)'));
-        const gt = el('button', `toggle sticker ${state.settings.guide ? 'on' : ''}`);
-        gt.textContent = state.settings.guide ? 'accesa' : 'spenta';
-        gt.addEventListener('click', () => {
-            state.settings.guide = !state.settings.guide;
-            // la partita resta segnata: i record fatti con la freccia lo dicono
-            if (state.settings.guide) {
-                state.save.assisted = true;
-                state.persist();
-            }
-            state.persistSettings();
-            gt.classList.toggle('on', state.settings.guide);
-            gt.textContent = state.settings.guide ? 'accesa' : 'spenta';
-            sfx.ui();
-        });
-        guide.append(gt);
-        root.append(guide);
-        root.append(text('div', 'phone-note', 'una freccia ti indica il prossimo varco. finché è accesa i trofei non si sbloccano e i record restano segnati come assistiti.'));
+        root.append(assistToggle({ rowClass: 'phone-row glass-chip' }));
 
         root.append(text('div', 'phone-section', 'comandi del telefono'));
         for (const [k, v] of [['apri e chiudi', 'TAB / P'], ['indietro', 'ESC'], ['mangia al volo', 'C']]) {

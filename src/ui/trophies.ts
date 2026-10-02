@@ -3,6 +3,7 @@ import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { achievementsBlocked } from '../engine/achievements';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
+import { loadBoard } from '../engine/score';
 import { el } from './dom';
 import './trophies.css';
 
@@ -17,6 +18,10 @@ function node(tag: keyof HTMLElementTagNameMap, cls: string, value?: string): HT
     if (value !== undefined) n.textContent = value;
     return n;
 }
+
+const ENDING_NAMES: Record<string, string> = {
+    riscatto: 'finale vero', consegna: 'wave consegnate', dei: 'più forte degli dei', pedro: 'il patto', sconfitta: 'sconfitta',
+};
 
 const RING_R = 30;
 const RING_C = 2 * Math.PI * RING_R;
@@ -58,9 +63,7 @@ export function buildTrophyCabinet(root: HTMLElement, opts: { wide?: boolean } =
     cab.append(head);
 
     if (achievementsBlocked()) {
-        cab.append(node('div', 'cab-warn', 'la freccia guida è accesa: in modalità assistita i trofei restano bloccati. si spegne dalle impostazioni.'));
-    } else if (state.save.assisted) {
-        cab.append(node('div', 'cab-warn soft', 'questa partita ha usato la modalità assistita: i record sono segnati così.'));
+        cab.append(node('div', 'cab-warn', 'partita assistita: la freccia guida è stata accesa, quindi trofei e punteggio restano spenti fino alla fine. quelli già presi restano tuoi.'));
     }
 
     const tabs = node('div', 'cab-tabs');
@@ -165,5 +168,22 @@ export function buildTrophyCabinet(root: HTMLElement, opts: { wide?: boolean } =
         recs.append(node('div', 'medals-empty', 'nessun capitolo finito. i record si scrivono all\'uscita.'));
     }
     cab.append(recs);
+
+    // la classifica delle partite finite: sopravvive alle partite nuove
+    const board = loadBoard();
+    const lb = node('div', 'records');
+    lb.append(node('div', 'records-title', 'classifica delle partite'));
+    if (!board.length) lb.append(node('div', 'medals-empty', 'ancora nessuna partita finita. il primo nome qui sopra sarà il tuo.'));
+    board.forEach((e, i) => {
+        const r = node('div', `rec board${i === 0 ? ' first' : ''}`);
+        const d = new Date(e.at);
+        r.append(
+            node('span', 'rec-name', `${i + 1}. ${e.name}`),
+            node('span', 'rec-meta', `${ENDING_NAMES[e.ending] ?? e.ending}  ${d.getDate()}/${d.getMonth() + 1}`),
+            node('b', 'rec-score', e.score.toLocaleString('it-IT')),
+        );
+        lb.append(r);
+    });
+    cab.append(lb);
     root.append(cab);
 }

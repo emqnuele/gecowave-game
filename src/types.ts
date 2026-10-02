@@ -144,6 +144,8 @@ export interface SaveData {
     assisted: boolean;
     /** record per capitolo */
     scores: Record<string, ChapterScore>;
+    /** punteggi dei capitoli finiti in questa partita: si sommano nel punteggio finale */
+    runScores: Record<string, number>;
     /** il capitolo in corso: da quando, con quante morti e uccisioni all'ingresso */
     chapterRun: { id: string; startMs: number; deaths0: number; kills0: number; noHitBosses: number } | null;
 }

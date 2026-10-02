@@ -100,6 +100,9 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 **Decisione**: dentro lo schermo niente `backdrop-filter` (decine di righe sfocate che scorrono erano la causa del lag): superfici piene, righe dritte. Il guscio è un telefono vero: isola, status bar con l'ora del realm (`realmClock`), la zona come operatore, il flow come batteria, il dipinto della zona come sfondo della home, widget dell'obiettivo, griglia a 4 colonne e dock, app che si aprono zoomando dall'icona toccata. La bacheca dei trofei è un modulo condiviso (`src/ui/trophies.ts`) usato dal telefono e dalla schermata **trofei** del menu principale: anello di progresso, filtro tutti/presi/mancanti, medaglie, scheda che sale dal basso, record per capitolo. La **freccia guida** si accende e spegne dalle impostazioni del menu, della pausa, del telefono e già nella creazione della partita, sempre con la spiegazione di cosa costa.
 **Vincolo trovato**: la classe globale `.label` di `style.css` mette tutto in maiuscolo: nei componenti nuovi usare nomi di classe specifici.
 
+### ADR-016 — punteggio di partita e assistita per sempre
+**Decisione**: accendere la freccia guida durante una partita la rende assistita fino alla fine (`SaveData.assisted`): `achievementsBlocked()` guarda anche il salvataggio, quindi spegnerla non riaccende trofei e punteggio. L'interruttore (`src/ui/assist.ts`, unico per menu, pausa, telefono e nuova partita) chiede conferma la prima volta. Il **punteggio della partita** (`src/engine/score.ts`) somma i capitoli finiti (`SaveData.runScores`, il migliore per capitolo nella partita), la stima del capitolo in corso (stessa formula senza bonus del tempo), 250 per trofeo e il bonus del finale (`ENDING_BONUS`). Si vede alla morte e nei titoli di coda; a fine partita va nella **classifica locale** (`localStorage` `gecowave-classifica`, prime dieci, sopravvive alle partite nuove), mostrata nella bacheca. Nel ng+ il punteggio riparte da zero.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -127,6 +130,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
 - Lastre che crollano sopra i pozzi e allagamenti periodici (tossici in rio, tecnokill, trenbolone, stabilimento), ADR-010.
+- Punteggio di partita alla morte e nei titoli di coda, classifica locale, partita assistita per sempre (ADR-016). HUD: le wave non finiscono più sotto la chip del telefono.
 - UI: telefono ridisegnato, bacheca trofei nel telefono e nel menu, freccia guida visibile ovunque (ADR-015).
 - Nemici: tratti scudo, soffitto, kamikaze (ADR-014).
 - Fase 5: note ambientali, quaderno di pedro, pensiero sepolto, scelte su notino e lochef, ospiti della piazza, finali estesi (ADR-013).

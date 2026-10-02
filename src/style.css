@@ -372,8 +372,12 @@ body {
 .hud-waves {
   position: absolute;
   bottom: 18px;
-  right: 18px;
+  /* a sinistra della chip del telefono, che sta nell'angolo */
+  right: 112px;
+  max-width: calc(100vw - 112px - 200px);
   display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -2051,4 +2055,46 @@ input[type='range']::-webkit-slider-thumb {
   font-size: 10px;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- punteggio della partita ---------- */
+
+.run-score {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 26px 12px;
+  border-radius: 16px;
+  background: #0d0c0a;
+  border: 1.5px dashed rgba(223, 177, 91, 0.45);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.85);
+  transform: rotate(-1deg);
+}
+
+.run-score .rs-label {
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.run-score .rs-value {
+  font-family: var(--font-crisis);
+  font-size: 30px;
+  line-height: 1.1;
+  color: #dfb15b;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-score .rs-note {
+  font-size: 13px;
+  color: #fff;
+}
+
+.run-score.off {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.run-score.off .rs-value {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
 }

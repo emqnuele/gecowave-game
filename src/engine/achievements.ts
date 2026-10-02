@@ -5,7 +5,8 @@ import { state } from './state';
 /* i trofei si prendono solo giocando senza aiuti: con la freccia accesa niente */
 
 export function achievementsBlocked(): boolean {
-    return state.settings.guide;
+    // una partita che ha acceso la freccia resta assistita fino in fondo
+    return state.settings.guide || state.save.assisted;
 }
 
 export function unlockAchievement(id: string): void {

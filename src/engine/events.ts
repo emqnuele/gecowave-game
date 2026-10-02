@@ -9,13 +9,13 @@ export interface GameEvents {
     'zone-changed': { title: string; accentWord: string; color: ZoneColor; punchline: string; showCard: boolean };
     'abilities-changed': { abilities: AbilityId[] };
     'dialogue-start': { lines: DialogueLine[]; onEnd?: () => void };
-    'player-died': { lost: number };
+    'player-died': { lost: number; score: number | null };
     'toast': { text: string };
     'wavesung': { sender: string; text: string };
     'ability-unlocked': { ability: AbilityId };
     'boss-hp': { hp: number; maxHp: number; name: string } | null;
     'choice-show': { title: string; options: { label: string; danger?: boolean }[]; onPick: (index: number) => void };
-    'ending': { id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto' };
+    'ending': { id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto'; score?: number | null; rank?: number };
     'doomsday-changed': { value: number; active: boolean };
     'request-pause': {};
     'inventory-changed': {};

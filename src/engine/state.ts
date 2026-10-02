@@ -54,6 +54,7 @@ const defaultSave = (): SaveData => ({
     achievements: [],
     assisted: false,
     scores: {},
+    runScores: {},
     chapterRun: null,
 });
 
