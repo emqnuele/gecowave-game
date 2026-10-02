@@ -453,10 +453,12 @@ export class GameScene extends Phaser.Scene {
     private spawnEntities(): void {
         for (const { spec, x, y } of this.level.entities) {
             switch (spec.type) {
-                case 'enemy':
+                case 'enemy': {
                     // una parte dei nemici dorme: si passa piano, o si sveglia tutto
-                    this.spawnEnemy(spec.kind, x, y, { sleeping: hashString(`${this.def.id}:${x}:${y}`) % 100 < 35 });
+                    const h = hashString(`${this.def.id}:${x}:${y}`);
+                    this.spawnEnemy(spec.kind, x, y, { sleeping: h % 100 < 35, elite: this.isEliteSpot(x, y, h) });
                     break;
+                }
                 case 'npc':
                     this.spawnNpc(spec.id, x, y);
                     break;
@@ -582,8 +584,18 @@ export class GameScene extends Phaser.Scene {
         return boss;
     }
 
-    private spawnEnemy(kind: EnemyKind, x: number, y: number, opts: { sleeping?: boolean; hunting?: boolean } = {}): Enemy {
-        const e = new Enemy(this, x, y, kind, this.nav, { sleeping: opts.sleeping });
+    /** poche élite per regione: avanti nel percorso, nelle stanze grandi, mai vicino all'inizio */
+    private isEliteSpot(x: number, y: number, h: number): boolean {
+        if (!this.layout) return false;
+        const room = this.roomAt(x, y);
+        if (!room || !['hall', 'cave', 'gauntlet', 'shaft'].includes(room.kind)) return false;
+        const p = room.pathIndex >= 0 ? room.pathIndex : this.layout.rooms[room.anchor].pathIndex;
+        if (p < this.layout.pathLength * 0.3) return false;
+        return h % 1000 < 22;
+    }
+
+    private spawnEnemy(kind: EnemyKind, x: number, y: number, opts: { sleeping?: boolean; hunting?: boolean; elite?: boolean } = {}): Enemy {
+        const e = new Enemy(this, x, y, kind, this.nav, { sleeping: opts.sleeping && !opts.elite, elite: opts.elite });
         if (opts.hunting) e.hunt();
         e.setDepth(4);
         this.enemies.add(e);

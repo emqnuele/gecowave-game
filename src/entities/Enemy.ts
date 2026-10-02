@@ -30,6 +30,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     mode: EnemyMode = 'patrol';
     /** lontano dal player: niente logica né fisica, le regioni ne contano centinaia */
     dormant = false;
+    /** élite: più grosso, più duro, più insistente, e paga meglio */
+    readonly elite: boolean;
+    private aura: Phaser.GameObjects.Image | null = null;
+    private speedMult = 1;
 
     private nav: NavGraph | null;
     private homeX: number;
@@ -55,9 +59,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private flyStuckY = 0;
     private mark: Phaser.GameObjects.Text | null = null;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean } = {}) {
+    constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean; elite?: boolean } = {}) {
         super(scene, x, y, ENEMIES[kind].texture);
-        this.arch = ENEMIES[kind];
+        this.elite = !!opts.elite;
+        const base = ENEMIES[kind];
+        // l'élite è lo stesso nemico, solo peggio: tutto si legge dall'archetipo
+        this.arch = this.elite
+            ? { ...base, hp: Math.ceil(base.hp * 3.5), aggroRange: base.aggroRange * 1.4, barre: [base.barre[0] * 6, base.barre[1] * 6], fireRateMs: base.fireRateMs ? base.fireRateMs * 0.7 : undefined }
+            : base;
+        this.speedMult = this.elite ? 1.2 : 1;
         this.hp = this.arch.hp;
         this.nav = nav;
         this.homeX = x;
@@ -70,6 +80,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         const airborne = this.arch.behavior === 'flyer' || this.arch.behavior === 'turret';
         body.setAllowGravity(!airborne);
         body.setSize(this.width * 0.8, this.height * 0.8);
+        if (this.elite) {
+            this.setScale(1.5);
+            this.aura = scene.add.image(x, y, 'p-dot').setTint(this.arch.glowColor).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.55).setScale(5).setDepth(3.9);
+            scene.tweens.add({ targets: this.aura, scale: 6.2, alpha: 0.3, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        }
         if (opts.sleeping && !airborne) this.setMode('sleep');
     }
 
@@ -80,6 +95,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (dormant) body.stop();
         body.enable = !dormant;
         this.mark?.setVisible(!dormant && this.mode === 'sleep');
+        this.aura?.setVisible(!dormant);
     }
 
     private get ground(): boolean {
@@ -130,6 +146,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         const dy = target.y - this.y;
         const dist = Math.hypot(dx, dy);
         this.mark?.setPosition(this.x, this.y - this.displayHeight / 2 - 12 + Math.sin(this.t / 300) * 2);
+        this.aura?.setPosition(this.x, this.y);
 
         if (now < this.stunnedUntil) {
             body.setVelocityX(body.velocity.x * 0.9);
@@ -162,7 +179,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
                 const relentless = RELENTLESS.has(this.arch.kind);
                 const lostFor = now - this.lastSeenAt;
                 const leash = Math.hypot(this.x - this.homeX, this.y - this.homeY);
-                if (!relentless && (lostFor > 4500 || leash > 1500)) {
+                if (!relentless && (lostFor > (this.elite ? 9000 : 4500) || leash > (this.elite ? 2600 : 1500))) {
                     this.setMode('return');
                     break;
                 }
@@ -259,7 +276,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
         const tb = target.body as Phaser.Physics.Arcade.Body | undefined;
         const ty = tb ? tb.bottom - 4 : target.y;
-        const speed = b === 'walker' ? Math.max(this.arch.speed, 110) : this.arch.speed;
+        const speed = (b === 'walker' ? Math.max(this.arch.speed, 110) : this.arch.speed) * this.speedMult;
         this.goTo(body, target.x, ty, now, speed);
     }
 
@@ -482,6 +499,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     destroy(fromScene?: boolean): void {
         this.mark?.destroy();
         this.mark = null;
+        this.aura?.destroy();
+        this.aura = null;
         super.destroy(fromScene);
     }
 
