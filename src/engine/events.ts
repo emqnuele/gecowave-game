@@ -22,6 +22,7 @@ export interface GameEvents {
     'messages-changed': {};
     'charm-found': { id: string };
     'achievement': { id: string };
+    'travel-show': { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void };
     'chapter-score': { id: string; score: number; best: boolean; assisted: boolean; lines: [string, string][] };
 }
 

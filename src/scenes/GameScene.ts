@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { COMBAT, TILE, ZONE_HEX } from '../config';
 import { DIALOGUES, NOTINO_FUGHE, TOASTS, TRABOCCHETTI, WAVESUNG } from '../content/story';
-import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
+import { LEVEL_ORDER, LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
+import { propArt } from '../engine/art/props';
 import { bus } from '../engine/events';
 import { biomeFor, type BiomeDef } from '../content/biomes';
 import { AmbienceManager } from '../engine/AmbienceManager';
@@ -171,6 +172,7 @@ export class GameScene extends Phaser.Scene {
     private arenaBars!: Phaser.Physics.Arcade.StaticGroup;
     private arenaGfx: Phaser.GameObjects.Graphics | null = null;
     private arenaRoom: Room | null = null;
+    private busStops: { key: string; x: number; y: number }[] = [];
     private homing: { obj: Phaser.Physics.Arcade.Sprite; at: number; moving: boolean }[] = [];
     private bossIntroShown = false;
     private exitLockToastAt = 0;
@@ -263,6 +265,7 @@ export class GameScene extends Phaser.Scene {
         this.interactables = [];
         this.analisiGlyphs = [];
         this.homing = [];
+        this.busStops = [];
         this.npcAt.clear();
         this.lastRoom = -1;
         this.guide = this.layout ? new RegionGuide(this.layout) : null;
@@ -368,6 +371,7 @@ export class GameScene extends Phaser.Scene {
 
         this.spawnEntities();
         this.spawnCheckpoints();
+        this.spawnBusStops();
         this.folk = new FolkManager(this, this.nav, (lines) => this.startLines(lines));
         this.folk.populate({
             seed: this.def.id,
@@ -985,6 +989,71 @@ export class GameScene extends Phaser.Scene {
 
     private micKey(cpId: string): string {
         return `mic-${this.def.id}-${cpId}`;
+    }
+
+    /** accanto a ogni microfono una fermata del citelis: si scopre passando, da lì si viaggia */
+    private spawnBusStops(): void {
+        for (const cp of this.level.checkpoints) {
+            const art = propArt(this.biome, 'busstop', 0);
+            if (!this.textures.exists(art.id)) this.textures.addCanvas(art.id, art.canvas);
+            const sx = cp.x + 58;
+            const sy = cp.y + TILE / 2;
+            this.add.image(sx, sy + 1, art.id).setOrigin(0.5, 1).setDepth(3).setPipeline('Light2D');
+            this.lighting.static(sx, sy - 70, 0xfacc15, 150, 0.7);
+            const key = `${this.def.id}:${cp.id}`;
+            this.busStops.push({ key, x: sx, y: sy - 30 });
+            this.interactables.push({ x: sx, y: sy - 30, range: 56, onInteract: () => this.openTravel(key) });
+        }
+    }
+
+    private updateBusStops(): void {
+        for (const s of this.busStops) {
+            if (state.save.stops.includes(s.key)) continue;
+            if (Math.abs(this.player.x - s.x) < 140 && Math.abs(this.player.y - s.y) < 110) {
+                state.save.stops.push(s.key);
+                state.persist();
+                bus.emit('toast', { text: 'fermata del citelis scoperta. da qui si viaggia (E sul palo).' });
+            }
+        }
+    }
+
+    private openTravel(current: string): void {
+        if (this.exiting || this.boss?.engaged || this.chaseSprite) {
+            bus.emit('toast', { text: 'il citelis non si ferma con qualcuno che ti insegue.' });
+            return;
+        }
+        if (!state.save.stops.includes(current)) state.save.stops.push(current);
+        const order = [...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k))];
+        const stops = state.save.stops
+            .map((key) => {
+                const [levelId, cpId] = key.split(':');
+                return { key, levelId, cpId };
+            })
+            .filter((s) => LEVELS[s.levelId])
+            .sort((a, b) => order.indexOf(a.levelId) - order.indexOf(b.levelId) || Number(a.cpId.split('-')[1]) - Number(b.cpId.split('-')[1]))
+            .map((s, i, all) => {
+                const n = all.filter((o, j) => o.levelId === s.levelId && j <= i).length;
+                return { key: s.key, levelId: s.levelId, label: `${LEVELS[s.levelId].accentWord} · fermata ${n}` };
+            });
+        bus.emit('travel-show', { stops, current, onPick: (key) => this.travelTo(key) });
+    }
+
+    /** viaggio col citelis: si scende alla fermata scelta, accanto al suo microfono */
+    private travelTo(key: string): void {
+        const [levelId, cpId] = key.split(':');
+        if (!LEVELS[levelId]) return;
+        sfx.dash();
+        bus.emit('toast', { text: 'sali sul citelis. convalidare, prego.' });
+        this.exiting = true;
+        state.portalReturn = null;
+        state.save.levelId = levelId;
+        state.save.checkpointId = cpId;
+        state.persist();
+        sfx.stopPad();
+        this.cameras.main.fadeOut(450, 0, 0, 0);
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+            this.scene.restart({ levelId, checkpointId: cpId, showCard: levelId !== this.def.id } satisfies SceneData);
+        });
     }
 
     private spawnCheckpoints(): void {
@@ -1764,6 +1833,7 @@ export class GameScene extends Phaser.Scene {
         this.folk.update(time, delta, this.player, this.threats(), !!this.boss?.engaged);
         this.updateArenaLock(time);
         this.updateExplore();
+        this.updateBusStops();
         this.updateTrophies(time);
         const here = this.layout ? this.roomAt(this.player.x, this.player.y) : null;
         this.atmosphere.update(time, delta, this.layout ? !!here?.surface : !this.biome.indoor);
@@ -2242,6 +2312,7 @@ export class GameScene extends Phaser.Scene {
         regionView.markers = [
             ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y, kind: 'mic' as const })),
             ...this.level.exits.slice(0, 1).map((e) => ({ x: e.centerX, y: e.centerY, kind: 'exit' as const })),
+            ...this.busStops.map((s) => ({ x: s.x, y: s.y, kind: 'stop' as const })),
         ];
     }
 

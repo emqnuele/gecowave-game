@@ -68,6 +68,7 @@ export class Screens {
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('charm-found', ({ id }) => this.charmCard(id));
         bus.on('achievement', ({ id }) => this.trophy(id));
+        bus.on('travel-show', (p) => this.travelBoard(p));
         bus.on('chapter-score', (p) => this.chapterScore(p));
         bus.on('choice-show', ({ title, options, onPick }) => this.choice(title, options, onPick));
         bus.on('request-pause', () => this.showPause());
@@ -408,6 +409,37 @@ export class Screens {
         card.append(h1, p);
         ui().append(card);
         setTimeout(() => card.remove(), 3300);
+    }
+
+    /** il tabellone della fermata: tutte le fermate scoperte, capitolo per capitolo */
+    private travelBoard(p: { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void }): void {
+        this.controller.pause();
+        const s = this.openOverlay('screen');
+        s.append(el('h2', 'font-crisis', 'CITELIS'));
+        s.append(el('div', 'font-marker', '<span style="color:rgba(255,255,255,.7)">prossima partenza: adesso. quella dopo: sempre.</span>'));
+        const close = () => {
+            this.closeOverlay();
+            this.controller.resume();
+        };
+        const stack = el('div', 'menu-stack chapters-scroll');
+        let lastLevel = '';
+        p.stops.forEach((stop, i) => {
+            if (stop.levelId !== lastLevel) {
+                lastLevel = stop.levelId;
+                const lv = LEVELS[stop.levelId];
+                stack.append(el('div', 'chapters-secret-head font-marker', `${lv.title.toLowerCase()} ${lv.accentWord}`));
+            }
+            const here = stop.key === p.current;
+            const b = this.btn(here ? `● ${stop.label} (sei qui)` : stop.label, i % 2 ? 1 : -1, () => {
+                if (here) return;
+                close();
+                p.onPick(stop.key);
+            }, here ? 'glass-acid-yellow' : 'glass-acid-green');
+            stack.append(b);
+        });
+        s.append(stack);
+        s.append(this.btn('resto qui', 0, close));
+        this.onEsc(close);
     }
 
     /** trofeo sbloccato: medaglia dorata in alto a sinistra, non ferma il gioco */

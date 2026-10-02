@@ -129,6 +129,8 @@ export interface SaveData {
     radio: string | null;
     /** stanze visitate per regione: la mappa del telefono si rivela da qui */
     explored: Record<string, number[]>;
+    /** fermate del citelis scoperte: "capitolo:microfono" */
+    stops: string[];
     /** trofei sbloccati */
     achievements: string[];
     /** la modalità assistita è stata accesa almeno una volta in questa partita */

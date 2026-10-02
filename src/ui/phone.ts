@@ -682,6 +682,7 @@ export class Phone {
             const room = roomOf(m.x, m.y);
             if (!room || !explored.has(room.id)) continue;
             if (m.kind === 'mic') add('circle', { cx: m.x / T, cy: m.y / T, r: 3.5, fill: '#22d3ee', stroke: '#000', 'stroke-width': 1 });
+            if (m.kind === 'stop') add('rect', { x: m.x / T - 2, y: m.y / T - 5, width: 4, height: 7, fill: '#facc15', stroke: '#000', 'stroke-width': 0.8 });
             if (m.kind === 'exit') add('rect', { x: m.x / T - 3, y: m.y / T - 6, width: 6, height: 9, fill: '#facc15', stroke: '#000', 'stroke-width': 1 });
         }
         const goal = regionView.goal;
