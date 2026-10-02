@@ -7,9 +7,27 @@ import { materialCanvas } from './art/materials';
 
 /* il tilemap resta per le collisioni ma non si vede più: il terreno
    si ridisegna come contorno levigato e sporcato a mano, buio dentro,
-   leggibile sul bordo, vestito di erba sopra e radici sotto */
+   leggibile sul bordo, vestito di erba sopra e radici sotto.
+   le regioni sono enormi: i pezzi si dipingono attorno alla camera e
+   si buttano quando restano indietro */
 
 const CHUNK = 512;
+/** pezzi dipinti in anticipo fuori dalla vista, per lato */
+const AHEAD = 1;
+/** oltre questa distanza in pezzi dalla vista, un pezzo si butta */
+const KEEP = 3;
+/** pezzi fuori vista dipinti per frame: la vista invece si dipinge sempre tutta */
+const PER_FRAME = 1;
+/** celle attorno al pezzo da cui si ricavano i contorni: i bordi finti della finestra
+    restano più lontani di quanto arrivino la banda e il tratteggio */
+const WINDOW = 8;
+
+type ChunkKind = 'interior' | 'mixed' | 'empty' | 'dress';
+
+interface LiveChunk {
+    obj: Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
+    key: string | null;
+}
 /** quanto entra il materiale nel terreno prima di sparire nel buio */
 const BAND = [
     { width: 120, alpha: 0.16 },
@@ -126,6 +144,18 @@ export class TerrainRenderer {
     private textureKeys: string[] = [];
     private fakeRegions: { image: Phaser.GameObjects.Image; cells: Set<number>; revealed: boolean }[] = [];
     private cols = 0;
+    private seedKey = '';
+    private seed = 0;
+    private isRock: CellTest = () => false;
+    private pattern: HTMLCanvasElement | null = null;
+    private widthPx = 0;
+    private heightPx = 0;
+    private chunkCols = 0;
+    private chunkRows = 0;
+    private kinds: ChunkKind[] = [];
+    /** vestizione divisa per pezzo: ogni pezzo guarda solo la sua */
+    private dressByChunk = new Map<number, DressItem[]>();
+    private live = new Map<number, LiveChunk>();
 
     constructor(scene: Phaser.Scene, biome: BiomeDef) {
         this.scene = scene;
@@ -144,34 +174,95 @@ export class TerrainRenderer {
         const isRockOrFake: CellTest = (c, r) => outside(c, r) || cell(c, r) === '#' || cell(c, r) === 'F';
 
         const seed = hashString(seedKey);
-        const loops = this.buildLoops(cols, rows, isRock, seed);
-        const dress = this.buildDressing(loops, seed);
-        const widthPx = cols * TILE;
-        const heightPx = rows * TILE;
+        this.seedKey = seedKey;
+        this.seed = seed;
+        this.isRock = isRock;
+        // i contorni dell'intera regione servono solo per la vestizione: si dipinge per finestre
+        const dress = this.buildDressing(this.buildLoops(traceLoops(cols, rows, isRock), seed), seed);
+        this.widthPx = cols * TILE;
+        this.heightPx = rows * TILE;
+        this.chunkCols = Math.ceil(this.widthPx / CHUNK);
+        this.chunkRows = Math.ceil(this.heightPx / CHUNK);
+        this.pattern = materialCanvas(this.biome);
 
-        const pattern = materialCanvas(this.biome);
-        const deep = mix(this.biome.deep, 0x000000, 0.3);
-
-        for (let cy = 0; cy < heightPx; cy += CHUNK) {
-            for (let cx = 0; cx < widthPx; cx += CHUNK) {
-                const bounds = { x: cx, y: cy, w: Math.min(CHUNK, widthPx - cx), h: Math.min(CHUNK, heightPx - cy) };
-                const kind = this.classifyChunk(bounds, cols, rows, isRock);
-                if (kind === 'empty-or-dress') {
-                    const items = dress.filter((d) => this.itemHits(d, bounds));
-                    if (items.length === 0) continue;
+        for (const d of dress) {
+            const reach = dressReach(d);
+            const x0 = Math.max(0, Math.floor((Math.min(d.x, d.x2 ?? d.x) - reach) / CHUNK));
+            const x1 = Math.min(this.chunkCols - 1, Math.floor((Math.max(d.x, d.x2 ?? d.x) + reach) / CHUNK));
+            const y0 = Math.max(0, Math.floor((Math.min(d.y, d.y2 ?? d.y) - reach) / CHUNK));
+            const y1 = Math.min(this.chunkRows - 1, Math.floor((Math.max(d.y, d.y2 ?? d.y) + reach) / CHUNK));
+            for (let cy = y0; cy <= y1; cy++) {
+                for (let cx = x0; cx <= x1; cx++) {
+                    const k = cy * this.chunkCols + cx;
+                    const list = this.dressByChunk.get(k);
+                    if (list) list.push(d);
+                    else this.dressByChunk.set(k, [d]);
                 }
-                if (kind === 'interior') {
-                    this.scene.add.rectangle(bounds.x, bounds.y, bounds.w, bounds.h, deep).setOrigin(0, 0).setDepth(2);
-                    continue;
-                }
-                const key = `terrain-${seedKey}-${cx}-${cy}`;
-                const el = this.paintRegion(bounds, loops, dress, pattern);
-                this.addTexture(key, el);
-                this.scene.add.image(bounds.x, bounds.y, key).setOrigin(0, 0).setDepth(2).setPipeline('Light2D');
+            }
+        }
+        this.kinds = [];
+        for (let cy = 0; cy < this.chunkRows; cy++) {
+            for (let cx = 0; cx < this.chunkCols; cx++) {
+                const kind = this.classifyChunk(this.chunkBounds(cx, cy), cols, rows, isRock);
+                const k = cy * this.chunkCols + cx;
+                this.kinds.push(kind === 'empty-or-dress' ? (this.dressByChunk.has(k) ? 'dress' : 'empty') : kind);
             }
         }
 
-        this.buildFakeWalls(grid, cols, rows, isRockOrFake, seed, pattern);
+        this.buildFakeWalls(grid, cols, rows, isRockOrFake, seed, this.pattern);
+    }
+
+    /** dipinge i pezzi attorno alla vista e butta quelli rimasti lontani */
+    update(view: Phaser.Geom.Rectangle): void {
+        if (this.chunkCols === 0) return;
+        const vx0 = Math.floor(view.x / CHUNK);
+        const vy0 = Math.floor(view.y / CHUNK);
+        const vx1 = Math.floor((view.x + view.width) / CHUNK);
+        const vy1 = Math.floor((view.y + view.height) / CHUNK);
+        // ciò che si vede non può aspettare: un buco nel terreno è peggio di un frame lento
+        for (let cy = vy0; cy <= vy1; cy++) for (let cx = vx0; cx <= vx1; cx++) this.ensure(cx, cy);
+        let budget = PER_FRAME;
+        for (let cy = vy0 - AHEAD; cy <= vy1 + AHEAD && budget > 0; cy++) {
+            for (let cx = vx0 - AHEAD; cx <= vx1 + AHEAD && budget > 0; cx++) {
+                if (this.ensure(cx, cy)) budget--;
+            }
+        }
+        for (const [k, chunk] of this.live) {
+            const cx = k % this.chunkCols;
+            const cy = (k - cx) / this.chunkCols;
+            if (cx < vx0 - KEEP || cx > vx1 + KEEP || cy < vy0 - KEEP || cy > vy1 + KEEP) {
+                chunk.obj.destroy();
+                if (chunk.key) this.removeTexture(chunk.key);
+                this.live.delete(k);
+            }
+        }
+    }
+
+    private chunkBounds(cx: number, cy: number): { x: number; y: number; w: number; h: number } {
+        const x = cx * CHUNK;
+        const y = cy * CHUNK;
+        return { x, y, w: Math.min(CHUNK, this.widthPx - x), h: Math.min(CHUNK, this.heightPx - y) };
+    }
+
+    /** true se ha dovuto dipingere davvero */
+    private ensure(cx: number, cy: number): boolean {
+        if (cx < 0 || cy < 0 || cx >= this.chunkCols || cy >= this.chunkRows) return false;
+        const k = cy * this.chunkCols + cx;
+        const kind = this.kinds[k];
+        if (kind === 'empty' || this.live.has(k)) return false;
+        const bounds = this.chunkBounds(cx, cy);
+        if (kind === 'interior') {
+            const deep = mix(this.biome.deep, 0x000000, 0.3);
+            const obj = this.scene.add.rectangle(bounds.x, bounds.y, bounds.w, bounds.h, deep).setOrigin(0, 0).setDepth(2);
+            this.live.set(k, { obj, key: null });
+            return false;
+        }
+        const key = `terrain-${this.seedKey}-${cx}-${cy}`;
+        const el = this.paintRegion(bounds, this.isRock, this.dressByChunk.get(k) ?? [], this.pattern!);
+        this.addTexture(key, el);
+        const obj = this.scene.add.image(bounds.x, bounds.y, key).setOrigin(0, 0).setDepth(2).setPipeline('Light2D');
+        this.live.set(k, { obj, key });
+        return true;
     }
 
     /** i muri finti si dissolvono quando ci entri, come in hollow knight */
@@ -188,10 +279,21 @@ export class TerrainRenderer {
         }
     }
 
-    private buildLoops(cols: number, rows: number, solid: CellTest, seed: number): Loop[] {
+    /** contorni delle sole celle attorno a un rettangolo del mondo: quel che c'è
+        oltre la finestra si considera uguale al bordo, così i contorni non si chiudono vicino */
+    private windowLoops(bounds: { x: number; y: number; w: number; h: number }, solid: CellTest): Loop[] {
+        const c0 = Math.floor(bounds.x / TILE) - WINDOW;
+        const r0 = Math.floor(bounds.y / TILE) - WINDOW;
+        const wc = Math.ceil((bounds.x + bounds.w) / TILE) + WINDOW - c0;
+        const wr = Math.ceil((bounds.y + bounds.h) / TILE) + WINDOW - r0;
+        const local: CellTest = (c, r) => solid(c0 + Math.max(0, Math.min(wc - 1, c)), r0 + Math.max(0, Math.min(wr - 1, r)));
+        const raw = traceLoops(wc, wr, local).map((loop) => loop.map((p) => ({ x: p.x + c0, y: p.y + r0 })));
+        return this.buildLoops(raw, this.seed);
+    }
+
+    private buildLoops(raw: { x: number; y: number }[][], seed: number): Loop[] {
         const noise = valueNoise2D(seed);
         const rough = roughness(this.biome);
-        const raw = traceLoops(cols, rows, solid);
         return raw.map((loop) => {
             const pts = loop.map((p) => ({ x: p.x * TILE, y: p.y * TILE }));
             const normals = computeNormals(pts);
@@ -299,7 +401,7 @@ export class TerrainRenderer {
     /** disegna una regione del mondo: roccia, banda di materiale, luce sul bordo, inchiostro, vestizione */
     private paintRegion(
         bounds: { x: number; y: number; w: number; h: number },
-        loops: Loop[],
+        solid: CellTest,
         dress: DressItem[],
         pattern: HTMLCanvasElement,
         extraClip?: (ctx: CanvasRenderingContext2D) => void,
@@ -318,7 +420,7 @@ export class TerrainRenderer {
         }
 
         const margin = 140;
-        const near = loops.filter((l) => this.loopHits(l, bounds, margin));
+        const near = this.windowLoops(bounds, solid).filter((l) => this.loopHits(l, bounds, margin));
         const solidPath = new Path2D();
         for (const l of near) {
             solidPath.moveTo(l.pts[0].x, l.pts[0].y);
@@ -428,7 +530,6 @@ export class TerrainRenderer {
             for (let c = 0; c < cols; c++) if (grid[r]?.[c] === 'F') fake.add(r * cols + c);
         }
         if (fake.size === 0) return;
-        const loops = this.buildLoops(cols, rows, solidWithFake, seed);
         const seen = new Set<number>();
         let idx = 0;
         for (const start of fake) {
@@ -461,7 +562,7 @@ export class TerrainRenderer {
             }
             const pad = 6;
             const bounds = { x: c0 * TILE - pad, y: r0 * TILE - pad, w: (c1 - c0 + 1) * TILE + pad * 2, h: (r1 - r0 + 1) * TILE + pad * 2 };
-            const el = this.paintRegion(bounds, loops, [], pattern, (ctx) => {
+            const el = this.paintRegion(bounds, solidWithFake, [], pattern, (ctx) => {
                 ctx.beginPath();
                 for (const k of comp) {
                     const c = k % cols;
@@ -482,6 +583,12 @@ export class TerrainRenderer {
         this.textureKeys.push(key);
     }
 
+    private removeTexture(key: string): void {
+        if (this.scene.textures.exists(key)) this.scene.textures.remove(key);
+        const i = this.textureKeys.indexOf(key);
+        if (i >= 0) this.textureKeys.splice(i, 1);
+    }
+
     private destroy(): void {
         // le texture dei chunk sono per-livello: liberarle evita di gonfiare la gpu a ogni capitolo
         for (const key of this.textureKeys) {
@@ -489,5 +596,9 @@ export class TerrainRenderer {
         }
         this.textureKeys = [];
         this.fakeRegions = [];
+        this.live.clear();
+        this.dressByChunk.clear();
+        this.kinds = [];
+        this.chunkCols = 0;
     }
 }

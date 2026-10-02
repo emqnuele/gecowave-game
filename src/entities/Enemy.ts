@@ -14,6 +14,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private facingDir: 1 | -1 = -1;
     private chargingUntil = 0;
     private stunnedUntil = 0;
+    /** lontano dal player: niente logica né fisica, le regioni ne contano centinaia */
+    dormant = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind) {
         super(scene, x, y, ENEMIES[kind].texture);
@@ -29,6 +31,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         const airborne = this.arch.behavior === 'flyer' || this.arch.behavior === 'turret';
         body.setAllowGravity(!airborne);
         body.setSize(this.width * 0.8, this.height * 0.8);
+    }
+
+    setDormant(dormant: boolean): void {
+        if (dormant === this.dormant || !this.body) return;
+        this.dormant = dormant;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        if (dormant) body.stop();
+        body.enable = !dormant;
     }
 
     /** target = giocatore, o il suo riflesso distorto se attivo */

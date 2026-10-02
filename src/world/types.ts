@@ -57,8 +57,20 @@ export interface RegionLayout {
     pathLength: number;
     /** quota del terreno in superficie, in celle: il parallasse ci si appoggia */
     horizonRow: number;
-    /** agguati e trigger legati alla vecchia x: progresso sul percorso */
-    oldXToProgress: (oldX: number) => number;
+    /** coppie [vecchia x in celle, progresso sul percorso], ordinate per x:
+        agguati e trigger del capitolo lineare si ritrovano nella regione */
+    progressPairs: [number, number][];
+}
+
+/** progresso sul percorso corrispondente a una x del vecchio capitolo lineare */
+export function oldXToProgress(layout: RegionLayout, oldX: number): number {
+    const pairs = layout.progressPairs;
+    for (let i = 1; i < pairs.length; i++) {
+        const [x0, p0] = pairs[i - 1];
+        const [x1, p1] = pairs[i];
+        if (oldX <= x1) return x1 === x0 ? p1 : p0 + ((oldX - x0) / (x1 - x0)) * (p1 - p0);
+    }
+    return layout.pathLength - 1;
 }
 
 /** come si muove il geco, in celle */

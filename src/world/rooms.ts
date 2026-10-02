@@ -1,6 +1,6 @@
 import { mulberry32 } from '../engine/art/ink';
 import { AIR, Grid, SOLID, WATER } from './grid';
-import type { Door, Rect, Room } from './types';
+import type { Door, Moves, Rect, Room } from './types';
 
 /* lo scavo di ogni stanza dentro il suo rettangolo: si lascia un bordo
    di roccia di una cella, le porte poi lo bucano */
@@ -76,7 +76,7 @@ function hall(g: Grid, room: Room, rnd: () => number, opts: { pits: number; plat
     floatingPlatforms(g, rnd, I, opts.platforms, ceil, floor);
 }
 
-function shaft(g: Grid, room: Room, rnd: () => number): void {
+function shaft(g: Grid, room: Room, rnd: () => number, m: Moves): void {
     const I = inner(room.rect);
     // pareti frastagliate, poi una scala di sporgenze a zig-zag
     for (let y = I.y; y < I.y + I.h; y++) {
@@ -85,14 +85,15 @@ function shaft(g: Grid, room: Room, rnd: () => number): void {
         for (let x = I.x + wl; x < I.x + I.w - wr; x++) g.set(x, y, AIR);
     }
     // sporgenze alternate: sopra ognuna restano 5 righe libere per saltare,
-    // e il varco orizzontale tra un lato e l'altro sta sotto la corsa
+    // e il varco tra un lato e l'altro resta entro la corsa del salto di adesso
     let side = rnd() < 0.5 ? 0 : 1;
     const bottom = I.y + I.h;
-    const w = Math.max(4, Math.floor(I.w / 2) - 2);
+    const gap = Math.max(3, Math.min(m.run - 1, 4 + Math.floor(rnd() * 3)));
+    const wl = Math.floor((I.w - gap) / 2);
+    const wr = I.w - gap - wl;
     for (let y = bottom - 3; y > I.y + 4; y -= 3) {
-        const jitter = Math.floor(rnd() * 3);
-        if (side === 0) g.platform(I.x, y, w - jitter);
-        else g.platform(I.x + I.w - w + jitter, y, w - jitter);
+        if (side === 0) g.platform(I.x, y, wl);
+        else g.platform(I.x + I.w - wr, y, wr);
         side = 1 - side;
     }
 }
@@ -150,7 +151,7 @@ function secret(g: Grid, room: Room, rnd: () => number): void {
     for (let cx = x - 2; cx < x + w + 2; cx++) g.set(cx, y + h, SOLID);
 }
 
-export function carveRoom(g: Grid, room: Room, seed: number): void {
+export function carveRoom(g: Grid, room: Room, seed: number, m: Moves): void {
     const rnd = mulberry32(seed + room.id * 131);
     switch (room.kind) {
         case 'start':
@@ -168,7 +169,7 @@ export function carveRoom(g: Grid, room: Room, seed: number): void {
             hall(g, room, rnd, { pits: 2, platforms: 2, water: true });
             break;
         case 'shaft':
-            shaft(g, room, rnd);
+            shaft(g, room, rnd, m);
             break;
         case 'cave':
             cave(g, room, rnd);

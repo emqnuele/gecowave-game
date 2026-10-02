@@ -1,6 +1,6 @@
 import { biomeFor } from '../content/biomes';
 import { ENEMIES } from '../content/enemies';
-import { LEVEL_ORDER, LEVELS } from '../content/levels';
+import { LEVEL_ORDER } from '../content/levels';
 import { hashString, mulberry32 } from '../engine/art/ink';
 import type { EntitySpec, LevelDef } from '../types';
 import { extractBeats, type Beat } from './beats';
@@ -53,18 +53,6 @@ function movesFor(id: string): Moves {
     if (idx === 0) return BASIC;
     if (idx === 1) return DASH;
     return FULL;
-}
-
-const cache = new Map<string, Region>();
-
-export function getRegion(id: string): Region {
-    const hit = cache.get(id);
-    if (hit) return hit;
-    const def = LEVELS[id];
-    if (!def) throw new Error(`regione sconosciuta: ${id}`);
-    const region = generateRegion(def);
-    cache.set(id, region);
-    return region;
 }
 
 interface Placement {
@@ -177,7 +165,7 @@ function attemptRegion(def: LevelDef, attempt: number): Region & { report: Regio
     const stands = macro.doors.map((d) => planDoor(g, d, rooms));
     applyDoors(g, stands);
     buildSkeletons(g, rooms, stands, pathMoves, mulberry32(seed ^ 0x5eed));
-    if (!GEN_DEBUG.skipCarve) for (const room of rooms) carveRoom(g, room, seed);
+    if (!GEN_DEBUG.skipCarve) for (const room of rooms) carveRoom(g, room, seed, pathMoves);
 
     const byPath = rooms.filter((r) => r.pathIndex >= 0).sort((a, b) => a.pathIndex - b.pathIndex);
     const startRoom = byPath[0];
@@ -384,15 +372,6 @@ function attemptRegion(def: LevelDef, attempt: number): Region & { report: Regio
 
     for (const p of placements) g.force(p.c, p.r, p.ch);
 
-    const oldXToProgress = (oldX: number): number => {
-        for (let i = 1; i < progressPairs.length; i++) {
-            const [x0, p0] = progressPairs[i - 1];
-            const [x1, p1] = progressPairs[i];
-            if (oldX <= x1) return x1 === x0 ? p1 : p0 + ((oldX - x0) / (x1 - x0)) * (p1 - p0);
-        }
-        return pathLength - 1;
-    };
-
     // la linea dell'orizzonte: il pavimento medio delle stanze in superficie
     const surfaceFloors: number[] = [];
     for (const room of rooms.filter((r) => r.surface)) {
@@ -419,7 +398,7 @@ function attemptRegion(def: LevelDef, attempt: number): Region & { report: Regio
         doors: macro.doors,
         pathLength,
         horizonRow,
-        oldXToProgress,
+        progressPairs,
     };
     return { def: { ...def, grid: g.toStrings(), entities }, layout, report };
 }
@@ -457,16 +436,15 @@ function doorGate(doors: RegionLayout['doors'], rooms: Room[], room: Room): Cell
 
 /** in ogni stanza: un tronco verticale a due corsie dal fondo fino alla porta
     più alta, e da lì un ramo verso ogni porta, sul lato giusto, così le scale
-    non si incrociano. i rami laterali di inizio gioco chiedono salti che
+    non si incrociano. a inizio gioco alcuni rami laterali chiedono salti che
     arriveranno dopo: si torna */
 function buildSkeletons(g: Grid, rooms: Room[], plans: ReturnType<typeof planDoor>[], pathMoves: Moves, rnd: () => number): void {
     for (const room of rooms) {
         const I = inner(room.rect);
-        // una stanza "da tornarci dopo" non deve essere una trappola: ci si entra salendo,
-        // mai cadendo da un buco nel soffitto
-        const fallsIn = plans.some((p) => p.sides.length === 3 && p.sides[2].room === room.id);
-        const gated = room.pathIndex < 0 && pathMoves !== FULL && !fallsIn && rnd() < 0.6;
-        const m = gated ? FULL : pathMoves.rise > 3 ? BASIC : pathMoves;
+        // il cancello sta sul ramo verso la stanza dopo, mai sulla stanza stessa:
+        // una scala si scende sempre, quindi chi ci cade dentro può risalire
+        const gated = room.pathIndex < 0 && pathMoves !== FULL && rnd() < 0.6;
+        const m = pathMoves.rise > 3 ? BASIC : pathMoves;
         const step = Math.min(m.rise, 5);
         const doorsHere = plans.flatMap((p) => p.sides.filter((s) => s.room === room.id));
         const meanC = doorsHere.length ? doorsHere.reduce((sum, d) => sum + d.c, 0) / doorsHere.length : I.x + I.w / 2;
@@ -533,6 +511,9 @@ function buildSkeletons(g: Grid, rooms: Room[], plans: ReturnType<typeof planDoo
         GEN_DEBUG.trace?.(g, room, `tronco t1=${t1} punti=${JSON.stringify(trunk)}`);
 
         for (const st of doorsHere) {
+            // i rami nascono in ordine: un vicino laterale con id più alto è la stanza dopo
+            const deeper = plans.some((p) => p.sides.includes(st) && p.sides.some((o) => o.room > room.id && rooms[o.room].pathIndex < 0));
+            const bm = gated && deeper ? FULL : m;
             // basi candidate: prima i punti del tronco appena sotto la porta, sul suo lato
             const side = st.c >= (t1 + t2) / 2 ? t2 : t1;
             const bases = [...trunk].sort((x, y) => {
@@ -541,14 +522,14 @@ function buildSkeletons(g: Grid, rooms: Room[], plans: ReturnType<typeof planDoo
             });
             let done = false;
             for (const base of bases) {
-                if (dig(g, base, { c: st.c, r: st.r }, m, room.rect, undefined, true, (t1 + t2) / 2, true)) {
+                if (dig(g, base, { c: st.c, r: st.r }, bm, room.rect, { lock: true, awayFrom: (t1 + t2) / 2, mustWork: true })) {
                     done = true;
                     GEN_DEBUG.trace?.(g, room, `ramo verso ${st.c},${st.r} da ${JSON.stringify(base)}`);
                     break;
                 }
             }
             // nessuna base regge: si scava comunque dalla migliore, ci penserà la riparazione
-            if (!done) dig(g, bases[0], { c: st.c, r: st.r }, m, room.rect, undefined, true, (t1 + t2) / 2);
+            if (!done) dig(g, bases[0], { c: st.c, r: st.r }, bm, room.rect, { lock: true, awayFrom: (t1 + t2) / 2 });
         }
         if (GEN_DEBUG.onSkeletonFail) {
             const reach = pessimisticReach(g, room.rect, hub, m);
@@ -637,6 +618,11 @@ function planDig(from: Cell, to: Cell, m: Moves, clip: Rect, sgn: number, shift:
     (lo scavo successivo può togliere la roccia libera e aggiungere piattaforme
     nell'aria libera), più le celle che un progetto sta per bloccare. il bordo resta */
 export function pessimisticReach(g: Grid, clip: Rect, from: Cell, m: Moves, air?: Set<number>, solid?: Set<number>): Set<number> | null {
+    return localReach(g, clip, from, m, true, air, solid);
+}
+
+/** raggiungibilità dentro un rettangolo; `pessimistic` vale solo prima dello scavo delle stanze */
+function localReach(g: Grid, clip: Rect, from: Cell, m: Moves, pessimistic: boolean, air?: Set<number>, solid?: Set<number>): Set<number> | null {
     const cols = g.cols;
     const view = new Grid(clip.w, clip.h);
     for (let y = 0; y < clip.h; y++) {
@@ -646,7 +632,7 @@ export function pessimisticReach(g: Grid, clip: Rect, from: Cell, m: Moves, air?
             const k = gy * cols + gx;
             const border = x === 0 || y === 0 || x === clip.w - 1 || y === clip.h - 1;
             let ch: string;
-            if (border || g.lockedSolid(gx, gy) || g.lockedAir(gx, gy)) ch = g.get(gx, gy);
+            if (!pessimistic || border || g.lockedSolid(gx, gy) || g.lockedAir(gx, gy)) ch = g.get(gx, gy);
             else if (solid?.has(k)) ch = SOLID;
             else if (air?.has(k)) ch = AIR;
             else ch = '^';
@@ -663,10 +649,24 @@ export function pessimisticReach(g: Grid, clip: Rect, from: Cell, m: Moves, air?
     return out;
 }
 
+export interface DigOptions {
+    /** celle già percorribili da non rovinare */
+    protect?: Uint8Array;
+    /** blocca il risultato: lo scavo delle stanze non lo tocca */
+    lock?: boolean;
+    /** colonna da cui allontanare le corsie */
+    awayFrom?: number;
+    /** se nessuna variante regge non si scava niente */
+    mustWork?: boolean;
+    /** verifica sulla griglia vera: le stanze sono già scavate */
+    carved?: boolean;
+}
+
 /** scava una scalinata percorribile da `from` a `to`, restando dentro `clip`.
     ogni variante viene applicata e verificata col simulatore di salti; se non porta
     a destinazione si annulla e si prova la successiva */
-export function dig(g: Grid, from: Cell, to: Cell, m: Moves, clip: Rect, protect?: Uint8Array, lockResult = false, awayFrom?: number, mustWork = false): Cell[] | null {
+export function dig(g: Grid, from: Cell, to: Cell, m: Moves, clip: Rect, opts: DigOptions = {}): Cell[] | null {
+    const { protect, awayFrom, mustWork = false } = opts;
     const baseSgn = awayFrom !== undefined ? Math.sign(to.c - awayFrom) || 1 : Math.sign(from.c - to.c) || 1;
     const cols = g.cols;
     const apply = (plan: DigPlan): [number, string][] => {
@@ -693,10 +693,11 @@ export function dig(g: Grid, from: Cell, to: Cell, m: Moves, clip: Rect, protect
             g.force(k % cols, Math.floor(k / cols), ch);
         }
     };
-    /* verifica pessimistica: dentro la stanza conta solo ciò che è bloccato, perché lo
-       scavo successivo può togliere qualsiasi roccia libera e aggiungere piattaforme
-       in qualsiasi aria libera. il bordo della stanza invece non si tocca mai */
+    /* prima dello scavo delle stanze la verifica è pessimistica: dentro la stanza conta
+       solo ciò che è bloccato, perché lo scavo successivo può togliere qualsiasi roccia
+       libera e aggiungere piattaforme in qualsiasi aria libera. il bordo non si tocca mai */
     const works = (plan: DigPlan): boolean => {
+        if (opts.carved) return localReach(g, clip, from, m, false)?.has(to.r * cols + to.c) ?? false;
         const air = new Set(plan.air.map(([x, y]) => y * cols + x));
         const solid = new Set(plan.solid.map(([x, y]) => y * cols + x));
         return pessimisticReach(g, clip, from, m, air, solid)?.has(to.r * cols + to.c) ?? false;
@@ -720,7 +721,7 @@ export function dig(g: Grid, from: Cell, to: Cell, m: Moves, clip: Rect, protect
         chosen = fallback!;
         apply(chosen);
     }
-    if (lockResult) {
+    if (opts.lock) {
         for (const [x, y] of chosen.air) g.lock(x, y);
         for (const [x, y] of chosen.solid) g.lock(x, y);
     }
@@ -753,7 +754,7 @@ function repair(g: Grid, spawn: Cell, exit: Cell, targets: { cell: Cell; room: R
                 if (!src) continue;
                 busy.add(t.room.id);
                 if (!g.standable(t.cell.c, t.cell.r)) forceStand(g, t.cell.c, t.cell.r);
-                dig(g, src, t.cell, moves, t.room.rect, reach.reached);
+                dig(g, src, t.cell, moves, t.room.rect, { protect: reach.reached, carved: true });
                 fixed++;
             }
             if (fixed === 0) break;
@@ -773,14 +774,33 @@ function repair(g: Grid, spawn: Cell, exit: Cell, targets: { cell: Cell; room: R
             let fixed = 0;
             for (const [rid, stuck] of stuckByRoom) {
                 const room = rooms[rid];
-                const dst = nearestReached(reach.finishes, cols, inner(room.rect), stuck);
-                if (!dst) continue;
-                dig(g, stuck, dst, moves, room.rect, reach.finishes);
+                const dsts = nearestCells(reach.finishes, cols, inner(room.rect), stuck, 8);
+                if (dsts.length === 0) continue;
+                // la più vicina non sempre si lascia raggiungere: si provano anche le altre
+                const ok = dsts.some((dst) => dig(g, stuck, dst, moves, room.rect, { protect: reach.finishes, carved: true, mustWork: true }));
+                if (!ok) dig(g, stuck, dsts[0], moves, room.rect, { protect: reach.finishes, carved: true });
                 fixed++;
             }
             if (fixed === 0) break;
         }
     }
+}
+
+/** fino a `count` celle della maschera vicine a `to`, distanti tra loro almeno 6 */
+function nearestCells(mask: Uint8Array, cols: number, I: Rect, to: Cell, count: number): Cell[] {
+    const all: { c: number; r: number; d: number }[] = [];
+    for (let r = I.y; r < I.y + I.h; r++) {
+        for (let c = I.x; c < I.x + I.w; c++) {
+            if (mask[r * cols + c]) all.push({ c, r, d: Math.abs(c - to.c) + Math.abs(r - to.r) * 1.5 });
+        }
+    }
+    all.sort((a, b) => a.d - b.d);
+    const out: Cell[] = [];
+    for (const x of all) {
+        if (out.length >= count) break;
+        if (out.every((o) => Math.abs(o.c - x.c) + Math.abs(o.r - x.r) >= 6)) out.push({ c: x.c, r: x.r });
+    }
+    return out;
 }
 
 function nearestReached(mask: Uint8Array, cols: number, I: Rect, to: Cell): Cell | null {

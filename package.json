@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "regions": "scripts/world/run.sh build-regions",
     "electron": "electron .",
     "gen-icons": "node scripts/gen-icons.mjs",
     "app:preview": "npm run build && electron .",

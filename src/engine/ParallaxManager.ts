@@ -32,15 +32,16 @@ export class ParallaxManager {
     private sky: Phaser.GameObjects.Image | null = null;
     private veil: Phaser.GameObjects.Image | null = null;
     private fog: Phaser.GameObjects.TileSprite | null = null;
-    private levelHeight = 0;
+    /** quota del terreno su cui poggiano le sagome, in pixel del mondo */
+    private groundY = 0;
     private onResize = () => this.resize();
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
     }
 
-    build(zone: ZoneColor, levelId: string, biome: BiomeDef, levelHeight: number): void {
-        this.levelHeight = levelHeight;
+    build(zone: ZoneColor, levelId: string, biome: BiomeDef, groundY: number): void {
+        this.groundY = groundY;
         const key = (k: string) => `${k}-${biome.id}`;
 
         this.sky = this.scene.add.image(0, 0, this.gradientTexture(key('sky'), [[0, hex(biome.skyTop)], [1, hex(biome.skyBottom)]]))
@@ -155,9 +156,9 @@ export class ParallaxManager {
         const left = v.cx - v.w / 2;
         const top = v.cy - v.h / 2;
         const bottom = top + v.h;
-        // riferimento verticale: camera appoggiata al fondo del livello
-        const maxScrollY = Math.max(0, this.levelHeight - cam.height / cam.zoom);
-        const rise = maxScrollY - cam.scrollY;
+        // riferimento verticale: il fondo della vista appoggiato al terreno.
+        // sotto terra le sagome salgono e spariscono, sopra scendono piano
+        const rise = this.groundY - (cam.scrollY + cam.height / cam.zoom);
 
         if (this.painted) {
             const sp = this.painted.sprite;

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COMBAT, ZONE_HEX } from '../config';
+import { COMBAT, TILE, ZONE_HEX } from '../config';
 import { DIALOGUES, NOTINO_FUGHE, TOASTS, TRABOCCHETTI, WAVESUNG } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../engine/events';
@@ -13,6 +13,9 @@ import { BOSS_CHARMS, ITEMS } from '../content/items';
 import { LightingManager } from '../engine/LightingManager';
 import { loadLevel, type LoadedLevel } from '../engine/LevelLoader';
 import { ParallaxManager } from '../engine/ParallaxManager';
+import { RoomBackdrops } from '../engine/RoomBackdrops';
+import { loadRegion } from '../world/registry';
+import { oldXToProgress, type RegionLayout, type Room } from '../world/types';
 import { npcTexture } from '../engine/npcTexture';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -113,6 +116,10 @@ const TOMMASO_BLOCCA = ['tommaso-blocca', 'tommaso-blocca-2', 'tommaso-blocca-3'
 
 export class GameScene extends Phaser.Scene {
     private def!: LevelDef;
+    /** la regione a stanze; null quando si gioca il capitolo vecchio */
+    private layout: RegionLayout | null = null;
+    /** stanza per slot della macro-griglia */
+    private roomBySlot: Int16Array | null = null;
     private level!: LoadedLevel;
     private player!: Player;
     private boss: Boss | null = null;
@@ -204,8 +211,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     init(data: SceneData): void {
-        this.def = LEVELS[data.levelId];
+        const region = loadRegion(this, data.levelId);
+        this.def = region?.def ?? LEVELS[data.levelId];
         if (!this.def) throw new Error(`livello sconosciuto: ${data.levelId}`);
+        this.layout = region?.layout ?? null;
+        this.roomBySlot = null;
+        if (this.layout) {
+            const L = this.layout;
+            this.roomBySlot = new Int16Array(L.macroW * L.macroH).fill(-1);
+            for (const room of L.rooms) {
+                for (let y = room.sy; y < room.sy + room.sh; y++) {
+                    for (let x = room.sx; x < room.sx + room.sw; x++) this.roomBySlot[y * L.macroW + x] = room.id;
+                }
+            }
+        }
         music.playLevel(data.levelId);
     }
 
@@ -272,6 +291,7 @@ export class GameScene extends Phaser.Scene {
         this.terrain = new TerrainRenderer(this, this.biome);
         this.terrain.build({ grid: this.def.grid, biome: this.biome, seedKey: this.def.id });
         if (import.meta.env.DEV) console.info(`[terrain] ${this.def.id}: ${Math.round(performance.now() - t0)}ms`);
+        if (this.layout) new RoomBackdrops(this).build(this.layout, this.biome);
 
         this.parallax = new ParallaxManager(this);
         const reserved = [
@@ -312,7 +332,7 @@ export class GameScene extends Phaser.Scene {
         this.setupColliders();
         this.setupEvents();
         this.setupCamera();
-        this.parallax.build(this.def.color, this.def.id, this.biome, this.level.heightPx);
+        this.parallax.build(this.def.color, this.def.id, this.biome, this.layout ? this.layout.horizonRow * TILE : this.level.heightPx);
         this.parallax.resize();
         this.buildPrompt();
 
@@ -487,13 +507,13 @@ export class GameScene extends Phaser.Scene {
     private spawnNpc(id: string, x: number, y: number): void {
         // marker invisibili degli inseguimenti nella tana
         if (id === 'caccia-inizio') {
-            this.chaseStarts.push(x);
+            this.chaseStarts.push(this.progressAt(x, y));
             this.chaseStarts.sort((a, b) => a - b);
             this.chaseDone = this.chaseStarts.map(() => false);
             return;
         }
         if (id === 'caccia-fine') {
-            this.chaseEnds.push(x);
+            this.chaseEnds.push(this.progressAt(x, y));
             this.chaseEnds.sort((a, b) => a - b);
             return;
         }
@@ -507,14 +527,14 @@ export class GameScene extends Phaser.Scene {
         // marker invisibili delle arene del void: una per ogni rimpianto
         if (id.startsWith('arena-')) {
             this.voidArenas.push({ x, y });
-            this.voidArenas.sort((a, b) => a.x - b.x);
+            this.voidArenas.sort((a, b) => this.progressAt(a.x, a.y) - this.progressAt(b.x, b.y));
             return;
         }
 
         // marker invisibili delle arene della quest di walter
         if (id.startsWith('warena-')) {
             this.baruffoniArenas.push({ x, y });
-            this.baruffoniArenas.sort((a, b) => a.x - b.x);
+            this.baruffoniArenas.sort((a, b) => this.progressAt(a.x, a.y) - this.progressAt(b.x, b.y));
             return;
         }
 
@@ -1161,6 +1181,56 @@ export class GameScene extends Phaser.Scene {
         this.input.keyboard!.on('keydown-E', () => this.tryInteract());
     }
 
+    /* ---------- progresso: la x dei capitoli lineari, il percorso nelle regioni ---------- */
+
+    private roomAt(x: number, y: number): Room | null {
+        const L = this.layout;
+        if (!L || !this.roomBySlot) return null;
+        const sx = Math.floor(x / TILE / L.slotW);
+        const sy = Math.floor(y / TILE / L.slotH);
+        if (sx < 0 || sy < 0 || sx >= L.macroW || sy >= L.macroH) return null;
+        const id = this.roomBySlot[sy * L.macroW + sx];
+        return id >= 0 ? L.rooms[id] : null;
+    }
+
+    /** quanto si è avanti nel capitolo: celle nel capitolo vecchio, stanze del percorso nella regione */
+    private progressAt(x: number, y: number): number {
+        if (!this.layout) return x / TILE;
+        const room = this.roomAt(x, y);
+        if (!room) return 0;
+        // le stanze laterali contano come l'inizio della stanza da cui partono
+        if (room.pathIndex < 0) return this.layout.rooms[room.anchor].pathIndex;
+        const f = (x / TILE - room.rect.x) / room.rect.w;
+        return room.pathIndex + Phaser.Math.Clamp(f, 0, 0.999);
+    }
+
+    /** una x del capitolo vecchio, in pixel, tradotta in progresso */
+    private progressOfOldX(oldXPx: number): number {
+        return this.layout ? oldXToProgress(this.layout, oldXPx / TILE) : oldXPx / TILE;
+    }
+
+    /** il punto libero più vicino dove far comparire qualcuno alto due celle */
+    private openSpotNear(x: number, y: number, radius = 12): { x: number; y: number } {
+        const grid = this.def.grid;
+        const open = (c: number, r: number) => {
+            const ch = grid[r]?.[c];
+            return ch !== undefined && ch !== '#' && ch !== '%' && ch !== '^' && ch !== 'F';
+        };
+        const c0 = Math.floor(x / TILE);
+        const r0 = Math.floor(y / TILE);
+        for (let d = 0; d <= radius; d++) {
+            for (let dy = -d; dy <= d; dy++) {
+                for (let dx = -d; dx <= d; dx++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dy)) !== d) continue;
+                    const c = c0 + dx;
+                    const r = r0 + dy;
+                    if (open(c, r) && open(c, r - 1)) return { x: c * TILE + TILE / 2, y: r * TILE + TILE / 2 };
+                }
+            }
+        }
+        return { x: this.player.x, y: this.player.y - 40 };
+    }
+
     private setupCamera(): void {
         const cam = this.cameras.main;
         cam.setBounds(0, 0, this.level.widthPx, this.level.heightPx);
@@ -1346,22 +1416,7 @@ export class GameScene extends Phaser.Scene {
             const lastArena = this.baruffoniArenas[this.baruffoniArenas.length - 1];
             objX = (lastArena?.x ?? this.player.x) + 80;
         }
-        const lead = 150;
-        const targetX = Phaser.Math.Clamp(objX, this.player.x - lead, this.player.x + lead);
-        const speed = 150;
-        const step = (speed * delta) / 1000;
-        const dx = targetX - c.x;
-        if (Math.abs(dx) <= step + 1) {
-            c.x = targetX;
-        } else {
-            c.x += Math.sign(dx) * step;
-            c.setFlipX(dx < 0);
-        }
-        c.y = this.companionBaseY + Math.sin(time / 320) * 2;
-        if (this.companionInteract) {
-            this.companionInteract.x = c.x;
-            this.companionInteract.y = c.y;
-        }
+        this.moveGuide(c, objX, time, delta);
     }
 
     /** parlare con walter lungo il cammino: commento contestuale e strano */
@@ -1443,23 +1498,38 @@ export class GameScene extends Phaser.Scene {
             objX = (lastArena?.x ?? this.player.x) + 80;
         }
 
-        // guida ma resta vicino: non si allontana mai più di `lead` dal player.
-        // se il player resta indietro, romero non supera player+lead → di fatto lo aspetta.
-        const lead = 150;
-        const targetX = Phaser.Math.Clamp(objX, this.player.x - lead, this.player.x + lead);
+        this.moveGuide(c, objX, time, delta);
+    }
 
-        const speed = 150; // px/s, più lento del geco: non vola mai avanti
-        const step = (speed * delta) / 1000;
-        const dx = targetX - c.x;
-        if (Math.abs(dx) <= step + 1) {
-            c.x = targetX;
+    /** la guida accompagna il player: nei capitoli lineari cammina verso l'obiettivo
+        senza mai staccarsi, nelle regioni fluttua al suo fianco dal lato dell'obiettivo */
+    private moveGuide(c: Phaser.GameObjects.Sprite, objX: number, time: number, delta: number): void {
+        if (this.layout) {
+            const side = Math.sign(objX - this.player.x) || 1;
+            const tx = this.player.x + side * 70;
+            const ty = this.player.y - 26;
+            // rimasta in un'altra stanza: ti raggiunge invece di attraversare mezza regione
+            if (Math.hypot(tx - c.x, ty - c.y) > 900) c.setPosition(tx, ty);
+            const k = 1 - Math.exp(-delta / 260);
+            c.x += (tx - c.x) * k;
+            c.y += (ty - c.y) * k + Math.sin(time / 320) * 0.4;
+            c.setFlipX(side < 0);
         } else {
-            c.x += Math.sign(dx) * step;
-            c.setFlipX(dx < 0);
+            // guida ma resta vicino: non si allontana mai più di `lead` dal player.
+            // se il player resta indietro, la guida non supera player+lead → di fatto lo aspetta.
+            const lead = 150;
+            const targetX = Phaser.Math.Clamp(objX, this.player.x - lead, this.player.x + lead);
+            const speed = 150; // px/s, più lento del geco: non vola mai avanti
+            const step = (speed * delta) / 1000;
+            const dx = targetX - c.x;
+            if (Math.abs(dx) <= step + 1) {
+                c.x = targetX;
+            } else {
+                c.x += Math.sign(dx) * step;
+                c.setFlipX(dx < 0);
+            }
+            c.y = this.companionBaseY + Math.sin(time / 320) * 2;
         }
-        c.y = this.companionBaseY + Math.sin(time / 320) * 2;
-
-        // l'interactable segue romero
         if (this.companionInteract) {
             this.companionInteract.x = c.x;
             this.companionInteract.y = c.y;
@@ -1540,9 +1610,10 @@ export class GameScene extends Phaser.Scene {
         }
 
         const target = this.clone && this.clone.active ? (this.clone as Phaser.GameObjects.Sprite) : this.player;
-        this.enemies.getChildren().forEach((e) => (e as Enemy).update(time, delta, target));
+        this.updateEnemies(time, delta, target);
         this.boss?.update(time, delta, target);
         this.lighting.update();
+        this.terrain.update(this.cameras.main.worldView);
         this.parallax.update(time);
         this.ambience.update();
         this.water.update(time);
@@ -1576,6 +1647,35 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    /** i tetti delle comparse contano solo chi è sveglio: la regione intera ne ha centinaia */
+    private awakeEnemies(): number {
+        let n = 0;
+        for (const child of this.enemies.getChildren()) {
+            const e = child as Enemy;
+            if (e.active && !e.dormant) n++;
+        }
+        return n;
+    }
+
+    /** i nemici lontani dormono; si svegliano prima di entrare in vista, e il margine
+        tra sveglia e sonno evita che chi sta sul confine si accenda e spenga di continuo */
+    private updateEnemies(time: number, delta: number, target: Phaser.GameObjects.Sprite): void {
+        const px = this.player.x;
+        const py = this.player.y;
+        for (const child of this.enemies.getChildren()) {
+            const e = child as Enemy;
+            if (!e.active) continue;
+            const dx = Math.abs(e.x - px);
+            const dy = Math.abs(e.y - py);
+            if (e.dormant) {
+                if (dx < 1500 && dy < 1000) e.setDormant(false);
+            } else if (dx > 1800 || dy > 1250) {
+                e.setDormant(true);
+            }
+            if (!e.dormant) e.update(time, delta, target);
+        }
+    }
+
     /* ---------- la modalità doomsday del realm ---------- */
 
     private updateDoomsday(time: number, delta: number): void {
@@ -1601,7 +1701,8 @@ export class GameScene extends Phaser.Scene {
             this.nextWildGlitchAt = time + Phaser.Math.Between(3500, 6500);
             const side = Math.random() < 0.5 ? -1 : 1;
             const gx = Phaser.Math.Clamp(this.player.x + side * 420, 40, this.level.widthPx - 40);
-            this.spawnEnemy('glitchetto', gx, this.player.y - 80);
+            const at = this.openSpotNear(gx, this.player.y - 80);
+            this.spawnEnemy('glitchetto', at.x, at.y);
         }
 
         // doomsday pieno: pedro raggiunge il custode. boss anticipato, quasi impossibile.
@@ -1620,7 +1721,8 @@ export class GameScene extends Phaser.Scene {
             this.shake(400, 0.012);
             this.startDialogue('doomsday-pedro', () => {
                 const px = Phaser.Math.Clamp(this.player.x + 220, 80, this.level.widthPx - 80);
-                this.boss = new Boss(this, px, this.player.y - 120, 'pedro');
+                const at = this.openSpotNear(px, this.player.y - 120);
+                this.boss = new Boss(this, at.x, at.y, 'pedro');
                 this.boss.frenzy = true;
                 this.lighting.follow(this.boss, this.boss.def.glowColor, 320, 1.1);
                 this.setupBossColliders();
@@ -1898,7 +2000,8 @@ export class GameScene extends Phaser.Scene {
     private updateBossTrigger(): void {
         if (!this.boss || this.boss.engaged || this.player.dead || this.exiting) return;
         const dist = Math.abs(this.player.x - this.boss.x);
-        if (dist >= 440) return;
+        // nelle regioni il boss può stare sopra o sotto di te, dietro la roccia
+        if (dist >= 440 || Math.abs(this.player.y - this.boss.y) >= 380) return;
         // la formicona sta nella tana: non si sveglia se cammini sul soffitto
         if (this.boss.def.kind === 'formicona' && this.player.y < this.boss.y - 60) return;
 
@@ -2226,9 +2329,10 @@ export class GameScene extends Phaser.Scene {
 
         if (!this.chaseSprite) {
             // c'è una zona di caccia non ancora completata sotto i piedi?
+            const here = this.progressAt(this.player.x, this.player.y);
             const idx = this.chaseStarts.findIndex((sx, i) => {
                 const ex = this.chaseEnds[i] ?? Infinity;
-                return !this.chaseDone[i] && this.player.x >= sx && this.player.x < ex;
+                return !this.chaseDone[i] && here >= sx && here < ex;
             });
             if (idx < 0) return;
             this.chaseZoneIdx = idx;
@@ -2256,8 +2360,8 @@ export class GameScene extends Phaser.Scene {
         if (!chef?.active) return;
 
         // fine corsa: lochef ti perde di vista. per ora.
-        const endX = this.chaseEnds[this.chaseZoneIdx] ?? Infinity;
-        if (this.player.x >= endX) {
+        const endP = this.chaseEnds[this.chaseZoneIdx] ?? Infinity;
+        if (this.progressAt(this.player.x, this.player.y) >= endP) {
             this.chaseDone[this.chaseZoneIdx] = true;
             this.chaseSprite = null;
             this.tweens.add({
@@ -2305,7 +2409,7 @@ export class GameScene extends Phaser.Scene {
         const c = this.lamettaCenter;
 
         if (!this.lamettaActive) {
-            if (Math.abs(this.player.x - c.x) < 380 && !this.player.dead) {
+            if (Math.abs(this.player.x - c.x) < 380 && Math.abs(this.player.y - c.y) < 380 && !this.player.dead) {
                 this.lamettaActive = true;
                 // pavimento catturato col player a terra: le gocce successive nascono in aria
                 this.lamettaFloorY = this.player.y;
@@ -2325,7 +2429,7 @@ export class GameScene extends Phaser.Scene {
             const xs = [this.player.x - 70 + Math.random() * 40, this.player.x + 40 + Math.random() * 40];
             this.onBossLamette({ xs, y: this.player.y });
         }
-        if (time >= this.nextPitturaAt && this.enemies.getLength() < 5) {
+        if (time >= this.nextPitturaAt && this.awakeEnemies() < 5) {
             this.nextPitturaAt = time + 6500;
             this.spawnEnemy('pittura-mini', c.x + (Math.random() - 0.5) * 400, c.y - 60);
         }
@@ -2337,7 +2441,7 @@ export class GameScene extends Phaser.Scene {
         if (state.hasFlag('boss-down-smela')) { this.smelaArena = null; return; }
         // smela si rivela solo dopo che hai sistemato danjilo a metà livello
         if (!state.hasFlag('boss-down-danjilo')) return;
-        if (Math.abs(this.player.x - this.smelaArena.x) > 360) return;
+        if (Math.abs(this.player.x - this.smelaArena.x) > 360 || Math.abs(this.player.y - this.smelaArena.y) > 380) return;
         const a = this.smelaArena;
         this.smelaArena = null;
         this.boss = new Boss(this, a.x, a.y, 'smela');
@@ -2480,7 +2584,7 @@ export class GameScene extends Phaser.Scene {
         for (let i = 0; i < list.length; i++) {
             const a = list[i];
             const flag = `agguato-${this.def.id}-${i}`;
-            if (state.hasFlag(flag) || this.player.x < a.x) continue;
+            if (state.hasFlag(flag) || this.progressAt(this.player.x, this.player.y) < this.progressOfOldX(a.x)) continue;
             state.setFlag(flag);
             if (a.type === 'gag') {
                 this.startDialogue(a.intro);
@@ -2535,7 +2639,8 @@ export class GameScene extends Phaser.Scene {
         const spawned: Enemy[] = [];
         for (let i = 0; i < count; i++) {
             const dir = i % 2 === 0 ? 1 : -1;
-            const e = this.spawnEnemy('notino-mini', this.player.x + dir * (300 + i * 60), this.player.y - 140);
+            const at = this.openSpotNear(this.player.x + dir * (300 + i * 60), this.player.y - 140);
+            const e = this.spawnEnemy('notino-mini', at.x, at.y);
             this.physics.add.collider(e, this.level.layer);
             spawned.push(e);
         }
@@ -2576,7 +2681,7 @@ export class GameScene extends Phaser.Scene {
     private updatePatto(time: number): void {
         if (!this.pattoActive || this.player.dead || this.boss) return;
         // ondate di glitch per assaporare il potere rubato
-        if (time >= this.pattoNextSpawnAt && this.enemies.getLength() < 7) {
+        if (time >= this.pattoNextSpawnAt && this.awakeEnemies() < 7) {
             this.pattoNextSpawnAt = time + 3500;
             const dir = Math.random() > 0.5 ? 1 : -1;
             const e = this.spawnEnemy('glitchetto', this.player.x + dir * 420, this.player.y - 160);

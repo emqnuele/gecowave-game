@@ -71,7 +71,8 @@ export class LightingManager {
 
     /** luce di un oggetto di scena: le fiamme tremano, il resto respira piano */
     prop(x: number, y: number, color: number, radius: number, flame: boolean): Phaser.GameObjects.Light | null {
-        if (this.propCount >= 40) return null;
+        // phaser rende solo le luci vicine alla camera: il tetto serve alle regioni enormi
+        if (this.propCount >= 260) return null;
         this.propCount++;
         const light = this.scene.lights.addLight(x, y, radius, color, flame ? 1.05 : 0.75);
         this.scene.tweens.add({
