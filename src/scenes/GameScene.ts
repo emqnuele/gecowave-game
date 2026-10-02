@@ -38,7 +38,8 @@ import { music } from '../engine/music';
 import { generateFogTexture } from '../engine/textures';
 import { Boss } from '../entities/Boss';
 import { Companion } from '../entities/Companion';
-import { Enemy } from '../entities/Enemy';
+import { Enemy, type EnemyTrait } from '../entities/Enemy';
+import { ENEMIES } from '../content/enemies';
 import { Player } from '../entities/Player';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
 
@@ -523,7 +524,8 @@ export class GameScene extends Phaser.Scene {
                 case 'enemy': {
                     // una parte dei nemici dorme: si passa piano, o si sveglia tutto
                     const h = hashString(`${this.def.id}:${x}:${y}`);
-                    this.spawnEnemy(spec.kind, x, y, { sleeping: h % 100 < 35, elite: this.isEliteSpot(x, y, h) });
+                    const elite = this.isEliteSpot(x, y, h);
+                    this.spawnEnemy(spec.kind, x, y, { sleeping: h % 100 < 35, elite, trait: elite ? null : this.traitFor(spec.kind, x, y, h) });
                     break;
                 }
                 case 'npc':
@@ -661,13 +663,60 @@ export class GameScene extends Phaser.Scene {
         return h % 1000 < 22;
     }
 
-    private spawnEnemy(kind: EnemyKind, x: number, y: number, opts: { sleeping?: boolean; hunting?: boolean; elite?: boolean } = {}): Enemy {
-        const e = new Enemy(this, x, y, kind, this.nav, { sleeping: opts.sleeping && !opts.elite, elite: opts.elite });
+    /** varianti dei nemici delle regioni: deterministiche, per bioma e comportamento */
+    private traitFor(kind: EnemyKind, x: number, y: number, h: number): EnemyTrait | null {
+        if (!this.layout) return null;
+        const room = this.roomAt(x, y);
+        if (!room || room.kind === 'start' || room.kind === 'rest') return null;
+        const b = ENEMIES[kind].behavior;
+        const biome = this.biome.id;
+        const roll = (h >>> 10) % 1000;
+        const hard = (list: string[], hi: number, lo: number) => (list.includes(biome) ? hi : lo);
+        if ((b === 'walker' || b === 'charger') && roll < hard(['sanctum', 'factory', 'servers', 'core', 'noir', 'library', 'province', 'depot'], 200, 100)) return 'scudo';
+        if ((b === 'walker' || b === 'hopper' || b === 'chaser') && !room.surface && roll >= 300 && roll < 300 + hard(['burrow', 'cellar', 'memory', 'mind', 'lab', 'void', 'swamp'], 170, 80)) return 'soffitto';
+        if ((b === 'hopper' || b === 'flyer') && roll >= 600 && roll < 600 + hard(['wasteland', 'factory', 'core', 'void', 'servers', 'lab'], 140, 50)) return 'kamikaze';
+        return null;
+    }
+
+    private spawnEnemy(kind: EnemyKind, x: number, y: number, opts: { sleeping?: boolean; hunting?: boolean; elite?: boolean; trait?: EnemyTrait | null } = {}): Enemy {
+        const e = new Enemy(this, x, y, kind, this.nav, { sleeping: opts.sleeping && !opts.elite, elite: opts.elite, trait: opts.trait });
         if (opts.hunting) e.hunt();
         e.setDepth(4);
         this.enemies.add(e);
-        this.lighting.follow(e, e.arch.glowColor, 110, 0.55);
+        // il kamikaze si annuncia con una luce rossa, chi sta appeso al buio no
+        if (e.trait !== 'soffitto') this.lighting.follow(e, e.trait === 'kamikaze' ? 0xef4444 : e.arch.glowColor, 110, 0.55);
         return e;
+    }
+
+    /** lo scudo para: clang, rinculo, nessun flow */
+    private parry(enemy: Enemy): void {
+        sfx.clang();
+        const dir = Math.sign(this.player.x - enemy.x) || 1;
+        (this.player.body as Phaser.Physics.Arcade.Body).setVelocityX(dir * 260);
+        const sparks = this.add.particles(enemy.x - dir * 18, enemy.y, 'p-spark', {
+            speed: { min: 80, max: 220 }, angle: dir > 0 ? { min: -60, max: 60 } : { min: 120, max: 240 },
+            scale: { start: 0.7, end: 0 }, tint: 0xe5e7eb, lifespan: 260, quantity: 8, stopAfter: 8,
+        }).setDepth(6);
+        this.time.delayedCall(400, () => sparks.destroy());
+    }
+
+    private onEnemyExplode({ x, y, r, from }: { x: number; y: number; r: number; from: Enemy }): void {
+        sfx.crumble();
+        sfx.hit();
+        this.shake(220, 0.01);
+        const boom = this.add.particles(x, y, 'p-spark', {
+            speed: { min: 120, max: 340 }, scale: { start: 1.3, end: 0 }, tint: [0xef4444, 0xf97316, 0xfacc15],
+            lifespan: 420, quantity: 26, stopAfter: 26,
+        }).setDepth(6);
+        this.time.delayedCall(600, () => boom.destroy());
+        const flash = this.lighting.static(x, y, 0xf97316, 200, 1.4);
+        this.time.delayedCall(260, () => this.lighting.remove(flash));
+        if (Math.hypot(this.player.x - x, this.player.y - y) < r) this.player.hurt(1, x);
+        // lo scoppio non guarda in faccia nessuno: anche i compagni si fanno male
+        for (const obj of this.enemies.getChildren()) {
+            const e = obj as Enemy;
+            if (e !== from && e.active && Math.hypot(e.x - x, e.y - y) < r) e.takeDamage(2, x);
+        }
     }
 
 
@@ -1522,6 +1571,11 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.attackHitbox, this.enemies, (_hb, obj) => {
             if (!this.player.attackActive) return;
             const enemy = obj as Enemy;
+            if (enemy.blocks(this.player.x, this.player.attackDir)) {
+                this.player.attackActive = false;
+                this.parry(enemy);
+                return;
+            }
             this.player.attackActive = false;
             this.player.onAttackHit();
             this.hitstop();
@@ -1540,6 +1594,11 @@ export class GameScene extends Phaser.Scene {
             // il colpo risonante perfora ma ogni bersaglio lo subisce una volta
             const hitSet = (bullet.getData('hit') ?? new Set()) as Set<Enemy>;
             if (hitSet.has(enemy)) return;
+            if (enemy.blocks(bullet.x, 'shot')) {
+                this.parry(enemy);
+                this.popProjectile(bullet);
+                return;
+            }
             hitSet.add(enemy);
             bullet.setData('hit', hitSet);
             const dmg = (bullet.getData('dmg') as number | undefined) ?? state.risonanteDamage * state.damageMult;
@@ -1615,6 +1674,9 @@ export class GameScene extends Phaser.Scene {
         on('player-acqua', this.onAcquaTossica as never);
         on('enemy-shoot', this.onEnemyShoot as never);
         on('enemy-died', this.onEnemyDied as never);
+        on('enemy-explode', this.onEnemyExplode as never);
+        on('enemy-fuse', (() => sfx.fuse()) as never);
+        on('enemy-drop', (() => sfx.shriek()) as never);
         on('enemy-alert', this.onEnemyAlert as never);
         on('player-dead', this.onPlayerDead as never);
         on('boss-summon', this.onBossSummon as never);

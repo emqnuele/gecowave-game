@@ -122,6 +122,12 @@ class Sfx {
         this.noise(800, { freq: 180, q: 0.6, vol: 0.25 });
     }
     ui(): void { this.tone(520, 60, { type: 'square', vol: 0.04 }); }
+    clang(): void {
+        this.tone(1800, 120, { type: 'square', to: 1200, vol: 0.06 });
+        this.noise(80, { freq: 4200, q: 4, vol: 0.12 });
+    }
+    fuse(): void { [0, 160, 320, 480].forEach((d, i) => this.tone(900 + i * 180, 60, { type: 'square', vol: 0.05, delayMs: d })); }
+    shriek(): void { this.tone(1300, 260, { type: 'sawtooth', to: 500, vol: 0.06 }); }
     crack(): void { this.noise(120, { freq: 1400, q: 3, vol: 0.12 }); }
     crumble(): void {
         this.noise(420, { freq: 300, q: 0.7, vol: 0.2 });

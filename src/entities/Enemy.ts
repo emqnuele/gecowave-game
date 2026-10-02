@@ -2,12 +2,19 @@ import Phaser from 'phaser';
 import { ENEMIES, type EnemyArchetype } from '../content/enemies';
 import type { NavEdge, NavGraph } from '../engine/nav/NavGraph';
 import type { EnemyKind } from '../types';
+import { mix } from '../engine/art/ink';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo
    il grafo di navigazione (salti compresi), chi ti perde torna a casa, i più
    deboli a vita bassa scappano */
 export type EnemyMode = 'sleep' | 'patrol' | 'alert' | 'chase' | 'return' | 'flee';
+
+/** varianti che si sommano al comportamento: scudo davanti, agguato dal soffitto, scoppio */
+export type EnemyTrait = 'scudo' | 'soffitto' | 'kamikaze';
+
+const FUSE_MS = 650;
+const BLAST_R = 96;
 
 /** quanto salta ogni comportamento, in px: decide quali archi del grafo può usare */
 const JUMP: Record<EnemyArchetype['behavior'], number> = {
@@ -58,8 +65,13 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private stuckAt = 0;
     private flyStuckY = 0;
     private mark: Phaser.GameObjects.Text | null = null;
+    readonly trait: EnemyTrait | null;
+    private shield: Phaser.GameObjects.Image | null = null;
+    /** appeso al soffitto finché non passi sotto */
+    private hanging = false;
+    private fuseAt = 0;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean; elite?: boolean } = {}) {
+    constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean; elite?: boolean; trait?: EnemyTrait | null } = {}) {
         super(scene, x, y, ENEMIES[kind].texture);
         this.elite = !!opts.elite;
         const base = ENEMIES[kind];
@@ -85,7 +97,58 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             this.aura = scene.add.image(x, y, 'p-dot').setTint(this.arch.glowColor).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.55).setScale(5).setDepth(3.9);
             scene.tweens.add({ targets: this.aura, scale: 6.2, alpha: 0.3, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         }
-        if (opts.sleeping && !airborne) this.setMode('sleep');
+        this.trait = opts.trait ?? null;
+        if (this.trait === 'soffitto' && !this.hangFromCeiling()) this.trait = null;
+        if (this.trait === 'scudo') {
+            Enemy.ensureTextures(scene);
+            this.shield = scene.add.image(x, y, 'trait-scudo').setDepth(4.1).setPipeline('Light2D').setTint(mix(this.arch.glowColor, 0x52525b, 0.55));
+        }
+        if (opts.sleeping && !airborne && !this.hanging) this.setMode('sleep');
+    }
+
+    private static ensureTextures(scene: Phaser.Scene): void {
+        if (scene.textures.exists('trait-scudo')) return;
+        const g = scene.add.graphics();
+        // scudo d'inchiostro: chiaro, si tinge col colore del nemico
+        g.fillStyle(0xd4d4d8, 1);
+        g.fillRoundedRect(1, 1, 10, 24, 4);
+        g.lineStyle(2, 0x0b0c10, 1);
+        g.strokeRoundedRect(1, 1, 10, 24, 4);
+        g.lineStyle(1.5, 0x0b0c10, 1);
+        g.lineBetween(6, 4, 6, 22);
+        g.generateTexture('trait-scudo', 12, 26);
+        g.destroy();
+    }
+
+    /** si attacca al soffitto sopra la sua casa; false se lì sopra non c'è roccia */
+    private hangFromCeiling(): boolean {
+        const b = this.arch.behavior;
+        if (!this.nav || b === 'flyer' || b === 'turret') return false;
+        const c = Math.floor(this.x / 32);
+        let r = Math.floor(this.y / 32);
+        for (let k = 0; k < 12; k++, r--) {
+            if (this.nav.solid(c, r - 1)) {
+                // tra soffitto e pavimento serve spazio per cadere davvero
+                if (k < 5) return false;
+                this.hanging = true;
+                this.y = r * 32 + this.displayHeight / 2 + 1;
+                const body = this.body as Phaser.Physics.Arcade.Body;
+                body.setAllowGravity(false);
+                body.setVelocity(0, 0);
+                this.setFlipY(true);
+                this.setTint(0x6b7280);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** colpo parato: lo scudo guarda dove guarda lui, il pogo e i colpi alle spalle passano */
+    blocks(fromX: number, dir: 'side' | 'up' | 'down' | 'shot'): boolean {
+        if (this.trait !== 'scudo' || !this.active || dir === 'down' || dir === 'up') return false;
+        if (this.scene.time.now < this.stunnedUntil) return false;
+        const facing = this.flipX ? 1 : -1;
+        return Math.sign(fromX - this.x) === facing;
     }
 
     setDormant(dormant: boolean): void {
@@ -96,6 +159,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         body.enable = !dormant;
         this.mark?.setVisible(!dormant && this.mode === 'sleep');
         this.aura?.setVisible(!dormant);
+        this.shield?.setVisible(!dormant);
+        // chi dorme appeso resta appeso: senza gravità anche quando si risveglia il corpo
+        if (!dormant && this.hanging) body.setAllowGravity(false);
     }
 
     private get ground(): boolean {
@@ -147,6 +213,24 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         const dist = Math.hypot(dx, dy);
         this.mark?.setPosition(this.x, this.y - this.displayHeight / 2 - 12 + Math.sin(this.t / 300) * 2);
         this.aura?.setPosition(this.x, this.y);
+        if (this.shield) this.shield.setPosition(this.x + (this.flipX ? 1 : -1) * (this.displayWidth / 2 + 2), this.y + 2).setFlipX(this.flipX);
+
+        if (this.hanging) {
+            // passa sotto e ti cade addosso: lo si vede solo se lo si cerca
+            if (Math.abs(dx) < 70 && dy > 0 && dy < 420 && (!this.nav || this.nav.sight(this.x, this.y + 10, target.x, target.y - 10))) this.drop();
+            return;
+        }
+        if (this.fuseAt) {
+            body.setVelocityX(body.velocity.x * 0.85);
+            this.setTintFill(Math.floor(now / 90) % 2 ? 0xffffff : 0xef4444);
+            if (now >= this.fuseAt) this.explode();
+            return;
+        }
+        if (this.trait === 'kamikaze' && this.mode === 'chase' && dist < 80) {
+            this.fuseAt = now + FUSE_MS;
+            this.scene.events.emit('enemy-fuse', { x: this.x, y: this.y });
+            return;
+        }
 
         if (now < this.stunnedUntil) {
             body.setVelocityX(body.velocity.x * 0.9);
@@ -208,6 +292,25 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             this.nextShotAt = now + this.arch.fireRateMs;
             this.scene.events.emit('enemy-shoot', { x: this.x, y: this.y, tx: target.x, ty: target.y, color: this.arch.glowColor });
         }
+    }
+
+    private drop(): void {
+        this.hanging = false;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        body.setAllowGravity(true);
+        body.setVelocityY(260);
+        this.setFlipY(false);
+        this.clearTint();
+        this.scene.events.emit('enemy-drop', { x: this.x, y: this.y });
+        this.hunt();
+    }
+
+    /** il kamikaze: un lampo, un raggio, e paga lo stesso le sue barre */
+    private explode(): void {
+        if (!this.active) return;
+        this.scene.events.emit('enemy-explode', { x: this.x, y: this.y, r: BLAST_R, from: this });
+        this.hp = 0;
+        this.die();
     }
 
     private wake(): void {
@@ -459,6 +562,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     takeDamage(amount: number, fromX: number): void {
         if (!this.active) return;
+        // chi è appeso e viene colpito molla la presa
+        if (this.hanging) this.drop();
         this.hp -= amount;
         const body = this.body as Phaser.Physics.Arcade.Body;
         if (this.arch.behavior !== 'charger') {
@@ -501,6 +606,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.mark = null;
         this.aura?.destroy();
         this.aura = null;
+        this.shield?.destroy();
+        this.shield = null;
         super.destroy(fromScene);
     }
 

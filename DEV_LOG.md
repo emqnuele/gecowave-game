@@ -88,6 +88,13 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **romero in piazza** dopo il caso: chi ha letto il suo biglietto può offrirgli il caffè.
 - **finali estesi**: una riga per ognuna di queste conseguenze, più guastalla autista con tre corse vinte.
 
+### ADR-014 — tratti dei nemici
+**Decisione**: tre tratti ortogonali al comportamento (`EnemyTrait`), assegnati a runtime in modo deterministico per bioma e comportamento (`traitFor`), mai alle élite né nelle stanze di inizio e riposo:
+- **scudo** (camminatori e carichi): para i colpi frontali e il colpo risonante; passano pogo, colpi dal basso e alle spalle. La parata fa rinculo e non dà flow.
+- **soffitto** (camminatori, saltatori, inseguitori al chiuso): appeso a testa in giù sotto un soffitto alto almeno 5 righe, scuro e senza luce; cade quando passi sotto o quando lo colpisci.
+- **kamikaze** (saltatori e volanti): luce rossa, a 80 px innesca la miccia (650 ms, lampeggia, ticchetta) e scoppia in un raggio di 96 px che ferisce anche gli altri nemici.
+**Perché a runtime**: come le trappole, non toccano la griglia verificata.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -115,6 +122,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
 - Lastre che crollano sopra i pozzi e allagamenti periodici (tossici in rio, tecnokill, trenbolone, stabilimento), ADR-010.
+- Nemici: tratti scudo, soffitto, kamikaze (ADR-014).
 - Fase 5: note ambientali, quaderno di pedro, pensiero sepolto, scelte su notino e lochef, ospiti della piazza, finali estesi (ADR-013).
 - Sfide a tempo: corsa contro il citelis in ogni regione (ADR-012).
 - Ricordi rigenerata e verificata col simulatore corretto (ADR-011).
@@ -142,4 +150,5 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **pericoli**: lastre che crollano, allagamenti; ricordi sbloccata; trappole e passanti sulla pipeline di luce.
 - **sfide a tempo**: la corsa contro il citelis.
 - **trama**: archi secondari, scelte a metà gioco, lore ambientale, finali estesi.
+- **nemici**: scudati, appesi al soffitto, kamikaze.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.
