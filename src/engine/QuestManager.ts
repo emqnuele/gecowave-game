@@ -89,7 +89,7 @@ export class QuestManager {
         const key = ensureFolkTexture(this.scene, who.look, eye);
         const x = c * TILE + TILE / 2;
         const feet = (r + 1) * TILE;
-        const sprite = this.scene.add.image(x, feet + 1, key).setOrigin(0.5, 1).setDepth(3.7);
+        const sprite = this.scene.add.image(x, feet + 1, key).setOrigin(0.5, 1).setDepth(3.7).setPipeline('Light2D');
         this.scene.tweens.add({ targets: sprite, scaleY: 1.03, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         const mark = this.scene.add.text(x, feet - 66, '!', {
             fontFamily: '"Permanent Marker", cursive',

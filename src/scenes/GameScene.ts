@@ -3242,7 +3242,7 @@ export class GameScene extends Phaser.Scene {
     private spawnMirror(): void {
         if (!this.lamettaCenter) return;
         const c = this.lamettaCenter;
-        const mirror = this.add.sprite(c.x + 180, c.y + 12, 'black-mirror').setDepth(5).setAlpha(0);
+        const mirror = this.add.sprite(c.x + 180, c.y + 12, 'black-mirror').setDepth(5).setAlpha(0).setPipeline('Light2D');
         this.mirror = mirror;
         this.lighting.static(mirror.x, mirror.y, 0xc084fc, 220, 1.0);
         this.tweens.add({ targets: mirror, alpha: 1, duration: 800 });

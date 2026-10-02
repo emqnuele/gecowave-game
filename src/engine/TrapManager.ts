@@ -31,6 +31,10 @@ interface Trap {
     dir: 1 | -1;
     sprite: Phaser.GameObjects.Image;
     extra?: Phaser.GameObjects.Graphics;
+    /** pistone della pressa: un'immagine, così prende le luci come il resto */
+    rod?: Phaser.GameObjects.Image;
+    /** la sega porta con sé un filo di luce rossa: nel buio si sente arrivare */
+    glow?: Phaser.GameObjects.Light;
     state: number;
 }
 
@@ -121,9 +125,10 @@ export class TrapManager {
             const x1 = c1 * TILE + TILE / 2;
             const y = floorY - SAW_R + 3;
             if (!clear(x0, y) || !clear(x1, y) || !clear((x0 + x1) / 2, y)) return false;
-            const sprite = this.scene.add.image(x0, y, 'trap-sega').setDepth(4);
+            const sprite = this.scene.add.image(x0, y, 'trap-sega').setDepth(4).setPipeline('Light2D');
             const speed = 90 + rnd() * 70;
-            this.traps.push({ kind, x: x0, y, a: x0, b: x1, speed, phase: 0, period: 0, dir: 1, sprite, state: 0 });
+            const glow = this.scene.lights.addLight(x0, y, 90, 0xef4444, 0.45);
+            this.traps.push({ kind, x: x0, y, a: x0, b: x1, speed, phase: 0, period: 0, dir: 1, sprite, glow, state: 0 });
             return true;
         }
         if (kind === 'pressa') {
@@ -142,10 +147,10 @@ export class TrapManager {
             const x = (c + 1) * TILE;
             if (!clear(x, floorY)) return false;
             const upY = top * TILE + PRESS_H;
-            const sprite = this.scene.add.image(x, upY, 'trap-pressa').setOrigin(0.5, 1).setDepth(4);
-            const rod = this.scene.add.graphics().setDepth(3);
+            const sprite = this.scene.add.image(x, upY, 'trap-pressa').setOrigin(0.5, 1).setDepth(4).setPipeline('Light2D');
+            const rod = this.scene.add.image(x, top * TILE, 'trap-rod').setOrigin(0.5, 0).setDepth(3).setPipeline('Light2D');
             const period = 2600 + rnd() * 1200;
-            this.traps.push({ kind, x, y: upY, a: upY, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, extra: rod, state: 0 });
+            this.traps.push({ kind, x, y: upY, a: upY, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, rod, state: 0 });
             this.drawRod(this.traps[this.traps.length - 1], top * TILE);
             return true;
         }
@@ -155,7 +160,7 @@ export class TrapManager {
         if (!headroom(c, 3)) return false;
         const x = c * TILE + TILE / 2;
         if (!clear(x, floorY)) return false;
-        const sprite = this.scene.add.image(x, floorY, 'trap-grata').setOrigin(0.5, 1).setDepth(4);
+        const sprite = this.scene.add.image(x, floorY, 'trap-grata').setOrigin(0.5, 1).setDepth(4).setPipeline('Light2D');
         const jet = this.scene.add.graphics().setDepth(5);
         const period = 3000 + rnd() * 1400;
         this.traps.push({ kind: 'vapore', x, y: floorY, a: floorY - JET_H, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, extra: jet, state: 0 });
@@ -177,6 +182,7 @@ export class TrapManager {
                 if (t.x > t.b) { t.x = t.b; t.dir = -1; }
                 if (t.x < t.a) { t.x = t.a; t.dir = 1; }
                 t.sprite.setPosition(t.x, t.y);
+                t.glow?.setPosition(t.x, t.y);
                 t.sprite.rotation += t.dir * t.speed * (delta / 1000) / SAW_R;
                 const nx = Phaser.Math.Clamp(t.x, px0, px1);
                 const ny = Phaser.Math.Clamp(t.y, py0, py1);
@@ -221,14 +227,15 @@ export class TrapManager {
             g.clear();
             const warn = t.period - 1800;
             if (p >= warn && p < warn + 600) {
-                g.fillStyle(0xe5e7eb, 0.25 + 0.2 * Math.sin(p * 0.05));
+                g.fillStyle(0xcbd5e1, 0.15 + 0.1 * Math.sin(p * 0.05));
                 for (let k = 0; k < 3; k++) g.fillCircle(t.x + Math.sin(p * 0.01 + k * 2) * 6, t.b - 8 - k * 9 - (p - warn) * 0.02, 5 + k);
             } else if (p >= warn + 600 && p < warn + 1800) {
                 const k = Math.min(1, (p - warn - 600) / 120);
                 const top = t.b - JET_H * k;
-                g.fillStyle(0xf1f5f9, 0.5);
+                // il vapore non prende luce: tenue, o nel buio sembrerebbe un neon
+                g.fillStyle(0xcbd5e1, 0.22);
                 g.fillRect(t.x - 10, top, 20, t.b - top);
-                g.fillStyle(0xffffff, 0.35);
+                g.fillStyle(0xe2e8f0, 0.18);
                 for (let i = 0; i < 6; i++) g.fillCircle(t.x + Math.sin(p * 0.02 + i) * 8, top + ((p * 0.4 + i * 23) % (t.b - top)), 6);
                 if (px1 > t.x - 9 && px0 < t.x + 9 && py1 > top && py0 < t.b) player.hurt(1, t.x);
             }
@@ -253,12 +260,8 @@ export class TrapManager {
 
     /** il pistone che regge la pressa */
     private drawRod(t: Trap, ceilY: number): void {
-        const g = t.extra!;
-        g.clear();
-        g.fillStyle(INK, 1);
-        g.fillRect(t.x - 6, ceilY, 12, Math.max(0, t.y - PRESS_H - ceilY));
-        g.lineStyle(1.5, 0x52525b, 1);
-        g.strokeRect(t.x - 6, ceilY, 12, Math.max(0, t.y - PRESS_H - ceilY));
+        const h = Math.max(1, t.y - PRESS_H - ceilY);
+        t.rod?.setPosition(t.sprite.x, ceilY).setDisplaySize(12, h).setVisible(h > 1);
     }
 
     private ensureTextures(rim: number): void {
@@ -293,9 +296,18 @@ export class TrapManager {
             g.lineStyle(2, 0xa1a1aa, 1);
             g.strokeRect(1, 1, PRESS_W - 2, PRESS_H - 8);
             // strisce di pericolo
-            g.lineStyle(3, 0xfacc15, 0.85);
+            g.lineStyle(3, 0xb8901a, 0.7);
             for (let x = -PRESS_H; x < PRESS_W; x += 12) g.lineBetween(x, PRESS_H - 9, x + 12, 3);
             g.generateTexture('trap-pressa', PRESS_W, PRESS_H);
+            g.destroy();
+        }
+        if (!s.textures.exists('trap-rod')) {
+            const g = s.add.graphics();
+            g.fillStyle(0x52525b, 1);
+            g.fillRect(0, 0, 12, 8);
+            g.fillStyle(INK, 1);
+            g.fillRect(2, 0, 8, 8);
+            g.generateTexture('trap-rod', 12, 8);
             g.destroy();
         }
         if (!s.textures.exists('trap-grata')) {
@@ -314,6 +326,8 @@ export class TrapManager {
         for (const t of this.traps) {
             t.sprite.destroy();
             t.extra?.destroy();
+            t.rod?.destroy();
+            if (t.glow) this.scene.lights.removeLight(t.glow);
         }
         this.traps.length = 0;
     }

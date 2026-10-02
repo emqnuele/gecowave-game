@@ -147,7 +147,7 @@ export class HazardManager {
 
     private addSlab(x: number, y: number, biomeId: string): void {
         const img = this.group.create(x, y + SLAB_H / 2, `hz-slab-${biomeId}`) as Phaser.Physics.Arcade.Image;
-        img.setDepth(3);
+        img.setDepth(3).setPipeline('Light2D');
         const body = img.body as Phaser.Physics.Arcade.StaticBody;
         body.setSize(TILE, SLAB_H);
         body.checkCollision.down = false;

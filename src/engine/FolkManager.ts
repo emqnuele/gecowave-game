@@ -114,7 +114,7 @@ export class FolkManager {
         const key = ensureFolkTexture(this.scene, kind.look, eye);
         const s = this.nav.segments[seg];
         const feet = (s.r + 1) * TILE;
-        const sprite = this.scene.add.image(x, feet + 1, key).setOrigin(0.5, 1).setDepth(3.6);
+        const sprite = this.scene.add.image(x, feet + 1, key).setOrigin(0.5, 1).setDepth(3.6).setPipeline('Light2D');
         const w = new Wanderer(sprite, kind, seg, x, feet, home, (who) => this.converse(who));
         w.facing = Math.random() < 0.5 ? -1 : 1;
         this.folk.push(w);
