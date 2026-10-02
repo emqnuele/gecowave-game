@@ -3,6 +3,7 @@ import { ENEMIES, type EnemyArchetype } from '../content/enemies';
 import type { NavEdge, NavGraph } from '../engine/nav/NavGraph';
 import type { EnemyKind } from '../types';
 import { mix } from '../engine/art/ink';
+import { ensureCreature } from '../engine/art/creatures';
 import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
@@ -77,7 +78,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private animT = Math.random() * 1000;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean; elite?: boolean; trait?: EnemyTrait | null } = {}) {
-        super(scene, x, y, ENEMIES[kind].texture);
+        super(scene, x, y, ensureCreature(scene, ENEMIES[kind].texture));
         this.elite = !!opts.elite;
         const base = ENEMIES[kind];
         // l'élite è lo stesso nemico, solo peggio: tutto si legge dall'archetipo

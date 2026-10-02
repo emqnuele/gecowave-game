@@ -512,9 +512,11 @@ export function buildCreature(scene: Phaser.Scene, spec: CreatureSpec): void {
     const pad = spec.pad ?? 5;
     const fw = (spec.w + pad * 2) * R;
     const fh = (spec.h + pad * 2) * R;
-    const sheet = canvas(fw * frames, fh);
-    const glowSheet = canvas(fw * frames, fh);
-    const normals = canvas(fw * frames, fh);
+    // un filo vuoto tra i fotogrammi: il filtro lineare non deve pescare dal vicino
+    const step = fw + 2;
+    const sheet = canvas(step * frames, fh);
+    const glowSheet = canvas(step * frames, fh);
+    const normals = canvas(step * frames, fh);
     let anyGlow = false;
     for (let f = 0; f < frames; f++) {
         // stesso seme per ogni fotogramma: il tremolio non deve far ballare il disegno
@@ -525,23 +527,23 @@ export function buildCreature(scene: Phaser.Scene, spec: CreatureSpec): void {
         glow.ctx.setTransform(R, 0, 0, R, pad * R, pad * R);
         spec.draw(new Painter(main.ctx, glow.ctx, rnd, spec.w, spec.h, pad), frames > 1 ? f / frames : 0, f);
         const outlined = silhouetteOutline(main.el, (spec.outline ?? 1.15) * R);
-        sheet.ctx.drawImage(outlined, f * fw, 0);
-        glowSheet.ctx.drawImage(glow.el, f * fw, 0);
-        normals.ctx.drawImage(normalMap(outlined), f * fw, 0);
+        sheet.ctx.drawImage(outlined, f * step, 0);
+        glowSheet.ctx.drawImage(glow.el, f * step, 0);
+        normals.ctx.drawImage(normalMap(outlined), f * step, 0);
         if (!anyGlow) {
             const d = glow.ctx.getImageData(0, 0, fw, fh).data;
             for (let i = 3; i < d.length; i += 16) if (d[i] > 8) { anyGlow = true; break; }
         }
     }
-    register(scene, spec, spec.key, sheet.el, frames, fw, fh, normals.el);
-    if (anyGlow) register(scene, spec, glowKey(spec.key), glowSheet.el, frames, fw, fh, null);
+    register(scene, spec, spec.key, sheet.el, frames, step, fw, fh, normals.el);
+    if (anyGlow) register(scene, spec, glowKey(spec.key), glowSheet.el, frames, step, fw, fh, null);
 }
 
-function register(scene: Phaser.Scene, spec: CreatureSpec, key: string, el: HTMLCanvasElement, frames: number, fw: number, fh: number, normals: HTMLCanvasElement | null): void {
+function register(scene: Phaser.Scene, spec: CreatureSpec, key: string, el: HTMLCanvasElement, frames: number, step: number, fw: number, fh: number, normals: HTMLCanvasElement | null): void {
     if (scene.textures.exists(key)) scene.textures.remove(key);
     const tex = scene.textures.addCanvas(key, el);
     if (!tex) return;
-    for (let f = 0; f < frames; f++) tex.add(f, 0, f * fw, 0, fw, fh);
+    for (let f = 0; f < frames; f++) tex.add(f, 0, f * step, 0, fw, fh);
     tex.customData = { ...tex.customData, creatureFrames: frames, creatureRes: CREATURE_RES, creatureW: spec.w, creatureH: spec.h, creatureFaces: !!spec.faces };
     if (normals) tex.setDataSource(normals);
 }

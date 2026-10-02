@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { CreatureGlow, creatureFrames, creatureRes } from '../engine/art/creatureKit';
-import { CREATURE_KEYS } from '../engine/art/creatures';
+import { CREATURE_KEYS, ensureCreature } from '../engine/art/creatures';
 
 /* solo sviluppo (?gallery): tutto il cast vivo in griglia sotto una luce
    che segue il mouse, per controllare disegni, normal map e fotogrammi */
@@ -23,6 +23,7 @@ export class GalleryScene extends Phaser.Scene {
         keys.forEach((key, i) => {
             const x = 20 + cell / 2 + (i % cols) * cell;
             const y = 20 + cell / 2 + Math.floor(i / cols) * cell;
+            ensureCreature(this, key);
             const res = creatureRes(this, key);
             const tex = this.textures.get(key).get(0);
             const logical = Math.max(tex.width, tex.height) / res;

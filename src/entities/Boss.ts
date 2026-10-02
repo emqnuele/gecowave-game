@@ -4,6 +4,7 @@ import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { BossKind } from '../types';
+import { ensureCreature } from '../engine/art/creatures';
 import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 
 type Phase = 1 | 2 | 3;
@@ -37,7 +38,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     private faces: boolean;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: BossKind, hpOverride?: number) {
-        super(scene, x, y, BOSSES[kind].texture);
+        super(scene, x, y, ensureCreature(scene, BOSSES[kind].texture));
         this.def = BOSSES[kind];
         this.maxHp = hpOverride ?? this.def.hp;
         this.hp = this.maxHp;

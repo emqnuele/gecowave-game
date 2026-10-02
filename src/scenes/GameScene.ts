@@ -39,6 +39,7 @@ import { music } from '../engine/music';
 import { generateFogTexture } from '../engine/textures';
 import { Boss } from '../entities/Boss';
 import { creatureFrames, creatureRes } from '../engine/art/creatureKit';
+import { ensureCreature, prewarmCreatures } from '../engine/art/creatures';
 import { Companion } from '../entities/Companion';
 import { Enemy, type EnemyTrait } from '../entities/Enemy';
 import { ENEMIES } from '../content/enemies';
@@ -344,6 +345,7 @@ export class GameScene extends Phaser.Scene {
         this.lighting.enable(this.biome);
 
         this.level = loadLevel(this, this.def, this.biome);
+        prewarmCreatures(this, this.level.entities.map((e) => e.spec));
         this.level.layer.setDepth(2);
         this.level.spikes.setDepth(3, 0);
         this.nav = new NavGraph(this.def.grid);
@@ -3263,7 +3265,7 @@ export class GameScene extends Phaser.Scene {
                 const cam = this.cameras.main.worldView;
                 const sx = ahead > 0 ? cam.x - 60 : cam.right + 60;
                 // fuori dalle luci: lochef si vede sempre, è lui la luce cattiva
-                const chef = this.add.sprite(sx, this.player.y - 70, 'boss-lochef', 0).setDepth(7).setScale(1.25 / creatureRes(this, 'boss-lochef'));
+                const chef = this.add.sprite(sx, this.player.y - 70, ensureCreature(this, 'boss-lochef'), 0).setDepth(7).setScale(1.25 / creatureRes(this, 'boss-lochef'));
                 this.chaseSprite = chef;
                 this.chaseStartedAt = this.time.now;
                 this.lighting.follow(chef, 0xf87171, 300, 1.2);
