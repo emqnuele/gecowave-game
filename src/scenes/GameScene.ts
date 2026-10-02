@@ -17,6 +17,8 @@ import { RoomBackdrops } from '../engine/RoomBackdrops';
 import { loadRegion } from '../world/registry';
 import { oldXToProgress, type RegionLayout, type Room } from '../world/types';
 import { npcTexture } from '../engine/npcTexture';
+import { NavGraph } from '../engine/nav/NavGraph';
+import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import { music } from '../engine/music';
@@ -121,6 +123,8 @@ export class GameScene extends Phaser.Scene {
     /** stanza per slot della macro-griglia */
     private roomBySlot: Int16Array | null = null;
     private level!: LoadedLevel;
+    /** pavimenti e salti per chi insegue o passeggia */
+    private nav!: NavGraph;
     private player!: Player;
     private boss: Boss | null = null;
     private enemies!: Phaser.GameObjects.Group;
@@ -286,6 +290,7 @@ export class GameScene extends Phaser.Scene {
         this.level = loadLevel(this, this.def, this.biome);
         this.level.layer.setDepth(2);
         this.level.spikes.setDepth(3, 0);
+        this.nav = new NavGraph(this.def.grid);
 
         const t0 = performance.now();
         this.terrain = new TerrainRenderer(this, this.biome);
@@ -388,7 +393,8 @@ export class GameScene extends Phaser.Scene {
         for (const { spec, x, y } of this.level.entities) {
             switch (spec.type) {
                 case 'enemy':
-                    this.spawnEnemy(spec.kind, x, y);
+                    // una parte dei nemici dorme: si passa piano, o si sveglia tutto
+                    this.spawnEnemy(spec.kind, x, y, { sleeping: hashString(`${this.def.id}:${x}:${y}`) % 100 < 35 });
                     break;
                 case 'npc':
                     this.spawnNpc(spec.id, x, y);
@@ -495,8 +501,9 @@ export class GameScene extends Phaser.Scene {
         if (kind === 'pedrino') state.setFlag('ricordi-visti');
     }
 
-    private spawnEnemy(kind: EnemyKind, x: number, y: number): Enemy {
-        const e = new Enemy(this, x, y, kind);
+    private spawnEnemy(kind: EnemyKind, x: number, y: number, opts: { sleeping?: boolean; hunting?: boolean } = {}): Enemy {
+        const e = new Enemy(this, x, y, kind, this.nav, { sleeping: opts.sleeping });
+        if (opts.hunting) e.hunt();
         e.setDepth(4);
         this.enemies.add(e);
         this.lighting.follow(e, e.arch.glowColor, 110, 0.55);
@@ -1172,6 +1179,7 @@ export class GameScene extends Phaser.Scene {
         on('player-acqua', this.onAcquaTossica as never);
         on('enemy-shoot', this.onEnemyShoot as never);
         on('enemy-died', this.onEnemyDied as never);
+        on('enemy-alert', this.onEnemyAlert as never);
         on('player-dead', this.onPlayerDead as never);
         on('boss-summon', this.onBossSummon as never);
         on('boss-lamette', this.onBossLamette as never);
@@ -1702,7 +1710,7 @@ export class GameScene extends Phaser.Scene {
             const side = Math.random() < 0.5 ? -1 : 1;
             const gx = Phaser.Math.Clamp(this.player.x + side * 420, 40, this.level.widthPx - 40);
             const at = this.openSpotNear(gx, this.player.y - 80);
-            this.spawnEnemy('glitchetto', at.x, at.y);
+            this.spawnEnemy('glitchetto', at.x, at.y, { hunting: true });
         }
 
         // doomsday pieno: pedro raggiunge il custode. boss anticipato, quasi impossibile.
@@ -1759,6 +1767,7 @@ export class GameScene extends Phaser.Scene {
             quantity: 12,
             stopAfter: 12,
         });
+        this.nav.open(Math.floor(wall.x / TILE), Math.floor(wall.y / TILE));
         wall.destroy();
     }
 
@@ -2431,7 +2440,8 @@ export class GameScene extends Phaser.Scene {
         }
         if (time >= this.nextPitturaAt && this.awakeEnemies() < 5) {
             this.nextPitturaAt = time + 6500;
-            this.spawnEnemy('pittura-mini', c.x + (Math.random() - 0.5) * 400, c.y - 60);
+            const at = this.openSpotNear(c.x + (Math.random() - 0.5) * 400, c.y - 60, 8);
+            this.spawnEnemy('pittura-mini', at.x, at.y, { hunting: true });
         }
     }
 
@@ -2640,7 +2650,7 @@ export class GameScene extends Phaser.Scene {
         for (let i = 0; i < count; i++) {
             const dir = i % 2 === 0 ? 1 : -1;
             const at = this.openSpotNear(this.player.x + dir * (300 + i * 60), this.player.y - 140);
-            const e = this.spawnEnemy('notino-mini', at.x, at.y);
+            const e = this.spawnEnemy('notino-mini', at.x, at.y, { hunting: true });
             this.physics.add.collider(e, this.level.layer);
             spawned.push(e);
         }
@@ -2684,7 +2694,8 @@ export class GameScene extends Phaser.Scene {
         if (time >= this.pattoNextSpawnAt && this.awakeEnemies() < 7) {
             this.pattoNextSpawnAt = time + 3500;
             const dir = Math.random() > 0.5 ? 1 : -1;
-            const e = this.spawnEnemy('glitchetto', this.player.x + dir * 420, this.player.y - 160);
+            const at = this.openSpotNear(this.player.x + dir * 420, this.player.y - 60, 10);
+            const e = this.spawnEnemy('glitchetto', at.x, at.y, { hunting: true });
             this.physics.add.collider(e, this.level.layer);
         }
         const left = this.pattoDeiAt - time;
@@ -2786,7 +2797,7 @@ export class GameScene extends Phaser.Scene {
         }
         if (splitsInto) {
             for (let i = 0; i < splitsInto.count; i++) {
-                const mini = this.spawnEnemy(splitsInto.kind, x + (i ? 20 : -20), y - 10);
+                const mini = this.spawnEnemy(splitsInto.kind, x + (i ? 20 : -20), y - 10, { hunting: true });
                 this.physics.add.collider(mini, this.level.layer);
             }
         }
@@ -2802,8 +2813,18 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    /** chi ti vede chiama i compagni vicini: si radunano */
+    private onEnemyAlert({ x, y, from }: { x: number; y: number; from: Enemy }): void {
+        for (const child of this.enemies.getChildren()) {
+            const e = child as Enemy;
+            if (e === from || !e.active || e.dormant) continue;
+            if (Math.abs(e.x - x) < 340 && Math.abs(e.y - y) < 220) e.alertFrom(x, y);
+        }
+    }
+
     private onBossSummon({ x, y, kind }: { x: number; y: number; kind: EnemyKind }): void {
-        const e = this.spawnEnemy(kind, x, y);
+        const at = this.openSpotNear(x, y, 6);
+        const e = this.spawnEnemy(kind, at.x, at.y, { hunting: true });
         this.physics.add.collider(e, this.level.layer);
     }
 

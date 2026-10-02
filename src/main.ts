@@ -55,7 +55,7 @@ async function boot(): Promise<void> {
     });
 
     // handle di debug in sviluppo, mai nel build
-    if (import.meta.env.DEV) Object.assign(window, { __game: game });
+    if (import.meta.env.DEV) Object.assign(window, { __game: game, __bus: bus, __state: state });
 
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
         inGame = true;
