@@ -42,7 +42,9 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'le basi: A e D per muoverti, SPAZIO per saltare. J o il mouse per menare. tre colpi di fila fanno una combo: il terzo spacca.' },
         { speaker: 'markolino', color: 'green', text: 'ogni colpo carica il flow. tieni premuto Q e il flow diventa vita. i microfoni salvano: premi E lì vicino, tipo bonfire ma più rap.' },
         { speaker: 'markolino', color: 'green', text: 'se muori lasci le barre a terra. torna a riprendertele prima di rimorire, regola del realm, non l\'ho scritta io.' },
-        { speaker: 'markolino', color: 'green', text: 'vai a destra. trova i frammenti. ferma pedro. e se vedi un bus... corri.' },
+        { speaker: 'markolino', color: 'green', text: 'il realm si è sbriciolato in un labirinto di stanze: sopra, sotto, dietro i muri. quella freccia che ti gira intorno sono io che ti indico la strada. se ti offende, la spegni dal telefono.' },
+        { speaker: 'markolino', color: 'green', text: 'TAB apre il telefono: mappa, zaino, messaggi. la mappa si disegna solo dove sei passato, quindi esplora. i muri con le crepe si rompono, quelli che sembrano strani... a volte non ci sono.' },
+        { speaker: 'markolino', color: 'green', text: 'trova i frammenti. ferma pedro. e se vedi un bus... corri.' },
     ],
     'markolino-dono': [
         { speaker: 'markolino', color: 'green', text: 'aspetta. ho trovato questo nei rottami: un frammento della wave. la wave manifesta il tuo desiderio, e a quanto pare tu desideri... scappare velocemente. fa niente, prendilo.' },
@@ -60,7 +62,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'maschera appesa', color: 'green', text: '«una maschera con la mia stessa faccia. perfetta. ritmica. chi la indossa sente un beat lontano e il bisogno urgente di pubblicare un disco.»' },
     ],
     'geco-anziano': [
-        { speaker: 'geco anziano', color: 'green', text: 'un altro custode, eh. ne ho visti passare tanti. tutti di fretta, tutti a destra. nessuno che si fermi a leccare un muro in compagnia.' },
+        { speaker: 'geco anziano', color: 'green', text: 'un altro custode, eh. ne ho visti passare tanti. tutti di fretta, tutti dietro a una freccia. nessuno che si fermi a leccare un muro in compagnia.' },
         { speaker: 'geco anziano', color: 'green', text: 'un consiglio gratis: certi muri sono più finti di altri. e certi si rompono, se li convinci col terzo colpo della combo.' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco che prende appunti*' },
     ],
@@ -475,7 +477,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'caso-completo': [
         { speaker: 'commissario romero', color: 'blue', text: 'tre indizi. un fascicolo. il quadro è chiaro e fa schifo: nessun colpevole singolo, custode. un dio fatto, un supervisore assente e un ritratto profetico. il realm intero ha innescato pedro.' },
-        { speaker: 'commissario romero', color: 'blue', text: 'ora il limite notevole non ha più cavilli: VAI. arrestalo. è appostato in fondo al distretto. e da oggi, tecnicamente... il caso analisi 1 è CHIUSO. lo dico da 40 anni, fammelo godere.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'ora il limite notevole non ha più cavilli: VAI. arrestalo. è appostato nel cuore del distretto, segui la freccia. e da oggi, tecnicamente... il caso analisi 1 è CHIUSO. lo dico da 40 anni, fammelo godere.' },
     ],
     'limite-intro': [
         { speaker: 'il limite notevole', color: 'blue', text: 'fermo lì. io tendo a infinito, tu tendi a morire: le nostre traiettorie divergono. nessuno mi ha mai notificato NIENTE, sai perché? vizio di forma. sempre.' },

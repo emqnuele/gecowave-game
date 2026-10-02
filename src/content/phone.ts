@@ -5,7 +5,7 @@ import type { ZoneColor } from '../types';
 
 /** obiettivo principale mostrato nel diario, per capitolo */
 export const OBJECTIVES: Record<string, string> = {
-    perduta: 'segui markolino verso destra. trova il primo frammento della wave e non farti mangiare dal cratere.',
+    perduta: 'esplora il cratere: la freccia indica la prossima stanza giusta, la mappa (qui nel telefono) si disegna mentre giri. trova il primo frammento della wave.',
     bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea.',
     santuario: 'attraversa il santuario polarizzante. breccio custodisce un riflesso, lametta il resto.',
     tecnokill: 'sopravvivi al server di notino. torre radio, dune, e poi lui. armato di "BUM".',
@@ -51,7 +51,7 @@ export const CONTACTS: Contact[] = [
         id: 'markolino', name: 'markolino', color: 'green', icon: '🟢',
         call(ctx) {
             const hint: Record<string, string> = {
-                perduta: 'vai a DESTRA. sempre a destra. se trovi un muro con le crepe, terzo colpo della combo. se trovi un geco anziano, ascoltalo, ma non troppo.',
+                perduta: 'segui la FRECCIA. se ti perdi apri la mappa. se trovi un muro con le crepe, terzo colpo della combo. se trovi un geco anziano, ascoltalo, ma non troppo.',
                 bus: 'ivan è l\'unico che può tagliare guggu. senza di lui il capolinea non lo vedi neanche col binocolo.',
                 santuario: 'gli specchi mentono, ma alcuni sono porte. e lametta dipinge con rabbia: schiva i colori.',
                 tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI.',

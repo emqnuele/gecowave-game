@@ -316,38 +316,55 @@ export class NavGraph {
         return true;
     }
 
-    /** percorso in aria per chi vola: a* a griglia con un corpo di `size` celle, in pixel */
-    flyPath(x0: number, y0: number, x1: number, y1: number, size = 1, maxNodes = 2500): { x: number; y: number }[] | null {
-        const cols = this.cols;
-        const fits = (c: number, r: number) => {
-            for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) if (this.solid(c + dx, r + dy)) return false;
+    /** percorso in aria per chi vola: a* su blocchi di 2×2 celle (un corpo ci passa sempre), in pixel */
+    flyPath(x0: number, y0: number, x1: number, y1: number, maxNodes = 4000): { x: number; y: number }[] | null {
+        const B = 2;
+        const bw = Math.ceil(this.cols / B);
+        const bh = Math.ceil(this.rows / B);
+        const fits = (bx: number, by: number) => {
+            if (bx < 0 || by < 0 || bx >= bw || by >= bh) return false;
+            for (let dy = 0; dy < B; dy++) for (let dx = 0; dx < B; dx++) if (this.solid(bx * B + dx, by * B + dy)) return false;
             return true;
         };
-        const sc = Math.floor(x0 / T);
-        const sr = Math.floor(y0 / T);
-        const tc = Math.floor(x1 / T);
-        const tr = Math.floor(y1 / T);
-        if (!fits(sc, sr)) return null;
-        const key = (c: number, r: number) => r * cols + c;
+        // il blocco libero più vicino al punto: chi vola rasente a un muro sta a cavallo di due blocchi
+        const blockOf = (x: number, y: number): [number, number] | null => {
+            const bx = Math.floor(x / T / B);
+            const by = Math.floor(y / T / B);
+            for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+                if (fits(bx + dx, by + dy)) return [bx + dx, by + dy];
+            }
+            return null;
+        };
+        const s0 = blockOf(x0, y0);
+        const t0 = blockOf(x1, y1);
+        if (!s0 || !t0) return null;
+        const [sc, sr] = s0;
+        const [tc, tr] = t0;
+        const key = (c: number, r: number) => r * bw + c;
         const g = new Map<number, number>([[key(sc, sr), 0]]);
         const came = new Map<number, number>();
-        const open: [number, number][] = [[0, key(sc, sr)]];
+        // coda a secchi per costo intero: niente ricerca lineare su migliaia di nodi
+        const buckets: number[][] = [];
+        const push = (f: number, k: number) => {
+            const i = Math.floor(f);
+            (buckets[i] ??= []).push(k);
+        };
+        push(0, key(sc, sr));
         const closed = new Set<number>();
         let best = key(sc, sr);
         let bestH = Infinity;
         let n = 0;
-        while (open.length && n < maxNodes) {
-            let bi = 0;
-            for (let i = 1; i < open.length; i++) if (open[i][0] < open[bi][0]) bi = i;
-            const cur = open[bi][1];
-            open[bi] = open[open.length - 1];
-            open.pop();
+        let bi = 0;
+        while (n < maxNodes) {
+            while (bi < buckets.length && !(buckets[bi]?.length)) bi++;
+            if (bi >= buckets.length) break;
+            const cur = buckets[bi].pop()!;
             if (closed.has(cur)) continue;
             closed.add(cur);
             n++;
-            const c = cur % cols;
-            const r = (cur - c) / cols;
-            const hh = Math.abs(c - tc) + Math.abs(r - tr);
+            const c = cur % bw;
+            const r = (cur - c) / bw;
+            const hh = Math.max(Math.abs(c - tc), Math.abs(r - tr));
             if (hh < bestH) {
                 bestH = hh;
                 best = cur;
@@ -357,26 +374,27 @@ export class NavGraph {
                 const nc = c + dc;
                 const nr = r + dr;
                 if (!fits(nc, nr)) continue;
-                // in diagonale non si tagliano gli spigoli
                 if (dc && dr && (!fits(c + dc, r) || !fits(c, r + dr))) continue;
                 const k = key(nc, nr);
                 const ng = g.get(cur)! + (dc && dr ? 1.414 : 1);
                 if (ng < (g.get(k) ?? Infinity)) {
                     g.set(k, ng);
                     came.set(k, cur);
-                    open.push([ng + Math.abs(nc - tc) + Math.abs(nr - tr), k]);
+                    const f = ng + Math.max(Math.abs(nc - tc), Math.abs(nr - tr));
+                    push(f, k);
+                    if (Math.floor(f) < bi) bi = Math.floor(f);
                 }
             }
         }
         const pts: { x: number; y: number }[] = [];
         let cur = best;
         while (cur !== key(sc, sr)) {
-            const c = cur % cols;
-            const r = (cur - c) / cols;
-            pts.push({ x: c * T + (size * T) / 2, y: r * T + (size * T) / 2 });
-            const p = came.get(cur);
-            if (p === undefined) break;
-            cur = p;
+            const c = cur % bw;
+            const r = (cur - c) / bw;
+            pts.push({ x: (c * B + 1) * T, y: (r * B + 1) * T });
+            const pr = came.get(cur);
+            if (pr === undefined) break;
+            cur = pr;
         }
         return pts.reverse();
     }

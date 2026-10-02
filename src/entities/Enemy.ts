@@ -362,7 +362,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         let gy = ty;
         if (nav && !nav.sight(this.x, this.y, tx, ty)) {
             if (now - this.flyRouteAt > 700 || this.flyRoute.length === 0) {
-                this.flyRoute = nav.flyPath(this.x, this.y, tx, ty, 1, 1800) ?? [];
+                this.flyRoute = nav.flyPath(this.x, this.y, tx, ty) ?? [];
                 this.flyRouteAt = now;
             }
             while (this.flyRoute.length && Math.hypot(this.flyRoute[0].x - this.x, this.flyRoute[0].y - this.y) < 20) this.flyRoute.shift();
