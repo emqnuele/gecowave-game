@@ -42,7 +42,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'le basi: A e D per muoverti, SPAZIO per saltare. J o il mouse per menare. tre colpi di fila fanno una combo: il terzo spacca.' },
         { speaker: 'markolino', color: 'green', text: 'ogni colpo carica il flow. tieni premuto Q e il flow diventa vita. i microfoni salvano: premi E lì vicino, tipo bonfire ma più rap.' },
         { speaker: 'markolino', color: 'green', text: 'se muori lasci le barre a terra. torna a riprendertele prima di rimorire, regola del realm, non l\'ho scritta io.' },
-        { speaker: 'markolino', color: 'green', text: 'il realm si è sbriciolato in un labirinto di stanze: sopra, sotto, dietro i muri. quella freccia che ti gira intorno sono io che ti indico la strada. se ti offende, la spegni dal telefono.' },
+        { speaker: 'markolino', color: 'green', text: 'il realm si è sbriciolato in un labirinto di stanze: sopra, sotto, dietro i muri. se proprio ti perdi, nel telefono c\'è la modalità assistita: una freccia ti indica la strada. comoda. ma i trofei, a chi bara, non li dà nessuno.' },
         { speaker: 'markolino', color: 'green', text: 'TAB apre il telefono: mappa, zaino, messaggi. la mappa si disegna solo dove sei passato, quindi esplora. i muri con le crepe si rompono, quelli che sembrano strani... a volte non ci sono.' },
         { speaker: 'markolino', color: 'green', text: 'trova i frammenti. ferma pedro. e se vedi un bus... corri.' },
     ],

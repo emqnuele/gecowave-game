@@ -926,7 +926,7 @@ export class Phone {
         root.append(shake);
 
         const guide = el('div', 'phone-row glass-chip');
-        guide.append(text('span', 'name', 'freccia guida'));
+        guide.append(text('span', 'name', 'modalità assistita (freccia)'));
         const gt = el('button', `toggle sticker ${state.settings.guide ? 'on' : ''}`);
         gt.textContent = state.settings.guide ? 'attiva' : 'spenta';
         gt.addEventListener('click', () => {

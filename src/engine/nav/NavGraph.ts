@@ -316,6 +316,14 @@ export class NavGraph {
         return true;
     }
 
+    /** vista per un corpo largo 2r: tre linee parallele, così non si tagliano gli spigoli */
+    sightWide(x0: number, y0: number, x1: number, y1: number, r: number): boolean {
+        const d = Math.hypot(x1 - x0, y1 - y0) || 1;
+        const nx = (-(y1 - y0) / d) * r;
+        const ny = ((x1 - x0) / d) * r;
+        return this.sight(x0, y0, x1, y1) && this.sight(x0 + nx, y0 + ny, x1 + nx, y1 + ny) && this.sight(x0 - nx, y0 - ny, x1 - nx, y1 - ny);
+    }
+
     /** percorso in aria per chi vola: a* su blocchi di 2×2 celle (un corpo ci passa sempre), in pixel */
     flyPath(x0: number, y0: number, x1: number, y1: number, maxNodes = 4000): { x: number; y: number }[] | null {
         const B = 2;

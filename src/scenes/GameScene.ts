@@ -159,7 +159,6 @@ export class GameScene extends Phaser.Scene {
     private folk!: FolkManager;
     private atmosphere!: Atmosphere;
     private guideGfx!: Phaser.GameObjects.Graphics;
-    private guideText!: Phaser.GameObjects.Text;
     private lastRoom = -1;
     /** dove stanno gli npc di trama, per indicarli */
     private npcAt = new Map<string, { x: number; y: number }>();
@@ -2166,13 +2165,6 @@ export class GameScene extends Phaser.Scene {
 
     private buildGuide(): void {
         this.guideGfx = this.add.graphics().setDepth(9);
-        this.guideText = this.add.text(0, 0, '', {
-            fontFamily: '"Permanent Marker", cursive',
-            fontSize: '13px',
-            color: '#e2e8f0',
-            stroke: '#000',
-            strokeThickness: 3,
-        }).setOrigin(0.5).setDepth(9);
         regionView.id = this.def.id;
         regionView.layout = this.layout;
         regionView.markers = [
@@ -2185,7 +2177,6 @@ export class GameScene extends Phaser.Scene {
     private updateGuide(time: number): void {
         const g = this.guideGfx;
         g.clear();
-        this.guideText.setVisible(false);
         const goal = this.currentObjective();
         regionView.player = { x: this.player.x, y: this.player.y };
         regionView.goal = goal;
@@ -2210,12 +2201,6 @@ export class GameScene extends Phaser.Scene {
         g.fillTriangle(tip.x, tip.y, l.x, l.y, r.x, r.y);
         g.lineStyle(2, 0x000000, 0.8 * pulse);
         g.strokeTriangle(tip.x, tip.y, l.x, l.y, r.x, r.y);
-        // l'etichetta solo da fermi: in corsa basta la freccia
-        const body = this.player.body as Phaser.Physics.Arcade.Body;
-        if (Math.abs(body.velocity.x) < 30 && body.blocked.down) {
-            const far = next.rooms > 0 ? ` · ${next.rooms} stanz${next.rooms === 1 ? 'a' : 'e'}` : '';
-            this.guideText.setText(`${goal.label}${far}`).setPosition(this.player.x, this.player.y + 44).setAlpha(pulse + 0.2).setVisible(true);
-        }
     }
 
     /** l'arena si chiude a scontro iniziato col player dentro, si riapre a boss caduto */

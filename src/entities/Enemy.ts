@@ -52,6 +52,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private flyRouteAt = -99999;
     private stuckX = 0;
     private stuckAt = 0;
+    private flyStuckY = 0;
     private mark: Phaser.GameObjects.Text | null = null;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean } = {}) {
@@ -360,17 +361,37 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         const nav = this.nav;
         let gx = tx;
         let gy = ty;
-        if (nav && !nav.sight(this.x, this.y, tx, ty)) {
-            if (now - this.flyRouteAt > 700 || this.flyRoute.length === 0) {
+        const r = Math.max(8, Math.min(16, body.width / 2));
+        if (nav && !nav.sightWide(this.x, this.y, tx, ty, r)) {
+            if (now - this.flyRouteAt > 900 || this.flyRoute.length === 0) {
                 this.flyRoute = nav.flyPath(this.x, this.y, tx, ty) ?? [];
                 this.flyRouteAt = now;
             }
-            while (this.flyRoute.length && Math.hypot(this.flyRoute[0].x - this.x, this.flyRoute[0].y - this.y) < 20) this.flyRoute.shift();
-            // il primo punto del percorso ancora in vista
-            const next = this.flyRoute.find((p, i) => i > 3 ? false : nav.sight(this.x, this.y, p.x, p.y)) ?? this.flyRoute[0];
+            while (this.flyRoute.length && Math.hypot(this.flyRoute[0].x - this.x, this.flyRoute[0].y - this.y) < 24) this.flyRoute.shift();
+            // il punto più avanti del percorso che si vede col corpo intero: si tagliano le curve, non gli spigoli
+            let pick = -1;
+            for (let i = Math.min(6, this.flyRoute.length - 1); i >= 0; i--) {
+                const p = this.flyRoute[i];
+                if (nav.sightWide(this.x, this.y, p.x, p.y, r)) {
+                    pick = i;
+                    break;
+                }
+            }
+            const next = this.flyRoute[Math.max(0, pick)];
             if (next) {
                 gx = next.x;
                 gy = next.y;
+            }
+            // incastrato su uno spigolo: si salta al punto dopo e ci si stacca dal muro
+            if (Math.hypot(this.x - this.stuckX, this.y - this.flyStuckY) > 6) {
+                this.stuckX = this.x;
+                this.flyStuckY = this.y;
+                this.stuckAt = now;
+            } else if (now - this.stuckAt > 500) {
+                this.stuckAt = now;
+                this.flyRoute.shift();
+                body.setVelocity(-body.velocity.y || 60, body.velocity.x || -60);
+                return;
             }
         } else {
             this.flyRoute = [];

@@ -45,6 +45,12 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 - quest secondarie con npc ricorrenti, ricompense, scelte
 - sfide opzionali (arene, prove a tempo)
 
+### Fase 4b — trofei, punteggi e modalità assistita
+- **achievement** (trofei) per le imprese: boss senza danni, regioni esplorate al 100%, segreti, maschere, finali, sfide a tempo, scelte di trama
+- **punteggio** per capitolo e totale: tempo, morti, uccisioni, esplorazione, segreti; classifica locale nel profilo del telefono
+- **modalità assistita**: la freccia guida che indica il prossimo varco verso l'obiettivo è un'impostazione (spenta di default). chi la accende gioca in modalità facile e **non sblocca achievement** (la partita resta segnata come assistita)
+- niente testi in sovrimpressione accanto al geco: la freccia parla da sola, il resto lo dice la mappa del telefono
+
 ### Fase 5 — trama
 - trame secondarie per ogni personaggio, lore ambientale nelle stanze, finali estesi
 - migliorare la trama del gioco enormemente, più scelte, più conseguenze, più misteri, più colpi di scena, più emozioni. in generale attualmente è molto sloppy e poco soddisfacente, non dobbiamo riscrivere tutto ma dobbiamo renderlo più coerente, più profondo, più interessante, più divertente, più emozionante. abbiamo bisogno di una storia da film da gioco di serie A.

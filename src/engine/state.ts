@@ -13,7 +13,7 @@ const DOOMSDAY_BOSS_RELIEF = 0.14;
 export interface Settings {
     volume: number;
     screenShake: boolean;
-    /** la freccia che indica il prossimo varco verso l'obiettivo */
+    /** modalità assistita: la freccia che indica il prossimo varco verso l'obiettivo */
     guide: boolean;
 }
 
@@ -53,7 +53,7 @@ const defaultSave = (): SaveData => ({
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
 class GameState {
     save: SaveData = defaultSave();
-    settings: Settings = { volume: 0.7, screenShake: true, guide: true };
+    settings: Settings = { volume: 0.7, screenShake: true, guide: false };
     godMode = false;
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
