@@ -122,6 +122,14 @@ class Sfx {
         this.noise(800, { freq: 180, q: 0.6, vol: 0.25 });
     }
     ui(): void { this.tone(520, 60, { type: 'square', vol: 0.04 }); }
+    crack(): void { this.noise(120, { freq: 1400, q: 3, vol: 0.12 }); }
+    crumble(): void {
+        this.noise(420, { freq: 300, q: 0.7, vol: 0.2 });
+        this.tone(120, 300, { type: 'triangle', to: 60, vol: 0.06 });
+    }
+    splash(): void { this.noise(260, { freq: 700, q: 0.6, vol: 0.14 }); }
+    /** l'acqua che sale: un brontolio basso dalle tubature */
+    rumble(): void { this.noise(1800, { freq: 70, q: 0.4, vol: 0.22 }); }
 
     /** tuono lontano: rombo basso e lungo, poi la coda */
     thunder(): void {

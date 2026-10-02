@@ -45,6 +45,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private analisiReadyAt = 0;
     private scudoReadyAt = 0;
     private acquaReadyAt = 0;
+    /** lo imposta la scena quando il geco è dentro un allagamento */
+    submerged = false;
     private stunnedUntil = 0;
     private nextSmelaStun = 0;
     private nextTrenDrain = 0;
@@ -204,7 +206,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             body.setAccelerationX(0);
             body.setVelocityX(body.velocity.x * (this.grounded ? 0.8 : 0.96));
         }
-        body.setMaxVelocityX(PHYSICS.runSpeed * state.mods.speed);
+        // nell'acqua alta si arranca e si affonda piano; il salto resta pieno, se no le conche allagate diventano trappole
+        body.setMaxVelocityX(PHYSICS.runSpeed * state.mods.speed * (this.submerged ? 0.6 : 1));
+        if (this.submerged && body.velocity.y > 300) body.setVelocityY(300);
 
         // salto: buffer + coyote + rimbalzo
         if (Phaser.Input.Keyboard.JustDown(this.keys.jump) || Phaser.Input.Keyboard.JustDown(this.cursors.up)) {

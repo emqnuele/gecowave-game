@@ -2,7 +2,7 @@
 
 Registro tecnico del remaster: architettura, decisioni, vincoli e stato. Si aggiorna a ogni blocco di lavoro. Per la visione di prodotto vedi `REMASTER.md`, per il passaggio di consegne tra sessioni `HANDOFF.md`.
 
-Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`), messaggi brevi in italiano.
+Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenzionale (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`), messaggi brevi in italiano.
 
 ---
 
@@ -64,6 +64,14 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 **Perché a runtime**: non toccano la griglia, quindi la verifica del simulatore resta valida e non serve rigenerare. Non essendo solide non possono chiudere una strada: costano vita, non bloccano. Ogni trappola ha sempre una finestra (sega saltabile con 3 righe d'aria sopra, pressa con ciclo e tremito d'avviso, vapore con sbuffi d'avviso).
 **Vincolo**: si attivano per distanza dal geco, non per inquadratura (nel bot il `worldView` della camera non si aggiorna senza render).
 
+### ADR-010 — lastre che crollano e allagamenti, additivi
+**Decisione**: `HazardManager` mette ponti di lastre sopra i pozzi tra due pavimenti alla stessa quota (3–9 celle, mai su un buco verso la stanza di sotto) e allagamenti periodici nelle stanze basse o con la vasca, per bioma.
+**Perché non toccano la verifica**: le lastre sono solide solo dall'alto (`checkCollision` solo `up` più un `processCallback` sui piedi): da sotto si passa, da sopra si cade come prima dopo il tremito. Quindi aggiungono strade e non ne tolgono. L'acqua non è solida: rallenta (corsa ×0.6, caduta ≤ 300) e dove è tossica toglie un cuore ogni 1.6 s con la testa sotto, ma si ritira sempre (ciclo 70–110 s, doppio col temporale) e non supera mai la soglia dei varchi laterali.
+**Vincolo trovato**: `setMaxVelocityY` di arcade limita anche la salita: in acqua il salto spariva e le conche tossiche diventavano trappole mortali. La caduta si limita a mano, il salto resta pieno.
+
+### ADR-011 — il simulatore sceglie il tentativo del generatore
+**Decisione**: `build-regions` prova il tentativo successivo di `generateRegion` (fino a 6 volte) quando il simulatore boccia la regione. Le regioni che passano al tentativo 0 restano identiche, quindi non serve rigenerare tutto. Così si è sbloccata ricordi (tentativo 1: 45 stanze, 7347 posizioni, zero trappole).
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -90,16 +98,16 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - Fase 5: finale vero "riscatto" (giorno 30, il glitch, romero arresta gli dei).
 - Bot: campagna completa fino al finale e capitoli segreti.
 - Trappole meccaniche per bioma (seghe, presse, vapore).
+- Lastre che crollano sopra i pozzi e allagamenti periodici (tossici in rio, tecnokill, trenbolone, stabilimento), ADR-010.
+- Ricordi rigenerata e verificata col simulatore corretto (ADR-011).
 - Arene opzionali: un microfono rosso per regione in una stanza laterale larga (scelta deterministica dall'id), tre ondate con i nemici della regione (l'ultima con un'élite), stanza chiusa con le sbarre dei boss; vittoria = flag `arena-vinta-<id>`, 180 barre, trofeo "gladiatore" a cinque. Morire annulla la sfida.
 - Musica per ora del giorno: passa-basso WebAudio condiviso (`music.setNight`), da 20 kHz a 1,6 kHz su scala logaritmica; spento durante i boss. Se WebAudio fallisce la musica suona senza filtro.
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
 ### In corso / aperto
-- **ricordi**: con il simulatore corretto la rigenerazione fallisce (24 stati bloccati in una conca profonda nella caverna laterale 29, colonne ~572-588, righe ~199-205). Resta in gioco la versione precedente, generata col simulatore vecchio: la conca è probabilmente presente anche lì. Il riempimento a strati è stato provato e scartato (peggiora di uno stato e il giro si ferma). Strade possibili: scaletta di mensole a zig-zag nella conca, oppure un altro seme per ricordi (`attemptRegion` usa `region:<id>:<tentativo>`). Analisi: `KEEP_FAIL=1 scripts/world/run.sh build-regions ricordi` poi `REGION_FILE=/tmp/ricordi.fail.json scripts/world/run.sh simstuck ricordi`.
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
 ### Da fare
-- Piattaforme che crollano, allagamenti.
 - Sfide a tempo.
 - Trame secondarie per personaggio, più scelte a metà gioco.
 
@@ -115,4 +123,5 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - **trappole**: seghe, presse, vapore per bioma.
 - **audio**: musica ovattata di notte.
 - **arene opzionali**: il microfono rosso.
+- **pericoli**: lastre che crollano, allagamenti; ricordi sbloccata.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.

@@ -23,6 +23,7 @@ import { NavGraph } from '../engine/nav/NavGraph';
 import { RegionGuide } from '../engine/RegionGuide';
 import { FolkManager } from '../engine/FolkManager';
 import { TrapManager } from '../engine/TrapManager';
+import { HazardManager } from '../engine/HazardManager';
 import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
@@ -165,6 +166,7 @@ export class GameScene extends Phaser.Scene {
     private guide: RegionGuide | null = null;
     private folk!: FolkManager;
     private traps!: TrapManager;
+    private hazards!: HazardManager;
     private quests!: QuestManager;
     private atmosphere!: Atmosphere;
     private nextTrophyCheckAt = 0;
@@ -419,9 +421,22 @@ export class GameScene extends Phaser.Scene {
                 ...this.challengePoints(),
             ],
         });
+        this.hazards = new HazardManager(this, this.nav, () => this.atmosphere?.weather === 'temporale' || this.atmosphere?.weather === 'pioggia');
+        this.hazards.populate({
+            seed: this.def.id,
+            biomeId: this.biome.id,
+            layout: this.layout,
+            rim: this.biome.rim,
+            deep: this.biome.rock,
+            avoid: [sp, ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y })), ...this.busStops],
+        });
+        this.physics.add.collider(this.player, this.hazards.group,
+            (_p, slab) => this.hazards.landOn(slab as Phaser.GameObjects.GameObject),
+            (_p, slab) => this.hazards.canLand(this.player, slab as Phaser.GameObjects.GameObject));
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.folk.destroy();
             this.traps.destroy();
+            this.hazards.destroy();
         });
         this.spawnDroppedBarre();
         this.setupColliders();
@@ -2000,6 +2015,7 @@ export class GameScene extends Phaser.Scene {
         this.updateHoming(delta);
         this.folk.update(time, delta, this.player, this.threats(), !!this.boss?.engaged);
         this.traps.update(time, delta, this.player);
+        this.hazards.update(time, delta, this.player);
         this.updateArenaLock(time);
         this.updateExplore();
         this.updateBusStops();
