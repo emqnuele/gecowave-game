@@ -5,9 +5,10 @@ import type { EntitySpec } from '../../types';
 import { buildCreature, type CreatureSpec } from './creatureKit';
 import { ENEMY_ART } from './creatures/enemies';
 import { BOSS_ART } from './creatures/bosses';
+import { NPC_ART } from './creatures/npcs';
 import { patchNormalFlip } from './normalFlip';
 
-const SPECS = new Map<string, CreatureSpec>([...ENEMY_ART, ...BOSS_ART].map((s) => [s.key, s]));
+const SPECS = new Map<string, CreatureSpec>([...ENEMY_ART, ...BOSS_ART, ...NPC_ART].map((s) => [s.key, s]));
 export const CREATURE_KEYS = [...SPECS.keys()];
 
 /** i fogli costano (normal map comprese): si disegnano al primo uso, non al boot */

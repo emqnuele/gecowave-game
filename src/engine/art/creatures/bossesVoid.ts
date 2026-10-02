@@ -7,7 +7,7 @@ import { arm, aura, dissolve, frontLegs, gecoHead, label, scanlines, sin, TAU } 
    viola = colpe di lametta, blu = colpe di piema */
 
 /** lametta: la lama da barba fatta dio, coi fori e le lame ai lati */
-function lametta(p: Painter, x: number, y: number, w: number, h: number, body = 0xb9bccb, tone = 1): void {
+export function lametta(p: Painter, x: number, y: number, w: number, h: number, body = 0xb9bccb, tone = 1): void {
     for (const [sx, sy] of [[0, 0.12], [1, 0.12], [0, 0.66], [1, 0.66]] as const) {
         const bx = sx ? x + w : x;
         const d = sx ? 1 : -1;
@@ -32,16 +32,16 @@ function lametta(p: Painter, x: number, y: number, w: number, h: number, body = 
 }
 
 /** piema: il mantello a triangolo, la testa tonda, gli occhiali di teoremi */
-function piema(p: Painter, cx: number, top: number, ground: number, w: number, cloak: number, t: number): { hx: number; hy: number; r: number } {
+export function piema(p: Painter, cx: number, top: number, ground: number, w: number, cloak: number, t: number): { hx: number; hy: number; r: number } {
     const r = w * 0.27;
     const hy = top + r;
     const sway = sin(t) * 1.5;
-    p.shape([{ x: cx, y: hy + r * 0.4 }, { x: cx + w / 2 + sway, y: ground }, { x: cx + w * 0.2, y: ground - 3 }, { x: cx, y: ground }, { x: cx - w * 0.2, y: ground - 3 }, { x: cx - w / 2 + sway, y: ground }], cloak, { smooth: 1, hatch: 0.55, rim: 0xc7d2fe });
+    p.shape([{ x: cx - w * 0.14, y: hy + r * 0.7 }, { x: cx + w * 0.14, y: hy + r * 0.7 }, { x: cx + w / 2 + sway, y: ground }, { x: cx + w * 0.2, y: ground - 3 }, { x: cx, y: ground }, { x: cx - w * 0.2, y: ground - 3 }, { x: cx - w / 2 + sway, y: ground }], cloak, { smooth: 1, hatch: 0.55, rim: 0xc7d2fe });
     gecoHead(p, cx, hy, r, 0x8b9a7a, { mouth: 'flat' });
     return { hx: cx, hy, r };
 }
 
-function glasses(p: Painter, cx: number, y: number, gap: number, r: number, lens: number): void {
+export function glasses(p: Painter, cx: number, y: number, gap: number, r: number, lens: number): void {
     for (const dx of [-gap / 2, gap / 2]) {
         p.shape(p.ellipse(cx + dx, y, r, r * 0.9), 0x0f172a, { smooth: 0, hatch: 0, line: 1 });
         p.lit(p.ellipse(cx + dx, y, r * 0.78, r * 0.7), lens, 0.85);

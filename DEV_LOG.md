@@ -112,6 +112,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **animazione**: `syncLook` gira dopo la fisica (`POST_UPDATE`): fotogramma in base alla velocità (chi dorme respira piano), strato emissivo allineato, occhi smorzati a chi dorme o sta appeso.
 - **boss**: 30 fogli in `creatures/bosses.ts` (trama) e `creatures/bossesVoid.ts` (dei, void, autoscuole), pezzi comuni in `bossKit.ts` (testa da geco di fronte, gambe, braccia, scanline e sfaldamento dei ricordi, aure). Quelli di profilo (`faces`: guggu, riba, lochef, ticummi, furgone, formicona, 7:40) si girano verso il geco; gli altri sono frontali. Il ciclo accelera a ogni fase e lo strato emissivo pulsa con la rabbia.
 - **costo**: i fogli si disegnano al primo uso (`ensureCreature` nei costruttori di `Enemy` e `Boss`); `prewarmCreatures` all'apertura del capitolo prepara la legenda e gli evocati dei boss. Le vecchie sagome `Graphics` di nemici e boss sono state tolte da `textures.ts`.
+- **personaggi**: i 16 npc della trama (`creatures/npcs.ts`) sono frontali, respirano a fotogrammi e passano da `castSprite` in `GameScene` (`animateCreature`: scala logica, ciclo, strato emissivo). Le vecchie sagome `Graphics` degli npc sono state tolte.
 - **galleria**: `?gallery` (solo sviluppo, filtro con `?gallery=boss-`, `&cell=230`) mostra tutto il cast sotto una luce che segue il mouse.
 
 ### ADR-018 — il suono prende la forma del posto (fase 6)
@@ -164,7 +165,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 
 ### In corso / aperto
 - **fase 6, audio**: acustica per spazio (ovattato ed eco sottoterra), letti e suoni d'ambiente per bioma, passi per materiale, effetti di situazione (ADR-018).
-- **fase 6, grafica del cast**: nemici (19) e boss (30) rifatti a inchiostro, animati, con normal map (ADR-017).
+- **fase 6, grafica del cast**: nemici (19), boss (30) e personaggi (16) rifatti a inchiostro, animati, con normal map (ADR-017).
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
 
 ### Da fare

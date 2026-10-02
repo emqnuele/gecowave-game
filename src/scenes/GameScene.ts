@@ -40,7 +40,7 @@ import { state } from '../engine/state';
 import { music } from '../engine/music';
 import { generateFogTexture } from '../engine/textures';
 import { Boss } from '../entities/Boss';
-import { creatureFrames, creatureRes } from '../engine/art/creatureKit';
+import { animateCreature, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 import { ensureCreature, prewarmCreatures } from '../engine/art/creatures';
 import { Companion } from '../entities/Companion';
 import { Enemy, type EnemyTrait } from '../entities/Enemy';
@@ -644,6 +644,13 @@ export class GameScene extends Phaser.Scene {
         if (kind === 'pedrino') state.setFlag('ricordi-visti');
     }
 
+    /** personaggio di scena: foglio a inchiostro animato se esiste, texture semplice altrimenti */
+    private castSprite(x: number, y: number, key: string): Phaser.GameObjects.Sprite {
+        const sprite = this.add.sprite(x, y, ensureCreature(this, key), 0).setPipeline('Light2D');
+        animateCreature(sprite);
+        return sprite;
+    }
+
     /** la luce del boss sta un po' sopra la testa: le normal map lo modellano dall'alto */
     private lightBoss(boss: Boss, color: number, radius: number, intensity: number): Phaser.GameObjects.Light {
         const h = (boss.body as Phaser.Physics.Arcade.Body).height;
@@ -773,7 +780,7 @@ export class GameScene extends Phaser.Scene {
 
         // walter ti accompagna come faceva romero: cammina piano e si parla
         if (id === 'walter-guida') {
-            const guide = this.add.sprite(x, y + 4, 'npc-walter').setDepth(4).setPipeline('Light2D');
+            const guide = this.castSprite(x, y + 4, 'npc-walter').setDepth(4);
             this.lighting.follow(guide, 0x86efac, 160, 0.8);
             this.companion = guide;
             this.companionBaseY = y + 4;
@@ -784,7 +791,7 @@ export class GameScene extends Phaser.Scene {
 
         // romero che ti fa da guida tra i rimpianti: cammina piano accanto a te e si parla
         if (id === 'romero-guida') {
-            const guide = this.add.sprite(x, y + 4, 'npc-romero').setDepth(4).setPipeline('Light2D');
+            const guide = this.castSprite(x, y + 4, 'npc-romero').setDepth(4);
             this.lighting.follow(guide, 0x60a5fa, 170, 0.8);
             this.companion = guide;
             this.companionBaseY = y + 4;
@@ -819,7 +826,7 @@ export class GameScene extends Phaser.Scene {
 
         this.npcAt.set(id, { x, y });
         const texture = npcTexture(id);
-        const npc = this.add.sprite(x, y + 4, texture).setDepth(4).setPipeline('Light2D');
+        const npc = this.castSprite(x, y + 4, texture).setDepth(4);
         this.lighting.follow(npc, ZONE_HEX[this.def.color], 160, 0.7);
         // vavleeh è steso a terra: niente fluttuazione, per rispetto
         if (!id.startsWith('vavleeh')) {
@@ -2108,7 +2115,7 @@ export class GameScene extends Phaser.Scene {
         this.startDialogue('void-svolta', () => {
             // markolino piomba di corsa da destra
             const mx = this.player.x + 520;
-            const mk = this.add.sprite(mx, this.player.y, 'npc-markolino').setDepth(5).setPipeline('Light2D');
+            const mk = this.castSprite(mx, this.player.y, 'npc-markolino').setDepth(5);
             this.lighting.follow(mk, 0x4ade80, 200, 0.9);
             mk.setFlipX(true);
             bus.emit('wavesung', WAVESUNG.markolinoPedroMuove);

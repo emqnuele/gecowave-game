@@ -588,6 +588,31 @@ export class CreatureGlow {
     }
 }
 
+/** sprite di scena (personaggi, comparse): scala logica, respiro a fotogrammi e occhi accesi */
+export function animateCreature(sprite: Phaser.GameObjects.Sprite, msPerFrame = 240): void {
+    const scene = sprite.scene;
+    const key = sprite.texture.key;
+    const res = creatureRes(scene, key);
+    if (res !== 1) sprite.setScale(sprite.scaleX / res, sprite.scaleY / res);
+    const n = creatureFrames(scene, key);
+    const glow = new CreatureGlow(sprite);
+    let t = Math.random() * 1000;
+    const tick = (_time: number, delta: number) => {
+        if (!sprite.active) return;
+        t += delta;
+        if (n > 1) {
+            const f = Math.floor(t / msPerFrame) % n;
+            if (String(sprite.frame.name) !== String(f)) sprite.setFrame(f);
+        }
+        glow.sync();
+    };
+    scene.events.on(Phaser.Scenes.Events.POST_UPDATE, tick);
+    sprite.once(Phaser.GameObjects.Events.DESTROY, () => {
+        scene.events.off(Phaser.Scenes.Events.POST_UPDATE, tick);
+        glow.destroy();
+    });
+}
+
 /** colore misto comodo per le palette */
 export const tone = (c: number, t: number): number => shade(c, t);
 export const blend = (a: number, b: number, t: number): number => mix(a, b, t);
