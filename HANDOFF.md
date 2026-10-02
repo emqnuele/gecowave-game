@@ -270,3 +270,41 @@ Vedi `REMASTER.md`. In particolare la trama va resa "da serie A": scelte, conseg
 - La musica è HTML5 Audio (`src/engine/music.ts`); la radio vince sulla musica del capitolo, non su quella dei boss.
 - Font bundlati: Climate Crisis (titoli MAIUSCOLI), Permanent Marker (battute minuscole e storte), Martian Mono (corpo). Regole del design system in `design_system.md`: micro-rotazioni, sticker tratteggiati, ombre dure, un colore dominante per sezione.
 - Il dev server dell'utente può essere già attivo su :5173: usalo, non avviarne un altro.
+
+---
+
+## 7. Sessione "fix totale" (dopo il feedback: «bellissimo ma ingiocabile»)
+
+Feedback dell'utente: mappe irrisolvibili, boss/meccaniche/npc che non funzionano, mondo non vivo, notino che si incastra, lochef che non appare. Più: freccia guida **solo come modalità assistita** (spenta di default, blocca i trofei), niente testo accanto al geco, trofei e punteggi (ora in REMASTER.md, Fase 4b). Regola nuova: **committa e pusha continuamente** (branch `remaster-l6rk4r`).
+
+### Strumenti di verifica (la base di tutto)
+- `src/world/sim.ts`: il geco simulato con la **fisica vera di arcade** (stessa integrazione, separazione dalle tile con facce/bias/ordine assi, stesso controllo di Player). Calibrato contro il gioco vero: salto 221 px / apice 114 px identici.
+- `src/world/simreach.ts`: raggiungibilità a macro (camminate, cadute, ventaglio di salti, doppio salto, dash). `canFinish` per le trappole.
+- `src/world/simfix.ts`: `simVerify` (uscita, trappole, entità a portata) e `simRepair` (scalinate prudenti o riempimento delle tasche piccole, bottini spostati a portata).
+- `npm run regions` ora genera **e verifica col simulatore**, in parallelo (un processo per regione, ~3 min). Tutte e 20 passano: uscita raggiungibile, zero trappole, tutta la trama a portata.
+- Script in `scripts/world/`: `simcheck <id|all> [old]`, `simzoom`, `simstuck <id>`, `simfix-test`, `waypoints`, `render <id> [scala] [x0 x1 y0 y1]` (png della regione), `abilities.ts` (abilità per capitolo).
+- **Bot di playtest** (nello scratchpad della sessione, non nel repo): playwright + chromium headless, il loop di phaser fermato e avanzato a mano (`game.scene.update`), teletrasporto sulle tappe calcolate dal simulatore, dialoghi/scelte/card chiusi da solo, boss abbattuti. Ha completato **l'intera campagna fino al finale** e i capitoli segreti (galliate, marcetti, barrato, custode). Nota: i tween di phaser usano il tempo reale, quindi nel bot le scenette sono lente (non è un bug del gioco). In dev sono esposti `window.__game`, `__bus`, `__state`.
+
+### Bug veri trovati e corretti
+- Le ricompense dei boss (doppio salto di guggu, riflesso, ecc.) nascevano dove moriva il boss, spesso in aria o nella roccia → `rewardSpot` + `homeIn`: si posano su un pavimento e poi ti vengono incontro.
+- Boss che non si ingaggiavano nelle regioni → si svegliano quando entri nella loro stanza (o li vedi da vicino).
+- Arene: sbarre d'inchiostro sui varchi finché il boss è vivo (`lockArena`), anche durante le scenette.
+- Boss minuscoli nelle arene enormi → `Boss.baseScale` (1.45–2.1×) e `makeBoss` li sospende sopra il pavimento.
+- Lochef nella tana: appare a bordo schermo dal lato giusto, sempre visibile, velocità a elastico, molla dopo 50 s.
+- Trappole fisiche in ricordi/mente/stabilimento riparate; bottini irraggiungibili in perduta spostati.
+- Guide (romero, walter): ci si parla da vicino, si avvicinano quando ti fermi.
+- Camera con margine sul fondo/cima della mappa (le arene stanno spesso sul fondo), roccia piena sotto la mappa.
+- Sotterranei un po' meno neri (ambiente ×3.4, luce del player 400).
+
+### Sistemi nuovi
+- `src/engine/nav/NavGraph.ts`: segmenti di pavimento, cadute e salti balistici verificati, A* sui segmenti, `sight`/`sightWide`, `flyPath` (A* a blocchi 2×2 per chi vola).
+- `src/entities/Enemy.ts` riscritto: stati dorme/pattuglia/allerta/insegue/torna/scappa, vista che non passa la roccia, si chiamano tra loro (`enemy-alert`), inseguimento lungo il grafo con salti, volanti che aggirano i muri. `RELENTLESS` (notino-mini, eco, tossico-trenbo) non mollano mai.
+- `src/engine/RegionGuide.ts` + `regionView.ts`: strada tra le stanze; mappa del telefono che si rivela (`SaveData.explored`), ✶ obiettivo. Freccia guida = **modalità assistita** (`settings.guide`, spenta di default).
+- `src/content/folk.ts`, `src/engine/art/folk.ts`, `src/engine/FolkManager.ts`: passanti per bioma (14 sagome), camminano/saltano sul grafo, chiacchierano tra loro, battute quando passi, E per parlare, scappano dal pericolo, notizie che cambiano coi flag, paura di pedro col doomsday.
+- `src/engine/Atmosphere.ts`: ciclo giorno/notte (12 min), meteo per bioma (pioggia, temporale con lampi e tuono, nebbia, vento, cenere), solo all'aperto; pioggia sintetizzata in `sfx.setRain`.
+- Trofei e punteggi: `src/content/achievements.ts` (36 trofei), `src/engine/achievements.ts`, punteggio a fine capitolo (`finishChapter`, record in `SaveData.scores`), app **trofei** nel telefono. Con la freccia accesa niente trofei e record segnati "assistito".
+
+### Prossimi passi
+1. Fase 3c: hub-città e fermate del bus con viaggio rapido.
+2. Fase 4: wall-jump (nuova wave) con cancelli d'abilità veri verificati dal simulatore, élite, quest secondarie dai passanti, sfide a tempo.
+3. Fase 5: trama (scelte, conseguenze, colpi di scena).
