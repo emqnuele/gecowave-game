@@ -51,6 +51,7 @@ await page.evaluate((choiceMode) => {
         if (/le wave tornano/.test(title)) pick = 0;
         if (/trenbolone\?/.test(title)) pick = 0;
         if (/acqua/.test(title)) pick = 1;
+        if (/microfono rosso|bottega/.test(title)) pick = 1;   // arene opzionali e negozio si provano a parte
         ev(`  -> scelgo ${pick}`);
         all[pick]?.click();
         acted = true;

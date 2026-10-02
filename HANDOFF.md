@@ -311,8 +311,14 @@ Feedback dell'utente: mappe irrisolvibili, boss/meccaniche/npc che non funzionan
 - **élite**: `Enemy` con `elite` (scala 1.5, aura, vita ×3.5, bottino ×6), scelte da `isEliteSpot`.
 - **finale vero** "riscatto": `giorno30`, boss `glitchpedro`, `sceltaFinale`, flag `pedro-redento` e `dei-arrestati`.
 
+- **cancelli d'abilità** (`src/world/gates.ts`): mensola per il doppio salto e camino per aggrappo nei capitoli fino a rio, verificati due volte dal simulatore.
+- **hub della piazza** (`level00-piazza.ts`, `LevelDef.hub`): fuori dalla pipeline (`REGION_IDS`), fermata `HUB_STOP` nel tabellone dopo guggu, bottega, bar delle voci, bacheca, oracolo delle mappe, folla. Verifica: `scripts/world/run.sh hubcheck piazza`.
+- **trappole** (`src/engine/TrapManager.ts`): seghe, presse, vapore per bioma, a runtime, mai solide.
+- **musica di notte**: passa-basso WebAudio (`music.setNight`).
+- **arene opzionali**: microfono rosso per regione, tre ondate, `arena-vinta-<id>`, trofeo gladiatore.
+- Il log tecnico dettagliato con le decisioni (ADR) è in `DEV_LOG.md`.
+
 ### Prossimi passi
-1. Cancelli d'abilità veri nel generatore (zone raggiungibili solo con aggrappo/doppio salto, verificate dal simulatore).
-2. Hub-città.
-3. Trappole meccaniche, allagamenti, musica per ora del giorno.
-4. Trame secondarie per personaggio.
+1. Bot sulla campagna intera con le regioni rigenerate (tappe: `scripts/world/waypoints.ts`).
+2. Piattaforme che crollano, allagamenti, sfide a tempo.
+3. Trame secondarie per personaggio, più scelte a metà gioco.
