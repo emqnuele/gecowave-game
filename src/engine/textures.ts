@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
-import { TILE, ZONE_HEX } from '../config';
-import type { ZoneColor } from '../types';
+import { TILE } from '../config';
 
 /* il protagonista e il mondo usano gli asset dipinti della legacy;
    qui si genera il resto del cast: silhouette scure + glow acidi,
@@ -1900,148 +1899,9 @@ function particles(scene: Phaser.Scene): void {
     });
 }
 
-/* ---------- skyline procedurali (strati intermedi del parallasse) ---------- */
+/* ---------- nebbia frontale ---------- */
 
-type Motif = 'rooftops' | 'arches' | 'swamp' | 'towers' | 'stage' | 'depot' | 'wreckage';
-
-const ZONE_MOTIF: Record<ZoneColor, Motif> = {
-    green: 'rooftops',
-    yellow: 'depot',
-    purple: 'arches',
-    red: 'wreckage',
-    orange: 'swamp',
-    blue: 'towers',
-    cyan: 'stage',
-};
-
-function mixHex(base: number, tint: number, t: number): string {
-    const c1 = Phaser.Display.Color.IntegerToColor(base);
-    const c2 = Phaser.Display.Color.IntegerToColor(tint);
-    const r = Math.round(c1.red + (c2.red - c1.red) * t);
-    const gg = Math.round(c1.green + (c2.green - c1.green) * t);
-    const b = Math.round(c1.blue + (c2.blue - c1.blue) * t);
-    return `rgb(${r},${gg},${b})`;
-}
-
-function drawMotif(ctx: CanvasRenderingContext2D, motif: Motif, rnd: () => number, w: number, h: number, depth: number): void {
-    const ground = h;
-    if (motif === 'rooftops') {
-        let x = 0;
-        while (x < w) {
-            const bw = 50 + rnd() * 90;
-            const bh = 60 + rnd() * (110 + depth * 60);
-            ctx.fillRect(x, ground - bh, bw, bh);
-            ctx.beginPath();
-            ctx.moveTo(x - 4, ground - bh);
-            ctx.lineTo(x + bw / 2, ground - bh - 18 - rnd() * 14);
-            ctx.lineTo(x + bw + 4, ground - bh);
-            ctx.fill();
-            if (rnd() > 0.6) ctx.fillRect(x + bw * 0.3, ground - bh - 34, 8, 26);
-            x += bw + 6 + rnd() * 30;
-        }
-    } else if (motif === 'arches') {
-        let x = 0;
-        const ch = 100 + depth * 80;
-        while (x < w) {
-            const cw = 26 + rnd() * 10;
-            ctx.fillRect(x, ground - ch, cw, ch);
-            x += cw + 50 + rnd() * 40;
-        }
-        ctx.fillRect(0, ground - ch - 26, w, 30);
-    } else if (motif === 'swamp') {
-        let x = 0;
-        while (x < w) {
-            const th = 70 + rnd() * (90 + depth * 70);
-            const lean = (rnd() - 0.5) * 50;
-            ctx.beginPath();
-            ctx.moveTo(x, ground);
-            ctx.quadraticCurveTo(x + lean * 0.4, ground - th * 0.6, x + lean, ground - th);
-            ctx.lineWidth = 10 - depth * 3;
-            ctx.strokeStyle = ctx.fillStyle as string;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x + lean * 0.7, ground - th * 0.75);
-            ctx.lineTo(x + lean * 0.7 + (rnd() - 0.5) * 60, ground - th * 0.75 - rnd() * 36);
-            ctx.lineWidth = 4;
-            ctx.stroke();
-            x += 60 + rnd() * 70;
-        }
-    } else if (motif === 'towers') {
-        let x = 10;
-        while (x < w) {
-            const bw = 34 + rnd() * 30;
-            const bh = 110 + rnd() * (130 + depth * 80);
-            ctx.fillRect(x, ground - bh, bw, bh);
-            ctx.fillRect(x + bw / 2 - 1.5, ground - bh - 24, 3, 24);
-            x += bw + 36;
-        }
-    } else if (motif === 'depot') {
-        // pensiline e bus accatastati
-        ctx.fillRect(0, ground - 12, w, 12);
-        let x = 8;
-        while (x < w) {
-            ctx.fillRect(x, ground - 120 - depth * 40, 6, 120 + depth * 40);
-            ctx.fillRect(x - 20, ground - 120 - depth * 40, 56, 6);
-            const stack = 1 + Math.floor(rnd() * 2);
-            for (let s = 0; s < stack; s++) {
-                const bw = 70 + rnd() * 30;
-                ctx.beginPath();
-                ctx.roundRect(x + 24 + rnd() * 30, ground - 30 * (s + 1) - 4 * s, bw, 28, 6);
-                ctx.fill();
-            }
-            x += 170 + rnd() * 70;
-        }
-    } else if (motif === 'wreckage') {
-        // periferia post-tecnokill: tralicci e carcasse
-        let x = 0;
-        while (x < w) {
-            if (rnd() > 0.5) {
-                const th = 90 + rnd() * (70 + depth * 60);
-                ctx.beginPath();
-                ctx.moveTo(x, ground); ctx.lineTo(x + 14, ground - th); ctx.lineTo(x + 28, ground);
-                ctx.fill();
-                ctx.fillRect(x - 8, ground - th + 14, 44, 4);
-            } else {
-                ctx.beginPath();
-                ctx.roundRect(x, ground - 26, 60 + rnd() * 30, 26, 8);
-                ctx.fill();
-                ctx.fillRect(x + 10, ground - 38, 24, 14);
-            }
-            x += 90 + rnd() * 80;
-        }
-    } else {
-        // stage: tralicci e casse del palco finale
-        ctx.fillRect(0, ground - 14, w, 14);
-        let x = 20;
-        while (x < w) {
-            ctx.fillRect(x, ground - 180 - depth * 60, 8, 180 + depth * 60);
-            ctx.fillRect(x - 14, ground - 180 - depth * 60, 36, 8);
-            const stack = 1 + Math.floor(rnd() * 3);
-            for (let s = 0; s < stack; s++) {
-                ctx.fillRect(x + 30 + rnd() * 20, ground - 34 * (s + 1), 40, 30);
-            }
-            x += 160 + rnd() * 80;
-        }
-    }
-}
-
-export function generateZoneTextures(scene: Phaser.Scene, zone: ZoneColor): void {
-    const motif = ZONE_MOTIF[zone];
-    for (let layer = 0; layer < 2; layer++) {
-        const key = `bg-${zone}-${layer}`;
-        if (scene.textures.exists(key)) continue;
-        const w = 1024;
-        const h = 400;
-        const tex = scene.textures.createCanvas(key, w, h)!;
-        const ctx = tex.getContext();
-        const t = 0.06 + layer * 0.05;
-        ctx.fillStyle = mixHex(0x0a0b10, ZONE_HEX[zone], t);
-        ctx.strokeStyle = ctx.fillStyle;
-        const rnd = mulberry32(zone.length * 1000 + layer * 77 + motif.length);
-        drawMotif(ctx, motif, rnd, w, h, layer);
-        tex.refresh();
-    }
-
+export function generateFogTexture(scene: Phaser.Scene): void {
     // velo di nebbia tileabile, passa DAVANTI al giocatore
     if (!scene.textures.exists('fog')) {
         const tex = scene.textures.createCanvas('fog', 512, 512)!;

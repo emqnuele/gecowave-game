@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
-import { ZONE_HEX } from '../config';
-import type { ZoneColor } from '../types';
+import type { BiomeDef } from '../content/biomes';
 
 interface TrackedLight {
     light: Phaser.GameObjects.Light;
@@ -13,19 +12,21 @@ export class LightingManager {
     private scene: Phaser.Scene;
     private tracked: TrackedLight[] = [];
     private torchCount = 0;
+    private propCount = 0;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
     }
 
-    enable(zone: ZoneColor): void {
+    enable(biome: BiomeDef): void {
         this.scene.lights.enable();
-        const tint = Phaser.Display.Color.IntegerToColor(ZONE_HEX[zone]);
-        // ambiente scurissimo ma tinto di zona
+        const rim = Phaser.Display.Color.IntegerToColor(biome.rim);
+        // ambiente scurissimo ma tinto dal bioma: le sagome si leggono, i dettagli no
+        const k = biome.ambient * 2.2;
         const ambient = Phaser.Display.Color.GetColor(
-            Math.round(8 + tint.red * 0.04),
-            Math.round(8 + tint.green * 0.04),
-            Math.round(12 + tint.blue * 0.04)
+            Math.round(6 + rim.red * k),
+            Math.round(6 + rim.green * k),
+            Math.round(9 + rim.blue * k),
         );
         this.scene.lights.setAmbientColor(ambient);
     }
@@ -61,6 +62,23 @@ export class LightingManager {
             intensity: { from: 1.0, to: 0.78 },
             radius: { from: 240, to: 215 },
             duration: 120 + Math.random() * 220,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+        });
+        return light;
+    }
+
+    /** luce di un oggetto di scena: le fiamme tremano, il resto respira piano */
+    prop(x: number, y: number, color: number, radius: number, flame: boolean): Phaser.GameObjects.Light | null {
+        if (this.propCount >= 40) return null;
+        this.propCount++;
+        const light = this.scene.lights.addLight(x, y, radius, color, flame ? 1.05 : 0.75);
+        this.scene.tweens.add({
+            targets: light,
+            intensity: flame ? { from: 1.05, to: 0.8 } : { from: 0.75, to: 0.55 },
+            radius: { from: radius, to: radius * 0.9 },
+            duration: flame ? 110 + Math.random() * 200 : 1400 + Math.random() * 900,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut',

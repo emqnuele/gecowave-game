@@ -3,7 +3,11 @@ import { COMBAT, ZONE_HEX } from '../config';
 import { DIALOGUES, NOTINO_FUGHE, TOASTS, TRABOCCHETTI, WAVESUNG } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../engine/events';
+import { biomeFor, type BiomeDef } from '../content/biomes';
+import { AmbienceManager } from '../engine/AmbienceManager';
 import { DecorationManager } from '../engine/DecorationManager';
+import { TerrainRenderer } from '../engine/TerrainRenderer';
+import { WaterRenderer } from '../engine/WaterRenderer';
 import { LightingManager } from '../engine/LightingManager';
 import { loadLevel, type LoadedLevel } from '../engine/LevelLoader';
 import { ParallaxManager } from '../engine/ParallaxManager';
@@ -11,7 +15,7 @@ import { npcTexture } from '../engine/npcTexture';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import { music } from '../engine/music';
-import { generateZoneTextures } from '../engine/textures';
+import { generateFogTexture } from '../engine/textures';
 import { Boss } from '../entities/Boss';
 import { Companion } from '../entities/Companion';
 import { Enemy } from '../entities/Enemy';
@@ -124,6 +128,10 @@ export class GameScene extends Phaser.Scene {
     private checkpointSprites = new Map<string, Phaser.GameObjects.Sprite>();
     private lighting!: LightingManager;
     private parallax!: ParallaxManager;
+    private biome!: BiomeDef;
+    private terrain!: TerrainRenderer;
+    private ambience!: AmbienceManager;
+    private water!: WaterRenderer;
     private clone: Companion | null = null;
     private cloneUntil = 0;
     private cloneColliders: Phaser.Physics.Arcade.Collider[] = [];
@@ -248,19 +256,33 @@ export class GameScene extends Phaser.Scene {
         this.nextWildGlitchAt = 0;
         this.nextBeatAt = 0;
 
-        generateZoneTextures(this, this.def.color);
+        generateFogTexture(this);
 
+        this.biome = biomeFor(this.def);
         this.lighting = new LightingManager(this);
-        this.lighting.enable(this.def.color);
+        this.lighting.enable(this.biome);
 
-        this.level = loadLevel(this, this.def);
+        this.level = loadLevel(this, this.def, this.biome);
         this.level.layer.setDepth(2);
-        this.level.spikes.setDepth(2, 0);
+        this.level.spikes.setDepth(3, 0);
+
+        const t0 = performance.now();
+        this.terrain = new TerrainRenderer(this, this.biome);
+        this.terrain.build({ grid: this.def.grid, biome: this.biome, seedKey: this.def.id });
+        if (import.meta.env.DEV) console.info(`[terrain] ${this.def.id}: ${Math.round(performance.now() - t0)}ms`);
 
         this.parallax = new ParallaxManager(this);
-        new DecorationManager(this, this.lighting).decorate(this.def.grid, this.def.color);
-        this.buildWater();
-        this.buildDust();
+        const reserved = [
+            this.level.spawn,
+            ...this.level.checkpoints,
+            ...this.level.entities,
+            ...this.level.exits.map((r) => ({ x: r.centerX, y: r.centerY })),
+        ];
+        new DecorationManager(this, this.lighting).decorate(this.def.grid, this.biome, this.def.id, reserved);
+        this.water = new WaterRenderer(this);
+        this.water.build(this.level.water, this.biome, this.lighting);
+        this.ambience = new AmbienceManager(this);
+        this.ambience.build(this.biome, this.def.grid, this.def.id);
 
         let sp = this.level.spawn;
         const cpId = data.checkpointId ?? null;
@@ -288,7 +310,7 @@ export class GameScene extends Phaser.Scene {
         this.setupColliders();
         this.setupEvents();
         this.setupCamera();
-        this.parallax.build(this.def.color, this.def.id);
+        this.parallax.build(this.def.color, this.def.id, this.biome, this.level.heightPx);
         this.parallax.resize();
         this.buildPrompt();
 
@@ -339,46 +361,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     /* ---------- costruzione ---------- */
-
-    private buildWater(): void {
-        if (this.level.water.length === 0) return;
-        const g = this.add.graphics().setDepth(3);
-        for (const rect of this.level.water) {
-            g.fillStyle(0x22d3ee, 0.18);
-            g.fillRect(rect.x, rect.y + 6, rect.width, rect.height - 6);
-            g.fillStyle(0x67e8f9, 0.35);
-            g.fillRect(rect.x, rect.y + 6, rect.width, 3);
-        }
-        const first = this.level.water[0];
-        const last = this.level.water[this.level.water.length - 1];
-        const cx = (first.x + last.x + last.width) / 2;
-        this.lighting.static(cx, first.y, 0x22d3ee, 300, 0.8);
-        this.add.particles(cx, first.y + 4, 'p-dot', {
-            x: { min: -(last.x + last.width - first.x) / 2, max: (last.x + last.width - first.x) / 2 },
-            speedY: { min: -30, max: -10 },
-            scale: { start: 0.3, end: 0 },
-            alpha: { start: 0.5, end: 0 },
-            tint: 0x67e8f9,
-            lifespan: 1600,
-            frequency: 180,
-        }).setDepth(3);
-    }
-
-    private buildDust(): void {
-        const w = this.level.widthPx;
-        const h = this.level.heightPx;
-        this.add.particles(0, 0, 'p-dot', {
-            x: { min: 0, max: w },
-            y: { min: 0, max: h },
-            scale: { start: 0.18, end: 0 },
-            alpha: { start: 0.22, end: 0 },
-            tint: ZONE_HEX[this.def.color],
-            lifespan: 6000,
-            speedX: { min: -8, max: 8 },
-            speedY: { min: -14, max: -4 },
-            frequency: 240,
-        }).setDepth(3);
-    }
 
     private spawnEntities(): void {
         for (const { spec, x, y } of this.level.entities) {
@@ -1036,10 +1018,6 @@ export class GameScene extends Phaser.Scene {
             this.hitstop();
             this.destroyBreakableWall(obj as Phaser.Physics.Arcade.Sprite);
         });
-        this.physics.add.overlap(this.player, this.level.fakeWalls, (_p, obj) => {
-            const wall = obj as Phaser.Physics.Arcade.Sprite;
-            wall.alpha = 0.1;
-        });
 
         this.physics.add.overlap(this.player.attackHitbox, this.enemies, (_hb, obj) => {
             if (!this.player.attackActive) return;
@@ -1529,6 +1507,8 @@ export class GameScene extends Phaser.Scene {
         this.boss?.update(time, delta, target);
         this.lighting.update();
         this.parallax.update(time);
+        this.ambience.update();
+        this.water.update(time);
 
         this.trackSafePosition(delta);
         this.checkExits();
@@ -1624,12 +1604,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     private updateFakeWalls(): void {
-        if (!this.level?.fakeWalls) return;
-        this.level.fakeWalls.getChildren().forEach((obj) => {
-            const wall = obj as Phaser.Physics.Arcade.Sprite;
-            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, wall.x, wall.y);
-            if (dist > 48) wall.alpha = 1;
-        });
+        this.terrain.updateReveal(this.player.x, this.player.y);
     }
 
     private destroyBreakableWall(wall: Phaser.Physics.Arcade.Sprite): void {

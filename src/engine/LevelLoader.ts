@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { ART_SCALE, ART_TILE, TILE } from '../config';
+import type { BiomeDef } from '../content/biomes';
 import type { EntitySpec, LevelDef } from '../types';
+import { breakableKey, ensureBlockTextures, spikeKey } from './art/blocks';
 
 export interface PlacedEntity {
     spec: EntitySpec;
@@ -39,7 +41,8 @@ function mulberry32(seed: number): () => number {
     };
 }
 
-export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
+export function loadLevel(scene: Phaser.Scene, def: LevelDef, biome: BiomeDef): LoadedLevel {
+    ensureBlockTextures(scene, biome);
     const rows = def.grid;
     const width = Math.max(...rows.map((r) => r.length));
     const rnd = mulberry32(def.id.length * 31337);
@@ -73,28 +76,15 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
             }
             if (ch === 'F') {
                 dataRow.push(-1);
-                const float = !solid(c, r - 1) && !solid(c, r + 1);
-                const exposed = !solid(c, r - 1);
-                const pool = float ? WOOD_TILES : exposed ? TOP_TILES : FILL_TILES;
-                const frame = pool[Math.floor(rnd() * pool.length)];
-                const s = fakeWalls.create(cx, cy, 'tileset_main', frame) as Phaser.Physics.Arcade.Sprite;
-                s.setScale(ART_SCALE);
-                // il corpo statico è calcolato sul frame 160px non scalato:
-                // senza refreshBody resta enorme (zona fantasma di ~5 tile)
+                // il muro finto lo disegna il TerrainRenderer: qui resta solo il corpo
+                const s = fakeWalls.create(cx, cy, breakableKey(biome)) as Phaser.Physics.Arcade.Sprite;
+                s.setVisible(false);
                 s.refreshBody();
-                s.setPipeline('Light2D');
                 continue;
             }
             if (ch === '%') {
                 dataRow.push(-1);
-                const float = !solid(c, r - 1) && !solid(c, r + 1);
-                const exposed = !solid(c, r - 1);
-                const pool = float ? WOOD_TILES : exposed ? TOP_TILES : FILL_TILES;
-                const frame = pool[Math.floor(rnd() * pool.length)];
-                const s = breakableWalls.create(cx, cy, 'tileset_main', frame) as Phaser.Physics.Arcade.Sprite;
-                s.setScale(ART_SCALE);
-                // refreshBody riallinea dimensione E posizione del corpo alla
-                // scala: setSize da solo lasciava il corpo sfalsato (blocco fantasma)
+                const s = breakableWalls.create(cx, cy, breakableKey(biome)) as Phaser.Physics.Arcade.Sprite;
                 s.refreshBody();
                 s.setPipeline('Light2D');
                 continue;
@@ -103,7 +93,7 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
             if (ch === '.') continue;
 
             if (ch === '^') {
-                const s = spikes.create(cx, cy, 'spikes') as Phaser.Physics.Arcade.Sprite;
+                const s = spikes.create(cx, cy, spikeKey(biome)) as Phaser.Physics.Arcade.Sprite;
                 // hitbox solo sulle punte, non su tutta la tile
                 (s.body as Phaser.Physics.Arcade.StaticBody).setSize(TILE - 8, 12).setOffset(4, TILE - 12);
                 s.setPipeline('Light2D');
@@ -131,7 +121,8 @@ export function loadLevel(scene: Phaser.Scene, def: LevelDef): LoadedLevel {
     const layer = map.createLayer(0, tileset, 0, 0)!;
     layer.setScale(ART_SCALE);
     layer.setCollisionByExclusion([-1]);
-    layer.setPipeline('Light2D');
+    // le collisioni restano sul tilemap, la grafica la fa il TerrainRenderer
+    layer.setVisible(false);
 
     return {
         layer,

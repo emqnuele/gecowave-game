@@ -6,7 +6,7 @@ import '@fontsource/martian-mono/400.css';
 import '@fontsource/martian-mono/700.css';
 import './style.css';
 import { PHYSICS } from './config';
-import { FIRST_LEVEL, TOTAL_FRAGMENTS } from './content/levels';
+import { FIRST_LEVEL, LEVELS, TOTAL_FRAGMENTS } from './content/levels';
 import { endingCards, INTRO_CARDS } from './content/story';
 import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
@@ -50,6 +50,9 @@ async function boot(): Promise<void> {
         },
         scene: [BootScene, GameScene],
     });
+
+    // handle di debug in sviluppo, mai nel build
+    if (import.meta.env.DEV) Object.assign(window, { __game: game });
 
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
         sfx.init();
@@ -136,8 +139,14 @@ async function boot(): Promise<void> {
 
     game.events.once('boot-complete', () => {
         music.init();
-        music.playMenu();
-        screens.showMenu();
+        // scorciatoia di sviluppo: ?level=id salta menu e intro
+        const devLevel = import.meta.env.DEV ? new URLSearchParams(location.search).get('level') : null;
+        if (devLevel && LEVELS[devLevel]) {
+            startLevel(devLevel, null, false);
+        } else {
+            music.playMenu();
+            screens.showMenu();
+        }
         // il menu è pronto: spengo il loader e lo rimuovo a fine transizione
         const loader = document.getElementById('boot-loader');
         if (loader) {

@@ -63,6 +63,8 @@ export interface LevelDef {
     /** parola evidenziata a pennarello nel titolo */
     accentWord: string;
     color: ZoneColor;
+    /** bioma grafico (vedi content/biomes.ts); se manca si deduce dall'id o dal colore */
+    biome?: string;
     /** battuta mostrata sotto la title card */
     punchline: string;
     /** griglia ascii: # terreno, ^ spine, ~ acqua, P spawn, C microfono, X uscita */
