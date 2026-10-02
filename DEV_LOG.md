@@ -59,6 +59,11 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 **Decisione**: `LevelDef.hub` marca un livello disegnato da codice (`level00-piazza.ts`), senza regione generata. `REGION_IDS` esclude gli hub da `npm run regions`, dal BootScene e dagli script del mondo. La fermata `HUB_STOP` entra nel tabellone del citelis dopo guggu. La raggiungibilità si verifica con `scripts/world/run.sh hubcheck piazza` (stampa le celle raggiunte dal geco simulato).
 **Vincolo trovato**: una mensola a una riga dal marciapiede è un muro (il corpo è alto 55 px, serve una luce di almeno 2 righe sotto): i primi gradini vanno pieni fino a terra.
 
+### ADR-009 — trappole a runtime, mai solide
+**Decisione**: `TrapManager` piazza seghe (corrono sul pavimento), presse (cadono dal soffitto) e getti di vapore sui segmenti del grafo di navigazione, in modo deterministico per regione e con densità per bioma. Niente nelle stanze tranquille (inizio, riposo, arena, uscita, segrete) né vicino a varchi, microfoni, fermate e npc.
+**Perché a runtime**: non toccano la griglia, quindi la verifica del simulatore resta valida e non serve rigenerare. Non essendo solide non possono chiudere una strada: costano vita, non bloccano. Ogni trappola ha sempre una finestra (sega saltabile con 3 righe d'aria sopra, pressa con ciclo e tremito d'avviso, vapore con sbuffi d'avviso).
+**Vincolo**: si attivano per distanza dal geco, non per inquadratura (nel bot il `worldView` della camera non si aggiorna senza render).
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -83,13 +88,14 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - Fase 4: aggrappo (wave nuova, dalla formicona), élite, missioni dei passanti con amuleti nuovi, cancelli d'abilità nei primi capitoli.
 - Fase 5: finale vero "riscatto" (giorno 30, il glitch, romero arresta gli dei).
 - Bot: campagna completa fino al finale e capitoli segreti.
+- Trappole meccaniche per bioma (seghe, presse, vapore).
 - Hub della piazza: bottega (ricarica, pacco a sorpresa), bacheca delle commissioni, oracolo delle mappe (percentuali di esplorazione), bar con voci calcolate su quello che manca, folla dedicata (18+ passanti), due lore sui tetti.
 
 ### In corso
 - Rigenerazione completa delle regioni con simulatore corretto (bug del blocco del salto dal muro non azzerato) e controllo dei boss per stanza.
 
 ### Da fare
-- Trappole meccaniche (presse, seghe, piattaforme che crollano), allagamenti, musica per ora del giorno.
+- Piattaforme che crollano, allagamenti, musica per ora del giorno.
 - Sfide a tempo e arene opzionali.
 - Trame secondarie per personaggio, più scelte a metà gioco.
 
@@ -102,4 +108,5 @@ Branch di lavoro: `remaster-l6rk4r`. Commit in stile convenzionale (`feat:`, `fi
 - **gameplay**: aggrappo, missioni, cancelli d'abilità, trofei e punteggi.
 - **trama**: finale vero, coerenza di prezzi ed epiloghi.
 - **hub**: la piazza col citelis, npc di servizio, folla.
+- **trappole**: seghe, presse, vapore per bioma.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.

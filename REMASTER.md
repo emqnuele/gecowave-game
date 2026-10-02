@@ -40,7 +40,7 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 - importante: il mondo deve essere **pericoloso**: nemici che ti inseguono, ti attaccano, ti uccidono; boss che pattugliano le regioni; trappole ambientali; zone in cui non puoi tornare indietro senza morire.
 - IMPORTANTISSIMO: il mondo deve essere ENORME. almeno 10 volte piu grande di adesso. fatto BENE. 
 
-**stato fase 3**: regioni a stanze ✅ (10× il gioco vecchio, ogni regione verificata col geco simulato a fisica vera, zero trappole); mappa che si rivela ✅; fermate del citelis con viaggio rapido ✅; passanti vivi per bioma ✅; nemici che dormono, pattugliano, si chiamano, inseguono e scappano ✅; meteo e giorno/notte ✅; arene che si chiudono durante i boss ✅. da fare: l'hub-città, musica per ora del giorno, allagamenti, trappole meccaniche (presse, seghe, piattaforme che crollano).
+**stato fase 3**: regioni a stanze ✅ (10× il gioco vecchio, ogni regione verificata col geco simulato a fisica vera, zero trappole); mappa che si rivela ✅; fermate del citelis con viaggio rapido ✅; passanti vivi per bioma ✅; nemici che dormono, pattugliano, si chiamano, inseguono e scappano ✅; meteo e giorno/notte ✅; arene che si chiudono durante i boss ✅; hub della piazza col citelis (bottega, bar delle voci, bacheca, oracolo delle mappe) ✅; trappole meccaniche (seghe, presse, getti di vapore, per bioma) ✅. da fare: musica per ora del giorno, allagamenti, piattaforme che crollano.
 
 ### Fase 4 — gameplay
 - wall-jump/aggrappo (nuova wave), nuovi comportamenti nemici, nemici d'élite
