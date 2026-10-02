@@ -304,7 +304,15 @@ Feedback dell'utente: mappe irrisolvibili, boss/meccaniche/npc che non funzionan
 - `src/engine/Atmosphere.ts`: ciclo giorno/notte (12 min), meteo per bioma (pioggia, temporale con lampi e tuono, nebbia, vento, cenere), solo all'aperto; pioggia sintetizzata in `sfx.setRain`.
 - Trofei e punteggi: `src/content/achievements.ts` (36 trofei), `src/engine/achievements.ts`, punteggio a fine capitolo (`finishChapter`, record in `SaveData.scores`), app **trofei** nel telefono. Con la freccia accesa niente trofei e record segnati "assistito".
 
+### Aggiunte successive
+- **fermate del citelis**: palo accanto a ogni microfono, si scoprono passando (`SaveData.stops`), da lì il tabellone `travel-show` porta a qualsiasi fermata scoperta (`travelTo`).
+- **missioni dei passanti**: `src/content/quests.ts` (16, una per capitolo), `src/engine/QuestManager.ts`. Tutto piazzato su `layout.spots`: posizioni verificate dal simulatore che `npm run regions` salva per stanza. Stato in `SaveData.quests`, nel diario del telefono.
+- **aggrappo** (nuova wave, `PHYSICS.wall*`): presa e salto dai muri, replicata nel simulatore (traiettorie identiche al gioco vero), macro di arrampicata in `simreach`. La lascia la formicona. `TOTAL_FRAGMENTS` = 8.
+- **élite**: `Enemy` con `elite` (scala 1.5, aura, vita ×3.5, bottino ×6), scelte da `isEliteSpot`.
+- **finale vero** "riscatto": `giorno30`, boss `glitchpedro`, `sceltaFinale`, flag `pedro-redento` e `dei-arrestati`.
+
 ### Prossimi passi
-1. Fase 3c: hub-città e fermate del bus con viaggio rapido.
-2. Fase 4: wall-jump (nuova wave) con cancelli d'abilità veri verificati dal simulatore, élite, quest secondarie dai passanti, sfide a tempo.
-3. Fase 5: trama (scelte, conseguenze, colpi di scena).
+1. Cancelli d'abilità veri nel generatore (zone raggiungibili solo con aggrappo/doppio salto, verificate dal simulatore).
+2. Hub-città.
+3. Trappole meccaniche, allagamenti, musica per ora del giorno.
+4. Trame secondarie per personaggio.

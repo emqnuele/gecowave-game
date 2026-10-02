@@ -17,14 +17,14 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 
 ## Fasi
 
-### Fase 1 — motore visivo (tocca tutto il gioco esistente) ✅ in corso
+### Fase 1 — motore visivo (tocca tutto il gioco esistente) ✅
 - **biomi**: ogni capitolo ha un bioma (palette, materiale del terreno, vestizione delle superfici, sagome del parallasse, particelle, spine)
 - **terreno organico**: il tilemap resta solo per le collisioni; si disegna un contorno levigato e sporcato a mano, riempito col materiale del bioma, buio all'interno e leggibile sul bordo, con linea d'inchiostro, erba/muschio/cavi/cristalli sopra e radici/stalattiti/catene sotto
 - **props a inchiostro** generati per bioma (niente più atlante condiviso)
 - **parallasse a strati**: cielo, dipinto, 3 piani di sagome con prospettiva atmosferica, nebbia, **primo piano nero** davanti al giocatore
 - **atmosfera**: particelle per bioma, raggi di luce, acqua animata
 
-### Fase 2 — lo smartphone e l'inventario
+### Fase 2 — lo smartphone e l'inventario ✅
 - telefono stile GTA (TAB): messaggi (le wavesung diventano chat vere con storico), mappa, zaino, amuleti, diario delle quest, radio con la colonna sonora, impostazioni
 - inventario: consumabili, oggetti chiave, collezionabili
 - **amuleti** con tacche (stile charm di HK), equipaggiabili solo ai microfoni
@@ -40,12 +40,16 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 - importante: il mondo deve essere **pericoloso**: nemici che ti inseguono, ti attaccano, ti uccidono; boss che pattugliano le regioni; trappole ambientali; zone in cui non puoi tornare indietro senza morire.
 - IMPORTANTISSIMO: il mondo deve essere ENORME. almeno 10 volte piu grande di adesso. fatto BENE. 
 
+**stato fase 3**: regioni a stanze ✅ (10× il gioco vecchio, ogni regione verificata col geco simulato a fisica vera, zero trappole); mappa che si rivela ✅; fermate del citelis con viaggio rapido ✅; passanti vivi per bioma ✅; nemici che dormono, pattugliano, si chiamano, inseguono e scappano ✅; meteo e giorno/notte ✅; arene che si chiudono durante i boss ✅. da fare: l'hub-città, musica per ora del giorno, allagamenti, trappole meccaniche (presse, seghe, piattaforme che crollano).
+
 ### Fase 4 — gameplay
 - wall-jump/aggrappo (nuova wave), nuovi comportamenti nemici, nemici d'élite
 - quest secondarie con npc ricorrenti, ricompense, scelte
 - sfide opzionali (arene, prove a tempo)
 
-### Fase 4b — trofei, punteggi e modalità assistita
+**stato fase 4**: aggrappo (presa e salto dai muri, lo lascia la formicona) ✅; élite ✅; missioni dei passanti (cerca, caccia, consegna) con 7 amuleti nuovi ✅. da fare: cancelli d'abilità veri nel generatore (zone di regioni vecchie raggiungibili solo con aggrappo), sfide a tempo, arene opzionali.
+
+### Fase 4b — trofei, punteggi e modalità assistita ✅
 - **achievement** (trofei) per le imprese: boss senza danni, regioni esplorate al 100%, segreti, maschere, finali, sfide a tempo, scelte di trama
 - **punteggio** per capitolo e totale: tempo, morti, uccisioni, esplorazione, segreti; classifica locale nel profilo del telefono
 - **modalità assistita**: la freccia guida che indica il prossimo varco verso l'obiettivo è un'impostazione (spenta di default). chi la accende gioca in modalità facile e **non sblocca achievement** (la partita resta segnata come assistita)
@@ -54,3 +58,5 @@ Punti di forza da tenere: voce e trama (demenziale, coerente, piena di personagg
 ### Fase 5 — trama
 - trame secondarie per ogni personaggio, lore ambientale nelle stanze, finali estesi
 - migliorare la trama del gioco enormemente, più scelte, più conseguenze, più misteri, più colpi di scena, più emozioni. in generale attualmente è molto sloppy e poco soddisfacente, non dobbiamo riscrivere tutto ma dobbiamo renderlo più coerente, più profondo, più interessante, più divertente, più emozionante. abbiamo bisogno di una storia da film da gioco di serie A.
+
+**stato fase 5**: finale vero "riscatto" ✅: al nucleo, chi ha visto i ricordi di pedro può ricordargli il giorno 30; con le cinque verità del void pedro capisce di essere stato usato e si combatte il glitch (l'ordine di lametta) invece di lui; con il caso chiuso romero arresta gli dei; le wave si possono affidare a pedro redento. così caso, ricordi e void pagano davvero. da fare: trame secondarie per personaggio, più scelte con conseguenze a metà gioco.
