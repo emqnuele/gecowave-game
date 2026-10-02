@@ -4,6 +4,9 @@ import type { BiomeDef } from '../content/biomes';
 interface TrackedLight {
     light: Phaser.GameObjects.Light;
     target: Phaser.GameObjects.Sprite;
+    /** la luce sta sopra la creatura: con le normal map la modella dall'alto come nei dipinti */
+    dx: number;
+    dy: number;
 }
 
 /* il buio è il vero protagonista: ambiente quasi nero,
@@ -34,13 +37,13 @@ export class LightingManager {
 
     playerLight(target: Phaser.GameObjects.Sprite): Phaser.GameObjects.Light {
         const light = this.scene.lights.addLight(target.x, target.y, 400, 0xaaffdd, 1.35);
-        this.tracked.push({ light, target });
+        this.tracked.push({ light, target, dx: 0, dy: 0 });
         return light;
     }
 
-    follow(target: Phaser.GameObjects.Sprite, color: number, radius = 150, intensity = 0.8): Phaser.GameObjects.Light {
-        const light = this.scene.lights.addLight(target.x, target.y, radius, color, intensity);
-        this.tracked.push({ light, target });
+    follow(target: Phaser.GameObjects.Sprite, color: number, radius = 150, intensity = 0.8, dy = 0, dx = 0): Phaser.GameObjects.Light {
+        const light = this.scene.lights.addLight(target.x + dx, target.y + dy, radius, color, intensity);
+        this.tracked.push({ light, target, dx, dy });
         this.scene.tweens.add({
             targets: light,
             intensity: { from: intensity, to: intensity * 0.72 },
@@ -100,7 +103,7 @@ export class LightingManager {
 
     update(): void {
         for (let i = this.tracked.length - 1; i >= 0; i--) {
-            const { light, target } = this.tracked[i];
+            const { light, target, dx, dy } = this.tracked[i];
             if (!target.active) {
                 light.setIntensity(Math.max(0, light.intensity - 0.08));
                 if (light.intensity <= 0) {
@@ -108,7 +111,7 @@ export class LightingManager {
                     this.tracked.splice(i, 1);
                 }
             } else {
-                light.setPosition(target.x, target.y);
+                light.setPosition(target.x + (target.flipX ? -dx : dx), target.y + dy);
             }
         }
     }

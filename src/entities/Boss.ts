@@ -4,6 +4,7 @@ import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { BossKind } from '../types';
+import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 
 type Phase = 1 | 2 | 3;
 
@@ -29,6 +30,9 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     private nextAttackAt = 0;
     private busy = false;
     private summonedAtPhase: Phase | 0 = 0;
+    private look: CreatureGlow;
+    private frames: number;
+    private res: number;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: BossKind, hpOverride?: number) {
         super(scene, x, y, BOSSES[kind].texture);
@@ -41,12 +45,18 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         this.setPipeline('Light2D');
-        const big = Math.max(this.width, this.height);
-        this.baseScale = big < 70 ? 2.1 : big < 100 ? 1.75 : 1.45;
+        // la scala si decide sulla misura logica; i fogli a inchiostro sono disegnati al doppio
+        this.res = creatureRes(scene, this.texture.key);
+        this.frames = creatureFrames(scene, this.texture.key);
+        const frame = creatureBody(this);
+        const big = Math.max(frame.w, frame.h) / this.res;
+        this.baseScale = (big < 70 ? 2.1 : big < 100 ? 1.75 : 1.45) / this.res;
         this.setScale(this.baseScale);
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.setAllowGravity(false);
-        body.setSize(this.width * (this.def.bodyScale ?? 0.75), this.height * (this.def.bodyScale ?? 0.75));
+        body.setSize(frame.w * (this.def.bodyScale ?? 0.75), frame.h * (this.def.bodyScale ?? 0.75));
+        this.look = new CreatureGlow(this);
+        scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncLook, this);
         this.setDepth(5);
 
         if (kind === 'guggu' && !state.hasFlag('ivan')) {
@@ -103,8 +113,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             if (this.scaleX !== this.baseScale) this.setScale(this.baseScale);
             // scatti, tremori, niente movimenti morbidi: deve fare paura
             this.setDisplayOrigin(
-                this.width / 2 + (Math.random() > 0.85 ? (Math.random() - 0.5) * 8 : 0),
-                this.height / 2 + (Math.random() > 0.9 ? (Math.random() - 0.5) * 6 : 0)
+                this.width / 2 + (Math.random() > 0.85 ? (Math.random() - 0.5) * 8 * this.res : 0),
+                this.height / 2 + (Math.random() > 0.9 ? (Math.random() - 0.5) * 6 * this.res : 0)
             );
             if (Math.random() > 0.985) {
                 this.setTintFill(Math.random() > 0.5 ? 0x22d3ee : 0xf87171);
@@ -354,5 +364,25 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         }
         scene.cameras.main.shake(800, 0.012);
         scene.time.delayedCall(1300, () => scene.events.emit('boss-defeated', { kind, x, y }));
+    }
+
+    private animT = 0;
+
+    /** ciclo dei fotogrammi (più rapido a ogni fase) e strato emissivo che pulsa con la rabbia */
+    private syncLook(_time: number, delta: number): void {
+        if (!this.active) return;
+        this.animT += delta * (this.engaged ? 0.8 + this.phase * 0.35 : 0.6);
+        if (this.frames > 1) {
+            const f = Math.floor(this.animT / 160) % this.frames;
+            if (String(this.frame.name) !== String(f)) this.setFrame(f);
+        }
+        const rage = this.engaged ? 0.85 + Math.sin(this.animT / (420 - this.phase * 90)) * 0.15 : 0.8;
+        this.look.sync(rage);
+    }
+
+    destroy(fromScene?: boolean): void {
+        this.scene?.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncLook, this);
+        this.look?.destroy();
+        super.destroy(fromScene);
     }
 }

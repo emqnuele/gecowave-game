@@ -3,6 +3,7 @@ import { ENEMIES, type EnemyArchetype } from '../content/enemies';
 import type { NavEdge, NavGraph } from '../engine/nav/NavGraph';
 import type { EnemyKind } from '../types';
 import { mix } from '../engine/art/ink';
+import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo
@@ -70,6 +71,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     /** appeso al soffitto finché non passi sotto */
     private hanging = false;
     private fuseAt = 0;
+    /** occhi e luci della creatura, fuori dalla pipeline delle luci */
+    private look: CreatureGlow;
+    private frames: number;
+    private animT = Math.random() * 1000;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean; elite?: boolean; trait?: EnemyTrait | null } = {}) {
         super(scene, x, y, ENEMIES[kind].texture);
@@ -87,13 +92,20 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         this.setPipeline('Light2D');
+        // i fogli a inchiostro sono disegnati al doppio: la scala li riporta alla misura logica
+        const res = creatureRes(scene, this.texture.key);
+        this.setScale(1 / res);
+        this.frames = creatureFrames(scene, this.texture.key);
+        this.look = new CreatureGlow(this);
+        scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncLook, this);
 
         const body = this.body as Phaser.Physics.Arcade.Body;
         const airborne = this.arch.behavior === 'flyer' || this.arch.behavior === 'turret';
         body.setAllowGravity(!airborne);
-        body.setSize(this.width * 0.8, this.height * 0.8);
+        const frame = creatureBody(this);
+        body.setSize(frame.w * 0.8, frame.h * 0.8);
         if (this.elite) {
-            this.setScale(1.5);
+            this.setScale(1.5 / res);
             this.aura = scene.add.image(x, y, 'p-dot').setTint(this.arch.glowColor).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.55).setScale(5).setDepth(3.9);
             scene.tweens.add({ targets: this.aura, scale: 6.2, alpha: 0.3, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         }
@@ -131,7 +143,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
                 // tra soffitto e pavimento serve spazio per cadere davvero
                 if (k < 5) return false;
                 this.hanging = true;
-                this.y = r * 32 + this.displayHeight / 2 + 1;
+                this.y = r * 32 + (creatureBody(this).h * this.scaleY) / 2 + 1;
                 const body = this.body as Phaser.Physics.Arcade.Body;
                 body.setAllowGravity(false);
                 body.setVelocity(0, 0);
@@ -159,6 +171,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         body.enable = !dormant;
         this.mark?.setVisible(!dormant && this.mode === 'sleep');
         this.aura?.setVisible(!dormant);
+        this.look.setVisible(!dormant);
         this.shield?.setVisible(!dormant);
         // chi dorme appeso resta appeso: senza gravità anche quando si risveglia il corpo
         if (!dormant && this.hanging) body.setAllowGravity(false);
@@ -211,9 +224,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         const dx = target.x - this.x;
         const dy = target.y - this.y;
         const dist = Math.hypot(dx, dy);
-        this.mark?.setPosition(this.x, this.y - this.displayHeight / 2 - 12 + Math.sin(this.t / 300) * 2);
+        this.mark?.setPosition(this.x, this.y - body.height / 2 - 16 + Math.sin(this.t / 300) * 2);
         this.aura?.setPosition(this.x, this.y);
-        if (this.shield) this.shield.setPosition(this.x + (this.flipX ? 1 : -1) * (this.displayWidth / 2 + 2), this.y + 2).setFlipX(this.flipX);
+        if (this.shield) this.shield.setPosition(this.x + (this.flipX ? 1 : -1) * (body.width / 2 + 6), this.y + 2).setFlipX(this.flipX);
 
         if (this.hanging) {
             // passa sotto e ti cade addosso: lo si vede solo se lo si cerca
@@ -601,7 +614,24 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.destroy();
     }
 
+    /** fotogramma del ciclo e strato emissivo: dopo la fisica, così non resta indietro */
+    private syncLook(_time: number, delta: number): void {
+        if (!this.active || this.dormant) return;
+        if (this.frames > 1) {
+            const body = this.body as Phaser.Physics.Arcade.Body;
+            const v = Math.hypot(body.velocity.x, body.velocity.y);
+            const asleep = this.mode === 'sleep' || this.hanging;
+            // chi corre muove le zampe più in fretta, chi dorme respira appena
+            this.animT += delta * (asleep ? 0.35 : 0.8 + Math.min(1.6, v / 160));
+            const f = Math.floor(this.animT / 150) % this.frames;
+            if (String(this.frame.name) !== String(f)) this.setFrame(f);
+        }
+        this.look.sync(this.mode === 'sleep' || this.hanging ? 0.25 : 1);
+    }
+
     destroy(fromScene?: boolean): void {
+        this.scene?.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncLook, this);
+        this.look.destroy();
         this.mark?.destroy();
         this.mark = null;
         this.aura?.destroy();

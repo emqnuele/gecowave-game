@@ -15,6 +15,7 @@ import { music } from './engine/music';
 import { checkAchievements } from './engine/achievements';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
+import { GalleryScene } from './scenes/GalleryScene';
 import { DialogueBox } from './ui/dialogue';
 import { Phone } from './ui/phone';
 import { Hud } from './ui/hud';
@@ -52,7 +53,7 @@ async function boot(): Promise<void> {
                 tileBias: 48,
             },
         },
-        scene: [BootScene, GameScene],
+        scene: [BootScene, GameScene, GalleryScene],
     });
 
     // handle di debug in sviluppo, mai nel build
@@ -161,7 +162,9 @@ async function boot(): Promise<void> {
         music.init();
         // scorciatoia di sviluppo: ?level=id salta menu e intro
         const devLevel = import.meta.env.DEV ? new URLSearchParams(location.search).get('level') : null;
-        if (devLevel && LEVELS[devLevel]) {
+        if (import.meta.env.DEV && new URLSearchParams(location.search).has('gallery')) {
+            game.scene.start('GalleryScene');
+        } else if (devLevel && LEVELS[devLevel]) {
             startLevel(devLevel, null, false);
         } else {
             music.playMenu();

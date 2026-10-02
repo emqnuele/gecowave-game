@@ -38,6 +38,7 @@ import { state } from '../engine/state';
 import { music } from '../engine/music';
 import { generateFogTexture } from '../engine/textures';
 import { Boss } from '../entities/Boss';
+import { creatureFrames, creatureRes } from '../engine/art/creatureKit';
 import { Companion } from '../entities/Companion';
 import { Enemy, type EnemyTrait } from '../entities/Enemy';
 import { ENEMIES } from '../content/enemies';
@@ -570,7 +571,7 @@ export class GameScene extends Phaser.Scene {
                     if (spec.kind === 'limite' && this.indiziRaccolti() >= 3) this.boss.invulnerable = false;
                     // da cliente premium ticummi ha i tuoi dati: evoca echi di te
                     if (spec.kind === 'ticummi' && state.hasFlag('tommasorveglianza')) this.boss.summonOverride = 'eco';
-                    this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
+                    this.lightBoss(this.boss, this.boss.def.glowColor, 280, 1.0);
                     break;
                 }
             }
@@ -637,6 +638,12 @@ export class GameScene extends Phaser.Scene {
         if (kind === 'pedrino') state.setFlag('ricordi-visti');
     }
 
+    /** la luce del boss sta un po' sopra la testa: le normal map lo modellano dall'alto */
+    private lightBoss(boss: Boss, color: number, radius: number, intensity: number): Phaser.GameObjects.Light {
+        const h = (boss.body as Phaser.Physics.Arcade.Body).height;
+        return this.lighting.follow(boss, color, radius + h * 0.5, intensity, -h * 0.75, -h * 0.25);
+    }
+
     /** un boss nasce sospeso sopra il pavimento più vicino, con la testa sotto il soffitto */
     private makeBoss(x: number, y: number, kind: BossKind, hpOverride?: number): Boss {
         const boss = new Boss(this, x, y, kind, hpOverride);
@@ -647,7 +654,7 @@ export class GameScene extends Phaser.Scene {
         let top = r;
         while (top > 0 && !this.nav.solid(c, top - 1) && floor - top * TILE < 600) top--;
         const ceil = top * TILE;
-        const half = boss.displayHeight / 2;
+        const half = (boss.body as Phaser.Physics.Arcade.Body).height / 2 / (boss.def.bodyScale ?? 0.75);
         let by = floor - half - 70;
         if (by - half < ceil + 16) by = (floor + ceil) / 2;
         boss.relocate(x, by);
@@ -685,7 +692,10 @@ export class GameScene extends Phaser.Scene {
         e.setDepth(4);
         this.enemies.add(e);
         // il kamikaze si annuncia con una luce rossa, chi sta appeso al buio no
-        if (e.trait !== 'soffitto') this.lighting.follow(e, e.trait === 'kamikaze' ? 0xef4444 : e.arch.glowColor, 110, 0.55);
+        if (e.trait !== 'soffitto') {
+            const h = (e.body as Phaser.Physics.Arcade.Body).height;
+            this.lighting.follow(e, e.trait === 'kamikaze' ? 0xef4444 : e.arch.glowColor, 120 + h, 0.6, -h * 0.9 - 8, -h * 0.35);
+        }
         return e;
     }
 
@@ -1857,7 +1867,7 @@ export class GameScene extends Phaser.Scene {
         }
         this.boss = this.makeBoss(arena.x, arena.y - 20, kind);
         this.bossIntroShown = false;
-        this.lighting.follow(this.boss, this.boss.def.glowColor, 260, 1.0);
+        this.lightBoss(this.boss, this.boss.def.glowColor, 260, 1.0);
         this.setupBossColliders();
     }
 
@@ -1899,10 +1909,10 @@ export class GameScene extends Phaser.Scene {
             const wy = arena.y - 30;
             const boss = this.makeBoss(cx, wy, 'walter');
             const full = boss.baseScale * 1.1;
-            boss.baseScale = 0.35;
+            boss.baseScale = full * 0.3;
             this.boss = boss;
             this.bossIntroShown = true; // l'ingaggio lo faccio io dopo la crescita
-            this.lighting.follow(boss, boss.def.glowColor, 320, 1.1);
+            this.lightBoss(boss, boss.def.glowColor, 320, 1.1);
             this.setupBossColliders();
             this.cameras.main.shake(600, 0.01);
             this.cameras.main.flash(300, 22, 163, 74);
@@ -1977,7 +1987,7 @@ export class GameScene extends Phaser.Scene {
         const kind = VOID_REGRETS[idx];
         this.boss = this.makeBoss(arena.x, arena.y - 20, kind);
         this.bossIntroShown = false;
-        this.lighting.follow(this.boss, this.boss.def.glowColor, 260, 1.0);
+        this.lightBoss(this.boss, this.boss.def.glowColor, 260, 1.0);
         this.setupBossColliders();
     }
 
@@ -2078,7 +2088,7 @@ export class GameScene extends Phaser.Scene {
                     this.boss = this.makeBoss(altar.x, altar.y - 30, 'trentatre');
                     this.boss.chase = true;
                     this.bossIntroShown = false;
-                    this.lighting.follow(this.boss, this.boss.def.glowColor, 320, 1.1);
+                    this.lightBoss(this.boss, this.boss.def.glowColor, 320, 1.1);
                     this.setupBossColliders();
                 },
             });
@@ -2252,7 +2262,7 @@ export class GameScene extends Phaser.Scene {
                 const at = this.openSpotNear(px, this.player.y - 120);
                 this.boss = this.makeBoss(at.x, at.y, 'pedro');
                 this.boss.frenzy = true;
-                this.lighting.follow(this.boss, this.boss.def.glowColor, 320, 1.1);
+                this.lightBoss(this.boss, this.boss.def.glowColor, 320, 1.1);
                 this.setupBossColliders();
                 this.boss.engage();
             });
@@ -3253,7 +3263,7 @@ export class GameScene extends Phaser.Scene {
                 const cam = this.cameras.main.worldView;
                 const sx = ahead > 0 ? cam.x - 60 : cam.right + 60;
                 // fuori dalle luci: lochef si vede sempre, è lui la luce cattiva
-                const chef = this.add.sprite(sx, this.player.y - 70, 'boss-lochef').setDepth(7);
+                const chef = this.add.sprite(sx, this.player.y - 70, 'boss-lochef', 0).setDepth(7).setScale(1.25 / creatureRes(this, 'boss-lochef'));
                 this.chaseSprite = chef;
                 this.chaseStartedAt = this.time.now;
                 this.lighting.follow(chef, 0xf87171, 300, 1.2);
@@ -3315,7 +3325,8 @@ export class GameScene extends Phaser.Scene {
         const speed = dist > 620 ? 560 : dist > 320 ? 330 : 245;
         chef.x += (dx / dist) * speed * (delta / 1000);
         chef.y += (dy / dist) * speed * (delta / 1000);
-        chef.setFlipX(dx < 0);
+        chef.setFlipX(dx > 0);
+        chef.setFrame(Math.floor(this.time.now / 110) % creatureFrames(this, 'boss-lochef'));
         // ondeggia: inquietante ma con stile
         chef.y += Math.sin(this.time.now / 200) * 0.6;
 
@@ -3372,7 +3383,7 @@ export class GameScene extends Phaser.Scene {
         this.smelaArena = null;
         this.boss = this.makeBoss(a.x, a.y, 'smela');
         this.bossIntroShown = false;
-        this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
+        this.lightBoss(this.boss, this.boss.def.glowColor, 280, 1.0);
         this.setupBossColliders();
     }
 
@@ -3641,7 +3652,7 @@ export class GameScene extends Phaser.Scene {
             this.boss = this.makeBoss(x, y, 'dei');
             this.boss.invulnerable = true;
             this.boss.frenzy = true;
-            this.lighting.follow(this.boss, 0xffffff, 340, 1.2);
+            this.lightBoss(this.boss, 0xffffff, 340, 1.2);
             this.setupBossColliders();
             this.boss.engage();
             this.cameras.main.flash(220, 255, 255, 255);
@@ -3770,7 +3781,7 @@ export class GameScene extends Phaser.Scene {
                     if (replaced === 'guggu' && state.hasFlag('ivan')) this.boss.invulnerable = false;
                     if (replaced === 'limite' && this.indiziRaccolti() >= 3) this.boss.invulnerable = false;
                     if (replaced === 'ticummi' && state.hasFlag('tommasorveglianza')) this.boss.summonOverride = 'eco';
-                    this.lighting.follow(this.boss, this.boss.def.glowColor, 280, 1.0);
+                    this.lightBoss(this.boss, this.boss.def.glowColor, 280, 1.0);
                     this.setupBossColliders();
                 }
             });
@@ -4016,7 +4027,7 @@ export class GameScene extends Phaser.Scene {
                 this.pedroShell = pedro;
                 this.boss = this.makeBoss(x + 160, y - 60, 'glitchpedro');
                 this.bossIntroShown = false;
-                this.lighting.follow(this.boss, this.boss.def.glowColor, 300, 1.1);
+                this.lightBoss(this.boss, this.boss.def.glowColor, 300, 1.1);
                 this.setupBossColliders();
                 this.shake(500, 0.012);
             });
@@ -4040,7 +4051,7 @@ export class GameScene extends Phaser.Scene {
                         this.startDialogue('dei-rifiuto', () => {
                             this.finalGodsFight = true;
                             this.boss = this.makeBoss(x, y - 40, 'dei');
-                            this.lighting.follow(this.boss, 0xffffff, 320, 1.1);
+                            this.lightBoss(this.boss, 0xffffff, 320, 1.1);
                             this.setupBossColliders();
                             this.boss.engage();
                         });
