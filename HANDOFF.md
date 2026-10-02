@@ -275,7 +275,7 @@ Vedi `REMASTER.md`. In particolare la trama va resa "da serie A": scelte, conseg
 
 ## 7. Sessione "fix totale" (dopo il feedback: «bellissimo ma ingiocabile»)
 
-Feedback dell'utente: mappe irrisolvibili, boss/meccaniche/npc che non funzionano, mondo non vivo, notino che si incastra, lochef che non appare. Più: freccia guida **solo come modalità assistita** (spenta di default, blocca i trofei), niente testo accanto al geco, trofei e punteggi (ora in REMASTER.md, Fase 4b). Regola nuova: **committa e pusha continuamente** (branch `remaster-l6rk4r`).
+Feedback dell'utente: mappe irrisolvibili, boss/meccaniche/npc che non funzionano, mondo non vivo, notino che si incastra, lochef che non appare. Più: freccia guida **solo come modalità assistita** (spenta di default, blocca i trofei), niente testo accanto al geco, trofei e punteggi (ora in REMASTER.md, Fase 4b). Regole nuove: **committa e pusha continuamente** (branch `remaster-l6rk4r`) con commit convenzionali (`feat:`, `fix:`, `docs:`...), e aggiorna **`DEV_LOG.md`** (architettura, ADR, vincoli, stato) a ogni blocco di lavoro.
 
 ### Strumenti di verifica (la base di tutto)
 - `src/world/sim.ts`: il geco simulato con la **fisica vera di arcade** (stessa integrazione, separazione dalle tile con facce/bias/ordine assi, stesso controllo di Player). Calibrato contro il gioco vero: salto 221 px / apice 114 px identici.
