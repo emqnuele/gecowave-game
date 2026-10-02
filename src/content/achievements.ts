@@ -1,0 +1,63 @@
+import type { SaveData } from '../types';
+
+/* i trofei del realm: si sbloccano solo senza modalità assistita.
+   quelli segreti restano ??? finché non li prendi */
+
+export interface AchievementDef {
+    id: string;
+    name: string;
+    desc: string;
+    icon: string;
+    secret?: boolean;
+    /** condizione sul salvataggio; quelli senza si sbloccano da un evento */
+    check?: (s: SaveData) => boolean;
+}
+
+const flag = (f: string) => (s: SaveData) => s.flags.includes(f);
+
+export const REGION_COUNT = 20;
+
+export const ACHIEVEMENTS: AchievementDef[] = [
+    // la strada principale
+    { id: 'custode-provvisorio', icon: '✦', name: 'custode provvisorio', desc: 'raccogli il primo frammento della gecowave.', check: (s) => s.abilities.length >= 1 },
+    { id: 'convalidato', icon: '🚌', name: 'convalidato', desc: 'sconfiggi guggu, re dei bus.', check: flag('boss-down-guggu') },
+    { id: 'critico-d-arte', icon: '🎨', name: 'critico d\'arte', desc: 'spacca la simmetria di breccio.', check: flag('boss-down-breccio') },
+    { id: 'failrp', icon: '🔫', name: 'fail rp', desc: 'chiudi il server di notino.', check: flag('boss-down-notino') },
+    { id: 'astemio', icon: '🍾', name: 'astemio per forza', desc: 'manda a dormire flauto speroindio.', check: flag('boss-down-flauto') },
+    { id: 'chef-stellato', icon: '🔪', name: 'chef stellato', desc: 'sopravvivi alla tana e batti lochef85.', check: flag('boss-down-lochef') },
+    { id: 'sindaco-decaduto', icon: '🐜', name: 'sindaco decaduto', desc: 'sfratta la formicona.', check: flag('boss-down-formicona') },
+    { id: 'acqua-passata', icon: '💧', name: 'acqua passata', desc: 'chiudi lo stabilimento di smela.', check: flag('stabilimento-chiuso') },
+    { id: 'qed', icon: '∎', name: 'come volevasi dimostrare', desc: 'completa il teorema nella mente di piema.', check: flag('boss-down-teorema') },
+    { id: 'caso-chiuso', icon: '🕵️', name: 'caso chiuso', desc: 'arresta il limite notevole.', check: flag('caso-risolto') },
+    { id: 'specchio-rotto', icon: '🪞', name: 'specchio rotto', desc: 'batti la tua ombra.', check: flag('boss-down-ombra') },
+    { id: 'disdetta', icon: '📡', name: 'disdetta', desc: 'chiudi il conto con ticummi.', check: flag('boss-down-ticummi') },
+    { id: 'infanzia', icon: '🧸', name: 'prima del glitch', desc: 'cammina nei ricordi di pedro fino in fondo.', check: flag('ricordi-visti') },
+    { id: 'rimpianti', icon: '🕳️', name: 'cinque verità', desc: 'guarda tutti i rimpianti del void.', check: flag('void-concluso') },
+    // finali
+    { id: 'finale-consegna', icon: '🌊', name: 'la wave torna a casa', desc: 'consegna le wave agli dei.', secret: true, check: flag('finale-consegna') },
+    { id: 'finale-dei', icon: '⚡', name: 'più forte degli dei', desc: 'tieniti le wave e vinci.', secret: true, check: flag('finale-dei') },
+    { id: 'finale-pedro', icon: '🌀', name: 'il patto', desc: 'segui pedro fino alla fine.', secret: true, check: flag('finale-pedro') },
+    // segreti e scelte
+    { id: 'il-33', icon: '3️⃣', name: 'il numero ti rispetta', desc: 'batti il 33 nel void.', secret: true, check: flag('boss-down-trentatre') },
+    { id: 'capolinea', icon: '🚏', name: 'ultima corsa', desc: 'trova la 14 barrato e il suo passeggero.', secret: true, check: flag('boss-down-settequaranta') },
+    { id: 'sul-beat', icon: '🥁', name: 'sul beat', desc: 'batti il primo custode.', secret: true, check: flag('boss-down-custode') },
+    { id: 'patente', icon: '🚗', name: 'patente in tre annetti', desc: 'chiudi la faccenda con walter baruffoni.', secret: true, check: flag('boss-down-walter') },
+    { id: 'abbonato', icon: '👍', name: 'assolutamente sicuro', desc: 'abbonati alla tommasorveglianza.', check: flag('tommasorveglianza') },
+    { id: 'pieta', icon: '🤲', name: 'pietà', desc: 'ridai la boccetta a ticummi.', secret: true, check: flag('ticummi-graziato') },
+    { id: 'tolleranza-zero', icon: '🥾', name: 'tolleranza zero', desc: 'calpesta il trenbolone davanti a ticummi.', secret: true, check: flag('trenbolone-distrutto') },
+    // collezioni
+    { id: 'maschere', icon: '🎭', name: 'tutte le facce', desc: 'raccogli tutte le maschere.', check: flag('maschera-completa') },
+    { id: 'wave-intera', icon: '🌊', name: 'la wave intera', desc: 'riunisci tutti e sette i frammenti.', check: (s) => s.abilities.length >= 7 },
+    { id: 'cuore-grande', icon: '❤️', name: 'cuore grande', desc: 'trova cinque cuori del realm.', check: (s) => s.stats.costituzione >= 5 },
+    { id: 'collezionista', icon: '🔮', name: 'collezionista', desc: 'possiedi otto amuleti.', check: (s) => s.charms.length >= 8 },
+    { id: 'ricco', icon: '♪', name: 'disco d\'oro', desc: 'tieni in tasca 1000 barre.', check: (s) => s.barre >= 1000 },
+    // esplorazione e gente
+    { id: 'cartografo', icon: '🗺️', name: 'cartografo', desc: 'esplora ogni stanza di una regione.' },
+    { id: 'gecografo', icon: '🧭', name: 'gecografo', desc: 'esplora ogni stanza di tutte le regioni.' },
+    { id: 'chiacchierone', icon: '💬', name: 'chiacchierone', desc: 'fai due chiacchiere con 25 passanti.', check: (s) => s.record.talks >= 25 },
+    // combattimento
+    { id: 'intoccabile', icon: '🛡️', name: 'intoccabile', desc: 'batti un boss di trama senza farti colpire.' },
+    { id: 'sterminatore', icon: '💀', name: 'sterminatore', desc: 'sconfiggi 300 nemici.', check: (s) => s.record.kills >= 300 },
+    { id: 'flop', icon: '🪦', name: 'il flop è parte del processo', desc: 'muori 25 volte. succede.', check: (s) => s.record.deaths >= 25 },
+    { id: 'speedrun', icon: '⏱️', name: 'di corsa', desc: 'completa la wave perduta in meno di 6 minuti.' },
+];

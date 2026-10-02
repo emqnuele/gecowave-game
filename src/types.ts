@@ -124,11 +124,29 @@ export interface SaveData {
     /** storico dei messaggi wavesung */
     messages: PhoneMessage[];
     /** contatori per il profilo */
-    record: { deaths: number; kills: number; bosses: number; playMs: number };
+    record: { deaths: number; kills: number; bosses: number; playMs: number; talks: number };
     /** traccia scelta dalla radio, null = musica del capitolo */
     radio: string | null;
     /** stanze visitate per regione: la mappa del telefono si rivela da qui */
     explored: Record<string, number[]>;
+    /** trofei sbloccati */
+    achievements: string[];
+    /** la modalità assistita è stata accesa almeno una volta in questa partita */
+    assisted: boolean;
+    /** record per capitolo */
+    scores: Record<string, ChapterScore>;
+    /** il capitolo in corso: da quando, con quante morti e uccisioni all'ingresso */
+    chapterRun: { id: string; startMs: number; deaths0: number; kills0: number; noHitBosses: number } | null;
+}
+
+export interface ChapterScore {
+    score: number;
+    timeMs: number;
+    deaths: number;
+    kills: number;
+    explored: number;
+    secrets: number;
+    assisted: boolean;
 }
 
 export interface PhoneMessage {

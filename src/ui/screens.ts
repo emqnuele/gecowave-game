@@ -1,4 +1,5 @@
 import { ZONE_CSS } from '../config';
+import { ACHIEVEMENTS } from '../content/achievements';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { ITEMS } from '../content/items';
 import { ABILITY_CARDS, CREDITS, DEATH_PUNCHLINES } from '../content/story';
@@ -66,6 +67,8 @@ export class Screens {
         bus.on('player-died', ({ lost }) => this.showDeath(lost));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('charm-found', ({ id }) => this.charmCard(id));
+        bus.on('achievement', ({ id }) => this.trophy(id));
+        bus.on('chapter-score', (p) => this.chapterScore(p));
         bus.on('choice-show', ({ title, options, onPick }) => this.choice(title, options, onPick));
         bus.on('request-pause', () => this.showPause());
     }
@@ -405,6 +408,43 @@ export class Screens {
         card.append(h1, p);
         ui().append(card);
         setTimeout(() => card.remove(), 3300);
+    }
+
+    /** trofeo sbloccato: medaglia dorata in alto a sinistra, non ferma il gioco */
+    private trophy(id: string): void {
+        const a = ACHIEVEMENTS.find((x) => x.id === id);
+        if (!a) return;
+        const t = el('div', 'trophy glass-panel');
+        const icon = el('div', 'trophy-icon', a.icon);
+        const txt = el('div', 'trophy-text');
+        txt.append(el('div', 'trophy-kicker font-marker', 'trofeo sbloccato'), el('div', 'trophy-name', a.name), el('div', 'trophy-desc', a.desc));
+        t.append(icon, txt);
+        // più trofei insieme si impilano
+        const stack = document.querySelectorAll('.trophy').length;
+        t.style.top = `${110 + stack * 84}px`;
+        ui().append(t);
+        sfx.unlock();
+        setTimeout(() => t.classList.add('fade-out'), 4800);
+        setTimeout(() => t.remove(), 5300);
+    }
+
+    /** fine capitolo: il conto, a pennarello */
+    private chapterScore(p: { id: string; score: number; best: boolean; assisted: boolean; lines: [string, string][] }): void {
+        document.getElementById('chapter-score')?.remove();
+        const card = el('div', 'glass-panel glass-acid-yellow');
+        card.id = 'chapter-score';
+        const lv = LEVELS[p.id];
+        card.append(el('div', 'cs-kicker font-marker', `capitolo completato${p.assisted ? ' · assistito' : ''}`));
+        card.append(el('div', 'cs-title', lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : p.id));
+        for (const [k, v] of p.lines) {
+            const row = el('div', 'cs-row');
+            row.append(el('span', '', k), el('b', '', v));
+            card.append(row);
+        }
+        card.append(el('div', 'cs-score font-marker', `${p.score.toLocaleString('it-IT')} punti${p.best ? ' — record!' : ''}`));
+        ui().append(card);
+        setTimeout(() => card.classList.add('fade-out'), 5600);
+        setTimeout(() => card.remove(), 6100);
     }
 
     private toast(text: string): void {

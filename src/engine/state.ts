@@ -45,9 +45,13 @@ const defaultSave = (): SaveData => ({
     equipped: [],
     notches: BASE_NOTCHES,
     messages: [],
-    record: { deaths: 0, kills: 0, bosses: 0, playMs: 0 },
+    record: { deaths: 0, kills: 0, bosses: 0, playMs: 0, talks: 0 },
     radio: null,
     explored: {},
+    achievements: [],
+    assisted: false,
+    scores: {},
+    chapterRun: null,
 });
 
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */

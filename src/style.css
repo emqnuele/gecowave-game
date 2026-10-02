@@ -1901,3 +1901,88 @@ input[type='range']::-webkit-slider-thumb {
     opacity: 0;
   }
 }
+
+/* ---------- trofei e punteggio di fine capitolo ---------- */
+
+.trophy {
+  position: absolute;
+  left: 18px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: min(330px, calc(100vw - 36px));
+  padding: 10px 14px;
+  border-color: rgba(250, 204, 21, 0.55);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 4px 4px 0 rgba(0, 0, 0, 0.7), 0 0 26px rgba(250, 204, 21, 0.18);
+  transform: rotate(-0.8deg);
+  animation: screen-in 0.35s ease both;
+  z-index: 40;
+}
+
+.trophy-icon {
+  font-size: 30px;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(250, 204, 21, 0.35), rgba(0, 0, 0, 0.6));
+  border: 2px dashed rgba(250, 204, 21, 0.7);
+}
+
+.trophy-kicker {
+  font-size: 11px;
+  color: var(--yellow);
+}
+
+.trophy-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin: 2px 0;
+}
+
+.trophy-desc {
+  font-size: 10px;
+  color: var(--zinc-400, #a1a1aa);
+  line-height: 1.4;
+}
+
+#chapter-score {
+  position: absolute;
+  top: 120px;
+  left: calc(50% - min(180px, 50vw - 18px));
+  width: min(360px, calc(100vw - 36px));
+  padding: 16px 20px;
+  transform: rotate(0.6deg);
+  animation: screen-in 0.35s ease both;
+  z-index: 40;
+}
+
+#chapter-score .cs-kicker {
+  font-size: 12px;
+  color: var(--yellow);
+}
+
+#chapter-score .cs-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 4px 0 10px;
+}
+
+#chapter-score .cs-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--zinc-300);
+  padding: 2px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+#chapter-score .cs-score {
+  margin-top: 10px;
+  font-size: 22px;
+  color: var(--yellow);
+  transform: rotate(-1.5deg);
+}
+

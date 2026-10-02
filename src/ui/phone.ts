@@ -9,6 +9,8 @@ import { music } from '../engine/music';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import { regionView } from '../engine/regionView';
+import { achievementsBlocked } from '../engine/achievements';
+import { ACHIEVEMENTS } from '../content/achievements';
 import { TOTAL_MASCHERE } from '../scenes/GameScene';
 import type { ZoneColor } from '../types';
 import './phone.css';
@@ -24,7 +26,7 @@ export interface PhoneHost {
     canOpen(): boolean;
 }
 
-type AppId = 'messaggi' | 'wavegram' | 'zaino' | 'amuleti' | 'wavezon' | 'mappa' | 'diario' | 'radio' | 'profilo' | 'impostazioni';
+type AppId = 'messaggi' | 'wavegram' | 'zaino' | 'amuleti' | 'wavezon' | 'mappa' | 'diario' | 'radio' | 'trofei' | 'profilo' | 'impostazioni';
 
 interface AppDef {
     id: AppId;
@@ -44,6 +46,7 @@ const APPS: AppDef[] = [
     { id: 'wavezon', name: 'wavezon', icon: '📦', tint: 'yellow', title: 'WAVEZON', sub: 'consegna in giornata, anche nel void' },
     { id: 'diario', name: 'diario', icon: '📓', tint: 'red', title: 'DIARIO', sub: 'cose da fare prima che il realm finisca' },
     { id: 'radio', name: 'radio', icon: '📻', tint: 'yellow', title: 'RADIO', sub: 'radio gecowave, l\'unica che non chiude' },
+    { id: 'trofei', name: 'trofei', icon: '🏆', tint: 'yellow', title: 'TROFEI', sub: 'la gloria, ma in pixel' },
     { id: 'profilo', name: 'io', icon: '🦎', tint: 'green', title: 'IO', sub: 'il custode, in numeri' },
     { id: 'impostazioni', name: 'impostazioni', icon: '⚙️', tint: 'cyan', title: 'IMPOSTAZIONI', sub: 'per chi vuole il realm più basso' },
 ];
@@ -290,6 +293,7 @@ export class Phone {
             case 'mappa': this.renderMap(content); break;
             case 'diario': this.renderJournal(content); break;
             case 'radio': this.renderRadio(content); break;
+            case 'trofei': this.renderTrophies(content); break;
             case 'profilo': this.renderProfile(content); break;
             case 'impostazioni': this.renderSettings(content); break;
         }
@@ -853,6 +857,43 @@ export class Phone {
 
     /* ---------- profilo ---------- */
 
+    /** trofei presi, quelli da prendere (i segreti restano ???) e i record per capitolo */
+    private renderTrophies(root: HTMLElement): void {
+        const got = new Set(state.save.achievements);
+        if (achievementsBlocked()) {
+            root.append(text('div', 'phone-note trophy-warn', 'modalità assistita attiva: con la freccia accesa i trofei non si sbloccano. si spegne dalle impostazioni.'));
+        }
+        root.append(text('div', 'phone-section', `trofei · ${got.size}/${ACHIEVEMENTS.length}`));
+        for (const a of ACHIEVEMENTS) {
+            const have = got.has(a.id);
+            const hidden = a.secret && !have;
+            const row = el('div', `phone-row glass-chip ${have ? 'glass-acid-yellow' : 'locked'}`);
+            row.append(text('span', 'lead', hidden ? '❔' : a.icon));
+            const main = el('div', 'main');
+            main.append(text('div', 'name', hidden ? '???' : a.name), text('div', 'preview', hidden ? 'un segreto del realm.' : a.desc));
+            row.append(main, text('span', 'meta', have ? '✓' : ''));
+            if (!have) row.style.opacity = '0.55';
+            root.append(row);
+        }
+        root.append(text('div', 'phone-section', 'record per capitolo'));
+        let total = 0;
+        for (const id of [...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k))]) {
+            const sc = state.save.scores[id];
+            if (!sc) continue;
+            total += sc.score;
+            const lv = LEVELS[id];
+            const line = el('div', 'stat-line');
+            const mm = Math.floor(sc.timeMs / 60000);
+            const ss = Math.floor((sc.timeMs / 1000) % 60);
+            line.append(text('span', '', `${lv?.accentWord ?? id} · ${mm}:${String(ss).padStart(2, '0')} · ${Math.round(sc.explored * 100)}%${sc.assisted ? ' · assistito' : ''}`), text('b', '', sc.score.toLocaleString('it-IT')));
+            root.append(line);
+        }
+        const tot = el('div', 'stat-line');
+        tot.append(text('span', '', 'totale'), text('b', '', total.toLocaleString('it-IT')));
+        root.append(tot);
+        if (state.save.assisted) root.append(text('div', 'phone-note', 'questa partita ha usato la modalità assistita.'));
+    }
+
     private renderProfile(root: HTMLElement): void {
         const card = el('div', 'player-card glass-panel glass-acid-green');
         const who = el('div');
@@ -931,6 +972,11 @@ export class Phone {
         gt.textContent = state.settings.guide ? 'attiva' : 'spenta';
         gt.addEventListener('click', () => {
             state.settings.guide = !state.settings.guide;
+            // la partita resta segnata: i record fatti con la freccia lo dicono
+            if (state.settings.guide) {
+                state.save.assisted = true;
+                state.persist();
+            }
             state.persistSettings();
             gt.classList.toggle('on', state.settings.guide);
             gt.textContent = state.settings.guide ? 'attiva' : 'spenta';
@@ -938,6 +984,7 @@ export class Phone {
         });
         guide.append(gt);
         root.append(guide);
+        root.append(text('div', 'phone-note', 'modalità facile: con la freccia accesa i trofei non si sbloccano e i record restano segnati come assistiti.'));
 
         root.append(text('div', 'phone-section', 'comandi del telefono'));
         for (const [k, v] of [['apri e chiudi', 'TAB / P'], ['indietro', 'ESC'], ['mangia al volo', 'C']]) {

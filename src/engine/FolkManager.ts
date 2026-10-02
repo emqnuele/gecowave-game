@@ -128,6 +128,7 @@ export class FolkManager {
         else if (state.save.doomsday > 0.4) lines.push({ speaker: w.kind.name, color: w.kind.color, text: pick(FOLK_PEDRO) });
         w.mode = 'face';
         w.until = this.scene.time.now + 2500;
+        state.save.record.talks++;
         this.talker(lines);
     }
 

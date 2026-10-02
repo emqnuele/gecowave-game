@@ -12,6 +12,7 @@ import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
 import { state } from './engine/state';
 import { music } from './engine/music';
+import { checkAchievements } from './engine/achievements';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { DialogueBox } from './ui/dialogue';
@@ -116,6 +117,8 @@ async function boot(): Promise<void> {
 
     bus.on('ending', ({ id }) => {
         inGame = false;
+        state.setFlag(`finale-${id}`);
+        checkAchievements();
         if (phone.isOpen) phone.close();
         sfx.stopPad();
         music.playEnding();

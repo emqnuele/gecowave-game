@@ -21,6 +21,8 @@ export interface GameEvents {
     'inventory-changed': {};
     'messages-changed': {};
     'charm-found': { id: string };
+    'achievement': { id: string };
+    'chapter-score': { id: string; score: number; best: boolean; assisted: boolean; lines: [string, string][] };
 }
 
 type Handler<T> = (payload: T) => void;

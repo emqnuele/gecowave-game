@@ -21,6 +21,8 @@ import { NavGraph } from '../engine/nav/NavGraph';
 import { RegionGuide } from '../engine/RegionGuide';
 import { FolkManager } from '../engine/FolkManager';
 import { Atmosphere } from '../engine/Atmosphere';
+import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
+import { REGION_COUNT } from '../content/achievements';
 import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
@@ -158,6 +160,9 @@ export class GameScene extends Phaser.Scene {
     private guide: RegionGuide | null = null;
     private folk!: FolkManager;
     private atmosphere!: Atmosphere;
+    private nextTrophyCheckAt = 0;
+    /** lo scontro col boss in corso: se ti colpisce niente "intoccabile" */
+    private bossFight: { hit: boolean; hp: number } | null = null;
     private guideGfx!: Phaser.GameObjects.Graphics;
     private lastRoom = -1;
     /** dove stanno gli npc di trama, per indicarli */
@@ -301,6 +306,12 @@ export class GameScene extends Phaser.Scene {
         this.replacedBossY = 0;
         this.nextWildGlitchAt = 0;
         this.nextBeatAt = 0;
+        this.nextTrophyCheckAt = 0;
+        this.bossFight = null;
+        // il capitolo comincia quando ci entri da fuori: morire e riprovare non azzera il cronometro
+        if (state.save.chapterRun?.id !== data.levelId) {
+            state.save.chapterRun = { id: data.levelId, startMs: state.save.record.playMs, deaths0: state.save.record.deaths, kills0: state.save.record.kills, noHitBosses: 0 };
+        }
 
         generateFogTexture(this);
 
@@ -1753,6 +1764,7 @@ export class GameScene extends Phaser.Scene {
         this.folk.update(time, delta, this.player, this.threats(), !!this.boss?.engaged);
         this.updateArenaLock(time);
         this.updateExplore();
+        this.updateTrophies(time);
         const here = this.layout ? this.roomAt(this.player.x, this.player.y) : null;
         this.atmosphere.update(time, delta, this.layout ? !!here?.surface : !this.biome.indoor);
         this.updateGuide(time);
@@ -2107,6 +2119,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     private gotoLevel(next: string, spawnAt?: { x: number; y: number }): void {
+        if (next !== this.def.id) this.finishChapter();
         this.exiting = true;
         state.save.levelId = next;
         state.save.checkpointId = null;
@@ -2135,8 +2148,67 @@ export class GameScene extends Phaser.Scene {
         const room = this.roomAt(this.player.x, this.player.y);
         if (!room || room.id === this.lastRoom) return;
         this.lastRoom = room.id;
-        if (state.explore(this.def.id, room.id)) state.persist();
+        if (state.explore(this.def.id, room.id)) {
+            if (state.save.explored[this.def.id].length >= this.layout.rooms.length && !state.hasFlag(`esplorata-${this.def.id}`)) {
+                state.setFlag(`esplorata-${this.def.id}`);
+                bus.emit('toast', { text: 'regione esplorata al 100%. la mappa è completa.' });
+                unlockAchievement('cartografo');
+                if (state.save.flags.filter((f) => f.startsWith('esplorata-')).length >= REGION_COUNT) unlockAchievement('gecografo');
+            }
+            state.persist();
+        }
         regionView.room = room.id;
+    }
+
+    /** trofei e boss senza danni */
+    private updateTrophies(time: number): void {
+        const boss = this.boss;
+        if (boss?.active && boss.engaged && boss.def.guardsExit !== false && !this.collapsePedro && !this.bossFight) {
+            this.bossFight = { hit: false, hp: state.run.hp };
+        }
+        if (this.bossFight) {
+            if (state.run.hp < this.bossFight.hp) this.bossFight.hit = true;
+            this.bossFight.hp = state.run.hp;
+        }
+        if (time >= this.nextTrophyCheckAt) {
+            this.nextTrophyCheckAt = time + 1000;
+            checkAchievements();
+        }
+    }
+
+    /** punteggio del capitolo quando lo lasci per andare avanti */
+    private finishChapter(): void {
+        const run = state.save.chapterRun;
+        if (!run || run.id !== this.def.id) return;
+        const timeMs = state.save.record.playMs - run.startMs;
+        const deaths = state.save.record.deaths - run.deaths0;
+        const kills = state.save.record.kills - run.kills0;
+        const explored = this.layout ? (state.save.explored[this.def.id]?.length ?? 0) / this.layout.rooms.length : 1;
+        const id = this.def.id;
+        const secrets = state.save.collectedLore.filter((k) => k.startsWith(`item-${id}-`) || k.startsWith(`cuore-${id}-`) || k === `maschera-${id}` || k.startsWith(`${id}-`)).length;
+        const minutes = timeMs / 60000;
+        const parts: [string, number][] = [
+            ['esplorazione', Math.round(explored * 3000)],
+            ['segreti', secrets * 150],
+            ['nemici', kills * 10],
+            ['tempo', Math.max(0, Math.round(3000 - minutes * 120))],
+            ['boss senza un graffio', run.noHitBosses * 600],
+            ['morti', -deaths * 250],
+        ];
+        const score = Math.max(0, parts.reduce((s, [, v]) => s + v, 0));
+        const assisted = achievementsBlocked();
+        const prev = state.save.scores[id];
+        const best = !prev || score > prev.score;
+        if (best) state.save.scores[id] = { score, timeMs, deaths, kills, explored, secrets, assisted };
+        if (id === 'perduta' && minutes < 6) unlockAchievement('speedrun');
+        state.save.chapterRun = null;
+        state.persist();
+        const mm = Math.floor(minutes);
+        const ss = Math.floor((timeMs / 1000) % 60);
+        bus.emit('chapter-score', {
+            id, score, best, assisted,
+            lines: [[`tempo ${mm}:${String(ss).padStart(2, '0')}`, ''], ...parts.filter(([, v]) => v !== 0).map(([k, v]) => [k, (v > 0 ? '+' : '') + v] as [string, string])],
+        });
     }
 
     /** cosa serve adesso per andare avanti, in ordine di urgenza */
@@ -3173,6 +3245,11 @@ export class GameScene extends Phaser.Scene {
             });
             return;
         }
+        if (this.bossFight && !this.bossFight.hit) {
+            unlockAchievement('intoccabile');
+            if (state.save.chapterRun) state.save.chapterRun.noHitBosses++;
+        }
+        this.bossFight = null;
         if (kind !== 'pedro' && kind !== 'dei') {
             state.setFlag(`boss-down-${kind}`);
             state.save.record.bosses++;
