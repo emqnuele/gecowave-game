@@ -552,18 +552,18 @@
 }
 
 .phone-title {
-  font-family: var(--font-crisis);
-  font-size: 28px;
+  font-family: var(--font-fell);
+  font-size: 30px;
+  letter-spacing: 0.1em;
   line-height: 1;
-  color: #fff;
+  color: var(--sx-bone);
 }
 
 .phone-sub {
-  font-family: var(--font-marker);
-  font-size: 13px;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
   color: var(--tint);
-  transform: rotate(-1deg);
-  transform-origin: left center;
   margin: 6px 0 18px;
 }
 
