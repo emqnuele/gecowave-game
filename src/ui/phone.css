@@ -100,32 +100,6 @@
   to { transform: translateY(140%) rotate(8deg); }
 }
 
-.phone-sticker {
-  position: absolute;
-  z-index: 6;
-  pointer-events: none;
-  padding: 4px 9px;
-  font-family: var(--font-marker);
-  font-size: 12px;
-  color: #000;
-  border-radius: 8px;
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
-}
-
-.phone-sticker.geco {
-  left: -14px;
-  bottom: 70px;
-  background: var(--green);
-  transform: rotate(-14deg);
-}
-
-.phone-sticker.brand {
-  right: -46px;
-  top: 236px;
-  background: #dfb15b;
-  transform: rotate(9deg);
-}
-
 /* lo schermo è opaco: niente vetro sfocato qui dentro, scorre liscio */
 .phone-screen {
   position: relative;

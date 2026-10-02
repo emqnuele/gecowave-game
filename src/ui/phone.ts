@@ -146,7 +146,6 @@ export class Phone {
         const phone = el('div', 'phone');
         phone.setAttribute('role', 'dialog');
         phone.setAttribute('aria-label', 'telefono');
-        phone.append(text('span', 'phone-sticker geco', 'geco'), text('span', 'phone-sticker brand', 'wavesung'));
         const screen = el('div', 'phone-screen', CRACK_SVG);
 
         // status bar: l'ora è quella del realm, l'operatore è la zona, la batteria è il flow
