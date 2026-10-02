@@ -23,7 +23,7 @@ export interface SimVerdict {
 
 const ENTITY_FREE = '#.^~F%';
 
-export function simVerify(grid: string[], entities: Record<string, EntitySpec>, ab: SimAbilities): SimVerdict {
+export function simVerify(grid: string[], entities: Record<string, EntitySpec>, ab: SimAbilities, layout?: RegionLayout): SimVerdict {
     const m = new SimMap(grid, { breakablesOpen: true });
     let P = { c: 0, r: 0 };
     const exits: { c: number; r: number }[] = [];
@@ -56,11 +56,17 @@ export function simVerify(grid: string[], entities: Record<string, EntitySpec>, 
         if (!fin.has(k)) stuck.push(cell);
         else good.push(cell);
     }
+    // un boss o un'arena valgono solo se si entra nella loro stanza: la vicinanza attraverso la roccia non conta
+    const sameRoom = (t: { c: number; r: number }, p: { x: number; y: number }) => {
+        if (!layout) return true;
+        return roomOf(layout, t.c, t.r) === roomOf(layout, Math.floor(p.x / 32), Math.floor(p.y / 32));
+    };
     const missing = targets.filter((t) => {
         const x = t.c * 32 + 16;
         const y = t.r * 32 + 16;
-        const [rx, ry] = t.boss ? [420, 360] : [60, 64];
-        return !pts.some((p) => Math.abs(p.x - x) < rx && Math.abs(p.y - y) < ry);
+        const arena = t.boss || /^npc:(arena-|warena-|smela-arena|lametta-arena)/.test(t.what);
+        const [rx, ry] = arena ? [700, 500] : [60, 64];
+        return !pts.some((p) => Math.abs(p.x - x) < rx && Math.abs(p.y - y) < ry && (!arena || sameRoom(t, p)));
     }).map(({ c, r, what }) => ({ c, r, what }));
     return { exit: exitKeys.length > 0, stuck, missing, states: reach.reached.size, good };
 }
@@ -72,7 +78,7 @@ function roomOf(layout: RegionLayout, c: number, r: number): Room | null {
 /** ripara le conche: da una posizione intrappolata scava una scalinata a passi di base
     verso la posizione buona più vicina della stessa stanza. le lettere restano dove sono */
 export function simRepair(grid: string[], entities: Record<string, EntitySpec>, layout: RegionLayout, ab: SimAbilities, maxRounds = 6): { grid: string[]; verdict: SimVerdict; rounds: number } {
-    let verdict = simVerify(grid, entities, ab);
+    let verdict = simVerify(grid, entities, ab, layout);
     let rounds = 0;
     while (verdict.stuck.length && rounds < maxRounds) {
         rounds++;
@@ -123,7 +129,7 @@ export function simRepair(grid: string[], entities: Record<string, EntitySpec>, 
             g.force(l.c, r, l.ch);
         }
         grid = g.toStrings();
-        const next = simVerify(grid, entities, ab);
+        const next = simVerify(grid, entities, ab, layout);
         if (next.stuck.length >= verdict.stuck.length && !next.exit === !verdict.exit) {
             verdict = next;
             break;
@@ -134,7 +140,7 @@ export function simRepair(grid: string[], entities: Record<string, EntitySpec>, 
         const fixedGrid = relocateLoot(grid, entities, verdict, ab);
         if (fixedGrid) {
             grid = fixedGrid;
-            verdict = simVerify(grid, entities, ab);
+            verdict = simVerify(grid, entities, ab, layout);
         }
     }
     return { grid, verdict, rounds };

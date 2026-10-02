@@ -26,6 +26,9 @@ interface Macro {
     input(f: number, air: number, b: SimBody): Input;
     /** la camminata si ferma appena cambia cella da terra */
     walk?: boolean;
+    /** abilità usate da questo macro: i salti normali si fanno senza aggrapparsi
+        (chi vuole il doppio salto accanto a un muro molla la direzione) */
+    ab?: SimAbilities;
 }
 
 const NONE: Input = { dir: 0, jump: false, dash: false };
@@ -44,7 +47,7 @@ function buildMacros(d: -1 | 1, ab: SimAbilities): Macro[] {
         });
     }
     const hz: [number, number][] = [[0, 999], [8, 999], [16, 999], [24, 999], [0, 8], [0, 16], [0, 26], [999, 999]];
-    for (const pre of [0, 5]) {
+    for (const pre of [0, 5, 10]) {
         for (const hold of [4, 10, 99]) {
             for (const [h0, h1] of hz) {
                 out.push({
@@ -84,6 +87,7 @@ function buildMacros(d: -1 | 1, ab: SimAbilities): Macro[] {
                 let pressAt = -99;
                 out.push({
                     frames: 300,
+                    ab,
                     input(f, _air, b) {
                         if (f === 0) {
                             jumps = 0;
@@ -147,6 +151,30 @@ export function settleAt(m: SimMap, c: number, r: number, ab: SimAbilities): Sim
     return rest(b);
 }
 
+/** chi atterra in una cella può sempre mettersi al centro: si riparte da lì se il corpo ci sta
+    e resta sullo stesso pavimento, altrimenti dal punto d'atterraggio */
+function placed(m: SimMap, landed: SimBody, ab: SimAbilities, key: number, x: number): SimBody | null {
+    const c = rest(landed);
+    c.x = x;
+    c.y -= 1;
+    for (let i = 0; i < 3; i++) simFrame(m, c, NONE, ab);
+    if (c.blockedDown && keyOf(m, c) === key && Math.abs(c.x - x) < 1) return rest(c);
+    return null;
+}
+
+/** un'altra partenza nella stessa cella: il centro, se il corpo ci sta */
+function variants(m: SimMap, landed: SimBody, ab: SimAbilities, key: number): SimBody[] {
+    const col = Math.floor((landed.x + BODY_W / 2) / TILE);
+    const cx = col * TILE + TILE / 2 - BODY_W / 2;
+    const out: SimBody[] = [];
+    for (const x of [cx]) {
+        if ([landed, ...out].some((o) => Math.abs(o.x - x) < 3)) continue;
+        const v = placed(m, landed, ab, key, x);
+        if (v) out.push(v);
+    }
+    return out;
+}
+
 /** stato canonico a riposo: fermo, timer azzerati */
 function rest(b: SimBody): SimBody {
     const r = b.clone();
@@ -164,26 +192,41 @@ function rest(b: SimBody): SimBody {
     r.prevJump = false;
     r.prevDash = false;
     r.hitSpike = false;
+    r.wallSide = 0;
+    r.wallUntil = 0;
+    r.wallLockUntil = 0;
+    r.blockedLeft = false;
+    r.blockedRight = false;
     return r;
 }
 
 export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { x0: number; x1: number; y0: number; y1: number }): SimReach {
     const reached = new Map<number, SimBody>();
     const edges = new Map<number, number[]>();
-    const macros = [...buildMacros(1, ab), ...buildMacros(-1, ab)];
+    const plain: SimAbilities = { ...ab, wall: false };
+    const macros = [...buildMacros(1, ab), ...buildMacros(-1, ab)].map((mac) => (mac.ab ? mac : { ...mac, ab: plain }));
     const k0 = keyOf(m, start);
     reached.set(k0, start);
+
+    // altre partenze per cella: un giocatore vero si sistema dove gli serve
+    const alt = new Map<number, SimBody[]>();
+    const add = (nk: number, landed: SimBody): void => {
+        const r = rest(landed);
+        reached.set(nk, r);
+        alt.set(nk, variants(m, r, ab, nk));
+        queue.push(nk);
+    };
     const queue = [k0];
     for (let qi = 0; qi < queue.length; qi++) {
         const k = queue[qi];
-        const base = reached.get(k)!;
         const outs = new Set<number>();
-        for (const mac of macros) {
+        const bases = [reached.get(k)!, ...(alt.get(k) ?? [])];
+        for (const base of bases) for (const mac of macros) {
             const b = base.clone();
             let airborne = false;
             let airAt = -1;
             for (let f = 0; f < mac.frames; f++) {
-                simFrame(m, b, mac.input(f, airAt < 0 ? -1 : f - airAt, b), ab);
+                simFrame(m, b, mac.input(f, airAt < 0 ? -1 : f - airAt, b), mac.ab ?? ab);
                 if (b.hitSpike) break;
                 if (b.y > m.rows * TILE) break;
                 if (!b.blockedDown) {
@@ -195,10 +238,7 @@ export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { 
                 if (mac.walk && !airborne) {
                     if (nk !== k) {
                         outs.add(nk);
-                        if (!reached.has(nk)) {
-                            reached.set(nk, rest(b));
-                            queue.push(nk);
-                        }
+                        if (!reached.has(nk)) add(nk, b);
                         break;
                     }
                     continue;
@@ -207,13 +247,7 @@ export function simReach(m: SimMap, start: SimBody, ab: SimAbilities, limit?: { 
                 // atterrato: un fotogramma fermo a terra per non contare i rimbalzi sui bordi
                 if (nk !== k) {
                     outs.add(nk);
-                    if (!reached.has(nk)) {
-                        const nb = rest(b);
-                        if (!limit || (nb.x >= limit.x0 && nb.x < limit.x1 && nb.y >= limit.y0 && nb.y < limit.y1)) {
-                            reached.set(nk, nb);
-                            queue.push(nk);
-                        }
-                    }
+                    if (!reached.has(nk) && (!limit || (b.x >= limit.x0 && b.x < limit.x1 && b.y >= limit.y0 && b.y < limit.y1))) add(nk, b);
                 }
                 break;
             }

@@ -112,7 +112,7 @@ export function addGates(
         const nextEnts = { ...ents, [ch]: spec };
         const g2 = next.map((r) => r.join(''));
         // ora: si gioca come prima e la ricompensa non si prende
-        const v1 = simVerify(g2, nextEnts, now);
+        const v1 = simVerify(g2, nextEnts, now, layout);
         const lockedNow = v1.missing.some((m) => m.c === edit.reward.c && m.r === edit.reward.r);
         const otherMissing = v1.missing.filter((m) => !(m.c === edit.reward.c && m.r === edit.reward.r) && !already.some((a) => a.c === m.c && a.r === m.r));
         if (!v1.exit || v1.stuck.length || otherMissing.length || !lockedNow) {
@@ -120,7 +120,7 @@ export function addGates(
             continue;
         }
         // dopo: con l'abilità nuova ci si arriva, e non si resta incastrati
-        const v2 = simVerify(g2, nextEnts, later);
+        const v2 = simVerify(g2, nextEnts, later, layout);
         const openLater = !v2.missing.some((m) => m.c === edit.reward.c && m.r === edit.reward.r);
         const brokeOld = v2.missing.some((m) => !(m.c === edit.reward.c && m.r === edit.reward.r) && !already.some((a) => a.c === m.c && a.r === m.r));
         if (!v2.exit || v2.stuck.length || !openLater || brokeOld) {
