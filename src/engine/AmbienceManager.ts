@@ -146,9 +146,10 @@ export class AmbienceManager {
                 add('p-dot', { lifespan: 3200, speedX: { min: -30, max: 30 }, speedY: { min: -80, max: -30 }, scale: { start: 0.3, end: 0 }, alpha: { start: 1, end: 0 }, tint: [0xff8a3d, 0xffc06b, b.accent], frequency: 90, blendMode: Phaser.BlendModes.ADD }, 21);
                 break;
             case 'rain': {
-                const r1 = add('amb-streak', { lifespan: 900, speedX: { min: -140, max: -110 }, speedY: { min: 900, max: 1100 }, rotate: 8, scaleY: { min: 0.8, max: 1.4 }, alpha: { start: 0.3, end: 0.15 }, tint: shade(b.rim, 0.1), frequency: 6 }, 21);
-                const r2 = add('amb-streak', { lifespan: 1300, speedX: { min: -80, max: -60 }, speedY: { min: 600, max: 700 }, rotate: 6, alpha: { start: 0.16, end: 0.05 }, tint: b.haze, frequency: 10 }, 0);
-                this.rain.push({ emitter: r1, baseFreq: 6 }, { emitter: r2, baseFreq: 10 });
+                // fitta quanto basta: ~80 gocce vive invece di ~280, a occhio uguale
+                const r1 = add('amb-streak', { lifespan: 900, speedX: { min: -140, max: -110 }, speedY: { min: 900, max: 1100 }, rotate: 8, scaleY: { min: 0.8, max: 1.4 }, alpha: { start: 0.3, end: 0.15 }, tint: shade(b.rim, 0.1), frequency: 24 }, 21);
+                const r2 = add('amb-streak', { lifespan: 1300, speedX: { min: -80, max: -60 }, speedY: { min: 600, max: 700 }, rotate: 6, alpha: { start: 0.16, end: 0.05 }, tint: b.haze, frequency: 30 }, 0);
+                this.rain.push({ emitter: r1, baseFreq: 24 }, { emitter: r2, baseFreq: 30 });
                 break;
             }
             case 'bubbles':
