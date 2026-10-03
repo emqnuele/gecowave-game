@@ -4,6 +4,7 @@ import { ITEMS, NOTCH_PRICES, BASE_NOTCHES, type ItemDef } from '../content/item
 import { LEVELS, LEVEL_ORDER, TOTAL_FRAGMENTS } from '../content/levels';
 import { CONTACTS, OBJECTIVES, POSTS, RADIO, type Contact } from '../content/phone';
 import { ABILITY_CARDS } from '../content/story';
+import { deletePhoto, listPhotos, PHOTO_FILTERS, processPhoto, savePhoto, type PhotoFilter } from './photos';
 import { bus } from '../engine/events';
 import { useItem } from '../engine/inventory';
 import { music } from '../engine/music';
@@ -27,9 +28,11 @@ export interface PhoneHost {
     resume(): void;
     /** il telefono si apre solo in gioco, senza menu o dialoghi aperti */
     canOpen(): boolean;
+    /** scatto del canvas di gioco, o null se l'obiettivo è tappato */
+    snapshot(): Promise<string | null>;
 }
 
-type AppId = 'messaggi' | 'wavegram' | 'zaino' | 'amuleti' | 'wavezon' | 'mappa' | 'diario' | 'radio' | 'trofei' | 'profilo' | 'impostazioni';
+type AppId = 'messaggi' | 'wavegram' | 'fotocamera' | 'galleria' | 'zaino' | 'amuleti' | 'wavezon' | 'mappa' | 'diario' | 'radio' | 'trofei' | 'profilo' | 'impostazioni';
 
 interface AppDef {
     id: AppId;
@@ -43,6 +46,8 @@ interface AppDef {
 const APPS: AppDef[] = [
     { id: 'messaggi', name: 'messaggi', icon: '💬', tint: 'blue', title: 'MESSAGGI', sub: 'tutti ti scrivono, nessuno ti chiede come stai' },
     { id: 'wavegram', name: 'wavegram', icon: '📸', tint: 'purple', title: 'WAVEGRAM', sub: 'il realm che collassa, ma con i filtri' },
+    { id: 'fotocamera', name: 'fotocamera', icon: '📷', tint: 'red', title: 'FOTOCAMERA', sub: 'il realm in posa, poi in cornice' },
+    { id: 'galleria', name: 'galleria', icon: '🖼️', tint: 'yellow', title: 'GALLERIA', sub: 'scatti dal realm, da portare via' },
     { id: 'mappa', name: 'mappa', icon: '🗺️', tint: 'green', title: 'MAPPA', sub: 'tu sei qui. purtroppo.' },
     { id: 'zaino', name: 'zaino', icon: '🎒', tint: 'orange', title: 'ZAINO', sub: 'tutto quello che un geco può portare' },
     { id: 'amuleti', name: 'amuleti', icon: '🔮', tint: 'purple', title: 'AMULETI', sub: 'si cambiano solo vicino a un microfono' },
@@ -349,6 +354,8 @@ export class Phone {
         switch (id) {
             case 'messaggi': this.renderMessages(content); break;
             case 'wavegram': this.renderWavegram(content); break;
+            case 'fotocamera': this.renderCamera(content); break;
+            case 'galleria': this.renderGallery(content); break;
             case 'zaino': this.renderInventory(content); break;
             case 'amuleti': this.renderCharms(content); break;
             case 'wavezon': this.renderShop(content); break;
@@ -499,6 +506,174 @@ export class Phone {
             root.append(post);
         }
         root.append(text('div', 'phone-empty', 'vai avanti nel realm: la gente posta di più quando succede qualcosa.'));
+    }
+
+    /* ---------- fotocamera e galleria ---------- */
+
+    private photoDraft: { img: HTMLImageElement; filter: PhotoFilter; letterbox: boolean; caption: string } | null = null;
+    private galleryOpen: string | null = null;
+
+    private renderCamera(root: HTMLElement): void {
+        root.replaceChildren();
+        const draft = this.photoDraft;
+        if (!draft) {
+            const vf = el('div', 'vf');
+            vf.append(el('div', 'vf-cross'));
+            vf.append(text('div', 'vf-hint', 'l\u2019obiettivo vede quello che vedi tu. il realm resta fermo in posa.'));
+            const note = el('div', 'phone-note');
+            const shoot = el('button', 'phone-btn cam-shoot', 'scatta');
+            shoot.addEventListener('click', async () => {
+                shoot.textContent = '···';
+                const src = await this.host.snapshot();
+                if (!src) {
+                    shoot.textContent = 'scatta';
+                    note.textContent = 'obiettivo tappato. riprova.';
+                    note.className = 'phone-note bad';
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => {
+                    const lv = LEVELS[state.save.levelId];
+                    this.photoDraft = { img, filter: 'naturale', letterbox: true, caption: lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : '' };
+                    this.renderCamera(root);
+                };
+                img.onerror = () => {
+                    shoot.textContent = 'scatta';
+                    note.textContent = 'obiettivo tappato. riprova.';
+                    note.className = 'phone-note bad';
+                };
+                img.src = src;
+            });
+            root.append(vf, shoot, note);
+            return;
+        }
+
+        const develop = () => processPhoto(draft.img, { filter: draft.filter, letterbox: draft.letterbox, caption: draft.caption });
+        const preview = el('img', 'cam-preview');
+        preview.alt = 'anteprima dello scatto';
+        preview.src = develop();
+
+        const filters = el('div', 'cam-filters');
+        const paintFilters = () => {
+            filters.replaceChildren();
+            for (const f of PHOTO_FILTERS) {
+                const b = el('button', `cam-filter${f.id === draft.filter ? ' on' : ''}`);
+                b.textContent = f.name;
+                b.addEventListener('click', () => {
+                    draft.filter = f.id;
+                    sfx.ui();
+                    preview.src = develop();
+                    paintFilters();
+                });
+                filters.append(b);
+            }
+        };
+        paintFilters();
+
+        const frameRow = el('div', 'cam-row');
+        frameRow.append(text('span', 'cam-label', 'mascherino'));
+        const frameBtn = el('button', 'cam-toggle');
+        const paintFrame = () => {
+            frameBtn.textContent = `‹ ${draft.letterbox ? 'cinema' : 'pieno'} ›`;
+        };
+        paintFrame();
+        frameBtn.addEventListener('click', () => {
+            draft.letterbox = !draft.letterbox;
+            sfx.ui();
+            preview.src = develop();
+            paintFrame();
+        });
+        frameRow.append(frameBtn);
+
+        const caption = el('input', 'cam-caption');
+        caption.type = 'text';
+        caption.maxLength = 60;
+        caption.placeholder = 'didascalia…';
+        caption.value = draft.caption;
+        caption.setAttribute('aria-label', 'didascalia della foto');
+        caption.addEventListener('input', () => {
+            draft.caption = caption.value;
+        });
+        caption.addEventListener('keydown', (e) => e.stopPropagation());
+
+        const actions = el('div', 'cam-actions');
+        const save = el('button', 'phone-btn', 'salva in galleria');
+        save.addEventListener('click', () => {
+            const done = savePhoto({ levelId: state.save.levelId, filter: draft.filter, caption: draft.caption, dataUrl: develop() });
+            if (!done) {
+                sfx.ui();
+                return;
+            }
+            sfx.unlock();
+            this.photoDraft = null;
+            this.galleryOpen = done.id;
+            this.openApp('galleria');
+        });
+        const trash = el('button', 'phone-btn cam-ghost', 'butta');
+        trash.addEventListener('click', () => {
+            sfx.ui();
+            this.photoDraft = null;
+            this.renderCamera(root);
+        });
+        actions.append(save, trash);
+        root.append(preview, filters, frameRow, caption, actions);
+    }
+
+    private renderGallery(root: HTMLElement): void {
+        root.replaceChildren();
+        const photos = listPhotos();
+        const openId = this.galleryOpen;
+        this.galleryOpen = null;
+        if (!photos.length) {
+            root.append(text('div', 'phone-empty', 'rullino vuoto. scatta dalla fotocamera: il realm posa sempre.'));
+            return;
+        }
+        const open = openId ? photos.find((p) => p.id === openId) ?? photos[0] : null;
+        if (open) {
+            const view = el('div', 'ph-viewer');
+            const img = el('img', 'ph-photo');
+            img.src = open.dataUrl;
+            img.alt = open.caption || 'scatto dal realm';
+            view.append(img);
+            if (open.caption) view.append(text('div', 'ph-caption', open.caption));
+            view.append(text('div', 'ph-meta', `${since(open.at)} · ${open.filter}`));
+            const actions = el('div', 'ph-actions');
+            const dl = el('a', 'phone-btn');
+            dl.textContent = 'scarica';
+            dl.href = open.dataUrl;
+            dl.download = `gecowave-${open.id}.jpg`;
+            const del = el('button', 'phone-btn cam-ghost', 'strappa');
+            del.addEventListener('click', () => {
+                deletePhoto(open.id);
+                sfx.ui();
+                this.renderGallery(root);
+            });
+            const close = el('button', 'phone-btn cam-ghost', 'chiudi');
+            close.addEventListener('click', () => {
+                sfx.ui();
+                this.renderGallery(root);
+            });
+            actions.append(dl, del, close);
+            view.append(actions);
+            root.append(view);
+            return;
+        }
+        const grid = el('div', 'ph-grid');
+        for (const p of photos) {
+            const b = el('button', 'ph-thumb');
+            const img = el('img');
+            img.src = p.dataUrl;
+            img.alt = p.caption || 'scatto dal realm';
+            img.loading = 'lazy';
+            b.append(img);
+            b.addEventListener('click', () => {
+                sfx.ui();
+                this.galleryOpen = p.id;
+                this.renderGallery(root);
+            });
+            grid.append(b);
+        }
+        root.append(grid);
     }
 
     /* ---------- zaino ---------- */

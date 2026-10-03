@@ -138,6 +138,23 @@ async function boot(): Promise<void> {
         pause: () => controller.pause(),
         resume: () => controller.resume(),
         canOpen: () => inGame && !screens.overlayOpen && !dialogue.open && game.scene.isActive('GameScene'),
+        snapshot: () => new Promise<string | null>((resolve) => {
+            const done = (v: string | null) => resolve(v);
+            try {
+                const r = game.renderer as unknown as { snapshot?: (cb: (img: HTMLImageElement) => void) => void };
+                if (typeof r.snapshot !== 'function') {
+                    done(null);
+                    return;
+                }
+                const timer = window.setTimeout(() => done(null), 3000);
+                r.snapshot((img) => {
+                    window.clearTimeout(timer);
+                    done(img && img.src ? img.src : null);
+                });
+            } catch {
+                done(null);
+            }
+        }),
     });
     hud.root.append(phone.hintElement);
 

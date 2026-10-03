@@ -1181,3 +1181,153 @@ button.phone-row {
 .phone .assist-row {
   width: 100%;
 }
+
+/* ---------- fotocamera ---------- */
+
+.vf {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #050506;
+  border: 1px solid rgba(207, 167, 92, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.vf-cross::before,
+.vf-cross::after {
+  content: '';
+  position: absolute;
+  background: rgba(207, 167, 92, 0.5);
+}
+
+.vf-cross::before {
+  left: 50%;
+  top: 12%;
+  bottom: 12%;
+  width: 1px;
+}
+
+.vf-cross::after {
+  top: 50%;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+}
+
+.vf-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  text-align: center;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--sx-ash);
+  padding: 0 12px;
+}
+
+.cam-shoot {
+  display: block;
+  margin: 4px auto;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid rgba(163, 34, 28, 0.9);
+  background: radial-gradient(circle, rgba(163, 34, 28, 0.35), rgba(0, 0, 0, 0.4));
+  color: var(--sx-bone);
+  font-size: 13px;
+}
+
+.cam-preview {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--sx-line);
+  margin-bottom: 12px;
+}
+
+.cam-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cam-filter {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--sx-line);
+  padding: 8px 2px;
+  cursor: pointer;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--sx-ash);
+}
+
+.cam-filter.on {
+  color: var(--sx-gold);
+  border-bottom-color: var(--sx-gold);
+  text-shadow: 0 0 12px rgba(255, 154, 74, 0.4);
+}
+
+.cam-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--sx-line);
+}
+
+.cam-label {
+  font-family: var(--font-fell);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--sx-bone);
+}
+
+.cam-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--sx-ash);
+}
+
+.cam-caption {
+  width: 100%;
+  margin: 12px 0 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(207, 167, 92, 0.5);
+  outline: none;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--sx-bone);
+  padding: 6px 2px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.cam-caption::placeholder {
+  color: var(--sx-dim);
+}
+
+.cam-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cam-actions .phone-btn {
+  flex: 1;
+}
+
+.cam-ghost {
+  opacity: 0.6;
+}
