@@ -9,7 +9,7 @@ import '@fontsource/im-fell-english/400-italic.css';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL, LEVELS, TOTAL_FRAGMENTS } from './content/levels';
-import { endingCards, INTRO_CARDS } from './content/story';
+import { endingCards, endingEpilogues, INTRO_CARDS } from './content/story';
 import { bus } from './engine/events';
 import { sfx } from './engine/sfx';
 import { state } from './engine/state';
@@ -186,6 +186,7 @@ async function boot(): Promise<void> {
         const gameEl = document.getElementById('game')!;
         gameEl.style.display = 'none';
         const cards = endingCards(id, state.save.flags);
+        const epilogues = endingEpilogues(id, state.save.flags);
         // pedro (patto) e sconfitta (sfida agli dei persa) sono game over definitivi
         const lose = id === 'pedro' || id === 'sconfitta';
         const title =
@@ -194,7 +195,7 @@ async function boot(): Promise<void> {
             : id === 'dei' ? 'ORA IL GECOREALM È TUO'
             : id === 'pedro' ? 'GLI DEI TI HANNO RAGGIUNTO'
             : 'IL REALM CONTINUA. TU NO.';
-        screens.endingSequence(cards, { outcome: lose ? 'lose' : 'win', title, score, rank }, () => {
+        screens.endingSequence(cards, { outcome: lose ? 'lose' : 'win', title, score, rank, epilogues }, () => {
             if (lose) {
                 // hai perso: il salvataggio viene cancellato, si riparte da zero
                 state.reset();

@@ -1149,87 +1149,132 @@ export const NOTINO_FUGHE = [
     'notino fugge: "questo round non conta, c\'era il sole negli occhi!!"',
 ];
 
-/** i finali si ricordano cosa hai fatto: righe extra dai flag */
+/** i finali si ricordano cosa hai fatto: nelle carte resta solo la trama
+    (max 3 righe), il resto finisce nei titoli di coda (vedi endingEpilogues) */
 export function endingCards(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto', flags: string[]): { text: string; punch?: string }[] {
     if (id === 'pedro') return ENDING_PEDRO;
     if (id === 'sconfitta') return ENDING_SCONFITTA;
     const base = id === 'consegna' ? ENDING_CONSEGNA : id === 'riscatto' ? ENDING_RISCATTO : ENDING_DEI;
-    const extra: { text: string; punch?: string }[] = [];
-    if (flags.includes('dei-arrestati')) {
-        extra.push({ text: 'piema e lametta scontano la pena alla ruhra: lui corregge compiti senza mai mettere 18, lei dipinge le aule. a matita. pedro passa a trovarli il giovedì. lametta piange sempre. piema dice che è allergia.' });
+    const plot = [cartellinoCard(flags)];
+    const pedro = pedroCard(id, flags);
+    if (pedro) plot.push(pedro);
+    const proc = processoCard(flags);
+    if (proc) plot.push(proc);
+    return [...base.slice(0, -1), ...plot, base[base.length - 1]];
+}
+
+/** epiloghi dei personaggi: stesse condizioni di prima, ma vanno nei titoli
+    di coda invece che nelle carte del finale. per pedro e sconfitta niente. */
+export function endingEpilogues(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto', flags: string[]): string[] {
+    if (id === 'pedro' || id === 'sconfitta') return [];
+    const out: string[] = [];
+    const proc = processoFlag(flags);
+    if (flags.includes('dei-arrestati') && proc !== 'dei-arrestati') {
+        out.push('piema e lametta scontano la pena alla ruhra: lui corregge compiti senza mai mettere 18, lei dipinge le aule. a matita. pedro passa a trovarli il giovedì. lametta piange sempre. piema dice che è allergia.');
     }
-    if (flags.includes('lametta-arrestato')) {
-        extra.push({ text: 'lametta sconta la pena alla ruhra e dipinge le aule. a matita. piema è libero: nessuna riga originale, nessuna prova. ogni tanto guarda il geco come chi sa di dovere un favore a qualcuno che ha fatto il suo stesso errore. nessuno dei due ne parla. è il loro modo di essere soci.' });
-    } else if (flags.includes('pensiero-cancellato')) {
-        extra.push({ text: 'nella testa di piema c\'è un cassetto vuoto. lui non sa perché, lì dentro, si sente più leggero. tu sì.' });
+    if (flags.includes('lametta-arrestato') && proc !== 'lametta-arrestato') {
+        out.push('lametta sconta la pena alla ruhra e dipinge le aule. a matita. piema è libero: nessuna riga originale, nessuna prova. ogni tanto guarda il geco come chi sa di dovere un favore a qualcuno che ha fatto il suo stesso errore. nessuno dei due ne parla. è il loro modo di essere soci.');
+    } else if (flags.includes('pensiero-cancellato') && proc !== 'pensiero-cancellato') {
+        out.push('nella testa di piema c\'è un cassetto vuoto. lui non sa perché, lì dentro, si sente più leggero. tu sì.');
     }
-    if (flags.includes('pensiero-portato')) {
-        extra.push({ text: 'il pensiero sepolto di piema è agli atti, in questura: fascicolo "analisi 1", pagina 1. romero l\'ha incorniciato. dice che è la prima riga vera mai scritta da un dio.' });
-    }
-    if (flags.includes('quaderno-completo')) {
-        extra.push(flags.includes('pedro-redento')
-            ? { text: 'pedro e il geco del muro si vedono ogni sera, alle quattro, in piazza. pedro parla, il geco fa il verso. si capiscono benissimo. si sono sempre capiti.' }
-            : { text: 'il quaderno di pedro sta in piazza, sotto vetro, accanto alla targa di ivan. ogni sera alle quattro il geco del muro passa e dice ciao. nessuno risponde. è la conversazione migliore della giornata.' });
+    if (flags.includes('pensiero-portato') && proc !== 'pensiero-portato') {
+        out.push('il pensiero sepolto di piema è agli atti, in questura: fascicolo "analisi 1", pagina 1. romero l\'ha incorniciato. dice che è la prima riga vera mai scritta da un dio.');
     }
     if (flags.includes('notino-a-casa')) {
-        extra.push({ text: 'notino fa ancora gli agguati, ma dopo cena. sua madre lo aspetta sulla porta col mestolo. il server ha cambiato nome: "tecnokill (solo nel weekend)".' });
+        out.push('notino fa ancora gli agguati, ma dopo cena. sua madre lo aspetta sulla porta col mestolo. il server ha cambiato nome: "tecnokill (solo nel weekend)".');
     }
     if (flags.includes('notino-disarmato')) {
-        extra.push({ text: 'notino non ti ha mai perdonato lo sparacchino. ha aperto un server tutto per te: "il geco ladro". ha un iscritto. è sua madre, per controllarlo.' });
+        out.push('notino non ti ha mai perdonato lo sparacchino. ha aperto un server tutto per te: "il geco ladro". ha un iscritto. è sua madre, per controllarlo.');
     }
     if (flags.includes('lochef-arrestato')) {
-        extra.push({ text: 'lochef85 cucina per la mensa del carcere. i detenuti non hanno mai mangiato così bene né così a disagio. il brodo è tiepido. sempre.' });
+        out.push('lochef85 cucina per la mensa del carcere. i detenuti non hanno mai mangiato così bene né così a disagio. il brodo è tiepido. sempre.');
     }
     if (flags.includes('lochef-libero')) {
-        extra.push({ text: 'la trattoria di lochef in piazza ha quattro stelle. la quinta l\'ha tolta un ispettore che non è più tornato a casa. indagini in corso.' });
+        out.push('la trattoria di lochef in piazza ha quattro stelle. la quinta l\'ha tolta un ispettore che non è più tornato a casa. indagini in corso.');
     }
     if (flags.includes('caffe-romero')) {
-        extra.push({ text: 'romero ha preso l\'abitudine del caffè al bar, ogni mattina, con lo zucchero. dice che quarant\'anni di arretrati non si recuperano. ma si addolciscono.' });
+        out.push('romero ha preso l\'abitudine del caffè al bar, ogni mattina, con lo zucchero. dice che quarant\'anni di arretrati non si recuperano. ma si addolciscono.');
     }
     if (flags.filter((f) => f.startsWith('corsa-vinta-')).length >= 3) {
-        extra.push({ text: 'guastalla ha preso la patente del citelis, in tre settimane, autoscuole marcetti gestione anna. guida la linea della piazza. va piano e si ferma a tutte le fermate. anche a quelle che non esistono.' });
+        out.push('guastalla ha preso la patente del citelis, in tre settimane, autoscuole marcetti gestione anna. guida la linea della piazza. va piano e si ferma a tutte le fermate. anche a quelle che non esistono.');
     }
     if (flags.includes('storie-del-realm')) {
-        extra.push({ text: 'qualcuno ha raccolto in un libro le note sparse del realm: herbert, il pendolare delle 7:39, franceschini, l\'ospite n.11. lo vendono al mercato del crollo. il primo capitolo si intitola "chi c\'era".' });
-    }
-    // il volere del geco dal primo minuto: la parola a matita sul cartellino
-    extra.push(flags.includes('quaderno-completo')
-        ? { text: 'il cartellino è in tasca, senza la parola a matita. nessuno te l\'ha cancellata: l\'hai cancellata tu, il giorno che hai saputo chi ti aveva scelto.' }
-        : { text: 'il cartellino dice ancora "provvisorio". a matita. qualcuno, da qualche parte, aveva scritto il tuo nome su cinque pagine. non le hai trovate tutte.' });
-    if (flags.includes('pedro-redento') && id !== 'riscatto') {
-        extra.push({ text: 'pedro, ripulito dal glitch, ha aperto un piccolo laboratorio al cratere. aggiusta le cose rotte. solo quelle. le storte le lascia stare.' });
+        out.push('qualcuno ha raccolto in un libro le note sparse del realm: herbert, il pendolare delle 7:39, franceschini, l\'ospite n.11. lo vendono al mercato del crollo. il primo capitolo si intitola "chi c\'era".');
     }
     if (flags.includes('ticummi-graziato')) {
-        extra.push({ text: 'ticummi è ancora in giro: ha rilanciato la tommasorveglianza, stavolta "etica e trasparente", a 0,18€. ha già due clienti. uno è notino, che vuole capire come fa a vederlo sempre.' });
+        out.push('ticummi è ancora in giro: ha rilanciato la tommasorveglianza, stavolta "etica e trasparente", a 0,18€. ha già due clienti. uno è notino, che vuole capire come fa a vederlo sempre.');
     }
     if (flags.includes('trenbolone-distrutto')) {
-        extra.push({ text: 'della boccetta calpestata davanti a ticummi parlano ancora: nel realm la chiamano "la delibera del geco". il villaggio di formica (FR) l\'ha ratificata all\'unanimità.' });
+        out.push('della boccetta calpestata davanti a ticummi parlano ancora: nel realm la chiamano "la delibera del geco". il villaggio di formica (FR) l\'ha ratificata all\'unanimità.');
     }
     if (flags.includes('tommasorveglianza')) {
-        extra.push({ text: 'da qualche parte, un server con i tuoi 41.077 secondi di footage continua a girare. ogni tanto il tuo clone si riaccende e si allena. non si sa mai, dice.' });
+        out.push('da qualche parte, un server con i tuoi 41.077 secondi di footage continua a girare. ogni tanto il tuo clone si riaccende e si allena. non si sa mai, dice.');
     }
     if (flags.includes('caso-risolto')) {
-        extra.push({ text: 'il commissario romero è andato in pensione il giorno dopo la chiusura del caso analisi 1. alla festa c\'era anche il limite notevole, ai domiciliari, che tendeva al buffet.' });
+        out.push('il commissario romero è andato in pensione il giorno dopo la chiusura del caso analisi 1. alla festa c\'era anche il limite notevole, ai domiciliari, che tendeva al buffet.');
     }
     if (flags.includes('ricordi-visti')) {
-        extra.push({ text: 'nella memoria di pedro, la cartella IMPORTANTE risulta sincronizzata al 100%. nessuno sa cosa significhi. il geco sì.' });
+        out.push('nella memoria di pedro, la cartella IMPORTANTE risulta sincronizzata al 100%. nessuno sa cosa significhi. il geco sì.');
     }
     if (flags.includes('stabilimento-chiuso')) {
-        extra.push({ text: 'il chiosco di acqua del rubinetto di smela, contro ogni pronostico, va fortissimo. lo slogan: "sa di niente, come promesso".' });
+        out.push('il chiosco di acqua del rubinetto di smela, contro ogni pronostico, va fortissimo. lo slogan: "sa di niente, come promesso".');
     }
     if (flags.includes('maschera-completa')) {
-        extra.push({ text: 'le cinque maschere della tua stessa faccia sono appese al muro di casa. di notte battono il tempo. i vicini non si lamentano: il ritmo è perfetto.' });
+        out.push('le cinque maschere della tua stessa faccia sono appese al muro di casa. di notte battono il tempo. i vicini non si lamentano: il ritmo è perfetto.');
     }
     if (flags.includes('boss-down-settequaranta')) {
-        extra.push({ text: 'la 14 barrato è stata dissepolta. samatt ci ha fatto un giro per nostalgia. il 7:40 ora è un monumento: morde ancora, ma solo i turisti senza biglietto.' });
+        out.push('la 14 barrato è stata dissepolta. samatt ci ha fatto un giro per nostalgia. il 7:40 ora è un monumento: morde ancora, ma solo i turisti senza biglietto.');
     }
     if (flags.includes('boss-down-walter')) {
-        extra.push({ text: 'a galliate hanno messo una targa sul capolinea: "guggu, re dei bus. teneva aperto". i maranza la puliscono a turno. le autoscuole marcetti ora le gestisce la signora anna. la patente si prende in tre settimane.' });
+        out.push('a galliate hanno messo una targa sul capolinea: "guggu, re dei bus. teneva aperto". i maranza la puliscono a turno. le autoscuole marcetti ora le gestisce la signora anna. la patente si prende in tre settimane.');
     }
     if (flags.includes('boss-down-custode')) {
-        extra.push({ text: 'il disco postumo del primo custode, "Trovati una Fidanzata", è tornato in classifica nel realm. seconda copia venduta: la tua. lui, da qualche parte, batte il tempo soddisfatto.' });
+        out.push('il disco postumo del primo custode, "Trovati una Fidanzata", è tornato in classifica nel realm. seconda copia venduta: la tua. lui, da qualche parte, batte il tempo soddisfatto.');
     }
-    return [...base.slice(0, -1), ...extra, base[base.length - 1]];
+    return out;
+}
+
+/* le tre righe di trama del finale: cartellino, pedro, processo */
+function cartellinoCard(flags: string[]): { text: string; punch?: string } {
+    // il volere del geco dal primo minuto: la parola a matita sul cartellino
+    return flags.includes('quaderno-completo')
+        ? { text: 'il cartellino è in tasca, senza la parola a matita. nessuno te l\'ha cancellata: l\'hai cancellata tu, il giorno che hai saputo chi ti aveva scelto.' }
+        : { text: 'il cartellino dice ancora "provvisorio". a matita. qualcuno, da qualche parte, aveva scritto il tuo nome su cinque pagine. non le hai trovate tutte.' };
+}
+
+function pedroCard(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto', flags: string[]): { text: string; punch?: string } | null {
+    if (flags.includes('quaderno-completo')) {
+        return flags.includes('pedro-redento')
+            ? { text: 'pedro e il geco del muro si vedono ogni sera, alle quattro, in piazza. pedro parla, il geco fa il verso. si capiscono benissimo. si sono sempre capiti.' }
+            : { text: 'il quaderno di pedro sta in piazza, sotto vetro, accanto alla targa di ivan. ogni sera alle quattro il geco del muro passa e dice ciao. nessuno risponde. è la conversazione migliore della giornata.' };
+    }
+    if (flags.includes('pedro-redento') && id !== 'riscatto') {
+        return { text: 'pedro, ripulito dal glitch, ha aperto un piccolo laboratorio al cratere. aggiusta le cose rotte. solo quelle. le storte le lascia stare.' };
+    }
+    return null;
+}
+
+function processoFlag(flags: string[]): string | null {
+    if (flags.includes('dei-arrestati')) return 'dei-arrestati';
+    if (flags.includes('lametta-arrestato')) return 'lametta-arrestato';
+    if (flags.includes('pensiero-cancellato')) return 'pensiero-cancellato';
+    if (flags.includes('pensiero-portato')) return 'pensiero-portato';
+    return null;
+}
+
+function processoCard(flags: string[]): { text: string; punch?: string } | null {
+    switch (processoFlag(flags)) {
+        case 'dei-arrestati':
+            return { text: 'piema e lametta scontano la pena alla ruhra: lui corregge compiti senza mai mettere 18, lei dipinge le aule. a matita. pedro passa a trovarli il giovedì. lametta piange sempre. piema dice che è allergia.' };
+        case 'lametta-arrestato':
+            return { text: 'lametta sconta la pena alla ruhra e dipinge le aule. a matita. piema è libero: nessuna riga originale, nessuna prova. ogni tanto guarda il geco come chi sa di dovere un favore a qualcuno che ha fatto il suo stesso errore. nessuno dei due ne parla. è il loro modo di essere soci.' };
+        case 'pensiero-cancellato':
+            return { text: 'nella testa di piema c\'è un cassetto vuoto. lui non sa perché, lì dentro, si sente più leggero. tu sì.' };
+        case 'pensiero-portato':
+            return { text: 'il pensiero sepolto di piema è agli atti, in questura: fascicolo "analisi 1", pagina 1. romero l\'ha incorniciato. dice che è la prima riga vera mai scritta da un dio.' };
+        default:
+            return null;
+    }
 }
 
 export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key: string }> = {

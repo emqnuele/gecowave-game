@@ -812,14 +812,15 @@ export class Screens {
 
     /* ---------- finale: storia + titoli di coda ---------- */
 
-    endingSequence(cards: { text: string; punch?: string }[], opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number }, onDone: () => void): void {
+    endingSequence(cards: { text: string; punch?: string }[], opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number; epilogues?: string[] }, onDone: () => void): void {
         this.storySequence(cards, () => this.showCredits(opts, onDone));
     }
 
-    private showCredits(opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number }, onDone: () => void): void {
+    private showCredits(opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number; epilogues?: string[] }, onDone: () => void): void {
         const win = opts.outcome === 'win';
         const s = this.openOverlay(`screen sx opaque credits-screen sx-credits ${win ? 'credits-win' : 'credits-lose'}`);
-        const ROLL_MS = 38000;
+        const epilogues = opts.epilogues ?? [];
+        const ROLL_MS = 38000 + epilogues.length * 2500;
 
         const head = el('div', 'credits-head');
         const end = el('h1', 'credits-end');
@@ -833,6 +834,18 @@ export class Screens {
         const game = el('div', 'credits-game');
         game.textContent = 'gecowave';
         inner.append(game);
+        if (epilogues.length > 0) {
+            const epiTitle = el('div', 'credits-role');
+            epiTitle.textContent = 'cosa ne è stato';
+            inner.append(epiTitle);
+            for (const epi of epilogues) {
+                const line = el('div', 'credits-epilogue');
+                line.textContent = epi;
+                inner.append(line);
+            }
+            // più righe, scorrimento più lento: resta leggibile
+            inner.style.animationDuration = `${26 + epilogues.length * 2}s`;
+        }
         let first = true;
         for (const c of CREDITS) {
             if (c.role) {
