@@ -223,7 +223,7 @@ class Sfx {
     shriek(): void { this.tone(1300, 260, { type: 'sawtooth', to: 500, vol: 0.06 }); }
     crack(): void { this.noise(120, { freq: 1400, q: 3, vol: 0.12 }); }
     /** battute gravi: un colpo basso e rado, quasi solo un respiro */
-    graveTick(): void { this.tone(150 + Math.random() * 30, 110, { type: 'sine', vol: 0.035 }); }    crumble(): void {
+    graveTick(): void { this.tone(200 + Math.random() * 40, 90, { type: 'triangle', vol: 0.07 }); }    crumble(): void {
         this.noise(420, { freq: 300, q: 0.7, vol: 0.2 });
         this.tone(120, 300, { type: 'triangle', to: 60, vol: 0.06 });
     }

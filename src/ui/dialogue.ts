@@ -61,7 +61,7 @@ export class DialogueBox {
         if (crack) this.box.classList.add('dlg-crepa');
         music.setGraveDuck(grave);
         const speed = grave ? 46 : crack ? 28 : 18;
-        const blipEvery = grave ? 12 : 3;
+        const blipEvery = grave ? 6 : 3;
 
         const text = this.box.querySelector<HTMLElement>('.text')!;
         text.textContent = '';
