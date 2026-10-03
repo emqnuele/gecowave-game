@@ -441,7 +441,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'mente-ordine': [
         { speaker: 'piema (ovunque)', color: 'blue', text: 'si è... chiuso. IL TEOREMA SI È CHIUSO. sento i pensieri rimettersi in fila per indice analitico. ordine. finalmente ORDINE.' },
         { speaker: 'piema (ovunque)', color: 'blue', text: 'custode, prendi: il frammento del calcolo. galleggiava tra i miei pensieri sbagliati. le leggi matematiche come arma. usale meglio di come le ho usate io.', mood: 'grave' },
-        { speaker: 'piema (ovunque)', color: 'blue', text: 'ti apro l\'uscita. io vado a cercare lametta. e... occhio a pedro: l\'ho visto dai miei pensieri rotti. non è più solo glitch, ormai. ha dei piani.', mood: 'grave' },
+        { speaker: 'piema (ovunque)', color: 'blue', text: 'ti apro l\'uscita. io vado a cercare lametta. e se vedi pedro... no. niente. vai.', mood: 'grave' },
     ],
     'lore-romero': [
         { speaker: 'targa della ruhra', color: 'blue', text: '«aula intitolata al commissario romero, che indagò per anni sul caso analisi 1. il caso è ancora aperto. il commissario pure, dicono.»' },
@@ -744,7 +744,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'ticummi-pieta': [
         { speaker: 'ticummi', color: 'cyan', text: '...me la ridai? davvero? dopo tutto quello che... ok. ok. forse la tommasorveglianza aveva ragione su di te: sei un buono. lo dicevano i dati. odio quando i dati hanno ragione.', mood: 'grave' },
-        { speaker: 'ticummi', color: 'cyan', text: 'vattene prima che mi commuova. e occhio a pedro: lo guardavo anche lui, dai monitor. non è più solo glitch. ha dei PIANI.', mood: 'grave' },
+        { speaker: 'ticummi', color: 'cyan', text: 'vattene prima che mi commuova. e un\'ultima cosa gratis: dai monitor ho visto pedro dipingere numeri sui muri, di notte. azzurri. sempre lo stesso.', mood: 'grave' },
     ],
     'ticummi-niente': [
         { speaker: 'ticummi', color: 'cyan', text: '...la calpesti. davanti a me. ok. messaggio ricevuto. durissimo, ma ricevuto.' },
