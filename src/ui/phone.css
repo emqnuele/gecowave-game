@@ -6,13 +6,13 @@
   position: absolute;
   right: 18px;
   bottom: 18px;
-  padding: 7px 13px;
+  padding: 7px 4px;
   font-family: var(--font-martian);
   font-size: 10px;
   color: var(--zinc-300);
-  background: rgba(5, 5, 5, 0.66);
-  border: 1px solid var(--sx-line);
-  border-radius: 4px;
+  background: none;
+  border: none;
+  border-radius: 0;
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;

@@ -346,13 +346,9 @@ body {
 }
 
 .hud-food {
-  position: absolute;
-  bottom: 24px;
-  left: 18px;
-  padding: 6px 14px;
-  transform: rotate(-1deg);
+  margin: 2px 12px 8px;
   font-family: var(--font-martian);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--zinc-300);
   display: flex;
   align-items: center;

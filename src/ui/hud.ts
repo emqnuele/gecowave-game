@@ -62,7 +62,11 @@ export class Hud {
         const flowWrap = el('div', 'flow-wrap');
         this.flowBar = el('div', 'flow-bar');
         flowWrap.append(this.flowBar);
-        topleft.append(this.hpRow, flowWrap);
+        this.food = el('div', 'hud-food');
+        this.foodKbd = el('kbd', '', '');
+        this.foodCount = el('span', 'food-count', '');
+        this.food.append(this.foodKbd, this.foodCount);
+        topleft.append(this.hpRow, flowWrap, this.food);
 
         this.barre = el('div', 'hud-barre', '♪ 0 barre');
         this.fragments = el('div', 'hud-fragments', '');
@@ -70,10 +74,6 @@ export class Hud {
         this.trenboBorder = el('div', 'trenbo-border');
         this.zone = el('div', 'hud-zone', '');
         this.waves = el('div', 'hud-waves');
-        this.food = el('div', 'hud-food');
-        this.foodKbd = el('kbd', '', '');
-        this.foodCount = el('span', 'food-count', '');
-        this.food.append(this.foodKbd, this.foodCount);
 
         this.doomsday = el('div', 'doomsday-meter');
         this.doomsdayFill = el('div', 'doomsday-fill');
@@ -84,7 +84,7 @@ export class Hud {
         this.trial = el('div', 'hud-trial', '');
         this.trial.style.display = 'none';
 
-        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.food, this.doomsday, this.trenboBorder, this.trial);
+        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.doomsday, this.trenboBorder, this.trial);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
