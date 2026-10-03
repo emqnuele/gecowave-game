@@ -140,8 +140,8 @@ Per ogni abilità: **meccanica**, **numeri** (in `COMBAT`, con nomi nuovi dove s
 ### 2.7 Tommasoscudo — il rimando perfetto
 - **Meccanica** (costo 20, ricarica 6,5 s):
   - durata **1,6 s** (oggi 2,2);
-  - i primi **220 ms** sono il **rimando perfetto**: un proiettile rimandato in quella finestra fa il **150%** del danno nemico (oggi 40%), **insegue** chi l'ha sparato (se il tiratore è ancora vivo, correggi la velocità verso di lui ogni fotogramma con sterzata limitata) e lo stordisce 600 ms; anche un nemico che ti tocca in quella finestra viene respinto senza farti danno;
-  - dopo i 220 ms, il rimando normale di oggi (40%).
+  - i primi **220 ms** sono il **rimando perfetto**: un proiettile rimandato in quella finestra fa il **60%** del danno nemico (oggi 40%), **insegue** chi l'ha sparato (se il tiratore è ancora vivo, correggi la velocità verso di lui ogni fotogramma con sterzata limitata) e lo stordisce 600 ms; anche un nemico che ti tocca in quella finestra viene respinto senza farti danno;
+  - dopo i 220 ms, il rimando normale (diventa 25%).
   - per sapere chi ha sparato: in `GameScene.onEnemyShoot` (evento `enemy-shoot`) salva sul proiettile `setData('shooter', enemy)`; per i boss, i proiettili dei boss passano da un'altra strada (cerca come `Boss` crea i proiettili): se non c'è un tiratore, il proiettile perfetto vola dritto.
 - **Grafica**: una bolla "monitor CRT": cerchio d'inchiostro ciano con righe di scansione orizzontali dentro (texture `FX.shield`), un pallino rosso **"● REC"** in alto a destra (`FX.rec`). Nei 220 ms perfetti il bordo è bianco e spesso. A ogni rimando perfetto spunta per 600 ms una scritta piccola a pennarello **"rimborsato 👍"** sopra il geco (è la voce della tommasorveglianza: meme voluto).
 - **Suono**: accensione = ronzio CRT; rimando normale = `sfx.slash` com'è; rimando perfetto = "ding" da notifica.
