@@ -65,7 +65,7 @@ export class Hud {
         this.food = el('div', 'hud-food');
         this.foodKbd = el('kbd', '', '');
         this.foodCount = el('span', 'food-count', '');
-        this.food.append(this.foodKbd, this.foodCount);
+        this.food.append(this.foodCount, this.foodKbd);
         topleft.append(this.hpRow, flowWrap);
 
         this.barre = el('div', 'hud-barre', '♪ 0 barre');

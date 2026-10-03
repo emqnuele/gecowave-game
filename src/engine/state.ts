@@ -1,6 +1,7 @@
 import { COMBAT } from '../config';
 import { BASE_NOTCHES, charmMods, ITEMS, LEGACY_ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
+import { bus } from './events';
 import type { Action, PresetId } from './input/actions';
 
 const SAVE_KEY = 'gecowave-save-v2';
@@ -264,6 +265,7 @@ class GameState {
         }
         this.save.inventory[id] = this.count(id) + n;
         this.persist();
+        bus.emit('inventory-changed', {});
     }
 
     removeItem(id: string, n = 1): boolean {
@@ -271,6 +273,7 @@ class GameState {
         this.save.inventory[id] = this.count(id) - n;
         if (this.save.inventory[id] <= 0) delete this.save.inventory[id];
         this.persist();
+        bus.emit('inventory-changed', {});
         return true;
     }
 
