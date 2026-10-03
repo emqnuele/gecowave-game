@@ -1517,8 +1517,8 @@ input.sx-range::-moz-range-thumb {
 }
 
 .hud-zone {
-  font-family: var(--font-marker);
-  font-size: 13px;
+  font-family: var(--font-fell);
+  font-size: 15px;
   padding: 6px 4px;
 }
 
