@@ -28,7 +28,7 @@ import { TimeTrial } from '../engine/TimeTrial';
 import { StoryManager } from '../engine/StoryManager';
 import { StagingManager } from '../engine/StagingManager';
 import { flashback } from '../engine/FlashbackManager';
-import { FLASHBACK_BEFORE } from '../content/flashbacks';
+import { FLASHBACK_BEFORE, FLASHBACK_ONCE } from '../content/flashbacks';
 import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { Soundscape } from '../engine/audio/Soundscape';
@@ -106,8 +106,8 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     glitchpedro: 'glitchpedro-intro',
 };
 
-/* l'ordine dei rimpianti nel void: ad ognuno la sua verità */
-const VOID_REGRETS: BossKind[] = ['delegato', 'notturno', 'modello', 'revisore', 'garante'];
+/* l'ordine dei rimpianti nel void: due di lametta, poi tre di piema */
+const VOID_REGRETS: BossKind[] = ['notturno', 'modello', 'revisore', 'delegato', 'garante'];
 
 /* la quest di walter baruffoni: sequenza di boss per capitolo.
    l'ultimo di marcetti è walter stesso, rivelato e ingrandito. */
@@ -2147,15 +2147,16 @@ export class GameScene extends Phaser.Scene {
         this.startDialogue(`${this.def.id}-walter-${n}`);
     }
 
-    /* ---------- il void: i rimpianti di piema e lametta ---------- */
+    /* ---------- il void: due rimpianti di lametta, tre di piema ---------- */
 
-    /** quante verità sono già state strappate ai rimpianti (0..5) */
-    private veritaRivelate(): number {
-        return VOID_REGRETS.filter((k) => state.hasFlag(`boss-down-${k}`)).length;
+    /** il primo rimpianto ancora in piedi: con l'ordine cambiato, contare non basta */
+    private nextRegret(): number {
+        const i = VOID_REGRETS.findIndex((k) => !state.hasFlag(`boss-down-${k}`));
+        return i < 0 ? VOID_REGRETS.length : i;
     }
 
     private setupVoid(): void {
-        this.voidStep = this.veritaRivelate();
+        this.voidStep = this.nextRegret();
         // riallineo romero alla verità a cui siamo arrivati
         if (this.companion) {
             const here = this.voidArenas[Math.min(this.voidStep, this.voidArenas.length - 1)];
@@ -2193,15 +2194,15 @@ export class GameScene extends Phaser.Scene {
 
     /** un rimpianto è caduto: si rivela la verità e romero ti porta al prossimo */
     private onVeritaRivelata(idx: number): void {
-        this.voidStep = idx + 1;
-        const last = idx >= VOID_REGRETS.length - 1;
         this.startDialogue(`verita-${idx + 1}`, () => {
-            if (last) {
+            const next = this.nextRegret();
+            this.voidStep = next;
+            if (next >= VOID_REGRETS.length) {
                 this.voidClimax();
                 return;
             }
             // romero non teletrasporta: cammina col player verso la prossima arena (updateVoid)
-            this.time.delayedCall(900, () => this.spawnRegret(idx + 1));
+            this.time.delayedCall(900, () => this.spawnRegret(next));
         });
     }
 
@@ -4710,7 +4711,9 @@ export class GameScene extends Phaser.Scene {
     private startDialogue(id: string, onEnd?: () => void): void {
         // mostra invece di raccontare: prima il flashback filmico, poi 1-2 righe al max
         const fbId = FLASHBACK_BEFORE[id];
-        if (fbId && !flashback.isPlaying) {
+        // certi flashback non si rigiocano: se visti altrove, solo le righe
+        const already = fbId !== undefined && FLASHBACK_ONCE.has(id) && state.save.seenDialogues.includes(`fb-${fbId}`);
+        if (fbId && !already && !flashback.isPlaying) {
             flashback.play(this, this.player, fbId, () => this.startLines(DIALOGUES[id], onEnd));
             return;
         }
