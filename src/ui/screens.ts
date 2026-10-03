@@ -73,7 +73,7 @@ export class Screens {
         defs.setAttribute('width', '0');
         defs.setAttribute('height', '0');
         defs.style.position = 'absolute';
-        defs.innerHTML = '<filter id="sx-ink" x="-5%" y="-20%" width="110%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>';
+        defs.innerHTML = '<filter id="sx-ink" x="-5%" y="-20%" width="110%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter><filter id="sx-ink-thin" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="1.4"/></filter>';
         document.body.append(defs);
         // oro all'avvio: coerente col menu, niente flash verde prima del boot
         this.setZone('yellow');

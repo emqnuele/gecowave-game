@@ -36,7 +36,7 @@ const ACTIVE_ORDER: { id: AbilityId; text: string }[] = [
 export class Hud {
     readonly root: HTMLElement;
     private hpRow: HTMLElement;
-    private flowPips: HTMLElement[];
+    private flowFill: HTMLElement;
     private barre: HTMLElement;
     private zone: HTMLElement;
     private waves: HTMLElement;
@@ -61,12 +61,10 @@ export class Hud {
         this.hpRow = el('div', 'hp-row');
         const flowWrap = el('div', 'flow-wrap');
         this.flowWrap = flowWrap;
-        this.flowPips = [];
-        for (let i = 0; i < 10; i++) {
-            const pip = el('div', 'flow-pip');
-            flowWrap.append(pip);
-            this.flowPips.push(pip);
-        }
+        this.flowFill = el('div', 'flow-fill');
+        const stripes = el('div', 'flow-stripes');
+        this.flowFill.append(stripes);
+        flowWrap.append(this.flowFill);
         this.food = el('div', 'hud-food');
         this.foodKbd = el('kbd', '', '');
         this.foodCount = el('span', 'food-count', '');
@@ -97,7 +95,7 @@ export class Hud {
             this.updateTrenbo();
         });
         bus.on('flow-changed', ({ flow, maxFlow }) => {
-            this.paintPips(flow, maxFlow);
+            this.paintFlow(flow, maxFlow);
             this.updateTrenbo();
             this.refreshWaveFlow(flow);
         });
@@ -143,7 +141,7 @@ export class Hud {
         this.updateTrenbo();
         this.updateDoomsdayVisibility();
         this.refreshFood();
-        this.paintPips(state.run.flow, state.maxFlow);
+        this.paintFlow(state.run.flow, state.maxFlow);
     }
     hide(): void {
         this.root.style.display = 'none';
@@ -242,12 +240,9 @@ export class Hud {
         this.food.classList.toggle('empty', n <= 0);
     }
 
-    /** il flusso a tacche: ognuna scatta quando si riempie */
-    private paintPips(flow: number, maxFlow: number): void {
-        const per = Math.max(1, maxFlow) / this.flowPips.length;
-        this.flowPips.forEach((pip, i) => {
-            pip.classList.toggle('on', flow >= (i + 1) * per);
-        });
+    /** la pennellata avanza col flusso */
+    private paintFlow(flow: number, maxFlow: number): void {
+        this.flowFill.style.width = `${(flow / Math.max(1, maxFlow)) * 100}%`;
         this.flowWrap.classList.toggle('full', flow >= maxFlow);
     }
 

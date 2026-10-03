@@ -293,35 +293,47 @@ body {
 }
 
 .flow-wrap {
-  display: flex;
-  gap: 7px;
+  height: 12px;
+  border-radius: 99px;
   margin: 0 12px 8px;
-  padding: 2px 0;
+  background: rgba(232, 223, 200, 0.06);
+  border: 1px solid var(--sx-line);
 }
 
-/* tacca d'inchiostro spenta */
-.flow-pip {
-  width: 9px;
-  height: 9px;
-  transform: rotate(45deg) scale(0.85);
-  background: rgba(232, 223, 200, 0.22);
-  transition: background 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+/* il flusso è una pennellata: tinta piena coi bordi sbavati d'inchiostro */
+.flow-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #43d17c;
+  filter: url(#sx-ink-thin);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.55);
+  transition: width 0.25s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* si accende di verde con uno scatto quando si riempie */
-.flow-pip.on {
-  transform: rotate(45deg) scale(1);
-  background: #4ade80;
-  box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+/* la pennellata scorre: strisce d'inchiostro in cammino */
+.flow-fill .flow-stripes {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40px;
+  width: calc(100% + 40px);
+  background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(0, 0, 0, 0.22) 7px 10px);
+  animation: flow-slide 0.9s linear infinite;
 }
 
-/* a pieno carico le tacche respirano piano */
-.flow-wrap.full .flow-pip.on {
-  animation: flow-breathe 1.8s ease-in-out infinite;
+@keyframes flow-slide {
+  to { transform: translateX(40px); }
+}
+
+/* a pieno carico la pennellata pulsa */
+.flow-wrap.full .flow-fill {
+  animation: flow-breathe 1.6s ease-in-out infinite;
 }
 
 @keyframes flow-breathe {
-  50% { box-shadow: 0 0 14px rgba(74, 222, 128, 1); }
+  50% { box-shadow: 0 0 18px rgba(74, 222, 128, 0.95); }
 }
 
 .hud-barre {
