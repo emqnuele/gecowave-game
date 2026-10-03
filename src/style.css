@@ -549,6 +549,11 @@ body {
 }
 
 /* ---------- flashback stile film: sottotitoli, mai muri ---------- */
+body.film #hud,
+body.film #toast,
+body.film .subs {
+  display: none !important;
+}
 #flashback-caption {
   position: absolute;
   left: 50%;

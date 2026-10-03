@@ -73,7 +73,15 @@ export class FlashbackManager {
         const ENTER = 1400 * (seen ? 0.8 : 1);
         const EXIT = 900;
         const dur = ENTER + filmDur + EXIT;
-        const canAudio = acoustics.context()?.state === 'running';
+        // l'audio si sveglia qui: sfx sopra si arrangia da solo se manca
+        try { acoustics.resume(); } catch { /* senza audio il film resta muto */ }
+        const canAudio = !!acoustics.context();
+        // il film è l'unica cosa accesa: hud e scritte di gioco spariscono
+        document.body.classList.add('film');
+        scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            document.body.classList.remove('film');
+            this.playing = false;
+        });
 
         // --- il mondo trattiene il fiato ---
         const godPrev = state.godMode;
@@ -99,8 +107,8 @@ export class FlashbackManager {
         const ctx: Ctx = { cx: sx, floorY, tint: fb.tint };
         this.ensureTextures(scene);
 
-        // sala buia + letterbox sottile
-        const dark = scene.add.rectangle(0, 0, W, H, 0x030304, 0).setOrigin(0, 0).setScrollFactor(0).setDepth(150);
+        // sala buia a tutto schermo: la camera zooma, i fondali no
+        const dark = scene.add.rectangle(sx, sy, W * 2.2, H * 2.2, 0x030304, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(150);
         const barH = H * 0.07;
         const top = scene.add.rectangle(0, -barH, W, barH, 0x000000, 1).setOrigin(0, 0).setScrollFactor(0).setDepth(200);
         const bottom = scene.add.rectangle(0, H, W, barH, 0x000000, 1).setOrigin(0, 0).setScrollFactor(0).setDepth(200);
@@ -118,7 +126,7 @@ export class FlashbackManager {
         };
 
         // --- il tornado in ingresso: lo shader avvita il frame live, poi il nero ---
-        scene.tweens.add({ targets: dark, alpha: 0.5, duration: ENTER * 0.6, ease: 'Quad.easeOut' });
+        scene.tweens.add({ targets: dark, alpha: 0.97, duration: ENTER * 0.6, ease: 'Quad.easeOut' });
         scene.tweens.add({ targets: top, y: 0, duration: ENTER * 0.7, ease: 'Cubic.easeOut' });
         scene.tweens.add({ targets: bottom, y: H - barH, duration: ENTER * 0.7, ease: 'Cubic.easeOut' });
         try {
@@ -135,17 +143,15 @@ export class FlashbackManager {
         try {
             vortexPipe = this.vortex(scene, fb.tint, 0, 1, ENTER - 100);
         } catch { vortexPipe = null; }
-        if (!vortexPipe && canAudio) {
+        if (!vortexPipe) {
             // senza WebGL niente shader: almeno le scie (mai più le righe)
             this.warp(scene, fb.tint, 'in', ENTER - 100);
         }
-        if (canAudio) {
-            scene.time.delayedCall(80, () => {
-                try { sfx.death('eco'); } catch { /* mai bloccare */ }
-                try { sfx.rumble(); } catch { /* mai bloccare */ }
-            });
-            timers.push(scene.time.delayedCall(80, () => undefined));
-        }
+        scene.time.delayedCall(80, () => {
+            try { sfx.death('eco'); } catch { /* mai bloccare */ }
+            try { sfx.rumble(); } catch { /* mai bloccare */ }
+        });
+        timers.push(scene.time.delayedCall(80, () => undefined));
         scene.time.delayedCall(ENTER - 180, () => {
             try { cam.fadeOut(180, 0, 0, 0); } catch { /* test */ }
         });
@@ -159,7 +165,7 @@ export class FlashbackManager {
         // --- regia: 3 inquadrature con stacco ---
         const builders = SHOTS[gesture];
         let scope: Scope = this.fresh();
-        const dip = scene.add.rectangle(0, 0, W, H, 0x000000, 0).setOrigin(0, 0).setScrollFactor(0).setDepth(190);
+        const dip = scene.add.rectangle(sx, sy, W * 1.6, H * 1.6, 0x000000, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(190);
 
         const cutTo = (i: number): void => {
             this.clearScope(scene, scope);
@@ -234,10 +240,10 @@ export class FlashbackManager {
                 cam.shake(150, 0.0032);
                 const z = cam.zoom;
                 cam.zoomTo(z * 1.04, 220);
-                if (canAudio) {
+                try {
                     if (gesture === 'saluta') sfx.chime(0, 1);
                     else sfx.heartbeat();
-                }
+                } catch { /* mai bloccare */ }
             } catch { /* test */ }
             showCap(2);
         });
@@ -247,6 +253,7 @@ export class FlashbackManager {
             if (done) return;
             done = true;
             this.playing = false;
+            document.body.classList.remove('film');
             window.removeEventListener('keydown', skip);
             for (const tm of timers) {
                 try { tm.remove(false); } catch { /* test */ }
@@ -259,9 +266,7 @@ export class FlashbackManager {
                 memoryPipe = null;
             } catch { /* test */ }
             // --- il tornado in uscita: il ricordo si riavvita e risputa fuori ---
-            if (canAudio) {
-                try { sfx.death('tecnodrone'); } catch { /* mai bloccare */ }
-            }
+            try { sfx.death('tecnodrone'); } catch { /* mai bloccare */ }
             try {
                 cam.shake(EXIT * 0.5, 0.005);
                 cam.zoomTo(cam.zoom * 1.5, EXIT * 0.45, 'Quad.easeIn');
@@ -618,17 +623,15 @@ export class FlashbackManager {
         return { moon };
     }
 
-    /** foley: solo se l'audio gira davvero (niente pile di oscillatori muti) */
-    private foley(scene: Phaser.Scene, scope: Scope, canAudio: boolean, ms: number, fn: () => void): void {
-        if (!canAudio) return;
+    /** foley: gli sfx muti da soli se il contesto manca, mai pile di errori */
+    private foley(scene: Phaser.Scene, scope: Scope, ms: number, fn: () => void): void {
         this.after(scope, scene, ms, fn);
     }
 
     // ---------- sound design per gesto ----------
 
-    gestureSound(scene: Phaser.Scene, scope: Scope, canAudio: boolean, gesture: Gesture, shot: number, at0: number): void {
-        if (!canAudio) return;
-        const F = (ms: number, fn: () => void): void => this.foley(scene, scope, canAudio, at0 + ms, fn);
+    gestureSound(scene: Phaser.Scene, scope: Scope, _canAudio: boolean, gesture: Gesture, shot: number, at0: number): void {
+        const F = (ms: number, fn: () => void): void => this.foley(scene, scope, at0 + ms, fn);
         switch (gesture) {
             case 'passa-carta':
                 if (shot === 0) { F(200, () => sfx.step('stone')); F(520, () => sfx.step('stone')); F(750, () => sfx.creak()); }
