@@ -905,13 +905,25 @@ button.phone-row {
 }
 
 .realm-map .node text {
-  font-family: var(--font-marker);
-  font-size: 13px;
-  fill: rgba(255, 255, 255, 0.8);
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
+  fill: var(--sx-bone);
 }
 
 .realm-map .node.locked text {
-  fill: rgba(255, 255, 255, 0.28);
+  fill: rgba(232, 223, 200, 0.28);
+}
+
+.realm-map .here {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: here-ping 2.2s ease-out infinite;
+}
+
+@keyframes here-ping {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
 }
 
 .realm-map .node:focus-visible circle,
@@ -1060,8 +1072,9 @@ button.phone-row {
 }
 
 .post .author {
-  font-family: var(--font-marker);
-  font-size: 15px;
+  font-family: var(--font-fell);
+  font-size: 16px;
+  letter-spacing: 0.06em;
 }
 
 .post .handle {
@@ -1070,9 +1083,11 @@ button.phone-row {
 }
 
 .post p {
-  font-size: 11px;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 14px;
   line-height: 1.65;
-  color: var(--zinc-300);
+  color: #cfc6b0;
 }
 
 .post .like {

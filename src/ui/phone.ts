@@ -785,7 +785,7 @@ export class Phone {
         const path = document.createElementNS(ns, 'path');
         path.setAttribute('d', d);
         path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', 'rgba(255,255,255,0.22)');
+        path.setAttribute('stroke', 'rgba(207,167,92,0.45)');
         path.setAttribute('stroke-width', '3');
         path.setAttribute('stroke-dasharray', '7 7');
         path.setAttribute('stroke-linecap', 'round');
