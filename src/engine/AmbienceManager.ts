@@ -17,11 +17,14 @@ interface Follower {
 export class AmbienceManager {
     private scene: Phaser.Scene;
     private followers: Follower[] = [];
+    /** gli emettitori di pioggia: si spengono al coperto */
+    private rain: { emitter: Phaser.GameObjects.Particles.ParticleEmitter; baseFreq: number }[] = [];
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
         scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.followers = [];
+            this.rain = [];
         });
     }
 
@@ -31,13 +34,19 @@ export class AmbienceManager {
         if (biome.lightShafts) this.addLightShafts(biome, grid, seedKey);
     }
 
-    update(): void {
+    update(outdoor: boolean): void {
         const v = this.scene.cameras.main.worldView;
         for (const f of this.followers) {
             f.emitter.setPosition(v.x - f.pad, v.y - f.pad);
             const zone = f.emitter.emitZones[0] as Phaser.GameObjects.Particles.Zones.RandomZone | undefined;
             const shape = zone?.source as Phaser.Geom.Rectangle | undefined;
             if (shape) shape.setSize(v.width + f.pad * 2, v.height + f.pad * 2);
+        }
+        // al coperto non piove: si risparmiano ~280 particelle e smette
+        // di piovere in testa dentro le stanze
+        for (const r of this.rain) {
+            r.emitter.setVisible(outdoor);
+            r.emitter.quantity = outdoor ? 1 : 0;
         }
     }
 
@@ -136,10 +145,12 @@ export class AmbienceManager {
             case 'embers':
                 add('p-dot', { lifespan: 3200, speedX: { min: -30, max: 30 }, speedY: { min: -80, max: -30 }, scale: { start: 0.3, end: 0 }, alpha: { start: 1, end: 0 }, tint: [0xff8a3d, 0xffc06b, b.accent], frequency: 90, blendMode: Phaser.BlendModes.ADD }, 21);
                 break;
-            case 'rain':
-                add('amb-streak', { lifespan: 900, speedX: { min: -140, max: -110 }, speedY: { min: 900, max: 1100 }, rotate: 8, scaleY: { min: 0.8, max: 1.4 }, alpha: { start: 0.3, end: 0.15 }, tint: shade(b.rim, 0.1), frequency: 6 }, 21);
-                add('amb-streak', { lifespan: 1300, speedX: { min: -80, max: -60 }, speedY: { min: 600, max: 700 }, rotate: 6, alpha: { start: 0.16, end: 0.05 }, tint: b.haze, frequency: 10 }, 0);
+            case 'rain': {
+                const r1 = add('amb-streak', { lifespan: 900, speedX: { min: -140, max: -110 }, speedY: { min: 900, max: 1100 }, rotate: 8, scaleY: { min: 0.8, max: 1.4 }, alpha: { start: 0.3, end: 0.15 }, tint: shade(b.rim, 0.1), frequency: 6 }, 21);
+                const r2 = add('amb-streak', { lifespan: 1300, speedX: { min: -80, max: -60 }, speedY: { min: 600, max: 700 }, rotate: 6, alpha: { start: 0.16, end: 0.05 }, tint: b.haze, frequency: 10 }, 0);
+                this.rain.push({ emitter: r1, baseFreq: 6 }, { emitter: r2, baseFreq: 10 });
                 break;
+            }
             case 'bubbles':
                 add('amb-bubble', { lifespan: 4000, speedX: { min: -8, max: 8 }, speedY: { min: -50, max: -20 }, scale: { min: 0.4, max: 1 }, alpha: { start: 0.45, end: 0 }, tint: b.accent, frequency: 260 }, 3);
                 break;

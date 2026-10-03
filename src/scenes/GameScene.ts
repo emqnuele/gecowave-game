@@ -2153,7 +2153,7 @@ export class GameScene extends Phaser.Scene {
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
         this.parallax.update(time);
-        this.ambience.update();
+        this.ambience.update(this.layout ? !!this.roomAt(this.player.x, this.player.y)?.surface : !this.biome.indoor);
         this.water.update(time);
 
         this.trackSafePosition(delta);
