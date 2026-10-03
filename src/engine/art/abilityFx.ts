@@ -8,7 +8,6 @@ import { crossHatch, glowSpot, hatch, hex, inkLine, inkShape, mulberry32, wobble
 export const FX = {
     dashGhost: 'fx-dash-ghost',
     ringJump: 'fx-ring-jump',
-    scratch: 'fx-scratch',
     wave1: 'fx-wave-1',
     wave2: 'fx-wave-2',
     waveTap: 'fx-wave-tap',
@@ -89,15 +88,6 @@ function ringJump(): HTMLCanvasElement {
     ctx.moveTo(w[0]!.x, w[0]!.y);
     for (const p of w) ctx.lineTo(p.x, p.y);
     ctx.stroke();
-    return el;
-}
-
-/* graffio corto sul muro */
-function scratch(): HTMLCanvasElement {
-    const { el, ctx } = cv(28, 20);
-    const rnd = mulberry32(4103);
-    inkLine(ctx, [{ x: 3, y: 5 }, { x: 25, y: 7 }], rnd, hex(0xe8e6df), 2.5, 1);
-    inkLine(ctx, [{ x: 4, y: 12 }, { x: 24, y: 14 }], rnd, hex(0xe8e6df), 2, 1);
     return el;
 }
 
@@ -473,7 +463,6 @@ function fragmentGlow(): HTMLCanvasElement {
 export function ensureAbilityFx(scene: Phaser.Scene): void {
     add(scene, FX.dashGhost, dashGhost());
     add(scene, FX.ringJump, ringJump());
-    add(scene, FX.scratch, scratch());
     add(scene, FX.waveTap, wave(0));
     addGlow(scene, FX.waveTap, waveGlow(0));
     add(scene, FX.wave1, wave(1));

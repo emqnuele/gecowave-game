@@ -228,11 +228,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             if (body.velocity.y > PHYSICS.wallSlideSpeed) body.setVelocityY(PHYSICS.wallSlideSpeed);
             this.airJumpUsed = false;
             if (now >= this.wallDustAt) {
-                this.wallDustAt = now + 90;
-                // graffio sul muro: resta e svanisce piano
-                const mark = this.scene.add.image(this.x + pressingWall * 14, this.y + 6, FX.scratch)
-                    .setDepth(3).setFlipX(pressingWall < 0).setAlpha(0.85);
-                this.scene.tweens.add({ targets: mark, alpha: 0, duration: 1200, onComplete: () => mark.destroy() });
+                this.wallDustAt = now + 110;
+                // polvere dal muro: si stacca e cade lungo la parete
+                const puff = this.scene.add.particles(this.x + pressingWall * 12, this.y + 10, 'p-dot', {
+                    speed: { min: 20, max: 80 }, angle: { min: 60, max: 120 },
+                    scale: { start: 0.45, end: 0 }, alpha: { start: 0.5, end: 0 },
+                    tint: 0xa8a29e, lifespan: 450, quantity: 2, stopAfter: 2,
+                });
+                this.scene.time.delayedCall(800, () => puff.destroy());
             }
         } else if (this.grounded) {
             this.wallUntil = 0;
