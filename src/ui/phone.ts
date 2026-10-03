@@ -960,7 +960,7 @@ export class Phone {
             const lines: [string, string][] = [
                 ['esplorazione', comp.total > 0 ? `${comp.visited}/${comp.total} · ${comp.percent}%` : 'mappa non disponibile'],
                 ['cuori', comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : 'nessun cuore qui'],
-                ['cose', `${comp.things.found}/${comp.things.total}`],
+                ['segreti', `${comp.things.found}/${comp.things.total}`],
             ];
             for (const [k, v] of lines) {
                 const line = el('div', 'stat-line');
@@ -1045,7 +1045,7 @@ export class Phone {
                     // conti del capitolo già visitato: gli stessi del riepilogo
                     const comp = chapterCompletion(id);
                     if (comp) {
-                        const done = el('div', 'punch', `esplorazione: ${comp.total > 0 ? `${comp.visited}/${comp.total} · ${comp.percent}%` : 'mappa non disponibile'} · cuori: ${comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : '—'} · cose: ${comp.things.found}/${comp.things.total}`);
+                        const done = el('div', 'punch', `esplorazione: ${comp.total > 0 ? `${comp.visited}/${comp.total} · ${comp.percent}%` : 'mappa non disponibile'} · cuori: ${comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : '—'} · segreti: ${comp.things.found}/${comp.things.total}`);
                         card.append(done);
                     }
                     info.append(card);

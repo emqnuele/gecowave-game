@@ -269,7 +269,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         const hearts = summary.hearts;
         const hChip = chip(hearts.total === 0 ? 'nessun cuore qui' : `cuori ${hearts.found}/${hearts.total}`, hearts.total > 0 && hearts.found < hearts.total);
         const things = summary.things;
-        const tChip = chip(`cose ${things.found}/${things.total}`, things.found < things.total);
+        const tChip = chip(`segreti ${things.found}/${things.total}`, things.found < things.total);
         const sChip = chip(`capitolo + ${fmt(summary.score.chapter)}`, false);
         for (const c of [eChip, hChip, tChip, sChip]) {
             c.classList.add('lit');
@@ -447,7 +447,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     // atto quarto: le cose
     const things = summary.things;
     const thingBeat = el('div', 'chsum-beat');
-    thingBeat.append(el('div', 'chsum-label', 'cose trovate'));
+    thingBeat.append(el('div', 'chsum-label', 'segreti del realm'));
     const thingNum = el('div', 'chsum-mid', '');
     const thingNote = el('div', 'chsum-subline', 'lore, maschere, tacche, amuleti, missioni');
     thingBeat.append(thingNum, thingNote);
@@ -456,7 +456,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         thingBeat.classList.add('lit');
         if (things.total === 0) {
             thingNum.textContent = '—';
-            thingNote.textContent = 'niente da raccogliere qui';
+            thingNote.textContent = 'qui niente si nasconde';
             return;
         }
         count(1400, things.found, (v) => {
@@ -467,7 +467,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         });
     });
     later(after(1400 + 700 + 1100), () => {
-        const c = chip(`cose ${things.found}/${things.total}`, things.found < things.total);
+        const c = chip(`segreti ${things.found}/${things.total}`, things.found < things.total);
         flyTo(thingBeat, dock, c, () => {});
         thingBeat.classList.add('leaving');
     });
