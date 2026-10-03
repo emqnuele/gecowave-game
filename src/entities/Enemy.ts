@@ -604,7 +604,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             color: this.arch.glowColor,
             splitsInto: this.arch.splitsInto ?? null,
         });
-        this.scene.add.particles(this.x, this.y, 'p-spark', {
+        const burst = this.scene.add.particles(this.x, this.y, 'p-spark', {
             speed: { min: 100, max: 280 },
             scale: { start: 1, end: 0 },
             tint: this.arch.glowColor,
@@ -612,6 +612,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             quantity: 14,
             stopAfter: 14,
         });
+        this.scene.time.delayedCall(800, () => burst.destroy());
         this.destroy();
     }
 

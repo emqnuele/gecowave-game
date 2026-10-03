@@ -227,6 +227,7 @@ export class GameScene extends Phaser.Scene {
     private scudoGfx: Phaser.GameObjects.Graphics | null = null;
     // inseguimenti nella tana: lochef ci prova più di una volta
     private chaseSprite: Phaser.GameObjects.Sprite | null = null;
+    private chaseTrail: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
     private chaseStarts: number[] = [];
     private chaseEnds: number[] = [];
     private chaseZoneIdx = -1;
@@ -314,6 +315,7 @@ export class GameScene extends Phaser.Scene {
         this.scudoUntil = 0;
         this.scudoGfx = null;
         this.chaseSprite = null;
+        this.chaseTrail = null;
         this.chaseStarts = [];
         this.chaseEnds = [];
         this.chaseZoneIdx = -1;
@@ -1219,7 +1221,7 @@ export class GameScene extends Phaser.Scene {
                 state.setFlag(`aperta-${id}`);
                 this.interactables = this.interactables.filter((it) => it !== entry);
                 sfx.unlock();
-                this.add.particles(door.x, door.y, 'p-spark', {
+                const burst = this.add.particles(door.x, door.y, 'p-spark', {
                     speed: { min: 40, max: 160 },
                     scale: { start: 0.7, end: 0 },
                     tint: 0x60a5fa,
@@ -1227,6 +1229,7 @@ export class GameScene extends Phaser.Scene {
                     quantity: 20,
                     stopAfter: 20,
                 });
+                this.time.delayedCall(900, () => burst.destroy());
                 door.destroy();
                 bus.emit('toast', { text: TOASTS.portaAperta });
             },
@@ -2311,7 +2314,7 @@ export class GameScene extends Phaser.Scene {
     private destroyBreakableWall(wall: Phaser.Physics.Arcade.Sprite): void {
         sfx.hit();
         this.cameras.main.shake(80, 0.005);
-        this.add.particles(wall.x, wall.y, 'p-spark', {
+        const burst = this.add.particles(wall.x, wall.y, 'p-spark', {
             speed: { min: 60, max: 200 },
             scale: { start: 0.8, end: 0 },
             tint: 0xcccccc,
@@ -2319,6 +2322,7 @@ export class GameScene extends Phaser.Scene {
             quantity: 12,
             stopAfter: 12,
         });
+        this.time.delayedCall(800, () => burst.destroy());
         this.nav.open(Math.floor(wall.x / TILE), Math.floor(wall.y / TILE));
         wall.destroy();
     }
@@ -3038,7 +3042,7 @@ export class GameScene extends Phaser.Scene {
         proj.setFlipX(dir < 0);
         proj.setVelocityX(dir * COMBAT.risonanteSpeed);
         this.lighting.follow(proj, 0x4ade80, 130, 0.8);
-        this.add.particles(0, 0, 'p-spark', {
+        const trail = this.add.particles(0, 0, 'p-spark', {
             follow: proj,
             speed: 30,
             scale: { start: 0.5, end: 0 },
@@ -3046,6 +3050,7 @@ export class GameScene extends Phaser.Scene {
             lifespan: 200,
             frequency: 30,
         }).setDepth(4);
+        proj.setData('trail', trail);
         this.time.delayedCall(1600, () => proj.active && this.popProjectile(proj));
     }
 
@@ -3094,7 +3099,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     private cloneHitFx(target: Phaser.GameObjects.Sprite): void {
-        this.add.particles(target.x, target.y, 'p-spark', {
+        const fx = this.add.particles(target.x, target.y, 'p-spark', {
             speed: { min: 60, max: 140 },
             scale: { start: 0.5, end: 0 },
             tint: 0x22d3ee,
@@ -3102,6 +3107,7 @@ export class GameScene extends Phaser.Scene {
             quantity: 5,
             stopAfter: 5,
         }).setDepth(6);
+        this.time.delayedCall(600, () => fx.destroy());
     }
 
     private nearestHostile(x: number, y: number): (Phaser.GameObjects.Sprite & { active: boolean }) | null {
@@ -3234,10 +3240,11 @@ export class GameScene extends Phaser.Scene {
                 body.velocity.x *= 0.45;
                 if (tick) {
                     e.takeDamage(COMBAT.acquaDamage, e.x);
-                    this.add.particles(e.x, e.y, 'p-dot', {
+                    const splash = this.add.particles(e.x, e.y, 'p-dot', {
                         speed: { min: 10, max: 30 }, angle: { min: 240, max: 300 },
                         scale: { start: 0.4, end: 0 }, tint: 0x22d3ee, lifespan: 400, quantity: 3, stopAfter: 3,
                     });
+                    this.time.delayedCall(800, () => splash.destroy());
                 }
             });
         }
@@ -3295,7 +3302,8 @@ export class GameScene extends Phaser.Scene {
                 this.chaseSprite = chef;
                 this.chaseStartedAt = this.time.now;
                 this.lighting.follow(chef, 0xf87171, 300, 1.2);
-                this.add.particles(0, 0, 'p-dot', {
+                this.chaseTrail?.destroy();
+                this.chaseTrail = this.add.particles(0, 0, 'p-dot', {
                     follow: chef,
                     speed: { min: 10, max: 40 },
                     scale: { start: 0.6, end: 0 },
@@ -3327,6 +3335,8 @@ export class GameScene extends Phaser.Scene {
         if (this.progressAt(this.player.x, this.player.y) >= endP || this.time.now - this.chaseStartedAt > 50000) {
             this.chaseDone[this.chaseZoneIdx] = true;
             this.chaseSprite = null;
+            this.chaseTrail?.destroy();
+            this.chaseTrail = null;
             this.tweens.add({
                 targets: chef,
                 x: chef.x - 500,
@@ -3629,7 +3639,7 @@ export class GameScene extends Phaser.Scene {
         bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
         if (pedro) {
             // pedro ha quello che voleva: si dissolve in glitch
-            this.add.particles(pedro.x, pedro.y, 'p-spark', {
+            const glitch = this.add.particles(pedro.x, pedro.y, 'p-spark', {
                 speed: { min: 100, max: 300 },
                 scale: { start: 1.2, end: 0 },
                 tint: 0x22d3ee,
@@ -3637,6 +3647,7 @@ export class GameScene extends Phaser.Scene {
                 quantity: 24,
                 stopAfter: 24,
             });
+            this.time.delayedCall(900, () => glitch.destroy());
             this.tweens.add({ targets: pedro, alpha: 0, duration: 600, onComplete: () => pedro.destroy() });
         }
         this.startDialogue('pedro-patto', () => {
@@ -3713,7 +3724,7 @@ export class GameScene extends Phaser.Scene {
     private onBossLamette({ xs, y }: { xs: number[]; y: number }): void {
         for (const x of xs) {
             // telegrafo a terra prima della lama
-            this.add.particles(x, y + 40, 'p-dot', {
+            const tele = this.add.particles(x, y + 40, 'p-dot', {
                 speed: { min: 10, max: 50 },
                 angle: { min: 250, max: 290 },
                 scale: { start: 0.5, end: 0 },
@@ -3722,6 +3733,7 @@ export class GameScene extends Phaser.Scene {
                 quantity: 8,
                 stopAfter: 8,
             });
+            this.time.delayedCall(750, () => tele.destroy());
             this.time.delayedCall(480, () => {
                 if (!this.scene.isActive()) return;
                 const blade = this.lametteGroup.create(x, y + 90, 'proj-lametta') as Phaser.Physics.Arcade.Sprite;
@@ -3738,13 +3750,15 @@ export class GameScene extends Phaser.Scene {
 
     private popProjectile(proj: Phaser.Physics.Arcade.Sprite): void {
         if (!proj.active) return;
-        this.add.particles(proj.x, proj.y, 'p-dot', {
+        (proj.getData('trail') as Phaser.GameObjects.Particles.ParticleEmitter | undefined)?.destroy();
+        const pop = this.add.particles(proj.x, proj.y, 'p-dot', {
             speed: { min: 30, max: 90 },
             scale: { start: 0.4, end: 0 },
             lifespan: 200,
             quantity: 4,
             stopAfter: 4,
         });
+        this.time.delayedCall(600, () => pop.destroy());
         proj.destroy();
     }
 
@@ -4047,7 +4061,8 @@ export class GameScene extends Phaser.Scene {
                 if (!pedro) return;
                 const { x, y } = pedro;
                 this.boss = null;
-                this.add.particles(x, y, 'p-spark', { speed: { min: 80, max: 260 }, scale: { start: 1.2, end: 0 }, tint: [0x22d3ee, 0xf87171], lifespan: 600, quantity: 30, stopAfter: 30 });
+                const boom = this.add.particles(x, y, 'p-spark', { speed: { min: 80, max: 260 }, scale: { start: 1.2, end: 0 }, tint: [0x22d3ee, 0xf87171], lifespan: 600, quantity: 30, stopAfter: 30 });
+                this.time.delayedCall(1000, () => boom.destroy());
                 this.tweens.add({ targets: pedro, alpha: 0.35, duration: 500 });
                 // pedro resta lì, spento, mentre il glitch esce da lui
                 pedro.engaged = false;
@@ -4181,7 +4196,7 @@ export class GameScene extends Phaser.Scene {
         mic.setTint(0x4ade80);
         bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
         bus.emit('toast', { text: TOASTS.checkpoint });
-        this.add.particles(mic.x, mic.y - 10, 'p-spark', {
+        const lit = this.add.particles(mic.x, mic.y - 10, 'p-spark', {
             speed: { min: 60, max: 180 },
             scale: { start: 0.8, end: 0 },
             tint: 0x4ade80,
@@ -4189,6 +4204,7 @@ export class GameScene extends Phaser.Scene {
             quantity: 16,
             stopAfter: 16,
         });
+        this.time.delayedCall(900, () => lit.destroy());
     }
 
     /** chi è sveglio e cattivo, per i passanti che devono scappare */

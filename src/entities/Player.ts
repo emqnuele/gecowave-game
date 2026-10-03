@@ -183,10 +183,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.airJumpUsed = false;
             if (now >= this.wallDustAt) {
                 this.wallDustAt = now + 90;
-                this.scene.add.particles(this.x + pressingWall * 16, this.y + 10, 'p-dot', {
+                const dust = this.scene.add.particles(this.x + pressingWall * 16, this.y + 10, 'p-dot', {
                     speed: { min: 10, max: 40 }, angle: { min: 240, max: 300 }, scale: { start: 0.35, end: 0 },
                     alpha: { start: 0.5, end: 0 }, lifespan: 260, quantity: 1, stopAfter: 1,
                 });
+                this.scene.time.delayedCall(600, () => dust.destroy());
             }
         } else if (this.grounded) {
             this.wallUntil = 0;
@@ -332,7 +333,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.nextSmelaStun = now + 5000;
                 this.stunnedUntil = now + 1100;
                 // l'animazione che sai. effetto smela III.
-                this.scene.add.particles(this.x, this.y + 10, 'p-dot', {
+                const puff = this.scene.add.particles(this.x, this.y + 10, 'p-dot', {
                     speed: { min: 10, max: 40 },
                     angle: { min: 60, max: 120 },
                     scale: { start: 0.5, end: 0 },
@@ -341,6 +342,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                     quantity: 6,
                     stopAfter: 6,
                 });
+                this.scene.time.delayedCall(900, () => puff.destroy());
             }
         }
 
@@ -615,7 +617,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     private dust(count: number): void {
-        this.scene.add.particles(this.x, this.y + 24, 'p-dot', {
+        const dust = this.scene.add.particles(this.x, this.y + 24, 'p-dot', {
             speed: { min: 20, max: 70 },
             angle: { min: 200, max: 340 },
             scale: { start: 0.5, end: 0 },
@@ -624,10 +626,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             quantity: count,
             stopAfter: count,
         });
+        this.scene.time.delayedCall(750, () => dust.destroy());
     }
 
     private burst(tint: number, count: number): void {
-        this.scene.add.particles(this.x, this.y, 'p-spark', {
+        const burst = this.scene.add.particles(this.x, this.y, 'p-spark', {
             speed: { min: 120, max: 260 },
             scale: { start: 0.9, end: 0 },
             tint,
@@ -635,5 +638,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             quantity: count,
             stopAfter: count,
         });
+        this.scene.time.delayedCall(700, () => burst.destroy());
     }
 }
