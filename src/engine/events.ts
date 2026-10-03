@@ -34,6 +34,8 @@ export interface GameEvents {
     /** battuta parlata a gioco in corso: sottotitolo che non ferma niente */
     'bark': { speaker: string; color: ZoneColor; text: string; glitch?: boolean; urgent?: boolean };
     'bark-clear': {};
+    /** la tana ti ha sentito nell'armadio: lochef torna in caccia da vicino */
+    'tana-sniffed': {};
 }
 
 type Handler<T> = (payload: T) => void;

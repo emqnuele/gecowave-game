@@ -56,7 +56,7 @@ import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { createMechanic, type Mechanic } from '../engine/mechanics';
 import { hitMult, LESSONS } from '../content/lessons';
-import { barksFor, LAMETTA_BARKS } from '../content/barks';
+import { BOSS_BARKS, barksFor, LAMETTA_BARKS } from '../content/barks';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
 
 interface SceneData {
@@ -245,6 +245,9 @@ export class GameScene extends Phaser.Scene {
     private scudoGfx: Phaser.GameObjects.Graphics | null = null;
     // inseguimenti nella tana: lochef ci prova più di una volta
     private chaseSprite: Phaser.GameObjects.Sprite | null = null;
+    private chaseLastSeen = { x: 0, y: 0 };
+    private chaseWhisperAt = 0;
+    private chaseWhisperIdx = 0;
     private chaseTrail: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
     private chaseStarts: number[] = [];
     private chaseEnds: number[] = [];
@@ -354,6 +357,8 @@ export class GameScene extends Phaser.Scene {
         this.chaseStarts = [];
         this.chaseEnds = [];
         this.chaseZoneIdx = -1;
+        this.chaseWhisperAt = 0;
+        this.chaseWhisperIdx = 0;
         this.chaseDone = [];
         this.ospite12Sprite = null;
         this.ospite12Interact = null;
@@ -530,12 +535,24 @@ export class GameScene extends Phaser.Scene {
                 awakeEnemies: () => this.awakeEnemies(),
                 quizDoor: (id, x, y) => this.spawnQuizDoor(id, x, y),
                 trialRunning: () => !!this.trial?.active,
+                chaseRunning: () => !!this.chaseSprite?.active,
+                chaseRanges: () => this.chaseStarts.map((start, i) => ({ start, end: this.chaseEnds[i] ?? Infinity })),
+                addInteractable: (x, y, range, onInteract) => {
+                    const entry: Interactable = { x, y, range, onInteract };
+                    this.interactables.push(entry);
+                    return () => {
+                        this.interactables = this.interactables.filter((it) => it !== entry);
+                    };
+                },
             });
         }
+        // la casa ti sente: lochef torna in caccia da vicino
+        const sniffedOff = bus.on('tana-sniffed', () => this.onTanaSniffed());
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.mechanic?.destroy();
             this.mechanic = null;
             this.silenceBoss();
+            sniffedOff();
             this.pedroGhost?.destroy();
             this.pedroGhost = null;
             this.marks33?.destroy();
@@ -3789,6 +3806,34 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
+        // da nascosto lochef perde la traccia: punta l'ultimo punto visto, poi si allontana
+        if (this.player.hidden) {
+            const ls = this.chaseLastSeen;
+            const hx = ls.x - chef.x;
+            const hy = ls.y - 30 - chef.y;
+            const hdist = Math.hypot(hx, hy) || 1;
+            if (hdist > 70) {
+                chef.x += (hx / hdist) * 260 * (delta / 1000);
+                chef.y += (hy / hdist) * 260 * (delta / 1000);
+            } else {
+                const ax = chef.x - this.player.x;
+                const ay = chef.y - this.player.y;
+                const adist = Math.hypot(ax, ay) || 1;
+                chef.x += (ax / adist) * 60 * (delta / 1000);
+                chef.y += (ay / adist) * 60 * (delta / 1000);
+                if (this.time.now >= this.chaseWhisperAt) {
+                    this.chaseWhisperAt = this.time.now + 5000;
+                    const lines = BOSS_BARKS.lochef?.extra?.whisper ?? [];
+                    const raw = lines.length ? lines[this.chaseWhisperIdx++ % lines.length] : 'dove sei, piccolo?';
+                    bus.emit('bark', { speaker: 'lochef85', color: 'red', text: typeof raw === 'string' ? raw : raw.text, urgent: true });
+                }
+            }
+            chef.setFlipX(hx > 0);
+            chef.setFrame(Math.floor(this.time.now / 110) % creatureFrames(this, 'boss-lochef'));
+            return;
+        }
+        this.chaseLastSeen = { x: this.player.x, y: this.player.y };
+
         // fluttua verso di te, attraversa i muri: è casa sua. a elastico: lontano corre, vicino ti lascia un respiro
         const dx = this.player.x - chef.x;
         const dy = this.player.y - 30 - chef.y;
@@ -3807,6 +3852,16 @@ export class GameScene extends Phaser.Scene {
                 chef.x -= Math.sign(dx) * 160;
             }
         }
+    }
+
+    /** la casa ti ha sentito nell'armadio: lochef torna in caccia da vicino */
+    private onTanaSniffed(): void {
+        const chef = this.chaseSprite;
+        if (!chef?.active || this.player.dead || this.exiting) return;
+        const side = chef.x < this.player.x ? -1 : 1;
+        chef.x = this.player.x + side * 200;
+        chef.y = this.player.y - 30;
+        bus.emit('bark', { speaker: 'lochef85', color: 'red', text: 'la casa ti sente.', urgent: true });
     }
 
     /* ---------- arena di lametta ---------- */

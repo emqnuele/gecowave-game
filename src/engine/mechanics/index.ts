@@ -2,6 +2,7 @@ import { BusDoors } from './BusDoors';
 import { CANTINA_CAMS, Cameras, SORVEGLIANZA_CAMS } from './Cameras';
 import { BELT, FloorFlow, STREAM } from './FloorFlow';
 import { Snipers } from './Snipers';
+import { Tana } from './Tana';
 import { pathGaps, seeded, type Mechanic, type MechanicCtx } from './types';
 import { TILE } from '../../config';
 
@@ -36,6 +37,7 @@ export function createMechanic(ctx: MechanicCtx): Mechanic | null {
         case 'sorveglianza': return new Cameras(ctx, SORVEGLIANZA_CAMS);
         case 'tecnokill': return new Snipers(ctx);
         case 'mente': return new MindDoors(ctx);
+        case 'tana': return new Tana(ctx);
         default: return null;
     }
 }

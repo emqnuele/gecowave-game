@@ -29,6 +29,12 @@ export interface MechanicCtx {
     quizDoor: (id: string, x: number, y: number) => void;
     /** la corsa contro il citelis è in corso: i tempi sono stati misurati senza porte */
     trialRunning: () => boolean;
+    /** un inseguimento è in corso: la tana resta in silenzio finché dura */
+    chaseRunning: () => boolean;
+    /** le zone di caccia come intervalli di progresso, per i nascondigli */
+    chaseRanges: () => { start: number; end: number }[];
+    /** un punto E premibile messo dalla meccanica (gli armadi della tana) */
+    addInteractable: (x: number, y: number, range: number, onInteract: () => void) => () => void;
 }
 
 export interface Mechanic {

@@ -55,6 +55,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     headUnder = false;
     /** spinta del posto (corrente del rio, nastri dello stabilimento), px/s; la scena la rimette ogni fotogramma */
     drift = 0;
+    /** tana: dentro l'armadio non si vede, non si muove, non si prende danno */
+    hidden = false;
     private stunnedUntil = 0;
     private nextSmelaStun = 0;
     private nextTrenDrain = 0;
@@ -134,7 +136,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     get invulnerable(): boolean {
-        return state.godMode || this.dashing || this.scene.time.now < this.invulnUntil;
+        return state.godMode || this.dashing || this.hidden || this.scene.time.now < this.invulnUntil;
     }
 
     private get grounded(): boolean {
@@ -143,6 +145,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     private get stunned(): boolean {
         return this.scene.time.now < this.stunnedUntil;
+    }
+
+    /** tana: da nascosto, un tasto di movimento fa uscire dall'armadio */
+    get movePressed(): boolean {
+        return this.keys.left.isDown || this.keys.right.isDown || this.keys.up.isDown || this.keys.down.isDown
+            || this.keys.jump.isDown || this.cursors.left.isDown || this.cursors.right.isDown
+            || this.cursors.up.isDown || this.cursors.down.isDown;
     }
 
     private emitVitals(hurt: boolean): void {
@@ -157,6 +166,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.updateMalusERigenerazione(now);
         this.updateBuffs(delta);
+        if (this.hidden) {
+            body.setAccelerationX(0);
+            body.setVelocity(0, 0);
+            return;
+        }
         if (this.stunned) {
             body.setAccelerationX(0);
             body.setVelocityX(body.velocity.x * 0.8);
