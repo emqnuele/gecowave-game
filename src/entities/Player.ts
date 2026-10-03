@@ -431,12 +431,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.attackAnimUntil = now + 260;
         this.attackActive = true;
         this.attackDir = dir;
-        if (dir === 'down' && !this.grounded) {
-            // schianto: parte la picchiata, si ferma a terra o sul pogo
-            this.slamming = true;
-            this.slamUntil = now + 4000;
+        {
+            // schianto: se stai cadendo, qualsiasi attacco diventa picchiata.
+            // parte la picchiata, si ferma a terra o sul pogo
             const slamBody = this.body as Phaser.Physics.Arcade.Body;
-            slamBody.setVelocityY(Math.max(slamBody.velocity.y, COMBAT.slamFall));
+            if (!this.grounded && slamBody.velocity.y > COMBAT.slamMinFall) {
+                this.attackDir = 'down';
+                this.slamming = true;
+                this.slamUntil = now + 4000;
+                slamBody.setVelocityY(Math.max(slamBody.velocity.y, COMBAT.slamFall));
+            }
         }
         this.comboResetAt = now + COMBAT.comboWindowMs;
         sfx.slash();
@@ -444,7 +448,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // il frame d'attacco è largo il doppio: l'origine va sul corpo
         this.setOrigin(this.flipX ? 0.75 : 0.25, 0.5);
         this.play('p-attack', true);
-        this.slashVisual(dir, this.comboStep);
+        this.slashVisual(this.attackDir, this.comboStep);
         this.comboStep = (this.comboStep + 1) % 3;
     }
 

@@ -2364,7 +2364,7 @@ export class GameScene extends Phaser.Scene {
         }
         if (!state.hasFlag('spiegato-schianto')) {
             state.setFlag('spiegato-schianto');
-            bus.emit('toast', { text: 'schianto! giù+attacco in aria sfonda i muri dall\u2019alto.' });
+            bus.emit('toast', { text: 'schianto! attacca mentre cadi per sfondare dall\u2019alto.' });
         }
     }
 

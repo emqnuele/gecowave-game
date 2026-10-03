@@ -31,7 +31,7 @@ const CONTROLS: [string, string][] = [
     ['salta (e rimbalzo a mezz\'aria)', 'SPAZIO'],
     ['attacca — 3 colpi = combo', 'J / clic'],
     ['attacca in alto', 'W+J in aria'],
-    ['schianto (sfonda muri e nemici)', 'S+J in aria'],
+    ['schianto (sfonda muri e nemici)', 'attacca mentre cadi'],
     ['scivolata', 'SHIFT / K'],
     ['colpo risonante (carica)', 'F tieni premuto'],
     ['riflesso distorto', 'G'],

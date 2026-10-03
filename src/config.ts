@@ -40,7 +40,9 @@ export const COMBAT = {
     attackCooldownMs: 300,
     attackActiveMs: 140,
     attackRange: 78,
-    /** schianto: giù+attacco in aria, picchiata che sfonda i muri dall'alto */
+    /** schianto: giù+attacco in aria, picchiata che sfonda i muri dall'alto.
+        parte solo in caduta franca: i tocchi all'apice restano attacchi normali */
+    slamMinFall: 300,
     slamFall: 950,
     slamRadius: 110,
     slamDamage: 3,
