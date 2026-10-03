@@ -1,5 +1,6 @@
 import { ZONE_CSS } from '../config';
 import { bus, type GameEvents } from '../engine/events';
+import { formatKeys } from '../engine/input/keyText';
 import { sfx } from '../engine/sfx';
 import { el, ui } from './dom';
 import './subtitles.css';
@@ -62,7 +63,7 @@ export class Subtitles {
         this.root.classList.add('subs-on');
         // chi attacca parla: un solo tocco all'apertura, non un ticchettio in battaglia
         sfx.ui();
-        const chars = [...b.text];
+        const chars = [...formatKeys(b.text)];
         let typed = 0;
         const speed = b.glitch ? 22 : 15;
         this.typing = window.setInterval(() => {

@@ -7,6 +7,7 @@ import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { ITEMS } from '../content/items';
 import { ABILITY_CARDS, CREDITS, deathPunchline } from '../content/story';
 import { bus } from '../engine/events';
+import { formatKeys } from '../engine/input/keyText';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import { music } from '../engine/music';
@@ -689,13 +690,13 @@ export class Screens {
         document.getElementById('toast')?.remove();
         const t = el('div', 'sticker glass-chip');
         t.id = 'toast';
-        t.textContent = text;
+        t.textContent = formatKeys(text);
         ui().append(t);
         setTimeout(() => t.remove(), 2700);
     }
 
     private wavesung(sender: string, text: string): void {
-        phoneBanner({ app: 'wavesung', title: sender, body: text, accent: 'blue', wrap: true, ms: 5200 });
+        phoneBanner({ app: 'wavesung', title: sender, body: formatKeys(text), accent: 'blue', wrap: true, ms: 5200 });
     }
 
     /** un oggetto ottenuto: il nome inciso al centro, la descrizione sotto */
@@ -729,15 +730,15 @@ export class Screens {
     private abilityCard(ability: keyof typeof ABILITY_CARDS): void {
         const card = ABILITY_CARDS[ability];
         const kbd = el('kbd');
-        kbd.textContent = card.key;
-        this.announce('frammento della gecowave', card.name, [card.desc], kbd, 'bella', 'var(--sx-bone)');
+        kbd.textContent = formatKeys(card.key);
+        this.announce('frammento della gecowave', card.name, [formatKeys(card.desc)], kbd, 'bella', 'var(--sx-bone)');
     }
 
     private charmCard(id: string): void {
         const item = ITEMS[id];
         if (!item) return;
-        const how = `costa ${item.cost} ${item.cost === 1 ? 'tacca' : 'tacche'}. si indossa dal telefono (tab), vicino a un microfono.`;
-        this.announce('amuleto trovato', `${item.icon} ${item.name}`, [item.desc, how], null, 'in tasca', 'var(--sx-gold)');
+        const how = `costa ${item.cost} ${item.cost === 1 ? 'tacca' : 'tacche'}. si indossa dal telefono ({k:phone}), vicino a un microfono.`;
+        this.announce('amuleto trovato', `${item.icon} ${item.name}`, [formatKeys(item.desc), formatKeys(how)], null, 'in tasca', 'var(--sx-gold)');
     }
 
     /* ---------- sequenze narrative ---------- */

@@ -1,11 +1,13 @@
 import { ZONE_CSS } from '../config';
 import { bus } from '../engine/events';
+import { matchesAction } from '../engine/input/actions';
+import { formatKeys, keyLabel } from '../engine/input/keyText';
 import { music } from '../engine/music';
 import { sfx } from '../engine/sfx';
 import type { DialogueLine } from '../types';
 import { el, ui } from './dom';
 
-/** bolla di dialogo con typewriter: E/spazio/clic per avanzare */
+/** bolla di dialogo con typewriter: interagisci/salta/clic per avanzare */
 export class DialogueBox {
     private box: HTMLElement | null = null;
     private lines: DialogueLine[] = [];
@@ -13,8 +15,9 @@ export class DialogueBox {
     private typed = 0;
     private typing: number | null = null;
     private onEnd?: () => void;
+    private shown = '';
     private keyHandler = (e: KeyboardEvent) => {
-        if (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter') {
+        if (e.code === 'Enter' || matchesAction(e, 'jump') || matchesAction(e, 'attack') || matchesAction(e, 'interact')) {
             e.preventDefault();
             this.advance();
         }
@@ -39,7 +42,7 @@ export class DialogueBox {
         this.box.dataset.anim = '1';
         const speaker = el('div', 'speaker sticker');
         const text = el('div', 'text font-martian');
-        const hint = el('div', 'hint', 'E / clic per continuare');
+        const hint = el('div', 'hint', `${keyLabel('interact')} / clic per continuare`);
         this.box.append(speaker, text, hint);
         this.box.addEventListener('click', () => this.advance());
         ui().append(this.box);
@@ -50,6 +53,7 @@ export class DialogueBox {
     private showLine(): void {
         if (!this.box) return;
         const line = this.lines[this.index];
+        this.shown = formatKeys(line.text);
         const speaker = this.box.querySelector<HTMLElement>('.speaker')!;
         speaker.textContent = line.speaker;
         speaker.style.color = ZONE_CSS[line.color];
@@ -69,13 +73,13 @@ export class DialogueBox {
         if (this.typing) clearInterval(this.typing);
         this.typing = window.setInterval(() => {
             this.typed++;
-            text.textContent = line.text.slice(0, this.typed);
+            text.textContent = this.shown.slice(0, this.typed);
             if (this.typed % blipEvery === 0) {
                 // le gravi respirano piano invece di restare mute
                 if (grave) sfx.graveTick();
                 else sfx.ui();
             }
-            if (this.typed >= line.text.length) {
+            if (this.typed >= this.shown.length) {
                 clearInterval(this.typing!);
                 this.typing = null;
             }
@@ -84,12 +88,11 @@ export class DialogueBox {
 
     private advance(): void {
         if (!this.box) return;
-        const line = this.lines[this.index];
         if (this.typing) {
             // primo input: completa la riga, secondo input: avanza
             clearInterval(this.typing);
             this.typing = null;
-            this.box.querySelector<HTMLElement>('.text')!.textContent = line.text;
+            this.box.querySelector<HTMLElement>('.text')!.textContent = this.shown;
             return;
         }
         this.index++;

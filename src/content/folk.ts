@@ -1,7 +1,7 @@
 import type { ZoneColor } from '../types';
 
 /* la gente del realm: chi abita le regioni mentre tu salvi il mondo.
-   battute brevi quando passi, due chiacchiere se premi E, panico se meni */
+   battute brevi quando passi, due chiacchiere se ti fermi, panico se meni */
 
 export type FolkLook =
     | 'pendolare' | 'vecchio' | 'bimbo' | 'operaio' | 'studente' | 'cuoco' | 'nonna'

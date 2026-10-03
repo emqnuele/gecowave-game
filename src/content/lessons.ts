@@ -31,7 +31,7 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
     },
     citelis: {
         ability: 'scivolata',
-        hint: 'i citelis caricano a testa bassa. non saltarli: SCIVOLA attraverso la carica (shift). sbandano storditi e lì prendono il doppio.',
+        hint: 'i citelis caricano a testa bassa. non saltarli: SCIVOLA attraverso la carica ({k:dash}). sbandano storditi e lì prendono il doppio.',
         staggerOnDash: true,
     },
     fiattipo: {
@@ -40,12 +40,12 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
         staggerOnDash: true,
     },
     pendolare: {
-        hint: 'il pendolare tiene la valigia davanti: in faccia non passa niente. salta sopra e premi GIÙ + attacco in aria: pogo. o giralo alle spalle.',
+        hint: 'il pendolare tiene la valigia davanti: in faccia non passa niente. salta sopra e premi {k:down} + {k:attack} in aria: pogo. o giralo alle spalle.',
         trait: 'scudo',
         regions: ['bus', 'barrato'],
     },
     specchietto: {
-        hint: 'gli specchietti volano all\'altezza della testa e di lato riflettono metà del colpo. colpisci in alto (W + attacco): li butti giù e fanno il doppio.',
+        hint: 'gli specchietti volano all\'altezza della testa e di lato riflettono metà del colpo. colpisci in alto ({k:up} + {k:attack}): li butti giù e fanno il doppio.',
         mult: { side: 0.5, up: 2 },
     },
     tecnodrone: {
@@ -60,7 +60,7 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
     },
     ammiratore: {
         ability: 'riflesso',
-        hint: 'i fan di lochef inseguono chiunque ti somigli. evoca il riflesso: perdono la testa per lui e tu li colpisci alle spalle.',
+        hint: 'i fan di lochef inseguono chiunque ti somigli. evoca il riflesso ({k:riflesso}): perdono la testa per lui e tu li colpisci alle spalle.',
     },
     formica: {
         ability: 'aggrappo',
@@ -68,17 +68,17 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
     },
     bottiglia: {
         ability: 'acquatossica',
-        hint: 'le bottiglie di smela sono plastica e veleno. lancia la bottiglia dove passano: chi la prende si blocca, chi ci cammina si scioglie.',
+        hint: 'le bottiglie di smela sono plastica e veleno. lancia la bottiglia ({k:down}+{k:wave}) dove passano: chi la prende si blocca, chi ci cammina si scioglie.',
         mult: { acqua: 99 },
     },
     numero: {
         ability: 'analisi',
-        hint: 'i numeri volanti schivano la spada ma non la matematica. analisi (H): i teoremi li fanno a pezzi.',
+        hint: 'i numeri volanti schivano la spada ma non la matematica. analisi ({k:up}+{k:wave}): i teoremi li fanno a pezzi.',
         mult: { analisi: 3 },
     },
     telecamera: {
         ability: 'scudo',
-        hint: 'le telecamere sparano da lontano. accendi il tommasoscudo appena prima del colpo: il rimando perfetto torna al mittente e le spegne di netto.',
+        hint: 'le telecamere sparano da lontano. accendi il tommasoscudo ({k:scudo}) appena prima del colpo: il rimando perfetto torna al mittente e le spegne di netto.',
         mult: { reflect: 99 },
     },
 };

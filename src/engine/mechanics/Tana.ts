@@ -103,7 +103,7 @@ export class Tana implements Mechanic {
             this.tutorialDone = true;
             if (!state.hasFlag('spiegato-nascondiglio')) {
                 state.setFlag('spiegato-nascondiglio');
-                bus.emit('toast', { text: 'un armadio. E per nasconderti.' });
+                bus.emit('toast', { text: 'un armadio. {k:interact} per nasconderti.' });
                 const first = this.hideouts[0];
                 if (first && !first.used) this.ctx.scene.tweens.add({ targets: first.sprite, alpha: 0.55, duration: 500, yoyo: true, repeat: 3 });
             }

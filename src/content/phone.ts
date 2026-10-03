@@ -54,7 +54,7 @@ export const CONTACTS: Contact[] = [
                 perduta: 'apri la MAPPA e cerca la ✶. se trovi un muro con le crepe, terzo colpo della combo. se trovi un geco anziano, ascoltalo, ma non troppo. e i 33 dipinti: guarda sempre dietro. non sbagliano mai.',
                 bus: 'ivan è l\'unico che può tagliare guggu. senza di lui il capolinea non lo vedi neanche col binocolo. e se vedi romero, parlagli: indaga sul glitch da prima di te.',
                 santuario: 'gli specchi mentono, ma alcuni sono porte. e lametta dipinge con rabbia: schiva i colori. cerca il ritratto con gli occhi storti.',
-                tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI. carica F da lontano invece di andare sotto.',
+                tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI. carica {k:wave} da lontano invece di andare sotto.',
                 trenbolone: 'ticummi ti offre la sorveglianza? ti protegge da notino ma allena l\'ombra su di te. 41.077 secondi di te = ombra forte. zero secondi = beta. scegli.',
                 rio: 'il rio rigenera chi non si droga. se hai preso il trenbolone... auguri. lo stabilimento dopo è opzionale: attraversalo pure senza fermarti.',
                 stabilimento: 'smela? puoi saltarla. attraversa e vai. se la affronti, la sua bottiglia è tua. la truffa vive solo se ti fermi.',

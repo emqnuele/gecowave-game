@@ -4,7 +4,8 @@ import { bus } from '../events';
 
 /* lo stato delle azioni per fotogramma: la scena lo aggiorna una volta
    prima del giocatore, poi tutti leggono down/pressed/released. gli stati
-   si calcolano confrontando col fotogramma prima, mai con JustDown. */
+   si calcolano confrontando col fotogramma prima, così più lettori non
+   si rubano mai l'evento. */
 
 const STICK_DEAD = 0.35;
 

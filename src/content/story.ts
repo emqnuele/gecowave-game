@@ -76,7 +76,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'oh. sei sveglio. la wave è esplosa, pedro è andato, gli dei sono spariti. qualcuno deve raccogliere i pezzi. indovina chi.' },
         { speaker: 'markolino', color: 'green', text: 'tieni, il cartellino. "CUSTODE" a penna, "provvisorio" a matita. finché non metti insieme i frammenti, sei questo.' },
         { speaker: 'il geco', color: 'green', text: '*il geco passa il pollice sulla parola a matita. non viene via.*' },
-        { speaker: 'markolino', color: 'green', text: 'A/D per muoverti, SPAZIO per saltare, J o mouse per menare. TAB apre il telefono. i microfoni salvano con E.' },
+        { speaker: 'markolino', color: 'green', text: '{k:left}/{k:right} per muoverti, {k:jump} per saltare, {k:attack} per menare. {k:phone} apre il telefono. i microfoni salvano con {k:interact}.' },
         { speaker: 'markolino', color: 'green', text: 'ultima cosa: se vedi un 33 dipinto su un muro, guarda dietro. nessuno sa chi li dipinge. ma non sbagliano mai.' },
     ],
     'markolino-dono': [
@@ -1282,27 +1282,27 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
     scivolata: {
         name: 'frammento della scivolata',
         desc: 'scatti in avanti, invulnerabile. la wave ha manifestato il tuo desiderio: scappare con stile.',
-        key: 'shift',
+        key: '{k:dash}',
     },
     rimbalzo: {
         name: 'frammento del rimbalzo',
         desc: 'salti di nuovo a mezz\'aria. il desiderio di ivan era far volare la gente fuori dai bus. ci sei andato vicino.',
-        key: 'spazio ×2',
+        key: '{k:jump} ×2',
     },
     aggrappo: {
         name: 'frammento dell\'aggrappo',
         desc: 'contro un muro tieni la direzione: ti aggrappi e scivoli piano, poi ti stacchi con un salto. la formicona si arrampicava sui muri del municipio per non pagare l\'affitto: adesso lo fai anche tu.',
-        key: 'spazio sul muro',
+        key: '{k:jump} sul muro',
     },
     riflesso: {
         name: 'riflesso distorto',
         desc: 'evochi un clone che attira i nemici e incassa al posto tuo. usalo di nuovo mentre c\'è: vi scambiate di posto. rubato agli specchi di lametta, non dirglielo.',
-        key: 'g',
+        key: '{k:riflesso}',
     },
     risonante: {
         name: 'colpo risonante',
         desc: 'tieni premuto e rilascia. poco = un\'eco corta. di più = un\'onda che perfora. tanto, se hai flow = l\'onda piena, che spacca anche gli scudi. la tecnokill di notino, ma con giudizio.',
-        key: 'f (tieni premuto)',
+        key: '{k:wave} (tieni)',
     },
     rigenerazione: {
         name: 'frammento del rio merdone',
@@ -1312,17 +1312,17 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
     analisi: {
         name: 'analisi 1',
         desc: 'una dimostrazione in tre tempi: ipotesi (chi è nel cerchio viene segnato), passaggi (i teoremi girano), q.e.d. (chi è ancora segnato paga). piema sarebbe fiero. o spaventato.',
-        key: 'h',
+        key: '{k:up}+{k:wave}',
     },
     scudo: {
         name: 'tommasoscudo',
         desc: 'una bolla che rimanda i proiettili. appena accesa, il rimando è perfetto: torna al mittente e lo stordisce. assolutamente sicuro. 👍',
-        key: 'r',
+        key: '{k:scudo}',
     },
     acquatossica: {
         name: 'la bottiglia di smela',
         desc: 'lanci la sua acqua premium: chi la prende in pieno si blocca (effetto smela III), chi ci cammina si avvelena e prende più danni. la sua arma, rivolta contro tutti.',
-        key: 'v',
+        key: '{k:down}+{k:wave}',
     },
 };
 
@@ -1407,8 +1407,8 @@ export const WAVESUNG = {
     pedroFootage: { sender: 'tommasorveglianza', text: 'FOOTAGE D\'ARCHIVIO cliente n.2: lametta guardava pedro ogni notte, giorni 1-42. giorno 41 ore 03:58 spegne lui la telecamera. motivo: "non voglio vedere". 👍' },
     romeroBus: { sender: 'romero', text: 'sono romero, questura. ti ho visto sul bus. se trovi lavagne strane, non toccarle. chiamami dal telefono. ho un caso vecchio quarant\'anni, e il glitch gli somiglia troppo.' },
     romeroSantuario: { sender: 'romero', text: 'santuario, eh? cerca il ritratto con gli occhi storti. è una prova, non arte. e se trovi uno scontrino delle 03:58, è mio. l\'ora ce l\'ho. il nome no. ancora.' },
-    markolinoPogo: { sender: 'markolino', text: 'quelli con lo scudo davanti? non menarli in faccia. salta sopra e premi GIÙ + attacco in aria: pogo. il terzo colpo spacca anche i muri.' },
-    markolinoRisonante: { sender: 'markolino', text: 'quelli che sparano da lontano? non andare sotto. tieni premuto F e molla: il colpo risonante perfora. notino insegna gratis.' },
+    markolinoPogo: { sender: 'markolino', text: 'quelli con lo scudo davanti? non menarli in faccia. salta sopra e premi {k:down} + {k:attack} in aria: pogo. il terzo colpo spacca anche i muri.' },
+    markolinoRisonante: { sender: 'markolino', text: 'quelli che sparano da lontano? non andare sotto. tieni premuto {k:wave} e molla: il colpo risonante perfora. notino insegna gratis.' },
     markolinoOmbra: { sender: 'markolino', text: 'l\'ombra sei tu. se hai comprato la sorveglianza è forte come te: cambia ritmo, non ripetere le mosse. se l\'hai rifiutata è una beta: mena e basta.' },
     markolino33: { sender: 'markolino', text: 'i 33 dipinti: azzurri, tratto ordinato, sempre accanto a un muro che non è un muro. guarda dietro. ogni volta.' },
     markolinoSmelaSkip: { sender: 'markolino', text: 'lo stabilimento? puoi attraversarlo senza fermarti, l\'uscita resta aperta. la truffa vive solo se ti fermi. ma l\'acqua tossica è comoda, eh.' },

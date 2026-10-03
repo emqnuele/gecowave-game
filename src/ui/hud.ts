@@ -1,6 +1,7 @@
 import { COMBAT, ZONE_CSS } from '../config';
 import { ABILITY_CARDS } from '../content/story';
 import { bus } from '../engine/events';
+import { formatKeys } from '../engine/input/keyText';
 import { state } from '../engine/state';
 import type { AbilityId, ZoneColor } from '../types';
 import { el } from './dom';
@@ -24,12 +25,12 @@ const WAVE_MIN_COST: Partial<Record<AbilityId, number>> = {
     acquatossica: COMBAT.acquaCost,
 };
 
-const ACTIVE_ORDER: { id: AbilityId; key: string }[] = [
-    { id: 'risonante', key: 'F' },
-    { id: 'riflesso', key: 'G' },
-    { id: 'analisi', key: 'H' },
-    { id: 'scudo', key: 'R' },
-    { id: 'acquatossica', key: 'V' },
+const ACTIVE_ORDER: { id: AbilityId; text: string }[] = [
+    { id: 'risonante', text: '{k:wave}' },
+    { id: 'analisi', text: '{k:up}+{k:wave}' },
+    { id: 'acquatossica', text: '{k:down}+{k:wave}' },
+    { id: 'scudo', text: '{k:scudo}' },
+    { id: 'riflesso', text: '{k:riflesso}' },
 ];
 
 export class Hud {
@@ -46,6 +47,7 @@ export class Hud {
     private doomsdayFill: HTMLElement;
     private bossBar: HTMLElement | null = null;
     private trial: HTMLElement;
+    private seenAbilities: AbilityId[] = [];
 
     constructor() {
         this.root = el('div');
@@ -112,6 +114,9 @@ export class Hud {
             this.trial.classList.toggle('critical', t.left < 5000);
         });
         bus.on('abilities-changed', ({ abilities }) => this.setAbilities(abilities));
+        // i tasti veri cambiano col dispositivo e con la rimappatura
+        bus.on('input-device', () => this.setAbilities(this.seenAbilities));
+        bus.on('controls-changed', () => this.setAbilities(this.seenAbilities));
         bus.on('wave-cooldowns', ({ cds, flow }) => this.setCooldowns(cds, flow));
         bus.on('boss-hp', (payload) => this.setBoss(payload));
         bus.on('doomsday-changed', ({ value, active }) => {
@@ -187,15 +192,16 @@ export class Hud {
     }
 
     private setAbilities(abilities: AbilityId[]): void {
+        this.seenAbilities = [...abilities];
         this.waves.replaceChildren();
-        for (const { id, key } of ACTIVE_ORDER) {
+        for (const { id, text } of ACTIVE_ORDER) {
             if (!abilities.includes(id)) continue;
             const card = ABILITY_CARDS[id];
             const chip = el('div', 'wave-chip');
             chip.dataset.ability = id;
             chip.style.setProperty('--cd', '0');
             const kbd = el('kbd');
-            kbd.textContent = key;
+            kbd.textContent = formatKeys(text);
             const name = el('span', 'wave-name');
             name.textContent = card.name.replace('frammento del ', '').replace('frammento della ', '');
             chip.append(kbd, name);

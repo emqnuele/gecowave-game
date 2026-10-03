@@ -8,6 +8,8 @@ import { CONTACTS, OBJECTIVES, POSTS, RADIO, type Contact } from '../content/pho
 import { ABILITY_CARDS } from '../content/story';
 import { deletePhoto, listPhotos, PHOTO_FILTERS, processPhoto, savePhoto, type PhotoFilter } from './photos';
 import { bus } from '../engine/events';
+import { matchesAction } from '../engine/input/actions';
+import { formatKeys, keyLabel } from '../engine/input/keyText';
 import { useItem } from '../engine/inventory';
 import { music } from '../engine/music';
 import { sfx } from '../engine/sfx';
@@ -23,7 +25,7 @@ import type { ZoneColor } from '../types';
 import './phone.css';
 import { el, ui } from './dom';
 
-/* il wavesung galaxy: TAB lo tira fuori dalla tasca. il gioco si ferma,
+/* il wavesung galaxy: il tasto del telefono lo tira fuori dalla tasca. il gioco si ferma,
    come quando guardi il telefono a cena e il mondo aspetta */
 
 export interface PhoneHost {
@@ -128,6 +130,7 @@ export class Phone {
         bus.on('barre-changed', () => {
             if (this.app === 'wavezon') this.refresh();
         });
+        bus.on('controls-changed', () => this.renderHint());
         window.addEventListener('keydown', this.keyHandler, true);
     }
 
@@ -215,7 +218,7 @@ export class Phone {
     }
 
     private onKey(e: KeyboardEvent): void {
-        if (e.code === 'Tab' || (e.code === 'KeyP' && !this.isTyping(e))) {
+        if (matchesAction(e, 'phone') && (e.code === 'Tab' || !this.isTyping(e))) {
             if (!this.isOpen && !this.host.canOpen()) return;
             e.preventDefault();
             e.stopImmediatePropagation();
@@ -223,7 +226,7 @@ export class Phone {
             return;
         }
         if (!this.isOpen) return;
-        if (e.code === 'Escape' || e.code === 'Backspace') {
+        if (matchesAction(e, 'pause') || e.code === 'Backspace') {
             if (this.isTyping(e)) return;
             e.preventDefault();
             e.stopImmediatePropagation();
@@ -246,7 +249,7 @@ export class Phone {
     private renderHint(): void {
         const unread = state.unreadMessages;
         this.hint.replaceChildren();
-        this.hint.append(text('span', '', '📱'), text('kbd', '', 'tab'));
+        this.hint.append(text('span', '', '📱'), text('kbd', '', keyLabel('phone').toLowerCase()));
         if (unread > 0) this.hint.append(text('span', 'unread', String(unread)));
     }
 
@@ -287,7 +290,7 @@ export class Phone {
         widget.append(
             text('span', 'w-kick', 'adesso'),
             text('span', 'w-waves', `✦ ${state.abilities.length}/${TOTAL_FRAGMENTS}`),
-            text('span', 'w-text', OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.'),
+            text('span', 'w-text', formatKeys(OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.')),
         );
         widget.addEventListener('click', (e) => this.launch('diario', e.currentTarget as HTMLElement));
         b.append(widget);
@@ -419,7 +422,7 @@ export class Phone {
             const row = el('button', `phone-row glass-chip glass-acid-${contact?.color ?? 'blue'}`);
             row.append(text('span', 'lead', contact?.icon ?? '📨'));
             const main = el('div', 'main');
-            main.append(text('div', 'name', sender), text('div', 'preview', t.preview));
+            main.append(text('div', 'name', sender), text('div', 'preview', formatKeys(t.preview)));
             row.append(main);
             if (t.unread) row.append(el('span', 'dot'));
             row.append(text('span', 'meta', since(t.last)));
@@ -437,7 +440,7 @@ export class Phone {
             if (m.sender !== sender) continue;
             m.read = true;
             const bubble = el('div', `bubble glass-chip glass-acid-${contact?.color ?? 'blue'}`);
-            bubble.textContent = m.text;
+            bubble.textContent = formatKeys(m.text);
             bubble.append(text('span', 'when', since(m.at)));
             root.append(bubble);
         }
@@ -473,12 +476,12 @@ export class Phone {
             avatar.classList.remove('call-ring');
             stateLine.textContent = 'in chiamata';
             const reply = el('div', `bubble glass-chip glass-acid-${c.color}`);
-            reply.textContent = c.call({
+            reply.textContent = formatKeys(c.call({
                 levelId: state.save.levelId,
                 flags: state.save.flags,
                 barre: state.save.barre,
                 abilities: state.abilities.length,
-            });
+            }));
             reply.style.textAlign = 'left';
             screen.insertBefore(reply, hang);
             sfx.pickup();
@@ -1069,7 +1072,7 @@ export class Phone {
         const lv = LEVELS[state.save.levelId];
         const obj = el('div', 'objective glass-panel glass-acid-red');
         obj.append(text('span', 'where', lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : 'da qualche parte'));
-        obj.append(document.createTextNode(OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.'));
+        obj.append(document.createTextNode(formatKeys(OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.')));
         root.append(obj);
 
         root.append(text('div', 'phone-section', 'il resto della vita'));
@@ -1220,8 +1223,8 @@ export class Phone {
             const card2 = ABILITY_CARDS[a];
             const row = el('div', 'phone-row glass-chip glass-acid-green');
             const main = el('div', 'main');
-            main.append(text('div', 'name', card2.name), text('div', 'preview', card2.desc));
-            row.append(main, text('span', 'meta', card2.key));
+            main.append(text('div', 'name', card2.name), text('div', 'preview', formatKeys(card2.desc)));
+            row.append(main, text('span', 'meta', formatKeys(card2.key)));
             root.append(row);
         }
     }
@@ -1264,7 +1267,7 @@ export class Phone {
         root.append(assistToggle({ rowClass: 'phone-row glass-chip' }));
 
         root.append(text('div', 'phone-section', 'comandi del telefono'));
-        for (const [k, v] of [['apri e chiudi', 'TAB / P'], ['indietro', 'ESC'], ['mangia al volo', 'C']]) {
+        for (const [k, v] of [['apri e chiudi', keyLabel('phone')], ['indietro', keyLabel('pause')], ['mangia al volo', keyLabel('eat')]]) {
             const line = el('div', 'stat-line');
             line.append(text('span', '', k), text('b', '', v));
             root.append(line);

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { FLASHBACKS } from '../content/flashbacks';
 import { bus } from './events';
+import { matchesAction } from './input/actions';
 import { sfx } from './sfx';
 import { state } from './state';
 import { music } from './music';
@@ -14,7 +15,7 @@ import { MemoryPipeline } from './fx/MemoryPipeline';
    scenografia (muri di carta/legno/cielo stellato generati), oggetti,
    attori che ENTRANO e AGISCONO, polvere/luci vive, foley dedicato.
    Shader veri dove sicuri: vignetta + zoom camera, blur di profondità
-   sullo sfondo, bagliori in ADD. Max 2 sottotitoli. E per saltare. */
+   sullo sfondo, bagliori in ADD. Max 2 sottotitoli, si salta con un tasto. */
 
 const CAST_TEXTURE: Record<string, string> = {
     lametta: 'npc-lametta',
@@ -298,7 +299,7 @@ export class FlashbackManager {
         };
 
         const skip = (e: KeyboardEvent): void => {
-            if (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter') finish();
+            if (e.code === 'Enter' || matchesAction(e, 'jump') || matchesAction(e, 'attack') || matchesAction(e, 'interact')) finish();
         };
         window.addEventListener('keydown', skip);
         timers.push(scene.time.delayedCall(ENTER + filmDur + 150, () => {

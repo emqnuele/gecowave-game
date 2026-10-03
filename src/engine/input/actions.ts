@@ -150,6 +150,26 @@ export function matchesAction(e: KeyboardEvent, action: Action): boolean {
     return codesForAction(action).includes(e.code);
 }
 
+/** nome di phaser da un KeyboardEvent.code, o null se non si lega */
+export function keyNameForCode(code: string): string | null {
+    switch (code) {
+        case 'Space': return 'SPACE';
+        case 'ShiftLeft':
+        case 'ShiftRight': return 'SHIFT';
+        case 'Tab': return 'TAB';
+        case 'Escape': return 'ESC';
+        case 'Enter': return 'ENTER';
+        case 'ArrowLeft': return 'LEFT';
+        case 'ArrowRight': return 'RIGHT';
+        case 'ArrowUp': return 'UP';
+        case 'ArrowDown': return 'DOWN';
+        default: break;
+    }
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return null;
+}
+
 /** etichetta leggibile di un singolo tasto di phaser */
 export function bindingLabel(name: string): string {
     switch (name) {

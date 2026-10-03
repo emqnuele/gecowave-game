@@ -57,6 +57,7 @@ import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { createMechanic, type Mechanic } from '../engine/mechanics';
 import { Input } from '../engine/input/Input';
+import { keyLabel } from '../engine/input/keyText';
 import { hitMult, LESSONS } from '../content/lessons';
 import { BOSS_BARKS, barksFor, LAMETTA_BARKS } from '../content/barks';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
@@ -172,6 +173,7 @@ export class GameScene extends Phaser.Scene {
     private doorGroup!: Phaser.Physics.Arcade.StaticGroup;
     private interactables: Interactable[] = [];
     private prompt!: Phaser.GameObjects.Container;
+    private promptTxt!: Phaser.GameObjects.Text;
     private lastSafe!: { x: number; y: number };
     private safeTimer = 0;
     private exiting = false;
@@ -1582,7 +1584,7 @@ export class GameScene extends Phaser.Scene {
             if (Math.abs(this.player.x - s.x) < 140 && Math.abs(this.player.y - s.y) < 110) {
                 state.save.stops.push(s.key);
                 state.persist();
-                bus.emit('toast', { text: 'fermata del citelis scoperta. da qui si viaggia (E sul palo).' });
+                bus.emit('toast', { text: 'fermata del citelis scoperta. da qui si viaggia ({k:interact} sul palo).' });
             }
         }
     }
@@ -2100,6 +2102,7 @@ export class GameScene extends Phaser.Scene {
             fontSize: '11px',
             color: '#4ade80',
         }).setOrigin(0.5);
+        this.promptTxt = txt;
         this.prompt = this.add.container(0, 0, [circle, txt]).setDepth(8).setVisible(false);
     }
 
@@ -2697,7 +2700,7 @@ export class GameScene extends Phaser.Scene {
         }
         if (!state.hasFlag('spiegato-schianto')) {
             state.setFlag('spiegato-schianto');
-            bus.emit('toast', { text: 'schianto! attacca mentre cadi per sfondare dall\u2019alto.' });
+            bus.emit('toast', { text: 'schianto! attacca ({k:attack}) mentre cadi per sfondare dall\u2019alto.' });
         }
     }
 
@@ -2991,6 +2994,7 @@ export class GameScene extends Phaser.Scene {
     private updatePrompt(): void {
         const near = this.findNearestInteractable();
         if (near) {
+            this.promptTxt.setText(keyLabel('interact'));
             this.prompt.setVisible(true);
             this.prompt.setPosition(near.x, near.y - 48 + Math.sin(this.time.now / 300) * 3);
         } else {
