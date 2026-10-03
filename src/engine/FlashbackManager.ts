@@ -77,6 +77,20 @@ export class FlashbackManager {
         const canAudio = !!acoustics.context();
         // il film è l'unica cosa accesa: hud e scritte di gioco spariscono
         document.body.classList.add('film');
+        // comparse e nemici escono di scena: il ricordo è solo suo
+        const host = scene as unknown as {
+            folk?: { setSuspended(v: boolean): void };
+            enemies?: Phaser.GameObjects.Group;
+        };
+        host.folk?.setSuspended(true);
+        const hiddenFoes: Phaser.GameObjects.Sprite[] = [];
+        for (const child of host.enemies?.getChildren() ?? []) {
+            const e = child as Phaser.GameObjects.Sprite;
+            if (e.active && e.visible) {
+                e.setVisible(false);
+                hiddenFoes.push(e);
+            }
+        }
 
         // --- il mondo trattiene il fiato: il geco resta dov'è, congelato ---
         const godPrev = state.godMode;
@@ -350,6 +364,10 @@ export class FlashbackManager {
                     cam.startFollow(player, true, 0.12, 0.12);
                 } catch { /* test */ }
                 clearDressing();
+                host.folk?.setSuspended(false);
+                for (const e of hiddenFoes) {
+                    try { if (e.active) e.setVisible(true); } catch { /* test */ }
+                }
                 bus.emit('toast', { text: '' });
                 onEnd?.();
             });
@@ -444,14 +462,12 @@ export class FlashbackManager {
             s.setScale(sc);
             s.setY(ctx.floorY - s.displayHeight / 2 + 6);
         } catch { /* test */ }
-        try { s.setTint(opts.tints ?? 0x2b2340); } catch { /* test */ }
+        // niente tinta scura: gli attori vivono della luce del palco e della seppia
         if (opts.flip) {
             try { s.setFlipX(true); } catch { /* test */ }
         }
         const sh = scene.add.ellipse(s.x, ctx.floorY + 5, s.displayWidth * 0.85, 9, 0x141018, 0.55);
         this.put(scope, sh, 169);
-        const halo = scene.add.circle(s.x, s.y, Math.max(24, s.displayHeight * 0.44), ctx.tint, 0.15);
-        this.put(scope, halo, 168);
         // in scena si dissolve, non si accende di colpo
         try {
             s.setAlpha(0);
@@ -961,7 +977,7 @@ const SHOTS: Record<Gesture, ShotBuilder[]> = {
             mgr['night'](scope, scene, ctx, 150);
             const bus = mgr['actor'](scope, scene, ctx, 'bus', 80, { flip: true });
             try { bus.setAlpha(0.85); } catch { /* test */ }
-            const sand = scene.add.rectangle(ctx.cx + 80, ctx.floorY + 22, 230, 8, 0xc2a35c, 1);
+            const sand = scene.add.ellipse(ctx.cx + 80, ctx.floorY + 22, 230, 8, 0x8a7648, 1);
             mgr['put'](scope, sand, 167);
             scene.tweens.add({ targets: sand, height: 30, y: ctx.floorY + 10, duration: 900, ease: 'Quad.easeOut' });
             const ivan = mgr['actor'](scope, scene, ctx, 'ivan', -90);

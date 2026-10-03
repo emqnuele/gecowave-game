@@ -66,6 +66,8 @@ export class FolkManager {
     private folk: Wanderer[] = [];
     private biomeId = 'crater';
     private talker: (lines: DialogueLine[]) => void;
+    /** durante un film: nessuno si muove, nessuno parla */
+    private suspended = false;
 
     constructor(scene: Phaser.Scene, nav: NavGraph, talker: (lines: DialogueLine[]) => void) {
         this.scene = scene;
@@ -75,6 +77,17 @@ export class FolkManager {
 
     get talkables(): FolkTalk[] {
         return this.folk.map((w) => w.talk);
+    }
+
+    setSuspended(v: boolean): void {
+        this.suspended = v;
+        if (v) {
+            for (const w of this.folk) {
+                w.sprite.setVisible(false);
+                w.glow.setVisible(false);
+                if (w.bubble) w.bubble.text.setVisible(false);
+            }
+        }
     }
 
     /** popola la regione: stanze tranquille, pavimenti larghi, lontano dai nemici */
@@ -157,6 +170,7 @@ export class FolkManager {
     }
 
     update(time: number, delta: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean): void {
+        if (this.suspended) return;
         const cam = this.scene.cameras.main.worldView;
         const dt = delta / 1000;
         for (const w of this.folk) {
