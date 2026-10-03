@@ -57,7 +57,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     // collezioni
     { id: 'maschere', icon: '🎭', name: 'tutte le facce', desc: 'raccogli tutte le maschere.', check: flag('maschera-completa') },
     { id: 'wave-intera', icon: '🌊', name: 'la wave intera', desc: 'riunisci tutti e otto i frammenti.', check: (s) => s.abilities.length >= 8 },
-    { id: 'cuore-grande', icon: '❤️', name: 'cuore grande', desc: 'trova cinque cuori del realm.', check: (s) => s.stats.costituzione >= 5 },
+    { id: 'cuore-grande', icon: '❤️', name: 'cuore grande', desc: 'trova cinque cuori del realm.', check: (s) => s.collectedLore.filter((k) => k.startsWith('cuore-')).length >= 5 },
     { id: 'collezionista', icon: '🔮', name: 'collezionista', desc: 'possiedi otto amuleti.', check: (s) => s.charms.length >= 8 },
     { id: 'ricco', icon: '♪', name: 'disco d\'oro', desc: 'tieni in tasca 1000 barre.', check: (s) => s.barre >= 1000 },
     // esplorazione e gente
