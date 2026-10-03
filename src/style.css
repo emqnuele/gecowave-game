@@ -293,19 +293,35 @@ body {
 }
 
 .flow-wrap {
-  height: 8px;
-  border-radius: 99px;
-  overflow: hidden;
+  display: flex;
+  gap: 7px;
   margin: 0 12px 8px;
-  background: rgba(255, 255, 255, 0.07);
+  padding: 2px 0;
 }
 
-.flow-bar {
-  height: 100%;
-  border-radius: 99px;
-  background: linear-gradient(90deg, var(--orange), var(--yellow));
-  box-shadow: 0 0 12px rgba(251, 146, 60, 0.6);
-  transition: width 0.25s ease;
+/* tacca d'inchiostro spenta */
+.flow-pip {
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg) scale(0.85);
+  background: rgba(232, 223, 200, 0.22);
+  transition: background 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+/* si accende di verde con uno scatto quando si riempie */
+.flow-pip.on {
+  transform: rotate(45deg) scale(1);
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+}
+
+/* a pieno carico le tacche respirano piano */
+.flow-wrap.full .flow-pip.on {
+  animation: flow-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes flow-breathe {
+  50% { box-shadow: 0 0 14px rgba(74, 222, 128, 1); }
 }
 
 .hud-barre {
