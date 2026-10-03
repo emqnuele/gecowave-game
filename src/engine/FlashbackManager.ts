@@ -391,8 +391,7 @@ export class FlashbackManager {
                 }
                 t.refresh();
             }
-            if (!scene.textures.exists('fb-night')) {
-                const t = scene.textures.createCanvas('fb-night', 64, 256)!;
+            if (!scene.textures.exists('fb-night')) {                const t = scene.textures.createCanvas('fb-night', 64, 256)!;
                 const c = t.getContext();
                 const g = c.createLinearGradient(0, 0, 0, 256);
                 g.addColorStop(0, '#0a0f24');
@@ -405,6 +404,18 @@ export class FlashbackManager {
                     const s = Math.random() > 0.85 ? 2 : 1;
                     c.fillRect(Math.random() * 64, Math.random() * 170, s, s);
                 }
+                t.refresh();
+            }
+            if (!scene.textures.exists('fb-glow')) {
+                // alone morbido per luna e presenze: nucleo pieno che svanisce
+                const t = scene.textures.createCanvas('fb-glow', 128, 128)!;
+                const c = t.getContext();
+                const g = c.createRadialGradient(64, 64, 4, 64, 64, 64);
+                g.addColorStop(0, 'rgba(255,255,255,0.9)');
+                g.addColorStop(0.35, 'rgba(255,255,255,0.28)');
+                g.addColorStop(1, 'rgba(255,255,255,0)');
+                c.fillStyle = g;
+                c.fillRect(0, 0, 128, 128);
                 t.refresh();
             }
             if (!scene.textures.exists('fb-plaster')) {
@@ -446,6 +457,11 @@ export class FlashbackManager {
         this.put(scope, sh, 169);
         const halo = scene.add.circle(s.x, s.y, Math.max(24, s.displayHeight * 0.44), ctx.tint, 0.15);
         this.put(scope, halo, 168);
+        // in scena si dissolve, non si accende di colpo
+        try {
+            s.setAlpha(0);
+            scene.tweens.add({ targets: s, alpha: 1, duration: 700, ease: 'Quad.easeOut' });
+        } catch { /* test */ }
         scene.tweens.add({ targets: s, y: s.y - 3, duration: 1050, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         return s;
     }
@@ -602,18 +618,17 @@ export class FlashbackManager {
     }
 
     /** esterno notte: cielo + luna che pulsa + dune + foschia */
-    night(scope: Scope, scene: Phaser.Scene, ctx: Ctx, moonDx: number): { moon: Phaser.GameObjects.Arc } {
+    night(scope: Scope, scene: Phaser.Scene, ctx: Ctx, moonDx: number): { moon: Phaser.GameObjects.Image } {
         const cam = scene.cameras.main;
         const W = cam.width;
         const sky = scene.add.tileSprite(ctx.cx, ctx.floorY - 190, W + 40, 340, 'fb-night');
         this.put(scope, sky, 160);
         try { sky.postFX.addBlur(0.5, 0, 0, 1); } catch { /* test */ }
-        const moon = scene.add.circle(ctx.cx + moonDx, ctx.floorY - 210, 17, 0xf2ecda, 0.95);
+        // luna vera: nucleo che sfuma nel cielo, niente torcia
+        const moon = scene.add.image(ctx.cx + moonDx, ctx.floorY - 210, 'fb-glow').setDisplaySize(120, 120);
         this.put(scope, moon, 161);
-        const mglow = scene.add.circle(moon.x, moon.y, 44, 0xe8e2cc, 0.18);
-        try { mglow.setBlendMode(Phaser.BlendModes.ADD); } catch { /* test */ }
-        this.put(scope, mglow, 161);
-        scene.tweens.add({ targets: mglow, scale: 1.15, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        try { moon.setBlendMode(Phaser.BlendModes.ADD); } catch { /* test */ }
+        scene.tweens.add({ targets: moon, alpha: 0.85, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         for (let i = 0; i < 3; i++) {
             const dune = scene.add.ellipse(ctx.cx + (i - 1) * 220, ctx.floorY + 40 - i * 14, 420, 90 - i * 12, [0x1a1626, 0x221c30, 0x2b2338][i] as number, 1);
             this.put(scope, dune, 162 + i);
