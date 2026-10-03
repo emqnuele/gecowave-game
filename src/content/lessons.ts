@@ -68,7 +68,7 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
     },
     bottiglia: {
         ability: 'acquatossica',
-        hint: 'le bottiglie di smela sono plastica e veleno. versa l\'acqua tossica (V) dove passano: ci camminano sopra e si sciolgono.',
+        hint: 'le bottiglie di smela sono plastica e veleno. lancia la bottiglia dove passano: chi la prende si blocca, chi ci cammina si scioglie.',
         mult: { acqua: 99 },
     },
     numero: {
@@ -78,7 +78,7 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
     },
     telecamera: {
         ability: 'scudo',
-        hint: 'le telecamere sparano da lontano. tommasoscudo (R) al momento giusto: il colpo torna indietro e le spegne di netto.',
+        hint: 'le telecamere sparano da lontano. accendi il tommasoscudo appena prima del colpo: il rimando perfetto torna al mittente e le spegne di netto.',
         mult: { reflect: 99 },
     },
 };

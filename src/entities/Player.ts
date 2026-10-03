@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
+import { FX } from '../engine/art/abilityFx';
 import { bus } from '../engine/events';
 import { quickHeal } from '../engine/inventory';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
+import type { AbilityId } from '../types';
 
 export type AttackDir = 'side' | 'up' | 'down';
 
@@ -45,7 +47,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private charging = false;
     private chargeStart = 0;
     private chargeEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
+    private chargeRing: Phaser.GameObjects.Image | null = null;
+    private chargeHit1 = false;
+    private chargeHit2 = false;
     private riflessoReadyAt = 0;
+    /** la scena lo alza finché il clone vive e lo scambio non è usato */
+    riflessoSwapAvailable = false;
     private analisiReadyAt = 0;
     private scudoReadyAt = 0;
     private acquaReadyAt = 0;
@@ -135,6 +142,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         return this.dashing;
     }
 
+    get isGrounded(): boolean {
+        return this.grounded;
+    }
+
+    /** frazione di ricarica restante per wave, 0 pronta: la legge l'hud */
+    cooldowns(): Partial<Record<AbilityId, number>> {
+        const now = this.scene.time.now;
+        const frac = (readyAt: number, total: number): number => {
+            const left = readyAt - now;
+            return left <= 0 ? 0 : Math.min(1, left / total);
+        };
+        return {
+            riflesso: this.riflessoSwapAvailable ? 0 : frac(this.riflessoReadyAt, COMBAT.riflessoCooldownMs),
+            risonante: 0,
+            analisi: frac(this.analisiReadyAt, COMBAT.analisiCooldownMs),
+            scudo: frac(this.scudoReadyAt, COMBAT.scudoCooldownMs),
+            acquatossica: frac(this.acquaReadyAt, COMBAT.acquaCooldownMs),
+        };
+    }
+
+    /** invulnerabilità breve regalata dallo scambio col riflesso */
+    grantInvuln(ms: number): void {
+        this.invulnUntil = Math.max(this.invulnUntil, this.scene.time.now + ms);
+    }
+
     get invulnerable(): boolean {
         return state.godMode || this.dashing || this.hidden || this.scene.time.now < this.invulnUntil;
     }
@@ -208,11 +240,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.airJumpUsed = false;
             if (now >= this.wallDustAt) {
                 this.wallDustAt = now + 90;
-                const dust = this.scene.add.particles(this.x + pressingWall * 16, this.y + 10, 'p-dot', {
-                    speed: { min: 10, max: 40 }, angle: { min: 240, max: 300 }, scale: { start: 0.35, end: 0 },
-                    alpha: { start: 0.5, end: 0 }, lifespan: 260, quantity: 1, stopAfter: 1,
-                });
-                this.scene.time.delayedCall(600, () => dust.destroy());
+                // graffio sul muro: resta e svanisce piano
+                const mark = this.scene.add.image(this.x + pressingWall * 14, this.y + 6, FX.scratch)
+                    .setDepth(3).setFlipX(pressingWall < 0).setAlpha(0.85);
+                this.scene.tweens.add({ targets: mark, alpha: 0, duration: 1200, onComplete: () => mark.destroy() });
             }
         } else if (this.grounded) {
             this.wallUntil = 0;
@@ -279,13 +310,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.wallUntil = 0;
                 this.jumpBufferedUntil = 0;
                 sfx.jump();
-                this.burst(0x4ade80, 5);
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'aggrappo' });
+                // spruzzo d'inchiostro dal lato del muro
+                const spray = this.scene.add.particles(this.x - this.wallSide * 14, this.y, 'p-dot', {
+                    speed: { min: 60, max: 180 }, angle: this.wallSide < 0 ? { min: -40, max: 40 } : { min: 140, max: 220 },
+                    scale: { start: 0.5, end: 0 }, alpha: { start: 0.6, end: 0 }, tint: 0x0b0c10,
+                    lifespan: 320, quantity: 6, stopAfter: 6,
+                });
+                this.scene.time.delayedCall(700, () => spray.destroy());
             } else if (!this.airJumpUsed && state.hasAbility('rimbalzo')) {
                 body.setVelocityY(-PHYSICS.doubleJumpVelocity);
                 this.airJumpUsed = true;
                 this.jumpBufferedUntil = 0;
                 sfx.doubleJump();
-                this.burst(0x4ade80, 7);
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'rimbalzo' });
+                // anello di pennello che si apre sotto i piedi
+                const ring = this.scene.add.image(this.x, this.y + 22, FX.ringJump).setDepth(3);
+                this.scene.tweens.add({
+                    targets: ring, scaleX: 1.7, scaleY: 1.7, alpha: 0, duration: 220,
+                    onComplete: () => ring.destroy(),
+                });
+                const drops = this.scene.add.particles(this.x, this.y + 20, 'p-dot', {
+                    speed: { min: 40, max: 120 }, angle: { min: 20, max: 160 },
+                    scale: { start: 0.4, end: 0 }, tint: 0x4ade80, lifespan: 380, quantity: 6, stopAfter: 6,
+                });
+                this.scene.time.delayedCall(800, () => drops.destroy());
             }
         }
         // salto variabile: rilascio = taglio della spinta
@@ -306,11 +355,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         if (Phaser.Input.Keyboard.JustDown(this.keys.eat)) bus.emit('toast', { text: quickHeal() });
 
-        if (Phaser.Input.Keyboard.JustDown(this.keys.riflesso) && state.hasAbility('riflesso') && now >= this.riflessoReadyAt) {
+        if (Phaser.Input.Keyboard.JustDown(this.keys.riflesso) && state.hasAbility('riflesso')) {
+            // seconda pressione col clone vivo: scambio di posto, non un clone nuovo
+            const scene = this.scene as unknown as { cloneAlive?: boolean };
+            if (this.riflessoSwapAvailable && scene.cloneAlive) {
+                this.scene.events.emit('player-riflesso-swap', {});
+                return;
+            }
+            if (now < this.riflessoReadyAt) return;
             if (this.spendFlow(COMBAT.riflessoCost * state.mods.abilityCost)) {
                 this.riflessoReadyAt = now + COMBAT.riflessoCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-riflesso', { x: this.x, y: this.y, facing: this.facing });
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'riflesso' });
             }
         }
 
@@ -319,6 +376,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-analisi', {});
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'analisi' });
             }
         }
 
@@ -327,6 +385,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.scudoReadyAt = now + COMBAT.scudoCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-scudo', {});
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'scudo' });
             }
         }
 
@@ -334,7 +393,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             if (this.spendFlow(COMBAT.acquaCost * state.mods.abilityCost)) {
                 this.acquaReadyAt = now + COMBAT.acquaCooldownMs;
                 sfx.unlock();
-                this.scene.events.emit('player-acqua', { x: this.x, y: this.y });
+                // in aria la lasci cadere sotto di te, a terra la lanci ad arco
+                const body = this.body as Phaser.Physics.Arcade.Body;
+                const aim = !body.blocked.down ? 'drop' : 'lob';
+                this.scene.events.emit('player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'acquatossica' });
             }
         }
 
@@ -397,8 +460,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             if (now >= this.nextRegenAt) {
                 this.nextRegenAt = now + COMBAT.regenTickMs;
                 state.run.hp += 1;
-                this.burst(0x4ade80, 5);
-                this.emitVitals(false);
+                // la cura si vede: una goccia scende sul geco
+                const drip = this.scene.add.image(this.x, this.y - 34, FX.regenDrip).setDepth(6);
+                const glow = this.scene.add.image(this.x, this.y - 34, `${FX.regenDrip}~glow`)
+                    .setDepth(5).setBlendMode(Phaser.BlendModes.ADD);
+                this.scene.tweens.add({
+                    targets: [drip, glow], y: this.y - 6, alpha: 0, duration: 420,
+                    onComplete: () => { drip.destroy(); glow.destroy(); },
+                });
+                sfx.regen();
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'rigenerazione' });
+                bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false, regen: true });
+                bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
             }
         } else if (now - this.lastDamageAt <= COMBAT.regenIdleMs) {
             this.nextRegenAt = 0;
@@ -432,17 +505,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         body.setAccelerationX(0);
         sfx.dash();
         this.scene.events.emit('player-act', { act: 'dash' });
+        this.scene.events.emit('player-act', { act: 'wave', wave: 'scivolata' });
         this.play('p-jump', true);
-        // scia di afterimage
+        // sagome d'inchiostro che restano indietro
         for (let i = 0; i < 4; i++) {
             this.scene.time.delayedCall(i * 35, () => {
                 if (!this.scene) return;
-                const ghost = this.scene.add.image(this.x, this.y, this.texture.key, this.frame.name)
-                    .setFlipX(this.flipX).setScale(this.scaleX, this.scaleY)
-                    .setAlpha(0.35).setTint(0x4ade80).setDepth(this.depth - 1);
+                const ghost = this.scene.add.image(this.x, this.y, FX.dashGhost)
+                    .setFlipX(this.flipX).setScale(0.8)
+                    .setAlpha(0.45).setTint(0x4ade80).setDepth(this.depth - 1);
                 this.scene.tweens.add({ targets: ghost, alpha: 0, duration: 220, onComplete: () => ghost.destroy() });
             });
         }
+        // linee di velocità orizzontali dietro il geco
+        const lines = this.scene.add.particles(this.x - this.facing * 20, this.y, 'p-dot', {
+            speed: { min: 200, max: 420 }, angle: this.facing > 0 ? { min: 165, max: 195 } : { min: -15, max: 15 },
+            scale: { start: 0.35, end: 0 }, alpha: { start: 0.5, end: 0 }, tint: 0xe8e6df,
+            lifespan: 260, quantity: 6, stopAfter: 6,
+        });
+        this.scene.time.delayedCall(600, () => lines.destroy());
+        if ((this.body as Phaser.Physics.Arcade.Body).blocked.down) this.dust(5);
     }
 
     private tryAttack(dir: AttackDir): void {
@@ -499,10 +581,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     private updateRisonante(now: number): void {
         if (!state.hasAbility('risonante')) return;
-        const risonanteCost = COMBAT.risonanteCost * state.mods.abilityCost;
-        if (this.keys.risonante.isDown && !this.charging && state.run.flow >= risonanteCost) {
+        const ecoCost = COMBAT.risonanteEcoCost * state.mods.abilityCost;
+        if (this.keys.risonante.isDown && !this.charging && state.run.flow >= ecoCost) {
             this.charging = true;
             this.chargeStart = now;
+            this.chargeHit1 = false;
+            this.chargeHit2 = false;
             this.chargeEmitter = this.scene.add.particles(0, 0, 'p-spark', {
                 follow: this,
                 speed: { min: 40, max: 120 },
@@ -511,20 +595,63 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 lifespan: 300,
                 frequency: 40,
             });
+            this.chargeRing = this.scene.add.image(this.x, this.y, FX.chargeRing).setDepth(5).setScale(1.4).setAlpha(0.8);
+        }
+        if (this.charging) {
+            const held = now - this.chargeStart;
+            // l'anello si stringe sul geco mentre carichi
+            this.chargeRing?.setPosition(this.x, this.y).setScale(Math.max(0.6, 1.4 - held / 1400));
+            if (!this.chargeHit1 && held >= COMBAT.risonanteChargeMs) {
+                this.chargeHit1 = true;
+                sfx.chargeStep(1);
+                this.scene.cameras.main.flash(60, 168, 85, 247);
+            }
+            if (!this.chargeHit2 && held >= COMBAT.risonanteFullChargeMs) {
+                this.chargeHit2 = true;
+                sfx.chargeStep(2);
+                this.chargeRing?.setTint(0xa855f7);
+                this.scene.cameras.main.flash(90, 168, 85, 247);
+            }
         }
         if (this.charging && !this.keys.risonante.isDown) {
-            const charged = now - this.chargeStart >= COMBAT.risonanteChargeMs;
+            const held = now - this.chargeStart;
             this.chargeEmitter?.destroy();
             this.chargeEmitter = null;
+            this.chargeRing?.destroy();
+            this.chargeRing = null;
             this.charging = false;
-            if (charged && this.spendFlow(risonanteCost)) {
-                sfx.shoot();
+            // tre colpi, mai un rilascio a vuoto: si spara il più forte che puoi pagare
+            const fullCost = COMBAT.risonanteFullCost * state.mods.abilityCost;
+            const waveCost = COMBAT.risonanteCost * state.mods.abilityCost;
+            let level: 0 | 1 | 2 = 0;
+            let cost = ecoCost;
+            if (held >= COMBAT.risonanteFullChargeMs && state.run.flow >= fullCost) {
+                level = 2;
+                cost = fullCost;
+            } else if (held >= COMBAT.risonanteChargeMs && state.run.flow >= waveCost) {
+                level = 1;
+                cost = waveCost;
+            } else if (state.run.flow < ecoCost) {
+                sfx.ui();
+                bus.emit('toast', { text: 'flow insufficiente. colpisci qualcosa.' });
+                return;
+            }
+            if (this.spendFlow(cost)) {
+                if (level === 2) sfx.shootFull();
+                else if (level === 1) sfx.shoot();
+                else sfx.shootEco();
                 this.scene.cameras.main.flash(80, 168, 85, 247);
-                this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing });
+                this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing, level });
                 this.scene.events.emit('player-act', { act: 'attack', dir: 'shot' });
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'risonante', level });
             } else {
                 sfx.ui();
             }
+        }
+        // tasto mollato mentre non caricavi: niente
+        if (!this.charging && this.chargeRing) {
+            this.chargeRing.destroy();
+            this.chargeRing = null;
         }
     }
 
@@ -593,6 +720,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (state.run.hp <= 0) {
             this.dead = true;
             this.chargeEmitter?.destroy();
+            this.chargeRing?.destroy();
+            this.chargeRing = null;
             sfx.die();
             this.scene.events.emit('player-dead');
         }
@@ -608,6 +737,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.burst(0xf87171, 14);
         this.dead = true;
         this.chargeEmitter?.destroy();
+        this.chargeRing?.destroy();
+        this.chargeRing = null;
         sfx.die();
         this.scene.events.emit('player-dead');
     }
@@ -659,26 +790,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     private slashVisual(dir: AttackDir, combo: number): void {
-        const g = this.scene.add.graphics().setDepth(this.depth + 1);
-        const angle = dir === 'up' ? -Math.PI / 2 : dir === 'down' ? Math.PI / 2 : this.facing === 1 ? 0 : Math.PI;
+        // pennellata: forma piena col bordo chiaro, il terzo con la coda d'inchiostro
         const big = combo === 2;
-        const radius = big ? 52 : 42;
-        g.lineStyle(big ? 4 : 3, 0xffffff, 0.9);
-        g.beginPath();
-        g.arc(0, 0, radius, angle - 0.95, angle + 0.95);
-        g.strokePath();
-        g.lineStyle(2, big ? 0xa855f7 : 0x4ade80, 0.6);
-        g.beginPath();
-        g.arc(0, 0, radius + 7, angle - 0.75, angle + 0.75);
-        g.strokePath();
-        g.setPosition(this.x, this.y);
+        const key = big ? FX.slashBig : FX.slash;
+        const angle = dir === 'up' ? -Math.PI / 2 : dir === 'down' ? Math.PI / 2 : this.facing === 1 ? 0 : Math.PI;
+        const img = this.scene.add.image(this.x, this.y, key).setDepth(this.depth + 1).setRotation(angle);
         this.scene.tweens.add({
-            targets: g,
+            targets: img,
             alpha: 0,
-            scaleX: big ? 1.45 : 1.25,
-            scaleY: big ? 1.45 : 1.25,
+            scaleX: big ? 1.3 : 1.15,
+            scaleY: big ? 1.3 : 1.15,
             duration: big ? 180 : 140,
-            onComplete: () => g.destroy(),
+            onComplete: () => img.destroy(),
         });
     }
 

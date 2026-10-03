@@ -45,6 +45,7 @@ import { music } from '../engine/music';
 import { generateFogTexture } from '../engine/textures';
 import { Boss } from '../entities/Boss';
 import { animateCreature, creatureFrames, creatureRes } from '../engine/art/creatureKit';
+import { ensureAbilityFx, FX } from '../engine/art/abilityFx';
 import { ensureCreature, prewarmCreatures } from '../engine/art/creatures';
 import { Companion } from '../entities/Companion';
 import { Enemy, type EnemyTrait } from '../entities/Enemy';
@@ -181,9 +182,27 @@ export class GameScene extends Phaser.Scene {
     private clone: Companion | null = null;
     private cloneUntil = 0;
     private cloneColliders: Phaser.Physics.Arcade.Collider[] = [];
+    private cloneTwin: Phaser.GameObjects.Image | null = null;
+    private cloneJitterAt = 0;
+    private cloneWaveAt = 0;
+    private cloneSwapUsed = false;
+    /** il player lo legge per sapere se la seconda pressione è uno scambio */
+    get cloneAlive(): boolean {
+        return !!this.clone?.active;
+    }
     private analisiUntil = 0;
     private nextAnalisiTick = 0;
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
+    private analisiPhase: 0 | 1 | 2 | 3 = 0;
+    private analisiStart = 0;
+    private analisiQedDone = false;
+    private analisiMarked = new Set<Enemy>();
+    private analisiMarks = new Map<Enemy, Phaser.GameObjects.Image>();
+    private analisiBossMarked = false;
+    private analisiCircle: Phaser.GameObjects.Graphics | null = null;
+    private analisiQed: Phaser.GameObjects.Image | null = null;
+    private lastCooldownEmit = 0;
+    private lastDashWaveAt = 0;
     private guide: RegionGuide | null = null;
     /** percorso della freccia: ricalcolato solo cambiando stanza */
     private guideCacheKey = '';
@@ -224,7 +243,7 @@ export class GameScene extends Phaser.Scene {
     private lamettaActive = false;
     private lamettaFloorY = 0;
     private smelaArena: { x: number; y: number } | null = null;
-    private acquaPuddles: { gfx: Phaser.GameObjects.Graphics; x: number; y: number; until: number; nextTick: number }[] = [];
+    private acquaPuddles: { img: Phaser.GameObjects.Image; glow: Phaser.GameObjects.Image; x: number; y: number; until: number; nextTick: number; waveAt: number }[] = [];
     private nextLametteAt = 0;
     private nextPitturaAt = 0;
     private colorDropsTaken = 0;
@@ -243,6 +262,13 @@ export class GameScene extends Phaser.Scene {
     // tommasoscudo
     private scudoUntil = 0;
     private scudoGfx: Phaser.GameObjects.Graphics | null = null;
+    private scudoStart = 0;
+    private scudoBubble: Phaser.GameObjects.Image | null = null;
+    private scudoBubbleGlow: Phaser.GameObjects.Image | null = null;
+    private scudoRec: Phaser.GameObjects.Image | null = null;
+    // bottiglie di smela in volo e avvelenamento
+    private acquaBottles: Phaser.Physics.Arcade.Sprite[] = [];
+    private poisoned = new Map<Enemy | Boss, number>();
     // inseguimenti nella tana: lochef ci prova più di una volta
     private chaseSprite: Phaser.GameObjects.Sprite | null = null;
     private chaseLastSeen = { x: 0, y: 0 };
@@ -326,9 +352,25 @@ export class GameScene extends Phaser.Scene {
         this.quizAttempts.clear();
         this.clone = null;
         this.cloneColliders = [];
+        this.cloneTwin = null;
+        this.cloneJitterAt = 0;
+        this.cloneWaveAt = 0;
+        this.cloneSwapUsed = false;
         this.mirror = null;
         this.interactables = [];
         this.analisiGlyphs = [];
+        this.analisiUntil = 0;
+        this.nextAnalisiTick = 0;
+        this.analisiPhase = 0;
+        this.analisiStart = 0;
+        this.analisiQedDone = false;
+        this.analisiMarked.clear();
+        this.analisiMarks.clear();
+        this.analisiBossMarked = false;
+        this.analisiCircle = null;
+        this.analisiQed = null;
+        this.lastCooldownEmit = 0;
+        this.lastDashWaveAt = 0;
         this.homing = [];
         this.busStops = [];
         this.npcAt.clear();
@@ -341,8 +383,10 @@ export class GameScene extends Phaser.Scene {
         this.lamettaCenter = null;
         this.lamettaActive = false;
         this.smelaArena = null;
-        this.acquaPuddles.forEach((p) => p.gfx.destroy());
+        this.acquaPuddles.forEach((p) => { p.img.destroy(); p.glow.destroy(); });
         this.acquaPuddles = [];
+        this.acquaBottles = [];
+        this.poisoned.clear();
         this.colorDropsTaken = 0;
         this.bossIntroShown = false;
         this.pedroChoiceShown = false;
@@ -352,6 +396,10 @@ export class GameScene extends Phaser.Scene {
         this.pattoWarned = 0;
         this.scudoUntil = 0;
         this.scudoGfx = null;
+        this.scudoStart = 0;
+        this.scudoBubble = null;
+        this.scudoBubbleGlow = null;
+        this.scudoRec = null;
         this.chaseSprite = null;
         this.chaseTrail = null;
         this.chaseStarts = [];
@@ -397,6 +445,7 @@ export class GameScene extends Phaser.Scene {
         this.lighting.enable(this.biome);
 
         this.level = loadLevel(this, this.def, this.biome);
+        ensureAbilityFx(this);
         prewarmCreatures(this, this.level.entities.map((e) => e.spec));
         this.level.layer.setDepth(2);
         this.level.spikes.setDepth(3, 0);
@@ -1799,7 +1848,7 @@ export class GameScene extends Phaser.Scene {
             this.hitstop();
             const open = LESSONS[enemy.arch.kind]?.openAfterShot;
             const mult = open && enemy.justFired ? open : hitMult(enemy.arch.kind, this.player.attackDir);
-            enemy.takeDamage(this.player.attackDamage * mult, this.player.x);
+            this.dmgTo(enemy, this.player.attackDamage * mult, this.player.x);
             this.weakFeedback(enemy, mult);
             // lo specchietto colpito dal basso perde quota e resta lì un attimo
             if (enemy.active && enemy.arch.kind === 'specchietto' && this.player.attackDir === 'up') {
@@ -1817,6 +1866,15 @@ export class GameScene extends Phaser.Scene {
                 this.weakFeedback(enemy, 2);
                 return;
             }
+            // rimando perfetto: chi ti tocca in quella finestra viene respinto senza farti danno
+            if (this.time.now < this.scudoUntil && this.time.now - this.scudoStart < COMBAT.scudoPerfectMs) {
+                const dir = Math.sign(enemy.x - this.player.x) || 1;
+                (enemy.body as Phaser.Physics.Arcade.Body)?.setVelocity(dir * 420, -260);
+                enemy.stun(COMBAT.scudoStunMs);
+                sfx.perfectDing();
+                this.refundNote();
+                return;
+            }
             this.player.hurt(1, enemy.x);
         });
 
@@ -1827,16 +1885,28 @@ export class GameScene extends Phaser.Scene {
             // il colpo risonante perfora ma ogni bersaglio lo subisce una volta
             const hitSet = (bullet.getData('hit') ?? new Set()) as Set<Enemy>;
             if (hitSet.has(enemy)) return;
-            if (enemy.blocks(bullet.x, 'shot')) {
+            const level = (bullet.getData('level') as number | undefined) ?? -1;
+            const reflected = !!bullet.getData('reflected');
+            // l'onda piena spacca anche gli scudi, eco e onda no
+            if (enemy.blocks(bullet.x, 'shot') && level !== 2) {
                 this.parry(enemy);
                 this.popProjectile(bullet);
                 return;
             }
             hitSet.add(enemy);
             bullet.setData('hit', hitSet);
-            const dmg = (bullet.getData('dmg') as number | undefined) ?? state.risonanteDamage * state.damageMult;
-            const mult = hitMult(enemy.arch.kind, bullet.getData('reflected') ? 'reflect' : 'shot');
-            enemy.takeDamage(dmg * mult, bullet.x);
+            const mult = hitMult(enemy.arch.kind, reflected ? 'reflect' : 'shot');
+            if (reflected) {
+                const dmg = (bullet.getData('dmg') as number | undefined) ?? COMBAT.scudoReflectNormal;
+                this.dmgTo(enemy, dmg * mult, bullet.x);
+                if (bullet.getData('perfect')) enemy.stun(COMBAT.scudoStunMs);
+            } else {
+                const step = level === 2 ? 2 : level === 1 ? 1 : 0.5;
+                this.dmgTo(enemy, state.risonanteDamage * state.damageMult * step * mult, bullet.x);
+                if (level === 2) enemy.stun(COMBAT.risonanteFullStunMs);
+                // l'eco corta non perfora: si ferma al primo
+                if (level === 0) this.popProjectile(bullet);
+            }
             this.weakFeedback(enemy, mult);
             this.player.onAttackHit();
         });
@@ -1874,7 +1944,7 @@ export class GameScene extends Phaser.Scene {
             this.physics.add.overlap(this.player.attackHitbox, this.boss, () => {
                 if (!this.player.attackActive || !this.boss) return;
                 this.player.attackActive = false;
-                if (this.boss.takeDamage(this.player.attackDamage, this.player.x, this.player.attackDir)) {
+                if (this.dmgTo(this.boss, this.player.attackDamage, this.player.x, this.player.attackDir)) {
                     this.player.onAttackHit();
                     this.hitstop();
                 } else if (this.boss.def.kind === 'guggu') {
@@ -1889,9 +1959,16 @@ export class GameScene extends Phaser.Scene {
             this.physics.add.overlap(this.playerProjectiles, this.boss, (obj, proj) => {
                 const bullet = (obj === this.boss ? proj : obj) as Phaser.Physics.Arcade.Sprite;
                 if (!this.boss || !bullet.active) return;
-                const dmg = (bullet.getData('dmg') as number | undefined) ?? state.risonanteDamage * state.damageMult;
-                if (this.boss.takeDamage(dmg, bullet.x, 'shot')) {
-                    this.player.onAttackHit();
+                const level = (bullet.getData('level') as number | undefined) ?? -1;
+                if (bullet.getData('reflected')) {
+                    const dmg = (bullet.getData('dmg') as number | undefined) ?? COMBAT.scudoReflectNormal;
+                    if (this.dmgTo(this.boss, dmg, bullet.x, 'shot')) this.player.onAttackHit();
+                } else {
+                    const step = level === 2 ? 2 : level === 1 ? 1 : 0.5;
+                    if (this.dmgTo(this.boss, state.risonanteDamage * state.damageMult * step, bullet.x, 'shot')) {
+                        this.player.onAttackHit();
+                    }
+                    if (level === 0) this.popProjectile(bullet);
                 }
             });
         }
@@ -1904,6 +1981,7 @@ export class GameScene extends Phaser.Scene {
         };
         on('player-risonante', this.onRisonante as never);
         on('player-riflesso', this.onRiflesso as never);
+        on('player-riflesso-swap', this.onRiflessoSwap as never);
         on('player-analisi', this.onAnalisi as never);
         on('player-scudo', this.onScudo as never);
         on('player-acqua', this.onAcquaTossica as never);
@@ -2436,7 +2514,9 @@ export class GameScene extends Phaser.Scene {
         this.updateGuide(time);
         this.updateAnalisi(time);
         this.updateScudo(time);
-        this.updateAcquaTossica(time);
+        this.updateAcquaTossica(time, delta);
+        this.updateAbilityFx(time);
+        this.updatePoison(time);
         this.updateLamettaArena(time);
         this.updateSmelaArena();
         this.updateWaterCure();
@@ -2592,7 +2672,7 @@ export class GameScene extends Phaser.Scene {
         for (const w of walls) this.destroyBreakableWall(w as Phaser.Physics.Arcade.Sprite);
         for (const child of this.enemies.getChildren()) {
             const e = child as Enemy;
-            if (e.active && Math.hypot(e.x - x, e.y - y) < r + 40) e.takeDamage(COMBAT.slamDamage, x);
+            if (e.active && Math.hypot(e.x - x, e.y - y) < r + 40) this.dmgTo(e, COMBAT.slamDamage, x);
         }
         if (!state.hasFlag('spiegato-schianto')) {
             state.setFlag('spiegato-schianto');
@@ -3483,22 +3563,26 @@ export class GameScene extends Phaser.Scene {
 
     /* ---------- abilità attive ---------- */
 
-    private onRisonante({ x, y, dir }: { x: number; y: number; dir: number }): void {
-        const proj = this.playerProjectiles.create(x, y, 'proj-risonante') as Phaser.Physics.Arcade.Sprite;
+    private onRisonante({ x, y, dir, level }: { x: number; y: number; dir: number; level?: number }): void {
+        const lv = (level === 2 ? 2 : level === 1 ? 1 : 0) as 0 | 1 | 2;
+        const key = lv === 2 ? FX.wave2 : lv === 1 ? FX.wave1 : FX.waveTap;
+        const proj = this.playerProjectiles.create(x, y, key) as Phaser.Physics.Arcade.Sprite;
         proj.setDepth(5);
         proj.setFlipX(dir < 0);
-        proj.setVelocityX(dir * COMBAT.risonanteSpeed);
+        const speed = lv === 2 ? COMBAT.risonanteFullSpeed : lv === 1 ? COMBAT.risonanteSpeed : COMBAT.risonanteEcoSpeed;
+        const life = lv === 2 ? COMBAT.risonanteFullLifeMs : lv === 1 ? COMBAT.risonanteLifeMs : COMBAT.risonanteEcoLifeMs;
+        proj.setVelocityX(dir * speed);
+        if (lv === 2) {
+            const body = proj.body as Phaser.Physics.Arcade.Body;
+            body.setSize(64, 64);
+        }
+        proj.setData('level', lv);
+        proj.setData('trailAt', 0);
+        proj.setData('waveAt', 0);
         this.lighting.follow(proj, 0x4ade80, 130, 0.8);
-        const trail = this.add.particles(0, 0, 'p-spark', {
-            follow: proj,
-            speed: 30,
-            scale: { start: 0.5, end: 0 },
-            tint: 0x4ade80,
-            lifespan: 200,
-            frequency: 30,
-        }).setDepth(4);
-        proj.setData('trail', trail);
-        this.time.delayedCall(1600, () => proj.active && this.popProjectile(proj));
+        const glow = this.add.image(x, y, `${key}~glow`).setDepth(4).setBlendMode(Phaser.BlendModes.ADD);
+        proj.setData('trail', glow);
+        this.time.delayedCall(life, () => proj.active && this.popProjectile(proj));
     }
 
     private onRiflesso({ x, y, facing }: { x: number; y: number; facing: number }): void {
@@ -3506,7 +3590,25 @@ export class GameScene extends Phaser.Scene {
         const clone = new Companion(this, x, y, facing < 0 ? -1 : 1);
         this.clone = clone;
         this.cloneUntil = this.time.now + COMBAT.riflessoDurationMs;
+        this.cloneSwapUsed = false;
+        this.player.riflessoSwapAvailable = true;
         this.lighting.follow(clone, 0x22d3ee, 180, 0.9);
+        // gemello luminoso sopra: vetro rotto che slitta a scatti
+        this.cloneTwin = this.add.image(x, y, clone.texture.key, clone.frame.name)
+            .setScale(clone.scaleX).setAlpha(0.35).setTint(0xa5f3fc)
+            .setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
+        this.cloneJitterAt = 0;
+        this.cloneWaveAt = 0;
+        // la nascita apre una stella di crepe
+        const crack = this.add.image(x, y, FX.mirrorCrack).setDepth(6).setScale(0.4).setAlpha(0.9);
+        const crackGlow = this.add.image(x, y, `${FX.mirrorCrack}~glow`).setDepth(5)
+            .setBlendMode(Phaser.BlendModes.ADD).setScale(0.4).setAlpha(0.7);
+        this.tweens.add({
+            targets: [crack, crackGlow], scaleX: 1.4, scaleY: 1.4, alpha: 0, duration: 300,
+            onComplete: () => { crack.destroy(); crackGlow.destroy(); },
+        });
+        sfx.mirrorBirth();
+        this.events.emit('player-act', { act: 'wave', wave: 'riflesso' });
 
         // stessa fisica del player: terreno, muri, porte
         this.cloneColliders.push(
@@ -3523,7 +3625,7 @@ export class GameScene extends Phaser.Scene {
                 const enemy = obj as Enemy;
                 clone.consumeSwing();
                 this.cloneHitFx(enemy);
-                enemy.takeDamage(clone.attackDamage, clone.x);
+                this.dmgTo(enemy, clone.attackDamage, clone.x);
             }),
         );
         if (this.boss) {
@@ -3532,15 +3634,57 @@ export class GameScene extends Phaser.Scene {
                     if (!clone.attackActive || !this.boss) return;
                     clone.consumeSwing();
                     this.cloneHitFx(obj as Phaser.GameObjects.Sprite);
-                    this.boss.takeDamage(clone.attackDamage, clone.x);
+                    this.dmgTo(this.boss, clone.attackDamage, clone.x);
                 }),
             );
+        }
+    }
+
+    /** seconda pressione: geco e clone si scambiano di posto */
+    private onRiflessoSwap(): void {
+        const clone = this.clone;
+        if (!clone?.active || this.cloneSwapUsed) return;
+        if (state.run.flow < COMBAT.riflessoSwapCost * state.mods.abilityCost) {
+            bus.emit('toast', { text: TOASTS.noFlow });
+            return;
+        }
+        state.run.flow -= COMBAT.riflessoSwapCost * state.mods.abilityCost;
+        bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
+        this.cloneSwapUsed = true;
+        this.player.riflessoSwapAvailable = false;
+        const px = this.player.x;
+        const py = this.player.y;
+        this.player.setPosition(clone.x, clone.y);
+        clone.setPosition(px, py);
+        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        body.setVelocity(0, 0);
+        this.player.grantInvuln(300);
+        sfx.mirrorSwap();
+        this.events.emit('player-act', { act: 'wave', wave: 'riflesso' });
+        for (const [sx, sy] of [[this.player.x, this.player.y], [px, py]] as const) {
+            for (let i = 0; i < 4; i++) {
+                const s = this.add.image(sx, sy, FX.mirrorShard).setDepth(6);
+                const a = Math.random() * Math.PI * 2;
+                this.tweens.add({
+                    targets: s,
+                    x: sx + Math.cos(a) * 60,
+                    y: sy + Math.sin(a) * 60,
+                    angle: 200,
+                    alpha: 0,
+                    duration: 400,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => s.destroy(),
+                });
+            }
         }
     }
 
     private killClone(): void {
         this.cloneColliders.forEach((c) => c.destroy());
         this.cloneColliders = [];
+        this.cloneTwin?.destroy();
+        this.cloneTwin = null;
+        this.player.riflessoSwapAvailable = false;
         this.clone?.kill();
         this.clone = null;
     }
@@ -3573,6 +3717,13 @@ export class GameScene extends Phaser.Scene {
         return best;
     }
 
+    /** il bersaglio vicino per il riflesso: senza nemici attorno resta fermo dov'è */
+    private nearHostile(x: number, y: number): (Phaser.GameObjects.Sprite & { active: boolean }) | null {
+        const h = this.nearestHostile(x, y);
+        if (!h || Math.hypot(h.x - x, h.y - y) > 700) return null;
+        return h;
+    }
+
     private updateClone(time: number, delta: number): void {
         const clone = this.clone;
         if (!clone || !clone.active) return;
@@ -3580,48 +3731,159 @@ export class GameScene extends Phaser.Scene {
             this.killClone();
             return;
         }
-        clone.update(time, delta, this.nearestHostile(clone.x, clone.y));
+        clone.update(time, delta, this.nearHostile(clone.x, clone.y));
+        // il gemello luminoso slitta a scatti come un vetro rotto
+        if (this.cloneTwin) {
+            this.cloneTwin.setPosition(clone.x, clone.y).setFrame(clone.frame.name).setFlipX(clone.flipX);
+            if (time >= this.cloneJitterAt) {
+                this.cloneJitterAt = time + 80 + Math.random() * 60;
+                this.cloneTwin.x += Math.random() < 0.5 ? -2 : 2;
+            }
+        }
+        // gancio per il piano 7: il clone tocca il mondo ogni 200 ms
+        if (time - this.cloneWaveAt >= 200) {
+            this.cloneWaveAt = time;
+            const body = clone.body as Phaser.Physics.Arcade.Body | null;
+            const w = body?.width ?? 36;
+            const h = body?.height ?? 55;
+            this.waveWorld('riflesso', clone.x, clone.y, new Phaser.Geom.Rectangle(clone.x - w / 2, clone.y - h / 2, w, h));
+        }
     }
 
     private onAnalisi(): void {
-        this.analisiUntil = this.time.now + COMBAT.analisiDurationMs;
+        this.clearAnalisiFx();
+        this.analisiStart = this.time.now;
+        this.analisiUntil = this.analisiStart + COMBAT.analisiDurationMs;
+        this.analisiPhase = 1;
+        this.analisiQedDone = false;
         this.nextAnalisiTick = 0;
-        this.analisiGlyphs.forEach((g) => g.destroy());
-        this.analisiGlyphs = [0, 1, 2].map((i) => this.add.image(this.player.x, this.player.y, `glyph-${i}`).setDepth(6));
+        this.analisiCircle = this.add.graphics().setDepth(5);
+        sfx.chalk();
         this.cameras.main.flash(90, 96, 165, 250);
     }
 
+    /** dimostrazione in tre tempi: ipotesi, passaggi, q.e.d. il cerchio segue il geco */
     private updateAnalisi(time: number): void {
-        if (this.analisiGlyphs.length === 0) return;
+        if (this.analisiPhase === 0) return;
+        const elapsed = time - this.analisiStart;
         if (time >= this.analisiUntil) {
-            this.analisiGlyphs.forEach((g) => g.destroy());
-            this.analisiGlyphs = [];
+            this.clearAnalisiFx();
             return;
         }
-        this.analisiGlyphs.forEach((g, i) => {
-            const angle = time / 250 + (i * Math.PI * 2) / 3;
-            g.setPosition(
-                this.player.x + Math.cos(angle) * COMBAT.analisiRadius * 0.7,
-                this.player.y + Math.sin(angle) * COMBAT.analisiRadius * 0.7
-            );
-            g.setRotation(angle + Math.PI / 2);
-        });
-        if (time >= this.nextAnalisiTick) {
-            this.nextAnalisiTick = time + COMBAT.analisiTickMs;
-            const hits: (Enemy | Boss)[] = [];
-            this.enemies.getChildren().forEach((obj) => {
-                const e = obj as Enemy;
-                if (e.active && Math.hypot(e.x - this.player.x, e.y - this.player.y) < COMBAT.analisiRadius) hits.push(e);
+        const px = this.player.x;
+        const py = this.player.y;
+        const r = COMBAT.analisiRadius;
+        if (elapsed < 600) {
+            // ipotesi: il cerchio si disegna e chi è dentro viene segnato
+            const t = elapsed / 600;
+            this.analisiCircle?.clear();
+            this.analisiCircle?.lineStyle(4, 0xdbeafe, 0.85);
+            this.analisiCircle?.beginPath();
+            this.analisiCircle?.arc(px, py, r, -Math.PI / 2, -Math.PI / 2 + t * Math.PI * 2);
+            this.analisiCircle?.strokePath();
+            this.markAnalisiTargets(px, py, r);
+        } else {
+            if (this.analisiPhase === 1) {
+                this.analisiPhase = 2;
+                // passaggi: i sei teoremi cominciano a girare
+                this.analisiGlyphs = FX.glyphs.map((k) => this.add.image(px, py, k).setDepth(6));
+            }
+            this.analisiCircle?.clear();
+            this.analisiCircle?.lineStyle(2.5, 0xdbeafe, 0.5);
+            this.analisiCircle?.strokeCircle(px, py, r);
+            this.analisiGlyphs.forEach((g, i) => {
+                const angle = time / 280 + (i * Math.PI * 2) / 6;
+                g.setPosition(px + Math.cos(angle) * r * 0.7, py + Math.sin(angle) * r * 0.7);
+                g.setRotation(angle + Math.PI / 2);
             });
-            if (this.boss?.active && Math.hypot(this.boss.x - this.player.x, this.boss.y - this.player.y) < COMBAT.analisiRadius + 40) {
-                hits.push(this.boss);
+            this.markAnalisiTargets(px, py, r);
+            if (time >= this.nextAnalisiTick) {
+                this.nextAnalisiTick = time + COMBAT.analisiTickMs;
+                sfx.analisiTick();
+                for (const obj of this.enemies.getChildren()) {
+                    const e = obj as Enemy;
+                    if (!e.active || Math.hypot(e.x - px, e.y - py) >= r) continue;
+                    const mult = hitMult(e.arch.kind, 'analisi');
+                    this.dmgTo(e, 1 * state.damageMult * mult, px);
+                    this.weakFeedback(e, mult);
+                    this.player.onAttackHit();
+                }
+                if (this.boss?.active && Math.hypot(this.boss.x - px, this.boss.y - py) < r + 40) {
+                    this.dmgTo(this.boss, 1 * state.damageMult, px);
+                    this.player.onAttackHit();
+                }
             }
-            for (const h of hits) {
-                const mult = h instanceof Enemy ? hitMult(h.arch.kind, 'analisi') : 1;
-                h.takeDamage(1 * state.damageMult * mult, this.player.x);
-                if (h instanceof Enemy) this.weakFeedback(h, mult);
-                this.player.onAttackHit();
+            if (elapsed >= 1800 && !this.analisiQedDone) {
+                this.analisiQedDone = true;
+                this.analisiPhase = 3;
+                this.qedAnalisi(px, py, r);
             }
+        }
+        // le x restano sopra la testa di chi è segnato
+        for (const [e, mark] of this.analisiMarks) {
+            if (!e.active) {
+                mark.destroy();
+                this.analisiMarks.delete(e);
+                this.analisiMarked.delete(e);
+                continue;
+            }
+            mark.setPosition(e.x, e.y - 52);
+        }
+    }
+
+    /** chi è nel cerchio viene segnato con una x di gesso */
+    private markAnalisiTargets(px: number, py: number, r: number): void {
+        for (const obj of this.enemies.getChildren()) {
+            const e = obj as Enemy;
+            if (!e.active || this.analisiMarked.has(e)) continue;
+            if (Math.hypot(e.x - px, e.y - py) >= r) continue;
+            this.analisiMarked.add(e);
+            const mark = this.add.image(e.x, e.y - 52, FX.chalkX).setDepth(7);
+            this.analisiMarks.set(e, mark);
+        }
+        if (this.boss?.active && !this.analisiBossMarked && Math.hypot(this.boss.x - px, this.boss.y - py) < r + 40) {
+            this.analisiBossMarked = true;
+        }
+    }
+
+    /** q.e.d.: chi è ancora segnato paga */
+    private qedAnalisi(px: number, py: number, r: number): void {
+        for (const e of [...this.analisiMarked]) {
+            if (!e.active || Math.hypot(e.x - px, e.y - py) >= r) continue;
+            const mult = hitMult(e.arch.kind, 'analisi');
+            this.dmgTo(e, COMBAT.analisiQedDamage * state.damageMult * mult, px);
+            const body = e.body as Phaser.Physics.Arcade.Body | null;
+            body?.setVelocity(Math.sign(e.x - px) * 320, -200);
+            this.weakFeedback(e, mult);
+            this.player.onAttackHit();
+        }
+        if (this.analisiBossMarked && this.boss?.active && Math.hypot(this.boss.x - px, this.boss.y - py) < r + 40) {
+            this.dmgTo(this.boss, COMBAT.analisiQedBossDamage * state.damageMult, px);
+            this.player.onAttackHit();
+        }
+        this.analisiQed?.destroy();
+        this.analisiQed = this.add.image(px, py - 70, FX.qed).setDepth(7).setScale(0.6).setAlpha(0);
+        this.tweens.add({ targets: this.analisiQed, alpha: 1, scaleX: 1, scaleY: 1, duration: 220 });
+        sfx.qed();
+        this.cameras.main.flash(120, 219, 234, 254);
+        this.waveWorld('analisi', px, py, new Phaser.Geom.Circle(px, py, r));
+    }
+
+    private clearAnalisiFx(): void {
+        this.analisiPhase = 0;
+        this.analisiQedDone = false;
+        this.analisiMarked.clear();
+        for (const m of this.analisiMarks.values()) m.destroy();
+        this.analisiMarks.clear();
+        this.analisiBossMarked = false;
+        this.analisiGlyphs.forEach((g) => g.destroy());
+        this.analisiGlyphs = [];
+        this.analisiCircle?.destroy();
+        this.analisiCircle = null;
+        if (this.analisiQed) {
+            const q = this.analisiQed;
+            this.analisiQed = null;
+            this.tweens.add({ targets: q, alpha: 0, duration: 300, onComplete: () => q.destroy() });
         }
     }
 
@@ -3629,93 +3891,306 @@ export class GameScene extends Phaser.Scene {
 
     private onScudo(): void {
         this.scudoUntil = this.time.now + COMBAT.scudoDurationMs;
-        this.scudoGfx?.destroy();
-        this.scudoGfx = this.add.graphics().setDepth(6);
+        this.scudoStart = this.time.now;
+        this.clearScudoFx();
+        this.scudoBubble = this.add.image(this.player.x, this.player.y, FX.shieldPerfect).setDepth(6);
+        this.scudoBubbleGlow = this.add.image(this.player.x, this.player.y, `${FX.shield}~glow`).setDepth(5)
+            .setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.8);
+        this.scudoRec = this.add.image(this.player.x + 44, this.player.y - 52, FX.rec).setDepth(7);
+        sfx.crt();
         this.cameras.main.flash(70, 34, 211, 238);
         bus.emit('toast', { text: TOASTS.scudo });
     }
 
     private updateScudo(time: number): void {
-        if (!this.scudoGfx) return;
+        if (!this.scudoBubble) return;
         if (time >= this.scudoUntil) {
-            this.scudoGfx.destroy();
-            this.scudoGfx = null;
+            this.clearScudoFx();
             return;
         }
-        const left = (this.scudoUntil - time) / COMBAT.scudoDurationMs;
-        const r = 52 + Math.sin(time / 90) * 4;
-        this.scudoGfx.clear();
-        this.scudoGfx.lineStyle(2, 0x22d3ee, 0.4 + left * 0.5);
-        this.scudoGfx.strokeCircle(this.player.x, this.player.y, r);
-        this.scudoGfx.fillStyle(0x22d3ee, 0.07);
-        this.scudoGfx.fillCircle(this.player.x, this.player.y, r);
+        // i primi 220 ms il bordo è bianco e spesso: il rimando è perfetto
+        const perfect = time - this.scudoStart < COMBAT.scudoPerfectMs;
+        this.scudoBubble.setTexture(perfect ? FX.shieldPerfect : FX.shield);
+        this.scudoBubble.setPosition(this.player.x, this.player.y);
+        this.scudoBubble.setScale(1 + Math.sin(time / 90) * 0.03);
+        this.scudoBubbleGlow?.setPosition(this.player.x, this.player.y);
+        this.scudoRec?.setPosition(this.player.x + 44, this.player.y - 52);
     }
 
-    /** acqua tossica: versa una pozza che rallenta e avvelena chi ci passa */
-    private onAcquaTossica({ x, y }: { x: number; y: number }): void {
-        const gfx = this.add.graphics().setDepth(3);
-        this.acquaPuddles.push({ gfx, x, y: y + 16, until: this.time.now + COMBAT.acquaDurationMs, nextTick: 0 });
-        sfx.slash();
-        this.cameras.main.flash(60, 34, 211, 238);
+    private clearScudoFx(): void {
+        this.scudoBubble?.destroy();
+        this.scudoBubble = null;
+        this.scudoBubbleGlow?.destroy();
+        this.scudoBubbleGlow = null;
+        this.scudoRec?.destroy();
+        this.scudoRec = null;
+        this.scudoGfx?.destroy();
+        this.scudoGfx = null;
     }
 
-    private updateAcquaTossica(time: number): void {
+    /** scritta a pennarello del rimando perfetto */
+    private refundNote(): void {
+        const note = this.add.image(this.player.x, this.player.y - 64, FX.refund).setDepth(7).setScale(0.7);
+        this.tweens.add({ targets: note, y: note.y - 18, alpha: 0, duration: 600, onComplete: () => note.destroy() });
+    }
+
+    /** la bottiglia di smela: a terra la lanci ad arco, in aria la lasci cadere */
+    private onAcquaTossica({ x, y, facing, aim }: { x: number; y: number; facing: number; aim: 'lob' | 'drop' }): void {
+        const bottle = this.physics.add.sprite(x, y - 10, FX.bottle).setDepth(5);
+        const body = bottle.body as Phaser.Physics.Arcade.Body;
+        if (aim === 'lob') {
+            const v = COMBAT.acquaBottleSpeed;
+            body.setVelocity(facing * v * 0.82, -v * 0.57);
+        } else {
+            body.setVelocity(facing * 50, COMBAT.acquaBottleDropSpeed);
+        }
+        body.setAngularVelocity(facing * 540);
+        body.setSize(20, 36);
+        this.lighting.follow(bottle, 0x22d3ee, 120, 0.7);
+        this.acquaBottles.push(bottle);
+        sfx.bottleThrow();
+        this.physics.add.collider(bottle, this.level.layer, () => this.burstBottle(bottle, null));
+        this.physics.add.collider(bottle, this.level.breakableWalls, () => this.burstBottle(bottle, null));
+        this.physics.add.overlap(bottle, this.enemies, (_b, obj) => this.burstBottle(bottle, obj as Enemy));
+        if (this.boss) {
+            this.physics.add.overlap(bottle, this.boss, (_b, obj) => this.burstBottle(bottle, obj as Boss));
+        }
+        this.time.delayedCall(3000, () => bottle.active && this.burstBottle(bottle, null));
+    }
+
+    /** la bottiglia scoppia: colpo diretto più pozza */
+    private burstBottle(bottle: Phaser.Physics.Arcade.Sprite, hit: Enemy | Boss | null): void {
+        if (!bottle.active) return;
+        const x = bottle.x;
+        const y = bottle.y;
+        bottle.destroy();
+        this.acquaBottles = this.acquaBottles.filter((b) => b !== bottle && b.active);
+        sfx.bottleCrack();
+        // schegge di plastica
+        for (let i = 0; i < 7; i++) {
+            const s = this.add.image(x, y, FX.shard).setDepth(6);
+            const a = Math.random() * Math.PI * 2;
+            this.tweens.add({
+                targets: s,
+                x: x + Math.cos(a) * (30 + Math.random() * 50),
+                y: y + Math.sin(a) * (20 + Math.random() * 30),
+                angle: 260,
+                alpha: 0,
+                duration: 420,
+                ease: 'Quad.easeOut',
+                onComplete: () => s.destroy(),
+            });
+        }
+        // colpo diretto: effetto smela III, stordito e avvelenato (il boss non si stordisce)
+        if (hit?.active) {
+            this.applyPoison(hit);
+            if (hit instanceof Enemy) {
+                hit.stun(COMBAT.acquaDirectStunMs);
+                this.dmgTo(hit, 1 * hitMult(hit.arch.kind, 'acqua'), x);
+                this.player.onAttackHit();
+            } else {
+                this.dmgTo(hit, 1, x);
+                this.player.onAttackHit();
+            }
+        }
+        this.spawnPuddle(x, y);
+        this.waveWorld('acquatossica', x, y, new Phaser.Geom.Circle(x, y, COMBAT.acquaRadius));
+    }
+
+    private spawnPuddle(x: number, y: number): void {
+        while (this.acquaPuddles.length >= COMBAT.acquaMaxPuddles) {
+            const old = this.acquaPuddles.shift();
+            old?.img.destroy();
+            old?.glow.destroy();
+        }
+        // la pozza sta sul pavimento sotto il punto di scoppio, mai a mezz'aria
+        const c = Math.floor(x / TILE);
+        let r = Math.floor(y / TILE);
+        for (let k = 0; k < 10 && !this.nav.solid(c, r + 1); k++) r++;
+        y = (r + 1) * TILE - 6;
+        const img = this.add.image(x, y, FX.puddle).setDepth(3);
+        const glow = this.add.image(x, y, `${FX.puddle}~glow`).setDepth(2)
+            .setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.7);
+        this.acquaPuddles.push({ img, glow, x, y, until: this.time.now + COMBAT.acquaDurationMs, nextTick: 0, waveAt: 0 });
+        // una pozza sopra un getto di vapore lo spegne per un po'
+        this.traps?.suppress(x, y, COMBAT.acquaRadius, 6000);
+    }
+
+    private updateAcquaTossica(time: number, _delta: number): void {
         const r = COMBAT.acquaRadius;
         for (let i = this.acquaPuddles.length - 1; i >= 0; i--) {
-            const p = this.acquaPuddles[i];
+            const p = this.acquaPuddles[i]!;
             if (time >= p.until) {
-                p.gfx.destroy();
+                p.img.destroy();
+                p.glow.destroy();
                 this.acquaPuddles.splice(i, 1);
                 continue;
             }
-            const left = (p.until - time) / COMBAT.acquaDurationMs;
-            const rr = r + Math.sin(time / 140) * 4;
-            p.gfx.clear();
-            p.gfx.fillStyle(0x22d3ee, 0.10 + left * 0.10);
-            p.gfx.fillEllipse(p.x, p.y, rr * 2, rr * 0.7);
-            p.gfx.lineStyle(2, 0x22d3ee, 0.25 + left * 0.3);
-            p.gfx.strokeEllipse(p.x, p.y, rr * 2, rr * 0.7);
-
             const tick = time >= p.nextTick;
             if (tick) p.nextTick = time + COMBAT.acquaTickMs;
-            this.enemies.getChildren().forEach((obj) => {
+            // bolle che salgono e scoppiano
+            if (tick && Math.random() < 0.6) sfx.bubble();
+            if (tick) {
+                const bubble = this.add.particles(p.x + (Math.random() - 0.5) * 120, p.y, 'p-dot', {
+                    speed: { min: 20, max: 60 }, angle: { min: 250, max: 290 },
+                    scale: { start: 0.4, end: 0 }, tint: 0x99f6e4, lifespan: 500, quantity: 2, stopAfter: 2,
+                });
+                this.time.delayedCall(800, () => bubble.destroy());
+            }
+            // gancio per il piano 7: la pozza tocca il mondo ogni 300 ms
+            if (time - p.waveAt >= 300) {
+                p.waveAt = time;
+                this.waveWorld('acquatossica', p.x, p.y, new Phaser.Geom.Circle(p.x, p.y, r));
+            }
+            for (const obj of this.enemies.getChildren()) {
                 const e = obj as Enemy;
-                if (!e.active) return;
-                const dx = Math.abs(e.x - p.x);
-                const dy = Math.abs(e.y - p.y);
-                if (dx > r || dy > r * 0.7) return;
+                if (!e.active) continue;
+                if (Math.abs(e.x - p.x) > r || Math.abs(e.y - p.y) > r * 0.7) continue;
                 // rallentamento: smorza la velocità orizzontale finché è nella pozza
                 const body = e.body as Phaser.Physics.Arcade.Body;
                 body.velocity.x *= 0.45;
+                this.applyPoison(e);
                 if (tick) {
-                    e.takeDamage(COMBAT.acquaDamage * hitMult(e.arch.kind, 'acqua'), e.x);
-                    const splash = this.add.particles(e.x, e.y, 'p-dot', {
-                        speed: { min: 10, max: 30 }, angle: { min: 240, max: 300 },
-                        scale: { start: 0.4, end: 0 }, tint: 0x22d3ee, lifespan: 400, quantity: 3, stopAfter: 3,
-                    });
-                    this.time.delayedCall(800, () => splash.destroy());
+                    this.dmgTo(e, COMBAT.acquaDamage * hitMult(e.arch.kind, 'acqua'), e.x);
+                    this.player.onAttackHit();
                 }
-            });
+            }
+            if (this.boss?.active && Math.abs(this.boss.x - p.x) < r && Math.abs(this.boss.y - p.y) < r) {
+                this.applyPoison(this.boss);
+            }
         }
     }
 
-    /** il proiettile torna indietro, tinto di ciano e dei nostri */
+    /** avvelenato: per 4 s prende più danni da tutto, tinto di verde-ciano */
+    private applyPoison(target: Enemy | Boss): void {
+        const until = this.time.now + COMBAT.poisonMs;
+        if (!this.poisoned.has(target)) target.setTint(0x67e8a0);
+        this.poisoned.set(target, until);
+    }
+
+    private updatePoison(time: number): void {
+        for (const [target, until] of this.poisoned) {
+            if (!target.active || time >= until) {
+                if (target.active) target.clearTint();
+                this.poisoned.delete(target);
+            }
+        }
+    }
+
+    /** danno del geco con l'avvelenamento: +30%, +15% sui boss */
+    private dmgTo(target: Enemy | Boss, amount: number, fromX: number, dir?: 'side' | 'up' | 'down' | 'shot'): boolean {
+        const poisoned = (this.poisoned.get(target) ?? 0) > this.time.now;
+        const mult = poisoned ? (target instanceof Boss ? COMBAT.poisonBossMult : COMBAT.poisonMult) : 1;
+        if (target instanceof Boss) return target.takeDamage(amount * mult, fromX, dir);
+        target.takeDamage(amount * mult, fromX);
+        return true;
+    }
+
+    /** il gancio per il piano 7: un'abilità tocca il mondo, i sigilli ascolteranno */
+    private waveWorld(
+        wave: 'risonante' | 'analisi' | 'scudo' | 'acquatossica' | 'riflesso' | 'scivolata',
+        x: number,
+        y: number,
+        area: Phaser.Geom.Circle | Phaser.Geom.Rectangle,
+        level?: number,
+    ): void {
+        this.events.emit('wave-world', { wave, x, y, area, level });
+    }
+
+    /** ricariche all'hud, scie dei proiettili, scivolata che tocca il mondo */
+    private updateAbilityFx(time: number): void {
+        if (time - this.lastCooldownEmit >= 100) {
+            this.lastCooldownEmit = time;
+            bus.emit('wave-cooldowns', { cds: this.player.cooldowns(), flow: state.run.flow });
+        }
+        if (this.player.isDashing && time - this.lastDashWaveAt >= 60) {
+            this.lastDashWaveAt = time;
+            const body = this.player.body as Phaser.Physics.Arcade.Body | null;
+            const w = body?.width ?? 36;
+            const h = body?.height ?? 55;
+            this.waveWorld('scivolata', this.player.x, this.player.y,
+                new Phaser.Geom.Rectangle(this.player.x - w / 2, this.player.y - h / 2, w, h));
+        }
+        for (const obj of this.playerProjectiles.getChildren()) {
+            const proj = obj as Phaser.Physics.Arcade.Sprite;
+            if (!proj.active) continue;
+            const glow = proj.getData('trail') as Phaser.GameObjects.Image | undefined;
+            if (glow) glow.setPosition(proj.x, proj.y);
+            // scia di archi: una copia che svanisce, ogni 40 ms
+            const level = (proj.getData('level') as number | undefined) ?? -1;
+            if (level >= 0 && time - (proj.getData('trailAt') as number ?? 0) >= 40) {
+                proj.setData('trailAt', time);
+                const ghost = this.add.image(proj.x, proj.y, proj.texture.key, proj.frame.name)
+                    .setFlipX(proj.flipX).setAlpha(0.5).setDepth(4);
+                const pbody = proj.body as Phaser.Physics.Arcade.Body | null;
+                if (pbody) ghost.setDisplaySize(pbody.width, pbody.height);
+                this.tweens.add({ targets: ghost, alpha: 0, duration: 200, onComplete: () => ghost.destroy() });
+            }
+            // il colpo tocca il mondo mentre vola, ogni 60 ms
+            const wave = level >= 0 ? 'risonante' as const : (proj.getData('reflected') ? 'scudo' as const : null);
+            if (wave && time - (proj.getData('waveAt') as number ?? 0) >= 60) {
+                proj.setData('waveAt', time);
+                const pbody = proj.body as Phaser.Physics.Arcade.Body | null;
+                const w = pbody?.width ?? 26;
+                const h = pbody?.height ?? 18;
+                this.waveWorld(wave, proj.x, proj.y,
+                    new Phaser.Geom.Rectangle(proj.x - w / 2, proj.y - h / 2, w, h),
+                    level >= 0 ? level : (proj.getData('perfect') ? 2 : 1));
+            }
+            // rimando perfetto: insegue chi l'ha sparato finché è vivo
+            const homing = proj.getData('homing') as (Phaser.GameObjects.Sprite & { active: boolean }) | undefined;
+            if (homing?.active) {
+                const pbody = proj.body as Phaser.Physics.Arcade.Body | null;
+                if (pbody) {
+                    const dx = homing.x - proj.x;
+                    const dy = homing.y - proj.y;
+                    const speed = Math.hypot(pbody.velocity.x, pbody.velocity.y) || 400;
+                    const cur = Math.atan2(pbody.velocity.y, pbody.velocity.x);
+                    const want = Math.atan2(dy, dx);
+                    let diff = want - cur;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    const turn = Phaser.Math.Clamp(diff, -0.09, 0.09);
+                    const next = cur + turn;
+                    pbody.setVelocity(Math.cos(next) * speed, Math.sin(next) * speed);
+                }
+            } else if (homing && !homing.active) {
+                proj.setData('homing', null);
+            }
+        }
+    }
     private reflectProjectile(proj: Phaser.Physics.Arcade.Sprite): void {
         if (!proj.active) return;
         const body = proj.body as Phaser.Physics.Arcade.Body;
         const vx = body.velocity.x;
         const vy = body.velocity.y;
+        const perfect = this.time.now - this.scudoStart < COMBAT.scudoPerfectMs;
+        const shooter = proj.getData('shooter') as (Phaser.GameObjects.Sprite & { active: boolean }) | undefined;
         this.popProjectile(proj);
-        sfx.slash();
         const back = this.playerProjectiles.create(this.player.x, this.player.y - 6, 'proj-ball') as Phaser.Physics.Arcade.Sprite;
         back.setDepth(5);
         back.setTint(0x22d3ee);
-        // scudo nerfato: il rimando fa solo il 40% del danno nemico (1 -> 0.4)
-        back.setData('dmg', 0.4);
+        back.setData('dmg', perfect ? COMBAT.scudoReflectPerfect : COMBAT.scudoReflectNormal);
         back.setData('reflected', true);
+        back.setData('perfect', perfect);
+        back.setData('waveAt', 0);
+        if (perfect && shooter?.active) back.setData('homing', shooter);
         const speed = Math.max(360, Math.hypot(vx, vy));
         const angle = Math.atan2(-vy, -vx);
         back.setVelocity(Math.cos(angle) * speed * 1.15, Math.sin(angle) * speed * 1.15);
+        if (perfect) {
+            sfx.perfectDing();
+            this.refundNote();
+            const target = shooter?.active ? shooter : null;
+            if (target) {
+                const dx = target.x - back.x;
+                const dy = target.y - back.y;
+                const d = Math.hypot(dx, dy) || 1;
+                back.setVelocity((dx / d) * speed * 1.15, (dy / d) * speed * 1.15);
+            }
+        } else {
+            sfx.slash();
+        }
         this.time.delayedCall(2600, () => back.active && this.popProjectile(back));
     }
 
@@ -4214,6 +4689,9 @@ export class GameScene extends Phaser.Scene {
         const proj = this.enemyProjectiles.create(x, y, 'proj-ball') as Phaser.Physics.Arcade.Sprite;
         proj.setDepth(5);
         proj.setTint(color ?? 0xf87171);
+        // chi ha sparato: il rimando perfetto deve sapere a chi tornare
+        const shooter = this.nearestHostile(x, y);
+        if (shooter && Math.hypot(shooter.x - x, shooter.y - y) < 80) proj.setData('shooter', shooter);
         // ogni attacco ha la sua voce: il cecchino è un ago, la croce un mattone, la spirale ronza
         const v = speed ?? 330;
         const s = size ?? 1;
@@ -4702,7 +5180,7 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.attackHitbox, this.boss, () => {
             if (!this.player.attackActive || !this.boss) return;
             this.player.attackActive = false;
-            if (this.boss.takeDamage(this.player.attackDamage, this.player.x)) {
+            if (this.dmgTo(this.boss, this.player.attackDamage, this.player.x)) {
                 this.player.onAttackHit();
                 this.hitstop();
             }
@@ -4713,9 +5191,16 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.playerProjectiles, this.boss, (obj, proj) => {
             const bullet = (obj === this.boss ? proj : obj) as Phaser.Physics.Arcade.Sprite;
             if (!this.boss || !bullet.active) return;
-            const dmg = (bullet.getData('dmg') as number | undefined) ?? state.risonanteDamage * state.damageMult;
-            if (this.boss.takeDamage(dmg, bullet.x)) {
-                this.player.onAttackHit();
+            const level = (bullet.getData('level') as number | undefined) ?? -1;
+            if (bullet.getData('reflected')) {
+                const dmg = (bullet.getData('dmg') as number | undefined) ?? COMBAT.scudoReflectNormal;
+                if (this.dmgTo(this.boss, dmg, bullet.x)) this.player.onAttackHit();
+            } else {
+                const step = level === 2 ? 2 : level === 1 ? 1 : 0.5;
+                if (this.dmgTo(this.boss, state.risonanteDamage * state.damageMult * step, bullet.x)) {
+                    this.player.onAttackHit();
+                }
+                if (level === 0) this.popProjectile(bullet);
             }
         });
     }

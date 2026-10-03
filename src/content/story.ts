@@ -1281,27 +1281,27 @@ function processoCard(flags: string[]): { text: string; punch?: string } | null 
 export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key: string }> = {
     scivolata: {
         name: 'frammento della scivolata',
-        desc: 'premi SHIFT (o K) per scattare in avanti, invulnerabile. la wave ha manifestato il tuo desiderio: scappare con stile.',
+        desc: 'scatti in avanti, invulnerabile. la wave ha manifestato il tuo desiderio: scappare con stile.',
         key: 'shift',
     },
     rimbalzo: {
         name: 'frammento del rimbalzo',
-        desc: 'premi SPAZIO a mezz\'aria per saltare di nuovo. il desiderio di ivan era far volare la gente fuori dai bus. ci sei andato vicino.',
+        desc: 'salti di nuovo a mezz\'aria. il desiderio di ivan era far volare la gente fuori dai bus. ci sei andato vicino.',
         key: 'spazio ×2',
     },
     aggrappo: {
         name: 'frammento dell\'aggrappo',
-        desc: 'salta contro un muro e tieni la direzione: ti aggrappi e scivoli piano. premi SPAZIO per staccarti con un salto. la formicona si arrampicava sui muri del municipio per non pagare l\'affitto: adesso lo fai anche tu.',
+        desc: 'contro un muro tieni la direzione: ti aggrappi e scivoli piano, poi ti stacchi con un salto. la formicona si arrampicava sui muri del municipio per non pagare l\'affitto: adesso lo fai anche tu.',
         key: 'spazio sul muro',
     },
     riflesso: {
         name: 'riflesso distorto',
-        desc: 'premi G per evocare un clone che attira i nemici e incassa al posto tuo. rubato agli specchi di lametta, non dirglielo.',
+        desc: 'evochi un clone che attira i nemici e incassa al posto tuo. usalo di nuovo mentre c\'è: vi scambiate di posto. rubato agli specchi di lametta, non dirglielo.',
         key: 'g',
     },
     risonante: {
         name: 'colpo risonante',
-        desc: 'tieni premuto F per caricare, rilascia per sparare una barra perforante. la tecnokill di notino, ma con giudizio.',
+        desc: 'tieni premuto e rilascia. poco = un\'eco corta. di più = un\'onda che perfora. tanto, se hai flow = l\'onda piena, che spacca anche gli scudi. la tecnokill di notino, ma con giudizio.',
         key: 'f (tieni premuto)',
     },
     rigenerazione: {
@@ -1311,17 +1311,17 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
     },
     analisi: {
         name: 'analisi 1',
-        desc: 'premi H per scatenare una tempesta di teoremi attorno a te. le leggi matematiche come attacco. piema sarebbe fiero. o spaventato.',
+        desc: 'una dimostrazione in tre tempi: ipotesi (chi è nel cerchio viene segnato), passaggi (i teoremi girano), q.e.d. (chi è ancora segnato paga). piema sarebbe fiero. o spaventato.',
         key: 'h',
     },
     scudo: {
         name: 'tommasoscudo',
-        desc: 'premi R per una bolla che rimanda i proiettili al mittente. il frammento che alimentava la tommasorveglianza, riconvertito. assolutamente sicuro. 👍',
+        desc: 'una bolla che rimanda i proiettili. appena accesa, il rimando è perfetto: torna al mittente e lo stordisce. assolutamente sicuro. 👍',
         key: 'r',
     },
     acquatossica: {
-        name: 'acqua tossica',
-        desc: 'premi V per versare a terra una pozza dell\'acqua di smela: i nemici che ci passano si avvelenano e rallentano. tu sei immune. la sua arma, rivolta contro di lei.',
+        name: 'la bottiglia di smela',
+        desc: 'lanci la sua acqua premium: chi la prende in pieno si blocca (effetto smela III), chi ci cammina si avvelena e prende più danni. la sua arma, rivolta contro tutti.',
         key: 'v',
     },
 };

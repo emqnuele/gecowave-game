@@ -209,6 +209,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: `BiomeSound.echo` (default 1) passato in `AcousticTarget.echoMul` e applicato alle tre mandate eco in `apply()`; `burrow: 1.7`. `graveTick` diventa colpo basso (sine 82→55 Hz, 0.12) più click (rumore a 1400 Hz, 0.06): il click passa su qualsiasi cassa, il colpo resta scuro.
 **Conseguenze**: solo la tana rimbomba di più; resto del gioco invariato.
 
+### ADR-034 — le abilità rifatte
+**Contesto**: alcune wave erano inutili (l'acqua di smela: pozza ai piedi, lenta, debole) o frustranti (il risonante a vuoto se mollavi prima dei 650 ms), quasi tutte disegnate con cerchi di `Graphics` e particelle generiche, senza ricarica leggibile né suono proprio.
+**Decisione**: ogni wave ha un ruolo in combattimento, un gancio nel mondo (evento di scena `wave-world` con area e livello, che il piano 7 userà per i sigilli), grafica a inchiostro (`src/engine/art/abilityFx.ts`, gemelle `~glow` in ADD) e suono sintetizzato suo. Stato vecchio → nuovo: scivolata uguale ma con sagome d'inchiostro e linee di velocità; rimbalzo con anello di pennello; aggrappo con graffi sul muro; riflesso 6→7 s con scambio di posto (seconda pressione, costo 10, 300 ms invulnerabile) e grafica da vetro rotto, fermo senza nemici vicini (700 px); risonante a tre colpi (eco 12 flow ×0.5, onda 30 ×1, piena 45 ×2 che spacca gli scudi e stordisce 400 ms, mai i boss); analisi in tre tempi (ipotesi con cerchio di gesso e marcatura, passaggi con sei glifi, q.e.d. da 3/4 danni); scudo 2,2→1,6 s con rimando perfetto nei primi 220 ms (60% e insegue il tiratore, 25% dopo); acqua rifatta come bottiglia (lancio ad arco a terra, caduta in aria, max 2 pozze da 5 s, colpo diretto = smela III 1,1 s) con avvelenamento (+30% da tutto, +15% sui boss, 4 s, via `dmgTo` su fendenti/proiettili/analisi/clone/schianto/acqua); rigenerazione visibile (goccia, cuore che pulsa, nota bassa); fendente a pennellata e frammento a cristallo. Ricariche nell'HUD (`Player.cooldowns`, bus `wave-cooldowns` a 10 Hz, velo `conic-gradient` con `--cd`, chip spenta senza flow). `player-act` con `{ act: 'wave', wave, level }` per il piano 8. Tasti e `AbilityId` invariati; `proj-risonante` e `glyph-0..2` rimossi da `textures.ts`. Deviazioni dal piano: l'anello del risonante è una texture sola che si stringe (non tre fotogrammi); lo `shooter` del rimando è il nemico più vicino al punto di sparo (gli emit `enemy-shoot` non portano il tiratore); la pozza spegne i getti di vapore (`TrapManager.suppress`) ma resta sopra il pavimento sotto lo scoppio.
+**Conseguenze**: bilanciamento cambiato (vedi tabella nel resoconto); i salvataggi restano validi (stessi `AbilityId`, stessi costi base dove c'erano); niente rigenerazione regioni.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -253,6 +258,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **le abilità rifatte**: tre colpi risonanti, scambio del riflesso, analisi in tre tempi, rimando perfetto, bottiglia di smela, avvelenamento, grafica a inchiostro, ricariche nell'hud, evento `wave-world` (ADR-034).
 - **eco e tick nella tana**: rimbombo del burrow e colpi gravi udibili (ADR-033).
 - **terreno senza scatti**: preload più fondo contro i cali entrando nelle stanze (ADR-032).
 - **la tana è horror**: capitolo horror per sottrazione, scelta tolta, nascondigli con buio e sussurri, ospite n.12, migrazione salvataggi (ADR-031).
