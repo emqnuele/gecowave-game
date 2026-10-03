@@ -1,7 +1,7 @@
 import type { EntitySpec } from '../types';
 import type { SimAbilities } from './sim';
 import { simVerify } from './simfix';
-import type { RegionLayout, Room } from './types';
+import type { PhysicalAbilityGate, RegionLayout, Room } from './types';
 
 /* cancelli d'abilità: una nicchia con una ricompensa che si vede subito ma si
    raggiunge solo tornando con un'abilità che arriva più avanti. ogni cancello
@@ -12,6 +12,8 @@ export interface GateResult {
     grid: string[];
     entities: Record<string, EntitySpec>;
     gates: { c: number; r: number; kind: 'camino' | 'mensola'; room: number }[];
+    /** metadata dei cancelli fisici, da salvare nel layout per i sigilli */
+    physical: PhysicalAbilityGate[];
 }
 
 const LETTERS = '0123456789!?&$@*+=<>:;|/{}()[]_-abcdefghijklmnopqrstuvwxyzABDEGHIJKLMNOQRSTUVWYZ';
@@ -86,6 +88,7 @@ export function addGates(
     let rows = grid.map((r) => [...r]);
     let ents = { ...entities };
     const gates: GateResult['gates'] = [];
+    const physical: PhysicalAbilityGate[] = [];
     const used = new Set(Object.keys(ents));
     const free = [...LETTERS].filter((ch) => !used.has(ch) && !'#.^~F%PCX'.includes(ch));
     const sideRooms = layout.rooms.filter((o) => o.pathIndex < 0 && o.kind !== 'arena');
@@ -131,8 +134,14 @@ export function addGates(
         ents = nextEnts;
         free.shift();
         gates.push({ c: edit.reward.c, r: edit.reward.r, kind, room: cand.room.id });
+        physical.push({
+            kind,
+            ability: kind === 'mensola' ? 'rimbalzo' : 'aggrappo',
+            room: cand.room.id,
+            reward: edit.reward,
+        });
         log(`  cancello (${kind}) in stanza ${cand.room.id} a ${edit.reward.c},${edit.reward.r}`);
     }
     void FREE;
-    return { grid: rows.map((r) => r.join('')), entities: ents, gates };
+    return { grid: rows.map((r) => r.join('')), entities: ents, gates, physical };
 }

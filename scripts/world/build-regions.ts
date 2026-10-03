@@ -9,6 +9,7 @@ import { encodeRegion } from '../../src/world/codec';
 import { generateRegion } from '../../src/world/region';
 import { simRepair } from '../../src/world/simfix';
 import { computeTrials } from '../../src/world/trials';
+import type { PhysicalAbilityGate } from '../../src/world/types';
 import { abilitiesFor } from './abilities';
 
 /* genera tutte le regioni in public/regions: il gioco le carica già pronte.
@@ -64,13 +65,17 @@ function buildAttempt(id: string, firstAttempt: number, last: boolean): { ok: bo
         if (!now.double) passes.push({ dash: true, double: true });
         passes.push({ dash: true, double: true, wall: true });
         const gated: { c: number; r: number }[] = [];
+        const physical: PhysicalAbilityGate[] = [];
         for (const later of passes) {
             const want = later.wall ? 2 : 1;
             const g = addGates(grid, entities, region.layout, now, later, v.good, want, (s) => gateLog.push(s), gated);
             grid = g.grid;
             entities = g.entities;
             gated.push(...g.gates);
+            physical.push(...g.physical);
         }
+        // i sigilli del piano 7 ci si agganciano senza rigenerare a caso
+        if (physical.length) region.layout.abilityGates = physical;
     }
     // fino a 4 posti per stanza, sparsi in larghezza, su aria libera con la testa libera
     const rows = grid;
