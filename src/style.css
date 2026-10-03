@@ -262,7 +262,7 @@ body {
   width: 22px;
   height: 22px;
   background: url('/assets/heart.png') no-repeat center / contain;
-  filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.85));
+  filter: hue-rotate(110deg) drop-shadow(0 0 6px rgba(74, 222, 128, 0.85));
   transition: opacity 0.2s, filter 0.2s, transform 0.2s;
 }
 
