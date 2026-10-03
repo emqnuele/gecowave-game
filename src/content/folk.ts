@@ -28,9 +28,19 @@ export const FOLK_PEDRO = [
     'dicono che pedro non dorma mai. neanche io, adesso.',
     'se vedi pedro digli che non sono in casa.',
 ];
+/** negli atti finali la gente parla piano: il realm trattiene il fiato */
+export const FOLK_QUIET = [
+    'shh. non fare rumore. non qui.',
+    'hai sentito anche tu, vero?',
+    'il realm si sta raddrizzando. tieniti forte.',
+    'non ho più battute. solo paura.',
+    'vai, custode. corri.',
+    'se vedi la wave... dille che aspettavo.',
+];
+
+/** battute che valgono ovunque, con il contesto del momento */
 export const FOLK_CHAT = [
-    ['hai visto il custode?', 'quello? sembra stanco.'],
-    ['i prezzi della wavezon...', 'una rapina. compro tutto lo stesso.'],
+    ['hai visto il custode?', 'quello? sembra stanco.'],    ['i prezzi della wavezon...', 'una rapina. compro tutto lo stesso.'],
     ['ieri ho sognato la gecowave.', 'e com\'era?', 'in ritardo.'],
     ['secondo te il realm collassa davvero?', 'con calma, ma sì.'],
     ['mio cugino ha visto lametta.', 'sobrio?', 'no.'],

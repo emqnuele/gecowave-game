@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { TILE } from '../config';
-import { FOLK, FOLK_AFTER, FOLK_CHAT, FOLK_PANIC, FOLK_PEDRO, type FolkKind } from '../content/folk';
+import { FOLK, FOLK_AFTER, FOLK_CHAT, FOLK_PANIC, FOLK_PEDRO, FOLK_QUIET, type FolkKind } from '../content/folk';
+import { toneFor } from '../content/tone';
 import { mulberry32 } from './art/ink';
 import { folkImage } from './art/folk';
 import { CreatureGlow } from './art/creatureKit';
@@ -222,7 +223,8 @@ export class FolkManager {
             w.mode = 'face';
             w.until = now + 1800;
             w.facing = px < w.x ? -1 : 1;
-            const pool = state.save.doomsday > 0.45 && Math.random() < 0.4 ? FOLK_PEDRO : w.kind.barks;
+            const pool = toneFor(state.save.levelId).folk === 'quieto' && Math.random() < 0.6 ? FOLK_QUIET
+                : state.save.doomsday > 0.45 && Math.random() < 0.4 ? FOLK_PEDRO : w.kind.barks;
             this.say(w, pool[Math.floor(Math.random() * pool.length)]);
             return;
         }

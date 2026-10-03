@@ -9,6 +9,8 @@ class MusicManager {
     private currentPath: string | null = null;
     private fadeInterval: ReturnType<typeof setInterval> | null = null;
     private unlockListener: (() => void) | null = null;
+    /** true durante una battuta grave: la musica resta sotto i dialoghi seri */
+    private graveDuck = false;
     init(): void {
         bus.on('boss-hp', (payload) => {
             if (payload) {
@@ -60,7 +62,15 @@ class MusicManager {
 
     setVolume(vol: number): void {
         if (this.currentAudio) {
-            this.currentAudio.volume = vol * MUSIC_VOLUME_MULT;
+            this.currentAudio.volume = vol * MUSIC_VOLUME_MULT * (this.graveDuck ? 0.3 : 1);
+        }
+    }
+
+    /** abbassa/alza la musica sotto le battute gravi (vedi DialogueBox) */
+    setGraveDuck(on: boolean): void {
+        this.graveDuck = on;
+        if (this.currentAudio) {
+            this.currentAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * (on ? 0.3 : 1);
         }
     }
 
@@ -278,7 +288,7 @@ class MusicManager {
             if (oldAudio) {
                 oldAudio.volume = Math.max(0, startVol * (1 - progress));
             }
-            newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * progress;
+            newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * (this.graveDuck ? 0.3 : 1) * progress;
 
             if (currentStep >= steps) {
                 if (this.fadeInterval) {
@@ -289,7 +299,7 @@ class MusicManager {
                     oldAudio.pause();
                     oldAudio.remove();
                 }
-                newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT;
+                newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * (this.graveDuck ? 0.3 : 1);
             }
         }, stepTime);
     }

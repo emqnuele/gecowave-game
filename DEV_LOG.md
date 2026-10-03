@@ -193,3 +193,10 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **nemici**: scudati, appesi al soffitto, kamikaze.
 - **fase 6**: nemici e boss a inchiostro animati con normal map; acustica dei posti, ambienti per bioma, passi, situazioni.
 - **simulatore**: partenze multiple, salti senza presa, azzeramento del blocco del salto dal muro, controllo boss per stanza.
+
+## curva meme->serio (fase 5)
+- `src/content/tone.ts`: ogni capitolo ha atto 1-4 e livello 0-100; il geco fa versi, poi pensa (da rio), poi dice una frase vera sola (giorno 30).
+- `DialogueLine.mood`: meme/crepa/grave/silenzio. grave = typewriter a 46ms, niente blip, pannello nero (`dlg-grave`), musica al 30% (`music.setGraveDuck`, rispettato anche dai fade).
+- contenuti: atto 1 invariato; atto 2 crepe (notino-sconfitto, lochef-sconfitto, rio-cura, smela-sconfitta); atto 3 sobrio (lametta in cantina riscritto senza battuta sulla sedia, ticummi, mente-ordine, caso, verdetto); atto 4 tutto grave (ricordi, guide di romero, giorno30, verità, glitch, redento, processo); riscatto con coda nuova.
+- `deathPunchline(levelId)` e `FOLK_QUIET` (passanti zitti negli atti finali) via `toneFor`.
+- build + editor typecheck ok.

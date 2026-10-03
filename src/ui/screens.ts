@@ -5,7 +5,7 @@ import { loadBoard } from '../engine/score';
 import { assistToggle } from './assist';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { ITEMS } from '../content/items';
-import { ABILITY_CARDS, CREDITS, DEATH_PUNCHLINES } from '../content/story';
+import { ABILITY_CARDS, CREDITS, deathPunchline } from '../content/story';
 import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -535,7 +535,7 @@ export class Screens {
         const band = el('div', 'sx-death-band');
         band.append(el('h1', 'sx-death-title', 'sei morto'));
         const p = el('div', 'sx-death-punch');
-        p.textContent = DEATH_PUNCHLINES[Math.floor(Math.random() * DEATH_PUNCHLINES.length)];
+        p.textContent = deathPunchline(state.save.levelId);
         band.append(p);
         if (lost > 0) {
             const loss = el('div', 'sx-death-loss');

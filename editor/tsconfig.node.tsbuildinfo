@@ -1,1 +1,1 @@
-{"root":["./vite.config.ts","./src/plugins/fileIo.ts"],"version":"5.9.3"}
+{"root":["./vite.config.ts","./src/plugins/fileio.ts"],"version":"5.9.3"}

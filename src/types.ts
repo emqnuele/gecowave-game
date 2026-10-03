@@ -90,10 +90,15 @@ export interface LevelDef {
     ambientNote?: number;
 }
 
+export type DialogueMood = 'meme' | 'crepa' | 'grave' | 'silenzio';
+
 export interface DialogueLine {
     speaker: string;
     color: ZoneColor;
     text: string;
+    /** tono della battuta: grave rallenta la macchina da scrivere e abbassa la musica.
+        se manca, la battuta segue l'atto del capitolo. */
+    mood?: DialogueMood;
 }
 
 export interface SaveData {

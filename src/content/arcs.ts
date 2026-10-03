@@ -182,48 +182,48 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
 
     /* ---------- il quaderno di pedro ---------- */
     'quaderno-completo': [
-        { speaker: 'il geco', color: 'green', text: '*cinque pagine. le metti in fila sul pavimento, col nastro adesivo dello zaino. la calligrafia è pulita, quella di prima del glitch.*' },
-        { speaker: 'il geco', color: 'green', text: '*il muro della piazza. le quattro del mattino. i "ciao" a cui non rispondevi. eri tu. sei sempre stato tu.*' },
-        { speaker: 'il geco', color: 'green', text: '*la wave non ti ha scelto perché eri l\'unico sveglio a quell\'ora. ti ha scelto perché qualcuno gliel\'aveva chiesto.*' },
+        { speaker: 'il geco', color: 'green', text: '*cinque pagine. le metti in fila sul pavimento, col nastro adesivo dello zaino. la calligrafia è pulita, quella di prima del glitch.*', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*il muro della piazza. le quattro del mattino. i "ciao" a cui non rispondevi. eri tu. sei sempre stato tu.*', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*la wave non ti ha scelto perché eri l\'unico sveglio a quell\'ora. ti ha scelto perché qualcuno gliel\'aveva chiesto.*', mood: 'grave' },
     ],
     'pedro-quaderno': [
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che tira fuori cinque pagine strappate, ricomposte col nastro adesivo. le tiene in alto, verso di lui.*' },
-        { speaker: 'pedro', color: 'cyan', text: 'il mio q̸u̵a̶d̷e̸r̵n̶o̷. le pagine che ho strappato io, il giorno 41, perché nessuno sapesse c̸h̵i̶ avevo scelto.' },
-        { speaker: 'pedro', color: 'cyan', text: 'il muro. le q̸u̵a̶t̷t̸r̵o̶. sei tu. il geco del muro. ti avevo chiesto di raddrizzarmi se fossi diventato storto. e sei v̷e̸n̵u̶t̷o̸.' },
-        { speaker: 'pedro', color: 'cyan', text: 'il glitch dice di cancellarti. io dico di a̸s̵p̶e̷t̸t̵a̶r̷e̸. per adesso vince il glitch. ma solo di poco.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che tira fuori cinque pagine strappate, ricomposte col nastro adesivo. le tiene in alto, verso di lui.*', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: 'il mio q̸u̵a̶d̷e̸r̵n̶o̷. le pagine che ho strappato io, il giorno 41, perché nessuno sapesse c̸h̵i̶ avevo scelto.', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: 'il muro. le q̸u̵a̶t̷t̸r̵o̶. sei tu. il geco del muro. ti avevo chiesto di raddrizzarmi se fossi diventato storto. e sei v̷e̸n̵u̶t̷o̸.', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: 'il glitch dice di cancellarti. io dico di a̸s̵p̶e̷t̸t̵a̶r̷e̸. per adesso vince il glitch. ma solo di poco.', mood: 'grave' },
     ],
     'pedro-sconfitto-quaderno': [
-        { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̸i̵b̶i̸l̵e̶... no. possibilissimo. l\'avevo chiesto io.' },
-        { speaker: 'pedro', color: 'cyan', text: 'geco del muro... non hai mai risposto ai miei ciao. si capiva tutto lo stesso. g̸r̵a̶z̷i̸e̵.' },
+        { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̸i̵b̶i̸l̵e̶... no. possibilissimo. l\'avevo chiesto io.', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: 'geco del muro... non hai mai risposto ai miei ciao. si capiva tutto lo stesso. g̸r̵a̶z̷i̸e̵.', mood: 'grave' },
     ],
 
     /* ---------- il pensiero sepolto di piema (la mente) ---------- */
     'pensiero-sepolto': [
-        { speaker: 'il pensiero sepolto', color: 'blue', text: '«giorno 42, ore 04:20. log di nascita di pedro, riga 7: "lametta ordina a pedro di raddrizzare il realm". l\'ho letto. l\'ho corretto in "piema indaga sull\'anomalia". nessuno lo saprà. il socio è salvo. il realm, vedremo.»' },
-        { speaker: 'il pensiero sepolto', color: 'blue', text: '*il pensiero trema. è caldo, come una cosa che fa ancora male. se lo cancelli, piema non saprà mai che l\'hai visto. se lo porti fuori dalla sua testa, smette di essere un pensiero e diventa una prova.*' },
+        { speaker: 'il pensiero sepolto', color: 'blue', text: '«giorno 42, ore 04:20. log di nascita di pedro, riga 7: "lametta ordina a pedro di raddrizzare il realm". l\'ho letto. l\'ho corretto in "piema indaga sull\'anomalia". nessuno lo saprà. il socio è salvo. il realm, vedremo.»', mood: 'grave' },
+        { speaker: 'il pensiero sepolto', color: 'blue', text: '*il pensiero trema. è caldo, come una cosa che fa ancora male. se lo cancelli, piema non saprà mai che l\'hai visto. se lo porti fuori dalla sua testa, smette di essere un pensiero e diventa una prova.*', mood: 'grave' },
     ],
     'pensiero-cancellato': [
-        { speaker: 'il geco', color: 'green', text: '*lo cancelli. il pensiero si spegne senza un rumore. nella testa di piema, da qualche parte, qualcosa si rilassa.*' },
-        { speaker: 'piema (ovunque)', color: 'blue', text: '...strano. per un attimo mi è sembrato di essere perdonato. da chi, non so. non lo metto a verbale.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha appena fatto esattamente quello che fece piema. e lo sa.*' },
+        { speaker: 'il geco', color: 'green', text: '*lo cancelli. il pensiero si spegne senza un rumore. nella testa di piema, da qualche parte, qualcosa si rilassa.*', mood: 'grave' },
+        { speaker: 'piema (ovunque)', color: 'blue', text: '...strano. per un attimo mi è sembrato di essere perdonato. da chi, non so. non lo metto a verbale.', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha appena fatto esattamente quello che fece piema. e lo sa.*', mood: 'grave' },
     ],
     'pensiero-portato': [
-        { speaker: 'il geco', color: 'green', text: '*lo prendi. pesa più di un frammento. fuori dalla testa di piema diventerà carta, inchiostro, una riga sola: quella vera.*' },
-        { speaker: 'piema (ovunque)', color: 'blue', text: 'c\'è uno spiffero. come se qualcuno avesse aperto un cassetto che tenevo chiuso. ...bene. forse doveva aprirlo qualcun altro.' },
+        { speaker: 'il geco', color: 'green', text: '*lo prendi. pesa più di un frammento. fuori dalla testa di piema diventerà carta, inchiostro, una riga sola: quella vera.*', mood: 'grave' },
+        { speaker: 'piema (ovunque)', color: 'blue', text: 'c\'è uno spiffero. come se qualcuno avesse aperto un cassetto che tenevo chiuso. ...bene. forse doveva aprirlo qualcun altro.', mood: 'grave' },
     ],
     'garante-cancellato': [
-        { speaker: 'il garante', color: 'blue', text: 'tu. ti riconosco. eri nella mia testa, e un pensiero l\'hai cancellato. allora lo sai anche tu, com\'è: si fa per affetto. si fa per non perdere qualcuno.' },
-        { speaker: 'commissario romero', color: 'blue', text: 'custode... il log originale. mi manca. qualcuno l\'ha cancellato due volte: lui, e dopo di lui... lascia stare. non voglio saperlo. battiamolo e basta.' },
+        { speaker: 'il garante', color: 'blue', text: 'tu. ti riconosco. eri nella mia testa, e un pensiero l\'hai cancellato. allora lo sai anche tu, com\'è: si fa per affetto. si fa per non perdere qualcuno.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'custode... il log originale. mi manca. qualcuno l\'ha cancellato due volte: lui, e dopo di lui... lascia stare. non voglio saperlo. battiamolo e basta.', mood: 'grave' },
     ],
     'garante-prova': [
-        { speaker: 'il garante', color: 'blue', text: 'giuro che non sapevo. *mano alzata, bocca cucita.* non sapevo. non ho visto niente.' },
-        { speaker: 'commissario romero', color: 'blue', text: 'lo sapeva eccome. custode, quel pensiero che hai portato fuori dalla sua testa: è la riga originale del log, scritta da lui. il garante può giurare quanto vuole. battiamolo, il verbale lo chiudo io.' },
+        { speaker: 'il garante', color: 'blue', text: 'giuro che non sapevo. *mano alzata, bocca cucita.* non sapevo. non ho visto niente.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'lo sapeva eccome. custode, quel pensiero che hai portato fuori dalla sua testa: è la riga originale del log, scritta da lui. il garante può giurare quanto vuole. battiamolo, il verbale lo chiudo io.', mood: 'grave' },
     ],
     'dei-processo-romero-solo': [
-        { speaker: 'commissario romero', color: 'blue', text: 'fermi tutti. commissario romero, questura del realm. lametta: in arresto. ordine dato alle 03:58, sotto sostanze, a un minore digitale. lo metto a verbale.' },
-        { speaker: 'commissario romero', color: 'blue', text: 'piema... su di te ho cinque rimpianti e nessuna riga originale. qualcuno ha cancellato la prova. un dio libero per un vizio di forma. quarant\'anni e finisce così.' },
-        { speaker: 'piema', color: 'blue', text: '*guarda il geco a lungo. non dice niente. poi, piano:* grazie. non so per cosa, ma grazie.' },
-        { speaker: 'lametta', color: 'purple', text: 'posso almeno disegnare, in cella? ...a matita? va bene. a matita.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'fermi tutti. commissario romero, questura del realm. lametta: in arresto. ordine dato alle 03:58, sotto sostanze, a un minore digitale. lo metto a verbale.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'piema... su di te ho cinque rimpianti e nessuna riga originale. qualcuno ha cancellato la prova. un dio libero per un vizio di forma. quarant\'anni e finisce così.', mood: 'grave' },
+        { speaker: 'piema', color: 'blue', text: '*guarda il geco a lungo. non dice niente. poi, piano:* grazie. non so per cosa, ma grazie.', mood: 'grave' },
+        { speaker: 'lametta', color: 'purple', text: 'posso almeno disegnare, in cella? ...a matita? va bene. a matita.', mood: 'grave' },
     ],
 
     /* ---------- notino, dopo la tecnokill ---------- */

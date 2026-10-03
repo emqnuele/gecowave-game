@@ -1,5 +1,6 @@
 import { ZONE_CSS } from '../config';
 import { bus } from '../engine/events';
+import { music } from '../engine/music';
 import { sfx } from '../engine/sfx';
 import type { DialogueLine } from '../types';
 import { el, ui } from './dom';
@@ -53,6 +54,14 @@ export class DialogueBox {
         speaker.textContent = line.speaker;
         speaker.style.color = ZONE_CSS[line.color];
         this.box.className = `glass-panel glass-acid-${line.color}`;
+        // le battute gravi si leggono piano: pannello più scuro, musica sotto
+        const grave = line.mood === 'grave' || line.mood === 'silenzio';
+        const crack = line.mood === 'crepa';
+        if (grave) this.box.classList.add('dlg-grave');
+        if (crack) this.box.classList.add('dlg-crepa');
+        music.setGraveDuck(grave);
+        const speed = grave ? 46 : crack ? 28 : 18;
+        const blipEvery = grave ? 9 : 3;
 
         const text = this.box.querySelector<HTMLElement>('.text')!;
         text.textContent = '';
@@ -61,12 +70,12 @@ export class DialogueBox {
         this.typing = window.setInterval(() => {
             this.typed++;
             text.textContent = line.text.slice(0, this.typed);
-            if (this.typed % 3 === 0) sfx.ui();
+            if (this.typed % blipEvery === 0 && !grave) sfx.ui();
             if (this.typed >= line.text.length) {
                 clearInterval(this.typing!);
                 this.typing = null;
             }
-        }, 18);
+        }, speed);
     }
 
     private advance(): void {
@@ -92,6 +101,7 @@ export class DialogueBox {
             clearInterval(this.typing);
             this.typing = null;
         }
+        music.setGraveDuck(false);
         window.removeEventListener('keydown', this.keyHandler);
         this.box?.remove();
         this.box = null;

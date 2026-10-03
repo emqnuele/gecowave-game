@@ -448,6 +448,33 @@ body {
   animation: soft-pulse 1.6s ease-in-out infinite;
 }
 
+/* battute gravi: niente sticker storto, pannello quasi nero, si legge piano */
+#dialogue.dlg-grave {
+  transform: translateX(-50%);
+  background: rgba(4, 4, 6, 0.88);
+}
+
+#dialogue.dlg-grave .speaker {
+  transform: none;
+  font-family: var(--font-martian);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+}
+
+#dialogue.dlg-grave .text {
+  color: #e4e4e7;
+}
+
+#dialogue.dlg-grave .hint {
+  animation: none;
+  opacity: 0.5;
+}
+
+/* crepa: la battuta ride ma si interrompe — solo un filo più sobria */
+#dialogue.dlg-crepa .speaker {
+  transform: rotate(-1deg);
+}
+
 /* ---------- title card di zona ---------- */
 
 #zonecard {
