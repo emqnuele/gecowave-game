@@ -802,11 +802,11 @@ input.sx-range::-moz-range-thumb {
 .sx-narration .punch {
   display: block;
   margin-top: 20px;
-  font-family: var(--font-marker);
-  text-transform: lowercase;
-  font-size: 19px;
-  color: var(--sx-gold);
-  transform: rotate(-1.5deg);
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 1.18em;
+  line-height: 1.6;
+  color: var(--sx-bone);
 }
 
 .sx-hint {
