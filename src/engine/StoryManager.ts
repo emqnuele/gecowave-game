@@ -66,8 +66,9 @@ export class StoryManager {
         };
         const anchorOf = (room: Room) => (room.pathIndex >= 0 ? room.pathIndex : layout.rooms.find((o) => o.id === room.anchor)?.pathIndex ?? 0);
         // stanze laterali in ordine di avanzamento: le note si leggono nell'ordine giusto andando avanti
+        const sealed = new Set((layout.seals ?? []).map((s) => s.room));
         const side = layout.rooms
-            .filter((r) => r.pathIndex < 0 && SIDE_KINDS.has(r.kind))
+            .filter((r) => r.pathIndex < 0 && SIDE_KINDS.has(r.kind) && !sealed.has(r.id))
             .sort((a, b) => anchorOf(a) - anchorOf(b) || hashString(`${regionId}:${a.id}`) - hashString(`${regionId}:${b.id}`));
         const pathRooms = layout.rooms.filter((r) => r.pathIndex >= 0 && (r.kind === 'hall' || r.kind === 'cave')).sort((a, b) => a.pathIndex - b.pathIndex);
         const taken = new Set<number>();

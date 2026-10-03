@@ -4,7 +4,7 @@ import type { RegionLayout } from '../world/types';
 export interface RegionMarker {
     x: number;
     y: number;
-    kind: 'mic' | 'boss' | 'exit' | 'npc' | 'goal' | 'stop';
+    kind: 'mic' | 'boss' | 'exit' | 'npc' | 'goal' | 'stop' | 'seal';
     label?: string;
 }
 

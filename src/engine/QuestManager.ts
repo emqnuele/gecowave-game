@@ -45,6 +45,8 @@ export class QuestManager {
     private spots: { c: number; r: number; room: RegionLayout['rooms'][number] }[] = [];
     private taken: { x: number; y: number }[] = [];
     private player: Phaser.GameObjects.GameObject | null = null;
+    /** stanze coi sigilli: gli oggetti da cercare restano fuori */
+    private sealed = new Set<number>();
 
     constructor(scene: Phaser.Scene, lighting: LightingManager, talk: (lines: DialogueLine[], onEnd?: () => void) => void) {
         this.scene = scene;
@@ -66,6 +68,7 @@ export class QuestManager {
         if (!layout?.spots?.length) return;
         const spots = layout.spots.map(([c, r, room]) => ({ c, r, room: layout.rooms[room] })).filter((s) => s.room);
         this.spots = spots;
+        this.sealed = new Set((layout.seals ?? []).map((s) => s.room));
         this.player = player;
         this.taken = [...avoid];
         const pick = (cands: typeof spots, seed: string) => this.pick(cands, seed);
@@ -226,7 +229,7 @@ export class QuestManager {
         const p = this.placed.find((x) => x.def === def);
         if (!p || p.thing?.active || !this.player) return;
         const giverRoom = this.spots.find((s) => s.c * TILE + TILE / 2 === p.giver.talk.x)?.room;
-        const side = this.spots.filter((s) => s.room.pathIndex < 0 && s.room.kind !== 'arena');
+        const side = this.spots.filter((s) => s.room.pathIndex < 0 && s.room.kind !== 'arena' && !this.sealed.has(s.room.id));
         const ts = this.pick(side.length ? side : this.spots.filter((s) => s.room !== giverRoom), `${def.id}:thing`);
         if (ts) p.thing = this.thing(def, ts.c, ts.r, this.player);
     }

@@ -1368,6 +1368,8 @@ export const TOASTS = {
     portaAperta: 'risposta esatta. il teorema cede, la porta si dissolve.',
     scudo: 'tommasoscudo attivo: i proiettili tornano al mittente.',
     cuore: 'un cuore del realm. la vita massima aumenta per sempre.',
+    sigilloPrima: 'il 33 aveva ragione. dietro c\u2019era qualcosa.',
+    sigilloDopo: 'sigillo aperto.',
     inseguimento: 'LOCHEF85 TI HA VISTO. CORRI.',
     inseguimentoFine: 'lo hai seminato. per ora.',
     ombraImpara: 'l\'ombra conosce le tue mosse. cambiale.',

@@ -55,6 +55,7 @@ import { BossVoice } from '../engine/BossVoice';
 import { OmbraBrain } from '../engine/OmbraBrain';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
+import { AbilitySeals } from '../engine/AbilitySeals';
 import { createMechanic, type Mechanic } from '../engine/mechanics';
 import { Input } from '../engine/input/Input';
 import { keyLabel } from '../engine/input/keyText';
@@ -223,6 +224,8 @@ export class GameScene extends Phaser.Scene {
     private story: StoryManager | null = null;
     private pedroGhost: PedroApparition | null = null;
     private marks33: TrentatreMarks | null = null;
+    /** un frammento apre il mondo: sigilli sulle porte laterali, mai sul percorso */
+    private seals: AbilitySeals | null = null;
     private staging: StagingManager | null = null;
     private quests!: QuestManager;
     private atmosphere!: Atmosphere;
@@ -441,6 +444,7 @@ export class GameScene extends Phaser.Scene {
         this.nextBeatAt = 0;
         this.nextTrophyCheckAt = 0;
         this.bossFight = null;
+        this.seals = null;
         // il capitolo comincia quando ci entri da fuori: morire e riprovare non azzera il cronometro
         if (state.save.chapterRun?.id !== data.levelId) {
             state.save.chapterRun = { id: data.levelId, startMs: state.save.record.playMs, deaths0: state.save.record.deaths, kills0: state.save.record.kills, noHitBosses: 0 };
@@ -633,6 +637,8 @@ export class GameScene extends Phaser.Scene {
             sniffedOff();
             this.pedroGhost?.destroy();
             this.pedroGhost = null;
+            this.seals?.destroy();
+            this.seals = null;
             this.marks33?.destroy();
             this.marks33 = null;
             this.folk.destroy();
@@ -650,6 +656,27 @@ export class GameScene extends Phaser.Scene {
         this.atmosphere.build(this.biome, this.def.id);
         this.soundscape = new Soundscape(this, this.biome, this.nav, this.layout ? this.layout.horizonRow : null);
         this.buildPrompt();
+        // i sigilli vivono nelle porte laterali: barriere, 33 e premi col save
+        this.seals = new AbilitySeals({
+            scene: this,
+            regionId: this.def.id,
+            layout: this.layout,
+            player: this.player,
+            nav: this.nav,
+            lighting: this.lighting,
+            fakeWalls: this.level.fakeWalls,
+            breakableWalls: this.level.breakableWalls,
+            getClone: () => {
+                const c = this.clone;
+                if (!c?.active) return null;
+                const body = c.body as Phaser.Physics.Arcade.Body | null;
+                return { x: c.x, y: c.y, w: body?.width ?? 36, h: body?.height ?? 55 };
+            },
+            giveHeart: (x, y, key) => this.spawnCuore(x, y, key, true),
+            giveItem: (x, y, item, key) => this.spawnItemPickup(x, y, item, 1, key, true),
+            giveBarre: (x, y, amount, key) => this.spawnBarrePickup(x, y, amount, key),
+            giveNotch: (x, y, key) => this.spawnItemPickup(x, y, 'tacca', 1, key, true),
+        });
         this.buildGuide();
 
         // i capitoli di walter riusano il fondale del trenbolone ma cupo e malato
@@ -1694,9 +1721,9 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    private spawnBarrePickup(x: number, y: number, amount: number): void {
+    private spawnBarrePickup(x: number, y: number, amount: number, persistKey?: string): void {
         // i pickup piazzati a mano non riappaiono una volta presi
-        const key = `${this.def.id}-${Math.round(x)}-${Math.round(y)}`;
+        const key = persistKey ?? `${this.def.id}-${Math.round(x)}-${Math.round(y)}`;
         if (state.save.collectedLore.includes(key)) return;
         const note = this.physics.add.sprite(x, y, 'barra').setDepth(4);
         (note.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
@@ -2528,6 +2555,7 @@ export class GameScene extends Phaser.Scene {
         this.voice?.update();
         this.pedroGhost?.update(this.player);
         this.marks33?.update(this.player);
+        this.seals?.update(time);
         this.updateLessons(time);
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
@@ -3252,6 +3280,7 @@ export class GameScene extends Phaser.Scene {
             ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y, kind: 'mic' as const })),
             ...this.level.exits.slice(0, 1).map((e) => ({ x: e.centerX, y: e.centerY, kind: 'exit' as const })),
             ...this.busStops.map((s) => ({ x: s.x, y: s.y, kind: 'stop' as const })),
+            ...(this.seals ? this.seals.markers() : []),
         ];
     }
 
@@ -3374,7 +3403,9 @@ export class GameScene extends Phaser.Scene {
         const rooms = L.rooms.filter((o) => o.pathIndex < 0 && (o.kind === 'hall' || o.kind === 'cave') && o.rect.w >= 18);
         const cands = rooms
             .map((room) => ({ room, spots: L.spots!.filter((sp) => sp[2] === room.id) }))
-            .filter((o) => o.spots.length >= 3);
+            .filter((o) => o.spots.length >= 3)
+            // il microfono rosso resta fuori dai sigilli: due extra non si sovrappongono
+            .filter((o) => !L.seals?.some((s) => s.room === o.room.id));
         if (!cands.length) return;
         const pickFrom = cands.slice().sort((a, b) => hashString(`${this.def.id}-${a.room.id}`) - hashString(`${this.def.id}-${b.room.id}`));
         for (const cand of pickFrom) {
