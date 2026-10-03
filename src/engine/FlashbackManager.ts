@@ -64,10 +64,10 @@ export class FlashbackManager {
         const gesture = fb.gesture as Gesture;
         const seen = state.save.seenDialogues.includes(`fb-${id}`);
         this.playing = true;
-        // 3 inquadrature lente: si legge tutto senza fretta, mai di fretta.
-        // più la voragine in ingresso e in uscita: il film dura ~22s.
+        // 3 inquadrature che si leggono senza fretta e senza lag: ~17s di film.
+        // più la voragine in ingresso e in uscita: tutto dura ~19s.
         const speed = seen ? 0.7 : 1;
-        const shotDur = [7000 * speed, 6500 * speed, 7500 * speed];
+        const shotDur = [5500 * speed, 5200 * speed, 6000 * speed];
         const filmDur = shotDur[0]! + shotDur[1]! + shotDur[2]!;
         const ENTER = 1400 * (seen ? 0.8 : 1);
         const EXIT = 900;
@@ -477,6 +477,19 @@ export class FlashbackManager {
             scene.tweens.add({ targets: s, alpha: 1, duration: 700, ease: 'Quad.easeOut' });
         } catch { /* test */ }
         scene.tweens.add({ targets: s, y: s.y - 3, duration: 1050, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        // vivi: dondolio e due fotogrammi che respirano
+        try {
+            scene.tweens.add({ targets: s, rotation: { from: -0.03, to: 0.03 }, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+            if ((s.texture.frameTotal ?? 1) > 1) {
+                let f = 0;
+                this.loop(scope, scene, 420, () => {
+                    try {
+                        f = f ? 0 : 1;
+                        s.setFrame(f);
+                    } catch { /* test */ }
+                });
+            }
+        } catch { /* test */ }
         return s;
     }
 
