@@ -521,7 +521,8 @@ export class Phone {
             vf.append(el('div', 'vf-cross'));
             vf.append(text('div', 'vf-hint', 'l\u2019obiettivo vede quello che vedi tu. il realm resta fermo in posa.'));
             const note = el('div', 'phone-note');
-            const shoot = el('button', 'phone-btn cam-shoot', 'scatta');
+            const shoot = el('button', 'cam-shoot', 'scatta');
+            shoot.type = 'button';
             shoot.addEventListener('click', async () => {
                 shoot.textContent = '···';
                 const src = await this.host.snapshot();
@@ -597,10 +598,20 @@ export class Phone {
         caption.addEventListener('keydown', (e) => e.stopPropagation());
 
         const actions = el('div', 'cam-actions');
-        const save = el('button', 'phone-btn', 'salva in galleria');
+        const actNote = el('div', 'phone-note');
+        const save = el('button', 'btn-gold', 'salva in galleria');
+        save.type = 'button';
         save.addEventListener('click', () => {
-            const done = savePhoto({ levelId: state.save.levelId, filter: draft.filter, caption: draft.caption, dataUrl: develop() });
+            const url = develop();
+            const done = savePhoto({ levelId: state.save.levelId, filter: draft.filter, caption: draft.caption, dataUrl: url });
             if (!done) {
+                // rullino bloccato: lo scatto si scarica subito, non si perde
+                const dl = document.createElement('a');
+                dl.href = url;
+                dl.download = `gecowave-${Date.now().toString(36)}.jpg`;
+                dl.click();
+                actNote.textContent = 'rullino bloccato: scatto scaricato al volo.';
+                actNote.className = 'phone-note bad';
                 sfx.ui();
                 return;
             }
@@ -609,14 +620,15 @@ export class Phone {
             this.galleryOpen = done.id;
             this.openApp('galleria');
         });
-        const trash = el('button', 'phone-btn cam-ghost', 'butta');
+        const trash = el('button', 'btn-ghost', 'butta');
+        trash.type = 'button';
         trash.addEventListener('click', () => {
             sfx.ui();
             this.photoDraft = null;
             this.renderCamera(root);
         });
         actions.append(save, trash);
-        root.append(preview, filters, frameRow, caption, actions);
+        root.append(preview, filters, frameRow, caption, actions, actNote);
     }
 
     private renderGallery(root: HTMLElement): void {
@@ -638,17 +650,19 @@ export class Phone {
             if (open.caption) view.append(text('div', 'ph-caption', open.caption));
             view.append(text('div', 'ph-meta', `${since(open.at)} · ${open.filter}`));
             const actions = el('div', 'ph-actions');
-            const dl = el('a', 'phone-btn');
+            const dl = el('a', 'btn-gold');
             dl.textContent = 'scarica';
             dl.href = open.dataUrl;
             dl.download = `gecowave-${open.id}.jpg`;
-            const del = el('button', 'phone-btn cam-ghost', 'strappa');
+            const del = el('button', 'btn-ghost', 'strappa');
+            del.type = 'button';
             del.addEventListener('click', () => {
                 deletePhoto(open.id);
                 sfx.ui();
                 this.renderGallery(root);
             });
-            const close = el('button', 'phone-btn cam-ghost', 'chiudi');
+            const close = el('button', 'btn-ghost', 'chiudi');
+            close.type = 'button';
             close.addEventListener('click', () => {
                 sfx.ui();
                 this.renderGallery(root);

@@ -1237,7 +1237,10 @@ button.phone-row {
   border: 2px solid rgba(163, 34, 28, 0.9);
   background: radial-gradient(circle, rgba(163, 34, 28, 0.35), rgba(0, 0, 0, 0.4));
   color: var(--sx-bone);
+  font-family: var(--font-fell);
   font-size: 13px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
 }
 
 .cam-preview {
@@ -1320,16 +1323,58 @@ button.phone-row {
 
 .cam-actions {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 4px;
   margin-top: 14px;
 }
 
-.cam-actions .phone-btn {
-  flex: 1;
+/* bottoni con stile completo: non dipendono da altre regole */
+.btn-gold {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  cursor: pointer;
+  background: var(--sx-gold);
+  border: none;
+  border-radius: 3px;
+  color: #14100a;
+  font-family: var(--font-fell);
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
-.cam-ghost {
-  opacity: 0.6;
+.btn-gold:active {
+  transform: scale(0.98);
+}
+
+.btn-ghost {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sx-ash);
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.ph-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.ph-actions .btn-gold,
+.ph-actions .btn-ghost {
+  width: 100%;
 }
 
 /* ---------- galleria ---------- */
