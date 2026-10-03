@@ -5,13 +5,13 @@ import { hashString } from './art/ink';
 import { bus } from './events';
 import { state } from './state';
 
-/* i 33 azzurri sui muri che non sono muri: li dipinge l'1% di pedro che non
-   ha eseguito l'ordine, senza sapere perché. dove c'è un 33, dietro c'è
-   qualcosa. il giocatore impara a leggerli come una lingua del realm */
+/* i 33 mimetizzati sui muri che non sono muri: li dipinge l'1% di pedro
+   che non ha eseguito l'ordine, senza sapere perché, del colore del muro.
+   dove c'è un 33, dietro c'è qualcosa. il giocatore impara a leggerli
+   come una lingua del realm */
 
 interface Mark {
     img: Phaser.GameObjects.Image;
-    glow: Phaser.GameObjects.Image;
     walls: Phaser.Physics.Arcade.Sprite[];
     box: Phaser.Geom.Rectangle;
     gone: boolean;
@@ -61,11 +61,9 @@ export class TrentatreMarks {
             const cx = (minX + maxX) / 2;
             const cy = minY + Math.min(maxY - minY, TILE * 3) / 2;
             const rot = ((hashString(start) % 100) / 100 - 0.5) * 0.3;
-            const glow = this.scene.add.image(cx, cy, 'p-dot').setTint(0x67e8f9).setBlendMode(Phaser.BlendModes.ADD)
-                .setAlpha(0.25).setScale(3.4).setDepth(5.4);
-            const img = this.scene.add.image(cx, cy, KEY).setRotation(rot).setAlpha(0.9).setDepth(5.5);
-            this.scene.tweens.add({ targets: glow, alpha: 0.45, scale: 4, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-            this.marks.push({ img, glow, walls: cluster, box: new Phaser.Geom.Rectangle(minX, minY, maxX - minX, maxY - minY), gone: false });
+            // niente luce, niente pulsazioni: un graffito del colore del muro
+            const img = this.scene.add.image(cx, cy, KEY).setRotation(rot).setAlpha(0.55).setDepth(5.5);
+            this.marks.push({ img, walls: cluster, box: new Phaser.Geom.Rectangle(minX, minY, maxX - minX, maxY - minY), gone: false });
         }
     }
 
@@ -77,10 +75,10 @@ export class TrentatreMarks {
             const inside = Phaser.Geom.Rectangle.Contains(m.box, player.x, player.y);
             if (broken) {
                 m.gone = true;
-                this.scene.tweens.add({ targets: [m.img, m.glow], alpha: 0, duration: 400 });
+                this.scene.tweens.add({ targets: [m.img], alpha: 0, duration: 400 });
                 continue;
             }
-            m.img.setAlpha(inside ? 0.2 : 0.9);
+            m.img.setAlpha(inside ? 0.15 : 0.55);
             if (!state.hasFlag('seme-33-visto') && Math.abs(player.x - m.img.x) < SEEN_R && Math.abs(player.y - m.img.y) < SEEN_R * 0.7) {
                 state.setFlag('seme-33-visto');
                 this.scene.time.delayedCall(900, () => bus.emit('wavesung', WAVESUNG.markolino33));
@@ -97,11 +95,11 @@ export class TrentatreMarks {
         c.textAlign = 'center';
         c.textBaseline = 'middle';
         c.lineJoin = 'round';
-        // contorno d'inchiostro come il resto del mondo, poi l'azzurro ordinato di pedro
+        // contorno d'inchiostro come il resto del mondo, poi il grigio del muro
         c.lineWidth = 6;
         c.strokeStyle = '#0b0c10';
         c.strokeText('33', 32, 24);
-        c.fillStyle = '#67e8f9';
+        c.fillStyle = '#5b6470';
         c.fillText('33', 32, 24);
         t.refresh();
     }
@@ -109,7 +107,6 @@ export class TrentatreMarks {
     destroy(): void {
         for (const m of this.marks) {
             m.img.destroy();
-            m.glow.destroy();
         }
         this.marks = [];
     }

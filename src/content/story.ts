@@ -83,7 +83,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'aspetta. ho trovato questo nei rottami: un frammento della wave. la wave manifesta il tuo desiderio, e a quanto pare tu desideri... scappare velocemente. fa niente, prendilo.' },
     ],
     'lore-gecorealm': [
-        { speaker: 'graffito sul muro', color: 'purple', text: '«il gecorealm fu creato da piema e lametta in sei giorni. il settimo uscì il primo bus dimensionale e da allora niente è più stato in orario.» sotto, azzurro, con una grafia ordinata: «33. non sono giorni. sono notti.»' },
+        { speaker: 'graffito sul muro', color: 'purple', text: '«il gecorealm fu creato da piema e lametta in sei giorni. il settimo uscì il primo bus dimensionale e da allora niente è più stato in orario.» sotto, quasi invisibile, con una grafia ordinata: «33. non sono giorni. sono notti.»' },
     ],
     'lore-scontro': [
         { speaker: 'cratere fumante', color: 'green', text: '«qui il cielo si è spaccato. ai lati si vedono ancora gli attacchi: pennellate viola, teoremi bianchi, scatti ciano. tre stili riconoscibilissimi. tre ego enormi. in mezzo, un appunto: "cartella IMPORTANTE: non cancellare".»' },
@@ -103,7 +103,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'ancora qui?? il realm COLLASSA. con calma eh, ma collassa. muoviti che più avanti c\'è gente messa peggio di te.' },
     ],
     'lore-cratere': [
-        { speaker: 'bordo del cratere', color: 'green', text: '«epicentro dello scontro. cratere perfettamente circolare: piema dice "ovvio", lametta dice "prego". una targa arrugginita: "Herbert, (TN), era qui".» dietro la targa, piccolo e azzurro: un 33.' },
+        { speaker: 'bordo del cratere', color: 'green', text: '«epicentro dello scontro. cratere perfettamente circolare: piema dice "ovvio", lametta dice "prego". una targa arrugginita: "Herbert, (TN), era qui".» dietro la targa, mimetizzato nel muro: un 33.' },
     ],
     'lore-scale': [
         { speaker: 'gradino numerato', color: 'green', text: '«le scale del collasso: 847 gradini, uno per ogni giro di samatt. nessuno sa chi le abbia contate. tutti sanno chi le avrebbe contate.»' },
@@ -570,7 +570,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
 
     'lore-33': [
         { speaker: 'lapide', color: 'cyan', text: '«33. di nuovo.»' },
-        { speaker: 'lapide', color: 'cyan', text: '«non l\'abbiamo messo noi.» — sotto, a matita, la grafia di piema. accanto, azzurro, un tratto ordinato che nessuno dei due riconosce.' },
+        { speaker: 'lapide', color: 'cyan', text: '«non l\'abbiamo messo noi.» — sotto, a matita, la grafia di piema. accanto, un tratto ordinato del colore della pietra, che nessuno dei due riconosce.' },
     ],
     'trentatre-altare': [
         { speaker: 'l\'altare', color: 'yellow', text: 'trentatré tacche, incise una per notte. l\'ultima è più profonda delle altre. la chiami?' },
@@ -756,7 +756,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'ticummi-pieta': [
         { speaker: 'ticummi', color: 'cyan', text: '...me la ridai? davvero? dopo tutto quello che... ok. ok. forse la tommasorveglianza aveva ragione su di te: sei un buono. lo dicevano i dati. odio quando i dati hanno ragione.', mood: 'grave' },
-        { speaker: 'ticummi', color: 'cyan', text: 'vattene prima che mi commuova. e un\'ultima cosa gratis: dai monitor ho visto pedro dipingere numeri sui muri, di notte. azzurri. sempre lo stesso.', mood: 'grave' },
+        { speaker: 'ticummi', color: 'cyan', text: 'vattene prima che mi commuova. e un\'ultima cosa gratis: dai monitor ho visto pedro dipingere numeri sui muri, di notte. nascosti nel colore del muro. sempre lo stesso.', mood: 'grave' },
     ],
     'ticummi-niente': [
         { speaker: 'ticummi', color: 'cyan', text: '...la calpesti. davanti a me. ok. messaggio ricevuto. durissimo, ma ricevuto.' },
@@ -1055,7 +1055,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     /* ---------- i tre misteri del cratere: tutti pagano ---------- */
     'seme-33': [
-        { speaker: 'markolino', color: 'green', text: 'li vedi anche tu, i 33? dipinti sui muri, azzurri, tratto ordinato. sempre dove c\'è qualcosa dietro. chi li dipinge sa dove nascondere le cose. e sa che passerai tu.' },
+        { speaker: 'markolino', color: 'green', text: 'li vedi anche tu, i 33? dipinti sui muri, nascosti nel colore del muro, tratto ordinato. sempre dove c\'è qualcosa dietro. chi li dipinge sa dove nascondere le cose. e sa che passerai tu.' },
     ],
     'seme-importante': [
         { speaker: 'taccuino del custode', color: 'green', text: '«IMPORTANTE. la cartella di pedro. l\'appunto nel cratere. il log del nucleo. stessa parola, tre posti.»' },
@@ -1405,7 +1405,7 @@ export const WAVESUNG = {
     markolinoPogo: { sender: 'markolino', text: 'quelli con lo scudo davanti? non menarli in faccia. salta sopra e premi {k:down} + {k:attack} in aria: pogo. il terzo colpo spacca anche i muri.' },
     markolinoRisonante: { sender: 'markolino', text: 'quelli che sparano da lontano? non andare sotto. tieni premuto {k:wave} e molla: il colpo risonante perfora. notino insegna gratis.' },
     markolinoOmbra: { sender: 'markolino', text: 'l\'ombra sei tu. se hai comprato la sorveglianza è forte come te: cambia ritmo, non ripetere le mosse. se l\'hai rifiutata è una beta: mena e basta.' },
-    markolino33: { sender: 'markolino', text: 'i 33 dipinti: azzurri, tratto ordinato, sempre accanto a un muro che non è un muro. guarda dietro. ogni volta.' },
+    markolino33: { sender: 'markolino', text: 'i 33 dipinti: nascosti nel colore del muro, tratto ordinato, sempre accanto a un muro che non è un muro. guarda dietro. ogni volta.' },
     markolinoSmelaSkip: { sender: 'markolino', text: 'lo stabilimento? puoi attraversarlo senza fermarti, l\'uscita resta aperta. la truffa vive solo se ti fermi. ma l\'acqua tossica è comoda, eh.' },
     markolinoMaschereTease: { sender: 'markolino', text: 'maschere con la tua faccia? primo custode, dischi. a 3 senti il beat, a 5 ritmo perfetto e si apre un varco verde in perduta. stanno dietro muri finti e crepe.' },
     markolinoCorseTease: { sender: 'guastalla', text: 'se batti il citelis in 3 corse prendo la patente e guido io la piazza. piano. mi fermo ovunque.' },

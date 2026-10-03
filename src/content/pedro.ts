@@ -27,7 +27,7 @@ export const PEDRO_APPARITIONS: Record<string, [string, string]> = {
     ],
     rio: [
         `il fiume ti ha curato. me niente mi cura: io sono l'${gl('ordine')}.`,
-        `i 33 sui muri. li hai visti? non so chi li dipinge. ho le dita ${gl('azzurre')}.`,
+        `i 33 sui muri. li hai visti? non so chi li dipinge. ho le dita ${gl('sporche')}.`,
     ],
     stabilimento: [
         'smela vende acqua che non è acqua. io vendo un realm dritto che non è un realm.',
