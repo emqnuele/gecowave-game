@@ -286,7 +286,9 @@ class Sfx {
     /** le gravi respirano piano: colpo basso più click, si sente anche su casse piccole */
     graveTick(): void {
         this.tone(82, 160, { type: 'sine', to: 55, vol: 0.12 });
-        this.noise(70, { freq: 1400, q: 2, vol: 0.06 });
+        // corpo udibile anche su casse piccole: knock che scende nei medi
+        this.tone(320, 70, { type: 'square', to: 170, vol: 0.05 });
+        this.noise(70, { freq: 2600, q: 1.2, vol: 0.06, to: 900 });
     }    crumble(): void {
         this.noise(420, { freq: 300, q: 0.7, vol: 0.2 });
         this.tone(120, 300, { type: 'triangle', to: 60, vol: 0.06 });
