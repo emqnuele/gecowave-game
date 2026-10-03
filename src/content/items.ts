@@ -23,17 +23,17 @@ export interface ItemDef {
 export const ITEMS: Record<string, ItemDef> = {
     /* ---------- consumabili ---------- */
     crocchetta: {
-        id: 'crocchetta', name: 'crocchetta del bar', icon: '🍘', kind: 'consumabile', price: 18,
+        id: 'crocchetta', name: 'crocchetta del bar', icon: '🍘', kind: 'consumabile', price: 15,
         desc: 'ridà 1 vita. fritta nel 2019, ancora calda dentro.',
         punch: 'non chiedere che olio.',
     },
     'panino-nonna': {
-        id: 'panino-nonna', name: 'panino della nonna di markolino', icon: '🥪', kind: 'consumabile', price: 45,
+        id: 'panino-nonna', name: 'panino della nonna di markolino', icon: '🥪', kind: 'consumabile', price: 60,
         desc: 'ridà 3 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
         punch: 'c\'è dentro amore e mortadella.',
     },
     energetico: {
-        id: 'energetico', name: 'energetico scaduto', icon: '🥫', kind: 'consumabile', price: 25,
+        id: 'energetico', name: 'energetico scaduto', icon: '🥫', kind: 'consumabile', price: 22,
         desc: 'riempie metà del flow. scaduto da quattro anni, il che lo rende più forte.',
         punch: 'il cuore fa un rumore nuovo.',
     },
@@ -43,7 +43,7 @@ export const ITEMS: Record<string, ItemDef> = {
         punch: 'sa di bruciato e di teoremi.',
     },
     rubinetto: {
-        id: 'rubinetto', name: 'acqua del rubinetto (dichiarata)', icon: '🚰', kind: 'consumabile', price: 12,
+        id: 'rubinetto', name: 'acqua del rubinetto (dichiarata)', icon: '🚰', kind: 'consumabile', price: 10,
         desc: 'ridà 1 vita e lava via la sete di smela. dichiarata come tale, per legge.',
         punch: 'finalmente un\'etichetta onesta.',
     },
@@ -53,7 +53,7 @@ export const ITEMS: Record<string, ItemDef> = {
         punch: '"come piace a te".',
     },
     santino: {
-        id: 'santino', name: 'santino di guggu', icon: '🃏', kind: 'consumabile', price: 60,
+        id: 'santino', name: 'santino di guggu', icon: '🃏', kind: 'consumabile', price: 50,
         desc: 'il prossimo colpo che ricevi viene assorbito dal santo. guggu benedice chi paga il biglietto.',
         punch: 'sul retro c\'è scritto "capolinea".',
     },
@@ -68,7 +68,7 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'le barre vengono da te da molto più lontano. notino le usava per non sentire le critiche.',
     },
     'scarpe-markolino': {
-        id: 'scarpe-markolino', name: 'scarpe di markolino', icon: '👟', kind: 'amuleto', cost: 2, price: 120,
+        id: 'scarpe-markolino', name: 'scarpe di markolino', icon: '👟', kind: 'amuleto', cost: 2, price: 100,
         desc: 'corri il 15% più veloce. puzzano di fretta.',
     },
     'occhiali-piema': {
@@ -76,7 +76,7 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'ogni colpo dà il 40% di flow in più. vedi il mondo come un insieme di limiti.',
     },
     'rosario-riba': {
-        id: 'rosario-riba', name: 'rosario di riba', icon: '📿', kind: 'amuleto', cost: 2, price: 150,
+        id: 'rosario-riba', name: 'rosario di riba', icon: '📿', kind: 'amuleto', cost: 2, price: 130,
         desc: 'ti curi quasi il doppio più in fretta. riba lo ha comprato credendo fosse un braccialetto.',
     },
     'microfono-oro': {
@@ -96,8 +96,8 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'le wave attive costano un quarto di flow in meno. dimostrato, non chiedere come.',
     },
     'geco-portafortuna': {
-        id: 'geco-portafortuna', name: 'geco portafortuna', icon: '🦎', kind: 'amuleto', cost: 1, price: 90,
-        desc: 'i nemici lasciano il 60% di barre in più. ti guarda. ti giudica. ti arricchisce.',
+        id: 'geco-portafortuna', name: 'geco portafortuna', icon: '🦎', kind: 'amuleto', cost: 1, price: 110,
+        desc: 'i nemici lasciano il 30% di barre in più. ti guarda. ti giudica. ti arricchisce.',
     },
     'cuore-vetro': {
         id: 'cuore-vetro', name: 'cuore di vetro', icon: '💔', kind: 'amuleto', cost: 3,
@@ -177,7 +177,7 @@ export const ITEMS: Record<string, ItemDef> = {
 };
 
 /** prezzi crescenti delle tacche extra su wavezon */
-export const NOTCH_PRICES = [150, 320, 600];
+export const NOTCH_PRICES = [120, 280, 520];
 export const BASE_NOTCHES = 3;
 
 /** l'amuleto che ogni boss lascia cadere */
@@ -232,12 +232,12 @@ export function charmMods(equipped: readonly string[]): CharmMods {
             case 'ciabatte-rio': m.dashCooldown *= 0.6; break;
             case 'pancia-lochef': m.maxHp += 2; break;
             case 'teorema-tascabile': m.abilityCost *= 0.75; break;
-            case 'geco-portafortuna': m.barre *= 1.6; break;
+            case 'geco-portafortuna': m.barre *= 1.3; break;
             case 'cuore-vetro': m.damage *= 1.6; m.damageTaken *= 2; break;
             case 'sim-pedro': m.flowRegen += 4; break;
             case 'biglietto-citelis': m.speed *= 1.08; m.dashCooldown *= 0.85; break;
             case 'pennello-copista': m.damage *= 1.12; break;
-            case 'canna-pescatore': m.magnet *= 2; m.barre *= 1.2; break;
+            case 'canna-pescatore': m.magnet *= 2; m.barre *= 1.1; break;
             case 'grembiule-cuoco': m.maxHp += 1; m.healTime *= 0.8; break;
             case 'casco-operaio': m.damageTaken *= 0.75; break;
             case 'tesi-dottorando': m.flowPerHit *= 1.25; break;

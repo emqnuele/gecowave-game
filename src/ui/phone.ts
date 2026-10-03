@@ -1,5 +1,7 @@
 import { ZONE_CSS } from '../config';
 import { TOTAL_NOTES, TOTAL_PAGES } from '../content/arcs';
+import { codexSections } from '../content/codex';
+import { DIALOGUES } from '../content/story';
 import { ITEMS, NOTCH_PRICES, BASE_NOTCHES, type ItemDef } from '../content/items';
 import { LEVELS, LEVEL_ORDER, TOTAL_FRAGMENTS } from '../content/levels';
 import { CONTACTS, OBJECTIVES, POSTS, RADIO, type Contact } from '../content/phone';
@@ -32,7 +34,7 @@ export interface PhoneHost {
     snapshot(): Promise<string | null>;
 }
 
-type AppId = 'messaggi' | 'wavegram' | 'fotocamera' | 'galleria' | 'zaino' | 'amuleti' | 'wavezon' | 'mappa' | 'diario' | 'radio' | 'trofei' | 'profilo' | 'impostazioni';
+type AppId = 'messaggi' | 'wavegram' | 'fotocamera' | 'galleria' | 'mappa' | 'zaino' | 'amuleti' | 'wavezon' | 'diario' | 'codex' | 'radio' | 'trofei' | 'profilo' | 'impostazioni';
 
 interface AppDef {
     id: AppId;
@@ -53,6 +55,7 @@ const APPS: AppDef[] = [
     { id: 'amuleti', name: 'amuleti', icon: '🔮', tint: 'purple', title: 'AMULETI', sub: 'si cambiano solo vicino a un microfono' },
     { id: 'wavezon', name: 'wavezon', icon: '📦', tint: 'yellow', title: 'WAVEZON', sub: 'consegna in giornata, anche nel void' },
     { id: 'diario', name: 'diario', icon: '📓', tint: 'red', title: 'DIARIO', sub: 'cose da fare prima che il realm finisca' },
+    { id: 'codex', name: 'codex', icon: '📖', tint: 'cyan', title: 'CODEX', sub: 'note, pagine, misteri: rileggili in ordine' },
     { id: 'radio', name: 'radio', icon: '📻', tint: 'yellow', title: 'RADIO', sub: 'radio gecowave, l\'unica che non chiude' },
     { id: 'trofei', name: 'trofei', icon: '🏆', tint: 'yellow', title: 'TROFEI', sub: 'la gloria, ma in pixel' },
     { id: 'profilo', name: 'io', icon: '🦎', tint: 'green', title: 'IO', sub: 'il custode, in numeri' },
@@ -361,6 +364,7 @@ export class Phone {
             case 'wavezon': this.renderShop(content); break;
             case 'mappa': this.renderMap(content); break;
             case 'diario': this.renderJournal(content); break;
+            case 'codex': this.renderCodex(content); break;
             case 'radio': this.renderRadio(content); break;
             case 'trofei': buildTrophyCabinet(content); break;
             case 'profilo': this.renderProfile(content); break;
@@ -1084,6 +1088,37 @@ export class Phone {
             main.append(bar);
             row.append(main, text('span', 'meta', `${q.done}/${q.total}`));
             root.append(row);
+        }
+    }
+
+    /* ---------- codex: note, pagine, misteri in ordine ---------- */
+
+    private renderCodex(root: HTMLElement): void {
+        const sections = codexSections(state.save.collectedLore, (f) => state.hasFlag(f));
+        if (!sections.length) {
+            root.append(text('div', 'phone-empty', 'ancora niente da rileggere. esplora le stanze laterali: chi cerca, legge.'));
+            return;
+        }
+        root.append(text('div', 'phone-note', 'tocca una riga raccolta per rileggerla. le ??? sono cose che non hai ancora trovato.'));
+        for (const s of sections) {
+            root.append(text('div', 'phone-section', `${s.title} — ${s.sub}`));
+            for (const e of s.entries) {
+                const row = el('button', `phone-row glass-chip ${e.collected ? 'glass-acid-cyan' : ''}`);
+                const main = el('div', 'main');
+                main.append(text('div', 'name', e.collected ? e.title : `${e.title.split('—')[0]}— ???`), text('div', 'preview', e.collected ? (DIALOGUES[e.id]?.[0]?.text ?? '') : 'non ancora trovato: esplora le stanze laterali.'));
+                row.append(text('span', 'lead', e.collected ? '📖' : '❔'), main, text('span', 'meta', e.collected ? '✓' : '…'));
+                if (e.collected && DIALOGUES[e.id]) {
+                    row.addEventListener('click', () => {
+                        const lines = DIALOGUES[e.id];
+                        const full = lines.map((l) => `${l.speaker}: ${l.text}`).join('\n\n');
+                        const overlay = el('div', 'phone-row glass-chip glass-acid-cyan');
+                        overlay.append(text('div', 'preview', full));
+                        row.after(overlay);
+                    });
+                }
+                if (!e.collected) (row as HTMLButtonElement).disabled = true;
+                root.append(row);
+            }
         }
     }
 

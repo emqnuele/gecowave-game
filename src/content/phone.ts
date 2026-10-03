@@ -5,24 +5,24 @@ import type { ZoneColor } from '../types';
 
 /** obiettivo principale mostrato nel diario, per capitolo */
 export const OBJECTIVES: Record<string, string> = {
-    perduta: 'esplora il cratere: la mappa (qui nel telefono) si disegna mentre giri, la ✶ segna l\'obiettivo. trova il primo frammento della wave.',
-    bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea.',
-    santuario: 'attraversa il santuario polarizzante. breccio custodisce un riflesso, lametta il resto.',
-    tecnokill: 'sopravvivi al server di notino. torre radio, dune, e poi lui. armato di "BUM".',
-    trenbolone: 'la via per il rio è sbarrata. per passare ti serve il trenbolone. purtroppo.',
+    perduta: 'esplora il cratere: la mappa (qui nel telefono) si disegna mentre giri, la ✶ segna l\'obiettivo. trova il primo frammento della wave. e conta i 33: sono ovunque.',
+    bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea. romero ti cerca: parlargli non è opzionale, è utile.',
+    santuario: 'attraversa il santuario polarizzante. breccio custodisce un riflesso, lametta il resto. cerca il ritratto con gli occhi storti: romero lo vuole.',
+    tecnokill: 'sopravvivi al server di notino. torre radio, dune, e poi lui. armato di "BUM". pedro ti guarda già: senti la statica?',
+    trenbolone: 'la via per il rio è sbarrata. per passare ti serve il trenbolone. purtroppo. ticummi ti offre la sorveglianza: leggi bene prima di firmare.',
     tana: 'sei nella tana di lochef85. scappa. due volte. non guardare i poster.',
-    rio: 'risali il rio merdone fino al villaggio di formica. il fiume rigenera, se lo rispetti.',
-    stabilimento: 'chiudi la catena dell\'acqua premium di smela. il furgone delle consegne non è d\'accordo.',
-    ruhra: 'trova piema alla ruhra prima che analisi 1 lo consumi. occhio alla riba.',
-    mente: 'sei dentro la mente di piema. risolvi le porte, sconfiggi il teorema.',
+    rio: 'risali il rio merdone fino al villaggio di formica. il fiume rigenera, se lo rispetti. lo stabilimento dopo è opzionale: truffa, non destino.',
+    stabilimento: 'OPZIONALE: chiudi la catena dell\'acqua premium di smela per l\'acqua tossica (V). puoi attraversare senza fermarti: l\'uscita resta aperta.',
+    ruhra: 'trova piema alla ruhra prima che analisi 1 lo consumi. occhio alla riba. porta il dispositivo nella mente.',
+    mente: 'sei dentro la mente di piema. risolvi le porte, sconfiggi il teorema. in fondo c\'è un pensiero sepolto: cancellarlo ti assolve, portarlo fuori ti condanna lui. scegli sapendo.',
     caso: 'aiuta romero: tre indizi in tre scene del crimine. senza il fascicolo completo il limite è intoccabile.',
-    sorveglianza: 'entra nella tommasorveglianza. l\'ombra si è allenata su di te. lametta è sparito qui vicino.',
+    sorveglianza: 'entra nella tommasorveglianza. l\'ombra si è allenata su di te: forte se hai comprato, beta se hai rifiutato. lametta è sparito qui vicino.',
     cantina: 'scendi nella cantina di ticummi. laboratorio, caveau, e una scelta.',
     ricordi: 'cammina nel backup di pedro, giorni 1-42. alla fine c\'è l\'ultimo pedro pulito.',
     void: 'segui romero tra i cinque rimpianti. ogni verità va strappata.',
-    nucleo: 'pedro ti aspetta al nucleo. qualsiasi cosa ti offra, è glitchata.',
+    nucleo: 'pedro ti aspetta al nucleo. qualsiasi cosa ti offra, è glitchata. se hai giorno 30 + 5 verità, puoi salvarlo invece di ucciderlo.',
     barrato: 'la 14 barrato esiste. trova il suo ultimo passeggero.',
-    custode: 'il primo custode batte il tempo. stai sul beat.',
+    custode: 'il primo custode batte il tempo. stai sul beat. servono tutte le maschere per aprirlo.',
     galliate: 'walter ti ha portato a galliate. i maranza prima, le domande dopo.',
     marcetti: 'autoscuole marcetti: la patente in tre annetti, se sopravvivi al titolare.',
 };
@@ -51,18 +51,23 @@ export const CONTACTS: Contact[] = [
         id: 'markolino', name: 'markolino', color: 'green', icon: '🟢',
         call(ctx) {
             const hint: Record<string, string> = {
-                perduta: 'apri la MAPPA e cerca la ✶. se trovi un muro con le crepe, terzo colpo della combo. se trovi un geco anziano, ascoltalo, ma non troppo.',
-                bus: 'ivan è l\'unico che può tagliare guggu. senza di lui il capolinea non lo vedi neanche col binocolo.',
-                santuario: 'gli specchi mentono, ma alcuni sono porte. e lametta dipinge con rabbia: schiva i colori.',
-                tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI.',
-                rio: 'il rio rigenera chi non si droga. se hai preso il trenbolone... auguri.',
-                ruhra: 'piema è dentro la ruhra. la riba ti morderà. è affettuosa, a modo suo.',
-                nucleo: 'qualsiasi cosa ti offra pedro: è glitchata. io te l\'ho detto. resta scritto.',
+                perduta: 'apri la MAPPA e cerca la ✶. se trovi un muro con le crepe, terzo colpo della combo. se trovi un geco anziano, ascoltalo, ma non troppo. e conta i 33: non sono un caso.',
+                bus: 'ivan è l\'unico che può tagliare guggu. senza di lui il capolinea non lo vedi neanche col binocolo. e se vedi romero, parlagli: indaga sul glitch da prima di te.',
+                santuario: 'gli specchi mentono, ma alcuni sono porte. e lametta dipinge con rabbia: schiva i colori. cerca il ritratto con gli occhi storti.',
+                tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI. carica F da lontano invece di andare sotto.',
+                trenbolone: 'ticummi ti offre la sorveglianza? ti protegge da notino ma allena l\'ombra su di te. 41.077 secondi di te = ombra forte. zero secondi = beta. scegli.',
+                rio: 'il rio rigenera chi non si droga. se hai preso il trenbolone... auguri. lo stabilimento dopo è opzionale: attraversalo pure senza fermarti.',
+                stabilimento: 'smela? puoi saltarla. attraversa e vai. se la affronti, l\'acqua tossica (V) è tua. la truffa vive solo se ti fermi.',
+                sorveglianza: 'l\'ombra sei tu. comprata = forte, cambia ritmo. non comprata = beta, mena e basta.',
+                mente: 'il pensiero sepolto in fondo: cancellarlo ti fa sentire come piema. portarlo fuori ti dà la prova per arrestarlo. non c\'è scelta pulita.',
+                ruhra: 'piema è dentro la ruhra. la riba ti morderà. è affettuosa, a modo suo. scudati? pogo da sopra, non in faccia.',
+                nucleo: 'qualsiasi cosa ti offra pedro: è glitchata. io te l\'ho detto. resta scritto. a meno che tu abbia giorno 30 + 5 verità: allora puoi strappargli l\'ordine di dosso.',
             };
             return hint[ctx.levelId] ?? pickFrom([
                 'sono impegnatissimo. sto salvando il realm. tu? ah, anche tu. ok, continua.',
                 'se muori ricordati le barre. le barre sono tutto. le barre sono la vita.',
                 'hai controllato i microfoni? lì puoi cambiare gli amuleti. non chiedermi perché, regola del realm.',
+                'maschere: 5 senti il beat, 10 ritmo perfetto + varco verde in perduta. corse citelis: 3 vinte e guastalla guida. microfono rosso: 3 ondate, 180 barre.',
             ]);
         },
     },
@@ -92,8 +97,20 @@ export const CONTACTS: Contact[] = [
     {
         id: 'ticummi', name: 'ticummi', color: 'cyan', icon: '👁️',
         call(ctx) {
-            if (has(ctx, 'tommasorveglianza')) return 'gentile cliente, la sua chiamata è importante per noi ed è stata registrata, trascritta, analizzata e rivenduta. 👍🫶';
-            return 'salve! tommasorveglianza, solo 0,09€. assolutamente sicura. ah, costa 133 barre in realtà. lo 0,09 è il prezzo emotivo. 👍';
+            if (has(ctx, 'tommasorveglianza')) return 'gentile cliente, la sua chiamata è importante per noi ed è stata registrata, trascritta, analizzata e rivenduta. l\'ombra la ringrazia per i 41.077 secondi. 👍🫶';
+            return 'salve! tommasorveglianza, solo 0,09€. assolutamente sicura. ah, costa 133 barre in realtà. lo 0,09 è il prezzo emotivo. avviso onesto: notino respinto gratis, ombra allenata su di te. 👍';
+        },
+    },
+    {
+        id: 'romero', name: 'romero', color: 'blue', icon: '🔎',
+        call(ctx) {
+            if (!has(ctx, 'visto-bus')) return 'questura del realm, commissario romero. se mi chiami dal cratere vuol dire che markolino ti ha parlato di me. bene. tieni gli occhi aperti sui 33.';
+            if (has(ctx, 'caso-risolto')) return 'caso chiuso, custode. il fascicolo è tuo. se vedi pedro, ricordagli il giorno 30. e grazie per il caffè, se me l\'hai portato.';
+            return pickFrom([
+                'romero qui. sto dietro a lametta e al trenbolone delle 03:58. se vedi lavagne o ritratti storti, memorizzali.',
+                'il glitch non è nato solo. qualcuno l\'ha ordinato. io lo provo. tu intanto non firmare niente senza leggere le clausole piccole.',
+                'quarant\'anni sul caso. tu in un pomeriggio fai più di me. continua così, ma chiama ogni tanto.',
+            ]);
         },
     },
     {
@@ -110,9 +127,10 @@ export const CONTACTS: Contact[] = [
         id: 'pedro', name: 'pedro', color: 'cyan', icon: '🤖',
         call(ctx) {
             if (has(ctx, 'ricordi-visti')) return 'h0 v1st0 ch3 h41 v1st0. g10rn0 1: c140 m0nd0. n3ss0n0 r1sp0s3. tu s1 p3r0. str4n0.';
+            if (!has(ctx, 'visto-bus')) return 'cH1 s3I. 4h. 1l cust0d3. 1o t1 gu4rd0 g1à. c0nt1nu4 4 r4cc0gl1ere. 1o s1st3m0 1l r3st0.';
             return pickFrom([
-                'cH1 s3I. 4h. 1l cust0d3. n0n d0vr3st1 4v3r3 qu3st0 num3r0.',
                 'l4 w4v3 3r4 st0rt4. 1o l4 st0 r4ddr1zz4nd0. t1 pr3g0 n0n 1nt3rf3r1r3.',
+                'h41 s3nt1t0 l4 st4t1c4? s0n0 1o. n0n sc4pp4re. r4cc0gl1.',
             ]);
         },
     },
@@ -140,6 +158,12 @@ export const POSTS: Post[] = [
     { author: 'piema', handle: '@prof.piema', color: 'blue', likes: 99, text: 'ricordo agli studenti che "mi si è glitchato il cane" non è una giustificazione valida. lo è stata una volta. non accadrà più.', needs: 'visto-ruhra' },
     { author: 'ticummi', handle: '@tommasorveglianza', color: 'cyan', likes: 3, text: 'tommasorveglianza: 47.000 schermi, 3 clienti, 0 problemi. 👍🫶 la sicurezza è un abbraccio che non finisce mai.', needs: 'visto-rio' },
     { author: 'romero', handle: '@det.romero', color: 'blue', likes: 40, text: 'quarant\'anni sul caso analisi 1. oggi un geco ha trovato tre indizi in un pomeriggio. vado a casa a riflettere sulla mia vita.', needs: 'caso-risolto' },
+    { author: 'romero', handle: '@det.romero', color: 'blue', likes: 12, text: 'avvistato glitch sul bus. il custode dice di aver sentito statica. lo scontrino delle 03:58 resta la mia unica pista.', needs: 'visto-bus' },
+    { author: 'pedro', handle: '@pedro', color: 'cyan', likes: 0, text: 'g10rn0 43. 1l r34lm è st0rt0. 1o l0 r4ddr1zz0. n0n s3rv3 r1ngr4z14rm1.', needs: 'visto-ricordi' },
+    { author: 'pedro', handle: '@pedro', color: 'cyan', likes: 0, text: 'c1 4nc0r4 n0n c1 c0n0sc14m0. m4 1o t1 v3d0 g1à.', needs: 'visto-perduta' },
+    { author: 'markolino', handle: '@markolino', color: 'green', likes: 5, text: 'maschere del primo custode: a 5 senti il beat, a 10 ritmo perfetto + varco verde in perduta. cercate dietro muri finti.', needs: 'visto-perduta' },
+    { author: 'guastalla', handle: '@guastalla.guida', color: 'yellow', likes: 7, text: 'se qualcuno batte il citelis in 3 corse, prendo la patente e guido io. piano.', needs: 'visto-bus' },
+    { author: 'samatt', handle: '@samatt851', color: 'yellow', likes: 44, text: 'microfono rosso = arena: 3 ondate, 180 barre. a 5 sei gladiatore. parola di ex pendolare.', needs: 'visto-rio' },
     { author: 'lochef85', handle: '@lochef85', color: 'red', likes: 85, text: 'c\'è posto. c\'è sempre posto. 🍖', needs: 'visto-tana' },
     { author: 'filippus il dodo', handle: '@filippus.lifts', color: 'blue', likes: 40000, text: 'panca piana 40.000 kg. estinzione: annullata. leg day: MAI saltato. ticummi: lumaca.', needs: 'visto-cantina' },
     { author: 'guggu', handle: '@guggu.citelis', color: 'yellow', likes: 7, text: 'servizio sospeso per custode. la 14 barrato tornerà. la 14 barrato torna sempre.', needs: 'boss-down-guggu' },

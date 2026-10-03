@@ -64,6 +64,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'markolino-intro': [
         { speaker: 'markolino', color: 'green', text: 'oh. oh! sei sveglio. senti, non c\'è tempo: pedro è abbandonato a sé stesso, piema è sparito e lametta sembra impazzito. sono l\'unico che se n\'è accorto, ovviamente.' },
         { speaker: 'markolino', color: 'green', text: 'la gecowave è in frammenti. e tu sei il custode provvisorio. lo so, anche io mi aspettavo di meglio.' },
+        { speaker: 'markolino', color: 'green', text: 'tre cose strane, così sai che non sono matto io: il numero 33 spunta ovunque, da settimane. lametta ha uno scaffale chiuso con scritto "Margherita" sopra. e pedro aveva una cartella chiamata IMPORTANTE che non apre più nessuno.' },
         { speaker: 'markolino', color: 'green', text: 'le basi: A e D per muoverti, SPAZIO per saltare. J o il mouse per menare. tre colpi di fila fanno una combo: il terzo spacca.' },
         { speaker: 'markolino', color: 'green', text: 'ogni colpo carica il flow. tieni premuto Q e il flow diventa vita. i microfoni salvano: premi E lì vicino, tipo bonfire ma più rap.' },
         { speaker: 'markolino', color: 'green', text: 'se muori lasci le barre a terra. torna a riprendertele prima di rimorire, regola del realm, non l\'ho scritta io.' },
@@ -75,10 +76,10 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'aspetta. ho trovato questo nei rottami: un frammento della wave. la wave manifesta il tuo desiderio, e a quanto pare tu desideri... scappare velocemente. fa niente, prendilo.' },
     ],
     'lore-gecorealm': [
-        { speaker: 'graffito sul muro', color: 'purple', text: '«il gecorealm fu creato da piema e lametta in sei giorni. il settimo uscì il primo bus dimensionale e da allora niente è più stato in orario.»' },
+        { speaker: 'graffito sul muro', color: 'purple', text: '«il gecorealm fu creato da piema e lametta in sei giorni. il settimo uscì il primo bus dimensionale e da allora niente è più stato in orario. sotto, di altra mano: "33. riconta i giorni. sono 33, non 7."»' },
     ],
     'lore-scontro': [
-        { speaker: 'cratere fumante', color: 'green', text: '«qui il cielo si è spaccato. ai lati si vedono ancora gli attacchi: pennellate viola, teoremi bianchi, scatti ciano. tre stili riconoscibilissimi. tre ego enormi.»' },
+        { speaker: 'cratere fumante', color: 'green', text: '«qui il cielo si è spaccato. ai lati si vedono ancora gli attacchi: pennellate viola, teoremi bianchi, scatti ciano. tre stili riconoscibilissimi. tre ego enormi. in mezzo, un appunto: "cartella IMPORTANTE: non cancellare".»' },
     ],
     'lore-videcoding': [
         { speaker: 'terminale abbandonato', color: 'cyan', text: '«ultimo log: "claudio porc*** mi fai una pompa?"»' },
@@ -95,7 +96,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'ancora qui?? il realm COLLASSA. con calma eh, ma collassa. muoviti che più avanti c\'è gente messa peggio di te.' },
     ],
     'lore-cratere': [
-        { speaker: 'bordo del cratere', color: 'green', text: '«epicentro dello scontro. qui la wave ha toccato terra per l\'ultima volta intera. cratere perfettamente circolare, diametro 33: piema dice "ovvio", lametta dice "prego". una targa arrugginita sul bordo: "Herbert, (TN), era qui".»' },
+        { speaker: 'bordo del cratere', color: 'green', text: '«epicentro dello scontro. qui la wave ha toccato terra per l\'ultima volta intera. cratere perfettamente circolare, diametro 33: piema dice "ovvio", lametta dice "prego". una targa arrugginita sul bordo: "Herbert, (TN), era qui". dietro la targa, inciso piccolo: "Margherita".»' },
     ],
     'lore-scale': [
         { speaker: 'gradino numerato', color: 'green', text: '«le scale del collasso: 847 gradini, uno per ogni giro di samatt. nessuno sa chi le abbia contate. tutti sanno chi le avrebbe contate.»' },
@@ -262,6 +263,8 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'ticummi-offerta': [
         { speaker: 'ticummi', color: 'blue', text: 'psst. ehi. tu. quello col trenbolone in circolo. ho visto tutto, io vedo sempre tutto. notino ti sta cercando per rubarti i frammenti.' },
         { speaker: 'ticummi', color: 'blue', text: 'per soli 0,09€ ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. al cambio del realm fanno 133 barre, ma il cambio lo decido io. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
+        { speaker: 'ticummi', color: 'blue', text: 'dettagli onesti, una volta sola: con l\'abbonamento notino viene respinto da solo, senza che tu meni. senza, ti tocca affrontarlo tu, ma almeno nessuno ti registra.' },
+        { speaker: 'ticummi', color: 'blue', text: 'l\'altra clausola sta scritta piccola: tutto quello che fai lo studio. e quello che studio, prima o poi, lo uso. l\'ombra laggiù si allena già sui tuoi salti. se mi dai 41.077 secondi di te, sarà forte come te. se non me li dai, sarà una beta sgranata.' },
     ],
     'spaccino-offerta': [
         { speaker: 'spaccino del rio', color: 'orange', text: 'ehi, geco. ti vedo smunto. ti serve la spinta. la forza vera.' },
@@ -1083,6 +1086,90 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-piazza-2': [
         { speaker: 'quaderno dimenticato', color: 'yellow', text: 'la grafia è di pedro, ma pulita, ordinata. "giorno 1 della wave. oggi la piazza era piena. ho deciso: la proteggo io." le pagine dopo sono strappate.' },
     ],
+    /* ---------- pedro prima del nucleo: echi, glitch, footage ---------- */
+    'pedro-eco-perduta': [
+        { speaker: '???', color: 'cyan', text: 'c̷u̶s̵t̸o̵d̶e̷... ti v̷e̸d̸o̷. sei s̸v̸e̸g̸l̸i̸o̸ sul muro. b̶r̸a̶v̸o̸. continua a r̶a̶c̶c̶o̶g̶l̶i̶e̶r̶e̸. io s̶i̷s̸t̵e̸m̷o̸ il resto.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che si guarda intorno. non c\'è nessuno. solo statica, per un secondo.*' },
+        { speaker: 'markolino', color: 'green', text: '(dal telefono, piano) l\'hai sentito anche tu, vero? pedro. ti guarda già. non so come, ma ti guarda.' },
+    ],
+    'pedro-eco-bus': [
+        { speaker: 'pedro', color: 'cyan', text: 'i b̷u̶s̵ girano. g̷u̶g̷g̷u̸ è pieno. tu s̶v̸u̸o̸t̸a̸l̸o̸. io intanto r̶a̶d̷d̸r̵i̸z̶z̶o̸ altrove.' },
+        { speaker: 'il geco', color: 'green', text: '*lo schermo del telefono glitcha per un secondo. la voce sembra uscire dal citelis stesso.*' },
+    ],
+    'pedro-eco-santuario': [
+        { speaker: 'pedro', color: 'cyan', text: 'l̶a̷m̸e̵t̶t̷a̸ dipinge. non f̷i̶d̸a̶r̸t̸i̸ dei colori. una volta ha d̸i̶s̸e̶g̶n̸a̶t̸o̸ anche me. ero d̶r̸i̶t̸t̸o̸, allora.' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco basso. gli specchi del santuario mostrano un ragazzo con gli occhi storti, per un frame.*' },
+    ],
+    'pedro-eco-tecnokill': [
+        { speaker: 'pedro', color: 'cyan', text: 'n̶o̷t̸i̵n̶o̸ spara. lascialo s̶p̸a̶r̸a̶r̸e̸. i bambini con le a̷r̸m̸i̷ mi ricordano q̸u̵a̶l̸c̶u̷n̸o̸. me.' },
+        { speaker: 'il geco', color: 'green', text: '*la torre radio gracchia il tuo nome, poi torna a dire "BUM".*' },
+    ],
+    'pedro-eco-trenbolone': [
+        { speaker: 'pedro', color: 'cyan', text: 'il t̶r̸e̶n̸b̶o̶l̸o̸n̸e̸ non ti serve. b̷u̶t̸t̸a̸l̸o̸ nel rio. io una volta ho preso a̷p̸p̸u̶n̸t̸i̸ su tutto. g̸u̶a̶r̸d̸a̸ dove mi ha portato.' },
+        { speaker: 'il geco (pensa)', color: 'green', text: '*per la prima volta, il glitch sembra un avvertimento. non una minaccia.*' },
+    ],
+    'pedro-osserva-rio': [
+        { speaker: 'pedro', color: 'cyan', text: 'il f̷i̶u̶m̸e̵ ti ha curato. b̶e̸n̸e̸. resta p̶u̶l̸i̶t̸o̸, custode. al n̶u̶c̸l̸e̸o̸ ti voglio p̶u̶l̸i̶t̸o̸.' },
+        { speaker: 'il geco (pensa)', color: 'green', text: '*la voce viene da sott\'acqua. il rio per un secondo sa di trenbolone e di scuse.*' },
+    ],
+    'pedro-footage-sorveglianza': [
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'FOOTAGE D\'ARCHIVIO, cliente n.2: lametta guardava pedro ogni notte, giorni 1-42. giorno 41 ore 03:58: spegne lui la telecamera. motivo: "non voglio vedere". 👍' },
+        { speaker: 'il geco (pensa)', color: 'green', text: '*pedro piccolo sullo schermo, che fa i nodi. 33 nodi. li chiama "cose che tengono".*' },
+    ],
+    /* ---------- romero prima del caso: due scene vere ---------- */
+    'romero-prima-bus': [
+        { speaker: 'commissario romero', color: 'blue', text: 'fermo lì, custode. due domande e ti lascio al tuo bus. dov\'eri quando la wave è esplosa? "sul muro"? mh. combacia.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'indago sul glitch di pedro da prima che avesse un nome. se trovi lavagne strane o log cancellati, non toccarli. chiamami. ho 60 anni di ginocchia ma corro ancora.' },
+    ],
+    'romero-prima-santuario': [
+        { speaker: 'commissario romero', color: 'blue', text: 'di nuovo tu. il santuario, eh? lametta ritrae tutti, ultimamente. anche uno con gli occhi storti. se vedi quel ritratto, memorizzalo: è una prova, non arte.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'e occhio al trenbolone che gira. la notte del glitch qualcuno ha comprato una boccetta alle 03:58. lo scontrino ce l\'ho io. il nome no. ancora.' },
+    ],
+    /* ---------- semi 33 / Margherita / IMPORTANTE ---------- */
+    'seme-33': [
+        { speaker: 'markolino', color: 'green', text: 'lo vedi anche tu, vero? 33 gradini, 33 giri di samatt, 33 nodi di pedro. non è un numero. è una firma. e non è la mia.' },
+    ],
+    'seme-margherita': [
+        { speaker: 'barattolo etichettato', color: 'purple', text: '«scaffale d, chiuso a chiave: "Margherita" — una tinta che lametta non ha mai mostrato a nessuno. sotto, a matita: "non è un colore. è una persona. non chiedere."»' },
+    ],
+    'seme-importante': [
+        { speaker: 'il geco (pensa)', color: 'green', text: '*IMPORTANTE. la parola torna ovunque: cartella di pedro, appunto nel cratere, log nel nucleo. qualcuno vuole che tu la ricordi.*' },
+    ],
+    /* ---------- scelte leggibili ---------- */
+    'tommaso-avviso-clausola': [
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'GRAZIE PER LA FIDUCIA. notino verrà respinto in automatico. in cambio, ogni tuo salto diventa nostro. clausola 12: i tuoi dati diventano armi. l\'ombra ringrazia. 🫶' },
+        { speaker: 'il geco (pensa)', color: 'green', text: '*41.077 secondi di te, in mano a ticummi. l\'ombra laggiù sta già imparando a curarsi all\'ultimo, come te.*' },
+    ],
+    'tommaso-rifiuto': [
+        { speaker: 'ticummi', color: 'cyan', text: 'rifiuti? RISPARMI? va bene. notino ti darà la caccia finché vuole, ma almeno l\'ombra sarà una beta sgranata. ci vediamo in cantina. porta i dati. ah no, non ce li ho. peccato. per me.' },
+    ],
+    /* ---------- stabilimento opzionale ---------- */
+    'smela-opzionale': [
+        { speaker: 'markolino', color: 'green', text: '(dal telefono) lo stabilimento di smela? puoi anche saltarlo, eh. è una truffa con le mura, non il tuo destino. ma se lo chiudi, l\'acqua tossica diventa tua. e smela... smela ha bisogno di qualcuno che le dica di no.' },
+    ],
+    'smela-skip': [
+        { speaker: 'il geco (pensa)', color: 'green', text: '*puoi attraversare lo stabilimento senza bere e senza fermarti. smela urla, il furgone sgomma, ma l\'uscita resta aperta. la truffa vive solo se ti fermi ad ascoltarla.*' },
+    ],
+    /* ---------- boss tutorial: cosa ti insegnano ---------- */
+    'tutorial-pogo': [
+        { speaker: 'markolino', color: 'green', text: 'quelli con lo scudo davanti? non menarli in faccia. salta sopra e premi GIÙ + attacco in aria: pogo. il terzo colpo della combo spacca anche i muri. usalo.' },
+    ],
+    'tutorial-risonante': [
+        { speaker: 'markolino', color: 'green', text: 'notino e quelli che sparano da lontano? carica F e molla: il colpo risonante perfora. contro i tori e le torrette, non andare sotto: rispondi da lontano.' },
+    ],
+    'tutorial-ombra': [
+        { speaker: 'markolino', color: 'green', text: 'l\'ombra sei tu. se hai comprato la sorveglianza, è forte come te e ti punisce se ripeti le mosse. cambia ritmo: dash, pausa, pogo. se non l\'hai comprata, è una beta: mena e basta.' },
+    ],
+    /* ---------- opzionali teaserati ---------- */
+    'tease-maschere': [
+        { speaker: 'markolino', color: 'green', text: 'le maschere con la tua faccia? sono del primo custode, quello dei dischi. a 5 senti il beat, a 10 hai il ritmo perfetto. e si apre un varco verde dove tutto è cominciato. cercale dietro i muri finti.' },
+    ],
+    'tease-corse': [
+        { speaker: 'guastalla', color: 'yellow', text: 'io... io ho preso la patente del citelis. se batti il citelis in 3 corse, guido io la linea della piazza. piano. mi fermo a tutte le fermate. anche a quelle che non esistono.' },
+    ],
+    'tease-arena': [
+        { speaker: 'markolino', color: 'green', text: 'vedi un microfono rosso? è un\'arena: tre ondate, l\'ultima con un\'élite. vinci e prendi 180 barre. a 5 arene sei un gladiatore. muori e la sfida si azzera, stile souls.' },
+    ],
 };
 
 export const ENDING_CONSEGNA: { text: string; punch?: string }[] = [
@@ -1346,7 +1433,17 @@ export const TOASTS = {
 
 export const WAVESUNG = {
     trenboloneAd: { sender: 'sponsor', text: 'TRENBOLONE! dona una nuova vita alla tua vita di merda! fatti di trenbolone! (messaggio promozionale non richiesto)' },
-    ticummiPromo: { sender: 'ticummi', text: 'offerta a tempo: tommasorveglianza, solo 0,09€. assolutamente sicura! 👍🫶' },
+    ticummiPromo: { sender: 'ticummi', text: 'offerta a tempo: tommasorveglianza, solo 0,09€. assolutamente sicura! 👍🫶 avviso onesto: notino respinto gratis, ma l\'ombra si allena su di te.' },
+    pedroEcoPerduta: { sender: '???', text: 't1 v3d0 sul mur0. c0nt1nu4 4 r4cc0gl1ere. 1o s1st3m0 1l r3st0.' },
+    pedroEcoBus: { sender: '???', text: '1 bus g1r4n0. tu svu0t4l1. 1o r4ddr1zz0 4ltr0v3.' },
+    pedroEcoSantuario: { sender: '???', text: 'n0n f1d4rt1 d31 c0l0r1. un4 v0lt4 h4nn0 d1s3gn4t0 4nch3 m3.' },
+    romeroBus: { sender: 'romero', text: 'sono romero, questura. ti ho visto sul bus. se trovi lavagne strane, non toccarle. chiamami dal telefono.' },
+    romeroSantuario: { sender: 'romero', text: 'santuario, eh? cerca il ritratto con gli occhi storti. è una prova, non arte. e lo scontrino delle 03:58 ce l\'ho io.' },
+    markolino33: { sender: 'markolino', text: 'hai contato i 33? gradini, giri, nodi. non è un numero, è una firma. e dietro la targa del cratere c\'è scritto "Margherita".' },
+    markolinoSmelaSkip: { sender: 'markolino', text: 'lo stabilimento? puoi attraversarlo senza fermarti, l\'uscita resta aperta. la truffa vive solo se ti fermi. ma l\'acqua tossica è comoda, eh.' },
+    markolinoMaschereTease: { sender: 'markolino', text: 'maschere con la tua faccia? primo custode, dischi. a 5 senti il beat, a 10 ritmo perfetto + varco verde in perduta. dietro muri finti e crepe.' },
+    markolinoCorseTease: { sender: 'guastalla', text: 'se batti il citelis in 3 corse prendo la patente e guido io la piazza. piano. mi fermo ovunque.' },
+    markolinoArenaTease: { sender: 'markolino', text: 'microfono rosso = arena: 3 ondate, 180 barre. a 5 sei gladiatore. muori e si azzera.' },
     markolinoPiema: { sender: 'markolino', text: 'HO TROVATO PIEMA!! è alla ruhra e sta impazzendo per analisi 1. SALVALO. occhio alla riba, è scema ma morde.' },
     markolinoTana: { sender: 'markolino', text: 'CUSTODE RISPONDI. il tuo segnale è sparito vicino alla tana di lochef85. se leggi questo: NON MANGIARE NIENTE e NON GUARDARE I POSTER.' },
     piemaAiuto: { sender: 'piema', text: 'custode, ho un problema serio: lametta è sparito. le tracce portano a ticummi e alla sua tommasorveglianza. ti prego di intervenire. — p.' },

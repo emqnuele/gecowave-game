@@ -47,6 +47,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     { id: 'polpette', icon: '🍝', name: 'è pronto in tavola', desc: 'rimanda notino da sua madre.', secret: true, check: flag('notino-a-casa') },
     { id: 'zucchero', icon: '☕', name: 'con lo zucchero', desc: 'offri a romero il caffè che aspettava da quarant\'anni.', secret: true, check: flag('caffe-romero') },
     { id: 'storie', icon: '📜', name: 'chi c\'era', desc: 'leggi quaranta note sparse per il realm.', check: flag('storie-del-realm') },
+    { id: 'archivista', icon: '📖', name: 'archivista', desc: 'leggi 20 voci del codex (note + pagine).', check: (s) => s.collectedLore.filter((k) => k.startsWith('nota-') || k.startsWith('pagina-pedro-')).length >= 20 },
+    { id: 'ti-guarda', icon: '📡', name: 'ti guarda già', desc: 'ascolta tutti gli echi di pedro prima del nucleo.', check: (s) => ['pedro-eco-perduta', 'pedro-eco-bus', 'pedro-eco-santuario', 'pedro-eco-tecnokill', 'pedro-eco-trenbolone', 'pedro-osserva-rio'].every((f) => s.flags.includes(f)) },
     { id: 'il-33', icon: '3️⃣', name: 'il numero ti rispetta', desc: 'batti il 33 nel void.', secret: true, check: flag('boss-down-trentatre') },
     { id: 'capolinea', icon: '🚏', name: 'ultima corsa', desc: 'trova la 14 barrato e il suo passeggero.', secret: true, check: flag('boss-down-settequaranta') },
     { id: 'sul-beat', icon: '🥁', name: 'sul beat', desc: 'batti il primo custode.', secret: true, check: flag('boss-down-custode') },

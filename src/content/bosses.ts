@@ -94,6 +94,8 @@ export const BOSSES: Record<BossKind, BossDef> = {
         cooldownMs: { 1: 2500, 2: 2000, 3: 1500 },
         summonKind: 'bottiglia',
         contactDamage: 1,
+        // stabilimento opzionale: si può attraversare senza fermarsi
+        guardsExit: false,
     },
     danjilo: {
         kind: 'danjilo',
@@ -125,6 +127,8 @@ export const BOSSES: Record<BossKind, BossDef> = {
         cooldownMs: { 1: 2300, 2: 1900, 3: 1500 },
         summonKind: 'bottiglia',
         contactDamage: 1,
+        // opzionale: chiudere la truffa dà l'acqua tossica, ma l'uscita resta aperta
+        guardsExit: false,
     },
     limite: {
         kind: 'limite',

@@ -172,12 +172,14 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 
 ### In corso / aperto
 - **bot sulla campagna intera** con le regioni rigenerate: non ancora rifatto. Le tappe nuove sono state generate in `/tmp/wp-1.json`, `/tmp/wp-2.json`, `/tmp/wp-3.json` (file temporanei, da rigenerare in una sessione nuova con `scripts/world/waypoints.ts`).
+- **stabilimento full-optional**: ora i boss non bloccano l'uscita ma la catena resta rio->stabilimento->ruhra. La rimozione dal path principale richiede rigenerazione regioni + migrazione salvataggi: da confermare con l'utente.
 
 ### Da fare
 
 ---
 
 ## 5. Cronologia
+- **trama esponenziale**: pedro echi precoci, romero anticipato, scelte leggibili, codex nel telefono, stabilimento attraversabile, semi 33/Margherita/IMPORTANTE, teaser opzionali, economia ribilanciata.
 - **fix totale**: simulatore, bot, ricompense, boss per stanza, arene, lochef, guide.
 - **mondo vivo**: navigazione, nemici a stati, passanti, meteo, giorno/notte, élite.
 - **orientamento**: mappa che si rivela, fermate e viaggio rapido, freccia assistita.
