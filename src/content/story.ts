@@ -474,7 +474,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     /* ---------- il caso analisi 1 ---------- */
     'romero-caso': [
-        { speaker: 'commissario romero', color: 'blue', text: 'pedro non si è glitchato da solo: qualcuno l\'ha innescato e ha lasciato tre tracce. trovale. senza, il limite ti respinge per vizio di forma.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'il glitch di pedro ha la firma del mio caso: una cosa fatta alle quattro, una riga corretta in blu. qualcuno l\'ha innescato e ha lasciato tre tracce. trovale. senza, il limite ti respinge per vizio di forma.' },
     ],
     'indizio-1': [
         { speaker: 'indizio n.1 — la lavagna', color: 'blue', text: '«raddrizzalo TU.» firmato lametta. sotto, una macchia arancione.' },
@@ -486,14 +486,15 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'indizio n.3 — il bozzetto', color: 'blue', text: 'pedro con gli occhi già storti. datato il giorno PRIMA del glitch.' },
     ],
     'caso-completo': [
-        { speaker: 'commissario romero', color: 'blue', text: 'un dio fatto, alle quattro, che scrive un ordine. e un ritratto che lo esegue prima ancora del glitch. il limite non ha più cavilli. vai.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'un dio fatto, alle quattro, che scrive un ordine. e un bozzetto dove pedro è già storto, il giorno prima. non è una profezia: è come lo vedeva. il limite non ha più cavilli. vai.', mood: 'grave' },
     ],
     'limite-intro': [
         { speaker: 'il limite notevole', color: 'blue', text: 'fermo lì. io tendo a infinito, tu tendi a morire: le nostre traiettorie divergono. nessuno mi ha mai notificato NIENTE, sai perché? vizio di forma. sempre.' },
-        { speaker: 'il limite notevole', color: 'blue', text: 'la verità sul glitch resta con me. confutami, se hai le prove. SE le hai.' },
+        { speaker: 'il limite notevole', color: 'blue', text: 'tendo a infinito da quarant\'anni per conto terzi. il terzo chi è? confutami, se hai le prove. SE le hai.' },
     ],
     'romero-verdetto': [
         { speaker: 'il limite notevole', color: 'blue', text: 'no... NO... le prove... convergono... io che tendo... a ZERO...' },
+        { speaker: 'il limite notevole', color: 'blue', text: '...quarant\'anni fa... chiedete a chi... firmava i verbali... in blu...' },
         { speaker: 'commissario romero', color: 'blue', text: 'in nome del realm: notevole, ma in arresto. quarant\'anni, custode. tieni il fascicolo, e questo cuore: era nella sala prove, nessuno l\'ha mai reclamato.', mood: 'grave' },
         { speaker: 'il geco', color: 'green', text: '«non è colpa di pedro.»', mood: 'grave' },
         { speaker: 'commissario romero', color: 'blue', text: '...parli. quarant\'anni di interrogatori, e la prima frase che sento da te è per l\'imputato. hai ragione, custode. ma avere ragione non basta: serve il perché.', mood: 'grave' },
@@ -1356,8 +1357,8 @@ export const WAVESUNG = {
     ticummiPromo: { sender: 'ticummi', text: 'offerta a tempo: tommasorveglianza, solo 0,09€. assolutamente sicura! 👍🫶 avviso onesto: notino respinto gratis, ma l\'ombra si allena su di te.' },
     pedroEcoPerduta: { sender: '???', text: 't1 v3d0. 5u1 mur0. c0m3 un4 v0lt4.' },
     pedroFootage: { sender: 'tommasorveglianza', text: 'FOOTAGE D\'ARCHIVIO cliente n.2: lametta guardava pedro ogni notte, giorni 1-42. giorno 41 ore 03:58 spegne lui la telecamera. motivo: "non voglio vedere". 👍' },
-    romeroBus: { sender: 'romero', text: 'sono romero, questura. ti ho visto sul bus. se trovi lavagne strane, non toccarle. chiamami dal telefono. indago sul glitch da 40 anni.' },
-    romeroSantuario: { sender: 'romero', text: 'santuario, eh? cerca il ritratto con gli occhi storti. è una prova, non arte. e lo scontrino delle 03:58 ce l\'ho io. il nome no. ancora.' },
+    romeroBus: { sender: 'romero', text: 'sono romero, questura. ti ho visto sul bus. se trovi lavagne strane, non toccarle. chiamami dal telefono. ho un caso vecchio quarant\'anni, e il glitch gli somiglia troppo.' },
+    romeroSantuario: { sender: 'romero', text: 'santuario, eh? cerca il ritratto con gli occhi storti. è una prova, non arte. e se trovi uno scontrino delle 03:58, è mio. l\'ora ce l\'ho. il nome no. ancora.' },
     markolinoPogo: { sender: 'markolino', text: 'quelli con lo scudo davanti? non menarli in faccia. salta sopra e premi GIÙ + attacco in aria: pogo. il terzo colpo spacca anche i muri.' },
     markolinoRisonante: { sender: 'markolino', text: 'quelli che sparano da lontano? non andare sotto. tieni premuto F e molla: il colpo risonante perfora. notino insegna gratis.' },
     markolinoOmbra: { sender: 'markolino', text: 'l\'ombra sei tu. se hai comprato la sorveglianza è forte come te: cambia ritmo, non ripetere le mosse. se l\'hai rifiutata è una beta: mena e basta.' },

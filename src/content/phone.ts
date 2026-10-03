@@ -158,7 +158,7 @@ export const POSTS: Post[] = [
     { author: 'piema', handle: '@prof.piema', color: 'blue', likes: 99, text: 'ricordo agli studenti che "mi si è glitchato il cane" non è una giustificazione valida. lo è stata una volta. non accadrà più.', needs: 'visto-ruhra' },
     { author: 'ticummi', handle: '@tommasorveglianza', color: 'cyan', likes: 3, text: 'tommasorveglianza: 47.000 schermi, 3 clienti, 0 problemi. 👍🫶 la sicurezza è un abbraccio che non finisce mai.', needs: 'visto-rio' },
     { author: 'romero', handle: '@det.romero', color: 'blue', likes: 40, text: 'quarant\'anni sul caso analisi 1. oggi un geco ha trovato tre indizi in un pomeriggio. vado a casa a riflettere sulla mia vita.', needs: 'caso-risolto' },
-    { author: 'romero', handle: '@det.romero', color: 'blue', likes: 12, text: 'avvistato glitch sul bus. il custode dice di aver sentito statica. lo scontrino delle 03:58 resta la mia unica pista.', needs: 'visto-bus' },
+    { author: 'romero', handle: '@det.romero', color: 'blue', likes: 12, text: 'avvistato glitch sul bus. il custode dice di aver sentito statica. un\'ora, 03:58, e nessun nome: la mia unica pista.', needs: 'visto-bus' },
     { author: 'pedro', handle: '@pedro', color: 'cyan', likes: 0, text: 'g10rn0 43. 1l r34lm è st0rt0. 1o l0 r4ddr1zz0. n0n s3rv3 r1ngr4z14rm1.', needs: 'visto-ricordi' },
     { author: 'pedro', handle: '@pedro', color: 'cyan', likes: 0, text: 'c1 4nc0r4 n0n c1 c0n0sc14m0. m4 1o t1 v3d0 g1à.', needs: 'visto-perduta' },
     { author: 'markolino', handle: '@markolino', color: 'green', likes: 5, text: 'maschere del primo custode: a 5 senti il beat, a 10 ritmo perfetto + varco verde in perduta. cercate dietro muri finti.', needs: 'visto-perduta' },

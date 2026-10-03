@@ -42,7 +42,7 @@ export const PEDRO_APPARITIONS: Record<string, [string, string]> = {
         `il pensiero in fondo. lo sai già, cosa ${gl('farne')}.`,
     ],
     caso: [
-        'romero cerca chi mi ha caricato. lo sa da quarant\'anni.',
+        'romero cerca la mano che mi ha caricato. la insegue da quarant\'anni. solo che non lo sa.',
         `un vecchio con le ginocchia rotte. mi ${gl('piace')}. non dirglielo.`,
     ],
     sorveglianza: [
