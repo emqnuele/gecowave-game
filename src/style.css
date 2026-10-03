@@ -310,7 +310,7 @@ body {
 
 .hud-barre {
   position: absolute;
-  top: 52px;
+  top: 48px;
   right: 18px;
   padding: 8px 14px 8px 18px;
   transform: rotate(1.5deg);
@@ -368,7 +368,8 @@ body {
   padding: 6px 14px;
   transform: rotate(1.2deg);
   font-family: var(--font-fell);
-  font-size: 15px;
+  font-size: 22px;
+  letter-spacing: 0.06em;
   font-size: 13px;
   color: var(--zinc-300);
 }
