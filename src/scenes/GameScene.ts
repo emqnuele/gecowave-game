@@ -148,6 +148,8 @@ export class GameScene extends Phaser.Scene {
     private player!: Player;
     private boss: Boss | null = null;
     private enemies!: Phaser.GameObjects.Group;
+    /** riusato ogni frame per le minacce: niente array nuovi per il GC */
+    private threatCache: { x: number; y: number }[] = [];
     private playerProjectiles!: Phaser.Physics.Arcade.Group;
     private enemyProjectiles!: Phaser.Physics.Arcade.Group;
     private lametteGroup!: Phaser.Physics.Arcade.Group;
@@ -4210,7 +4212,8 @@ export class GameScene extends Phaser.Scene {
 
     /** chi è sveglio e cattivo, per i passanti che devono scappare */
     private threats(): { x: number; y: number }[] {
-        const out: { x: number; y: number }[] = [];
+        const out = this.threatCache;
+        out.length = 0;
         for (const child of this.enemies.getChildren()) {
             const e = child as Enemy;
             if (e.active && !e.dormant && (e.mode === 'chase' || e.mode === 'alert')) out.push({ x: e.x, y: e.y });
