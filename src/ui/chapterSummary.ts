@@ -184,6 +184,8 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         clone.style.cssText += `;position:fixed;left:${r1.left}px;top:${r1.top}px;width:${r1.width}px;height:${r1.height}px;margin:0;z-index:5;pointer-events:none;transform-origin:center center;`;
         root.append(clone);
         flights.push(clone);
+        // l'originale sparisce subito: quello che vola è l'unico visibile
+        from.classList.add('leaving');
         const dx = r2.left + r2.width / 2 - (r1.left + r1.width / 2);
         const dy = r2.top + r2.height / 2 - (r1.top + r1.height / 2);
         const s = Math.max(0.05, Math.min(1, r2.width / r1.width));
@@ -191,7 +193,8 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
             const anim = clone.animate(
                 [
                     { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-                    { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.85 },
+                    { transform: `translate(${dx * 0.08}px, ${dy * 0.08}px) scale(1.04)`, opacity: 1, offset: 0.18 },
+                    { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.9 },
                 ],
                 { duration: 650, easing: 'cubic-bezier(.3,.7,.3,1)' },
             );

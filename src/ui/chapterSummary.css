@@ -123,8 +123,7 @@
 
 .chsum-beat.leaving {
   opacity: 0;
-  transform: scale(0.92);
-  transition: opacity 0.45s ease, transform 0.45s ease;
+  transition: opacity 0.15s ease;
 }
 
 /* il dock dei verdetti: piccoli, in fila */
