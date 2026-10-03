@@ -53,6 +53,7 @@ import { ENEMIES } from '../content/enemies';
 import { Player } from '../entities/Player';
 import { BossVoice } from '../engine/BossVoice';
 import { OmbraBrain } from '../engine/OmbraBrain';
+import type { PlayerAct } from '../engine/OmbraProfile';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { AbilitySeals } from '../engine/AbilitySeals';
@@ -1109,6 +1110,8 @@ export class GameScene extends Phaser.Scene {
                             if (i === 0 && state.save.barre >= 133) {
                                 state.save.barre -= 133;
                                 state.setFlag('tommasorveglianza');
+                                state.save.ombra.premium = true;
+                                state.persist();
                                 bus.emit('barre-changed', { barre: state.save.barre, gained: false });
                                 this.startDialogue('tommaso-avviso-clausola');
                             } else if (i === 0) {
@@ -2067,6 +2070,11 @@ export class GameScene extends Phaser.Scene {
         on('boss-defeated', this.onBossDefeated as never);
         on('boss-engaged', this.onBossEngaged as never);
         on('boss-dying', (() => this.silenceBoss()) as never);
+        // ogni mossa del geco nutre il profilo: l'ombra lo leggerà alla fine
+        // (la finestra live si collega col cervello nuovo, fase b)
+        on('player-act', ((act: PlayerAct) => {
+            state.observeOmbra(act);
+        }) as never);
         on('boss-phase', (({ phase }: { phase: number }) => this.voice?.say(phase === 2 ? 'phase2' : 'phase3', true)) as never);
     }
 
@@ -3689,7 +3697,7 @@ export class GameScene extends Phaser.Scene {
             onComplete: () => { crack.destroy(); crackGlow.destroy(); },
         });
         sfx.mirrorBirth();
-        this.events.emit('player-act', { act: 'wave', wave: 'riflesso' });
+        // la nascita è la stessa decisione del lancio: il profilo l'ha già vista
 
         // stessa fisica del player: terreno, muri, porte
         this.cloneColliders.push(

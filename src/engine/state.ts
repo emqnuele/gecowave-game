@@ -2,6 +2,7 @@ import { COMBAT } from '../config';
 import { BASE_NOTCHES, charmMods, ITEMS, LEGACY_ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
 import { bus } from './events';
+import { defaultOmbraProfile, observe as observeOmbraAct, sanitizeOmbraProfile, type PlayerAct } from './OmbraProfile';
 import type { Action, PresetId } from './input/actions';
 
 const SAVE_KEY = 'gecowave-save-v2';
@@ -66,6 +67,7 @@ const defaultSave = (): SaveData => ({
     runScores: {},
     chapterLog: {},
     chapterRun: null,
+    ombra: defaultOmbraProfile(),
 });
 
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
@@ -124,6 +126,12 @@ class GameState {
                     this.save.runScores = {};
                     this.save.scores = {};
                     this.save.chapterLog = {};
+                }
+                // l'ombra ha un profilo per partita: i salvataggi vecchi partono puliti
+                this.save.ombra = sanitizeOmbraProfile((parsed as { ombra?: unknown }).ombra);
+                if (this.hasFlag('tommasorveglianza') && !this.save.ombra.premium) {
+                    this.save.ombra.premium = true;
+                    this.persist();
                 }
             }
             const s = localStorage.getItem(SETTINGS_KEY);
@@ -339,6 +347,18 @@ class GameState {
             this.save.flags.splice(idx, 1);
             this.persist();
         }
+    }
+
+    /** una mossa del geco finisce nel profilo dell'ombra, una sola volta */
+    observeOmbra(act: PlayerAct): void {
+        if (observeOmbraAct(this.save.ombra, act)) this.persist();
+    }
+
+    /** una ripresa riuscita nel centro dati: alza la precisione, non i danni */
+    recordOmbraSighting(): void {
+        if (this.save.ombra.sightings >= 8) return;
+        this.save.ombra.sightings += 1;
+        this.persist();
     }
 
     /** avanza il doomsday col tempo reale; ritorna il valore aggiornato (0..1) */

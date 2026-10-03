@@ -137,8 +137,8 @@ export class Cameras implements Mechanic {
         this.ctx.scene.time.delayedCall(160, () => sfx.beep(0, 1));
         try { this.ctx.scene.cameras.main.flash(120, 120, 20, 20); } catch { /* camera finta */ }
         if (this.mode.kind === 'sorveglianza') {
-            if (state.run.ombraDati < MAX_DATA) state.run.ombraDati++;
-            bus.emit('toast', { text: `la tommasorveglianza ti ha ripreso. l'ombra impara (${state.run.ombraDati}/${MAX_DATA}).` });
+            state.recordOmbraSighting();
+            bus.emit('toast', { text: `la tommasorveglianza ti ha ripreso. l'ombra impara (${state.save.ombra.sightings}/${MAX_DATA}).` });
         } else {
             bus.emit('toast', { text: 'telecamera di ticummi: allarme. arriva gente.' });
         }

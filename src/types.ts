@@ -94,6 +94,24 @@ export interface LevelDef {
 
 export type DialogueMood = 'meme' | 'crepa' | 'grave' | 'silenzio';
 
+/* la sagoma che l'ombra legge: solo categorie normalizzate, mai tasti o dati veri */
+export type OmbraAction =
+    | 'attack-side' | 'attack-up' | 'attack-down'
+    | 'dash' | 'jump' | 'heal-start' | 'heal-done'
+    | 'wave-risonante' | 'wave-riflesso' | 'wave-analisi'
+    | 'wave-scudo' | 'wave-acquatossica';
+
+export interface OmbraProfile {
+    version: 1;
+    /** quante azioni normalizzate ha visto il modello in questa partita */
+    total: number;
+    counts: Record<OmbraAction, number>;
+    /** riprese riuscite nel centro sorveglianza; massimo 8 */
+    sightings: number;
+    /** contratto acquistato: sblocca la precisione alta, mai dati extra reali */
+    premium: boolean;
+}
+
 export interface DialogueLine {
     speaker: string;
     color: ZoneColor;
@@ -149,6 +167,8 @@ export interface SaveData {
     achievements: string[];
     /** la modalità assistita è stata accesa almeno una volta in questa partita */
     assisted: boolean;
+    /** la sagoma delle abitudini che l'ombra legge: locale, senza rete */
+    ombra: OmbraProfile;
     /** record per capitolo */
     scores: Record<string, ChapterScore>;
     /** punteggi dei capitoli finiti in questa partita: si sommano nel punteggio finale */

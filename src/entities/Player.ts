@@ -4,6 +4,7 @@ import { FX } from '../engine/art/abilityFx';
 import { bus } from '../engine/events';
 import type { Input } from '../engine/input/Input';
 import { quickHeal } from '../engine/inventory';
+import type { PlayerAct } from '../engine/OmbraProfile';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { AbilityId } from '../types';
@@ -177,6 +178,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
     }
 
+    /** una decisione, un evento: l'ombra legge le mosse, mai i tasti */
+    private act(a: PlayerAct): void {
+        this.scene.events.emit('player-act', a);
+    }
+
     update(_time: number, delta: number): void {
         if (this.dead) return;
         const now = this.scene.time.now;
@@ -289,6 +295,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.jumpBufferedUntil = 0;
                 this.coyoteUntil = 0;
                 sfx.jump();
+                this.act({ act: 'jump' });
             } else if (now < this.wallUntil && this.wallSide !== 0) {
                 // salto dal muro: su e via dal muro, i comandi tornano dopo un istante
                 const away = -this.wallSide as 1 | -1;
@@ -299,7 +306,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.wallUntil = 0;
                 this.jumpBufferedUntil = 0;
                 sfx.jump();
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'aggrappo' });
+                this.act({ act: 'jump' });
+                this.act({ act: 'wave', wave: 'aggrappo' });
                 // spruzzo d'inchiostro dal lato del muro
                 const spray = this.scene.add.particles(this.x - this.wallSide * 14, this.y, 'p-dot', {
                     speed: { min: 60, max: 180 }, angle: this.wallSide < 0 ? { min: -40, max: 40 } : { min: 140, max: 220 },
@@ -312,7 +320,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.airJumpUsed = true;
                 this.jumpBufferedUntil = 0;
                 sfx.doubleJump();
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'rimbalzo' });
+                this.act({ act: 'jump' });
+                this.act({ act: 'wave', wave: 'rimbalzo' });
                 // anello di pennello che si apre sotto i piedi
                 const ring = this.scene.add.image(this.x, this.y + 22, FX.ringJump).setDepth(3);
                 this.scene.tweens.add({
@@ -387,7 +396,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.riflessoReadyAt = now + COMBAT.riflessoCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-riflesso', { x: this.x, y: this.y, facing: this.facing });
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'riflesso' });
+                this.act({ act: 'wave', wave: 'riflesso' });
             }
         }
 
@@ -396,7 +405,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.scudoReadyAt = now + COMBAT.scudoCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-scudo', {});
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'scudo' });
+                this.act({ act: 'wave', wave: 'scudo' });
             }
         }
 
@@ -478,8 +487,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         body.setVelocity(PHYSICS.dashSpeed * this.facing, 0);
         body.setAccelerationX(0);
         sfx.dash();
-        this.scene.events.emit('player-act', { act: 'dash' });
-        this.scene.events.emit('player-act', { act: 'wave', wave: 'scivolata' });
+        this.act({ act: 'dash' });
+        this.act({ act: 'wave', wave: 'scivolata' });
         this.play('p-jump', true);
         // sagome d'inchiostro che restano indietro
         for (let i = 0; i < 4; i++) {
@@ -526,7 +535,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
         this.comboResetAt = now + COMBAT.comboWindowMs;
-        this.scene.events.emit('player-act', { act: 'attack', dir: this.attackDir });
+        this.act({ act: 'attack', dir: this.attackDir });
         sfx.slash();
         this.attacking = true;
         // il frame d'attacco è largo il doppio: l'origine va sul corpo
@@ -570,7 +579,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-analisi', {});
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'analisi' });
+                this.act({ act: 'wave', wave: 'analisi' });
             }
         } else {
             sfx.ui();
@@ -585,7 +594,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 // in aria la lasci cadere sotto di te, a terra la lanci ad arco
                 const aim = !this.grounded ? 'drop' : 'lob';
                 this.scene.events.emit('player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'acquatossica' });
+                this.act({ act: 'wave', wave: 'acquatossica' });
             }
         } else {
             sfx.ui();
@@ -602,8 +611,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         else sfx.shootEco();
         this.scene.cameras.main.flash(80, 168, 85, 247);
         this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing, level });
-        this.scene.events.emit('player-act', { act: 'attack', dir: 'shot' });
-        this.scene.events.emit('player-act', { act: 'wave', wave: 'risonante', level });
+        this.act({ act: 'wave', wave: 'risonante', level });
     }
 
     private updateRisonante(now: number): void {
