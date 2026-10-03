@@ -64,6 +64,9 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     root.append(flash);
     const stage = el('div', 'chsum-stage');
     root.append(stage);
+    // tutto il contenuto scala per entrare in un'inquadratura sola, senza scorrere
+    const fit = el('div', 'chsum-fit');
+    stage.append(fit);
     ui().append(root);
 
     const kick = el('div', 'chsum-kick', 'capitolo completato');
@@ -73,11 +76,11 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     em.textContent = summary.accentWord;
     title.append(em);
     const sub = el('div', 'chsum-sub', 'il realm tiene ancora. per ora.');
-    stage.append(kick, title, sub);
+    fit.append(kick, title, sub);
     if (summary.punchline) {
         const punch = el('div', 'chsum-punch');
         punch.textContent = summary.punchline;
-        stage.append(punch);
+        fit.append(punch);
     }
 
     // esplorazione
@@ -90,7 +93,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     bar.append(fill);
     const mapStamp = el('div', 'chsum-stamp', 'mappa completa');
     exploreBlock.append(pctEl, roomsEl, bar, mapStamp);
-    stage.append(exploreBlock);
+    fit.append(exploreBlock);
 
     // cuori
     const heartBlock = el('section', 'chsum-block');
@@ -99,7 +102,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     const heartRow = el('div', 'chsum-hearts');
     const heartNote = el('div', 'chsum-subline', '');
     heartBlock.append(heartNum, heartRow, heartNote);
-    stage.append(heartBlock);
+    fit.append(heartBlock);
 
     // cose
     const thingBlock = el('section', 'chsum-block');
@@ -107,7 +110,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     const thingNum = el('div', 'chsum-mid', '');
     const thingNote = el('div', 'chsum-subline', 'lore, maschere, tacche, amuleti, missioni');
     thingBlock.append(thingNum, thingNote);
-    stage.append(thingBlock);
+    fit.append(thingBlock);
 
     // punteggio
     const scoreBox = el('section', 'chsum-score');
@@ -136,17 +139,17 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     if (summary.score.assisted) {
         scoreBox.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
     }
-    stage.append(scoreBox);
+    fit.append(scoreBox);
 
     // run totale
     const runBox = el('section', 'chsum-score chsum-run');
     runBox.append(el('div', 'chsum-label', 'score attuale'));
     const runNum = el('div', 'chsum-hero-num', '0');
     runBox.append(runNum);
-    stage.append(runBox);
+    fit.append(runBox);
 
     const hint = el('div', 'chsum-go-hint', 'clicca ovunque per continuare');
-    stage.append(hint);
+    fit.append(hint);
 
     /* ---------- regia: battiti lenti, salto alla fine, poi oltre ---------- */
 
@@ -160,6 +163,25 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     let ready = false;
     let continued = false;
     let lastTick = 0;
+
+    // l'inquadratura contiene tutto: se lo schermo è basso si rimpicciolisce
+    const fitToScreen = (): void => {
+        fit.style.transform = '';
+        const h = fit.scrollHeight;
+        const avail = window.innerHeight * 0.9;
+        const s = h > 0 ? Math.min(1, avail / h) : 1;
+        if (s < 1) fit.style.transform = `scale(${s})`;
+    };
+    const onResize = (): void => {
+        if (!closed) fitToScreen();
+    };
+    window.addEventListener('resize', onResize);
+    fitToScreen();
+    if (document.fonts?.ready) {
+        document.fonts.ready.then(() => {
+            if (!closed) fitToScreen();
+        }).catch(() => {});
+    }
 
     const tick = (): void => {
         const now = performance.now();
@@ -228,6 +250,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         for (const id of rafs) cancelAnimationFrame(id);
         rafs.clear();
         window.removeEventListener('keydown', onKey, true);
+        window.removeEventListener('resize', onResize);
         root.remove();
         open = false;
     };
