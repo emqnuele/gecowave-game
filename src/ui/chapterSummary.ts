@@ -6,7 +6,7 @@ import { el, ui } from './dom';
 import './chapterSummary.css';
 
 /* il riepilogo animato di fine capitolo: una carta d'inchiostro che conta
-   da sola, poi lascia andare. un solo rAF, tutto distrutto all'uscita */
+   da sola, poi lascia andare. contatori col rAF, tutto distrutto all'uscita */
 
 let open = false;
 

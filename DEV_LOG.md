@@ -162,6 +162,13 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
+### ADR-025 — riepilogo animato di capitolo
+**Contesto**: a fine capitolo il conto era solo una notifica del telefono (ADR-019): niente celebrazione, niente mappa, niente cuori e segreti in un colpo d'occhio.
+**Decisione**: prima del fade verso la regione successiva si apre una carta d'inchiostro fullscreen (`src/ui/chapterSummary.ts`, evento `chapter-summary-show`): mappa esplorata con percentuale animata, cuori del realm, cose trovate, score voce per voce col sistema esistente (`chapterParts`/`sumParts`/`runScore`) e score attuale della run. La scena si mette in pausa e la musica si abbassa (`music.setGraveDuck`, la stessa via dei dialoghi gravi) finché il giocatore continua (click o invio, dopo ~1.7 s).
+**Fonte dei totali**: un catalogo centrale (`src/engine/ChapterCompletion.ts`) registra ogni voce con chiave persistente vera, capitolo proprietario e categoria `heart`/`thing`, prima di controllare se è già presa: il denominatore resta giusto anche sui salvataggi avanzati. Le registrazioni doppie con categoria o capitolo diversi avvisano in console invece di corrompere i conti in silenzio.
+**Cosa conta**: lore e note di regione, pagine di pedro (attribuite alla loro regione), pensiero sepolto, maschere, tacche piazzate, amuleti dei boss, sparacchino, completamento delle quest (l'amuleto quando c'è, la missione altrimenti), vittoria dell'arena rossa. Frammenti e abilità, barre, drop, cure, flow, checkpoint, corse contro il citelis, acquisti in negozio, quaderno ricomposto e oggetti chiave da flag di storia restano fuori: il primo gruppo è progressione, il secondo è globale o non attribuibile con certezza.
+**Conseguenze**: l'input `segreti` del punteggio ora viene dal catalogo invece che dalla regex su `collectedLore` (che contava anche i sacchetti di barre): i punteggi dei capitoli cambiano, in meglio. La mappa del telefono mostra gli stessi numeri dell'overlay, solo per i capitoli col catalogo sigillato e mai per quelli mai visitati. Senza ui pronta o in caso di errore la transizione prosegue normale: la campagna non si blocca mai. Nessun nuovo salvataggio, nessuna nuova valuta.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -206,6 +213,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **riepilogo di capitolo**: carta animata a fine livello con mappa, cuori, cose e score, catalogo centrale dei collezionabili (ADR-025).
 - **gioco vero**: boss che parlano in battaglia e ombra che impara, volere del geco e pedro in scena, 33 con un significato, flashback al posto degli spiegoni, una meccanica per bioma, economia a due uscite, nemici simbolo che insegnano una mossa.
 - **trama esponenziale**: pedro echi precoci, romero anticipato, scelte leggibili, codex nel telefono, stabilimento attraversabile, semi 33/Margherita/IMPORTANTE, teaser opzionali, economia ribilanciata.
 - **fix totale**: simulatore, bot, ricompense, boss per stanza, arene, lochef, guide.
