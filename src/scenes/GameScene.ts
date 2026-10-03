@@ -3813,8 +3813,8 @@ export class GameScene extends Phaser.Scene {
             const hy = ls.y - 30 - chef.y;
             const hdist = Math.hypot(hx, hy) || 1;
             if (hdist > 70) {
-                chef.x += (hx / hdist) * 260 * (delta / 1000);
-                chef.y += (hy / hdist) * 260 * (delta / 1000);
+                chef.x += (hx / hdist) * 235 * (delta / 1000);
+                chef.y += (hy / hdist) * 235 * 0.75 * (delta / 1000);
             } else {
                 const ax = chef.x - this.player.x;
                 const ay = chef.y - this.player.y;
@@ -3835,12 +3835,13 @@ export class GameScene extends Phaser.Scene {
         this.chaseLastSeen = { x: this.player.x, y: this.player.y };
 
         // fluttua verso di te, attraversa i muri: è casa sua. a elastico: lontano corre, vicino ti lascia un respiro
+        // sale e scende più piano di quanto si sposti in orizzontale: si sente che nuota nell'aria
         const dx = this.player.x - chef.x;
         const dy = this.player.y - 30 - chef.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const speed = dist > 620 ? 560 : dist > 320 ? 330 : 245;
+        const speed = dist > 620 ? 500 : dist > 320 ? 300 : 225;
         chef.x += (dx / dist) * speed * (delta / 1000);
-        chef.y += (dy / dist) * speed * (delta / 1000);
+        chef.y += (dy / dist) * speed * 0.75 * (delta / 1000);
         chef.setFlipX(dx > 0);
         chef.setFrame(Math.floor(this.time.now / 110) % creatureFrames(this, 'boss-lochef'));
         // ondeggia: inquietante ma con stile
