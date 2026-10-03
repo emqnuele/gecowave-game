@@ -6,7 +6,7 @@
   position: absolute;
   right: 18px;
   bottom: 18px;
-  padding: 7px 4px;
+  padding: 7px 0;
   font-family: var(--font-martian);
   font-size: 10px;
   color: var(--zinc-300);
@@ -38,19 +38,19 @@
 
 .phone-hint .unread {
   position: absolute;
-  top: -5px;
-  right: -7px;
-  min-width: 11px;
-  height: 11px;
-  padding: 0 3px;
-  border-radius: 6px;
+  top: -4px;
+  right: -6px;
+  min-width: 9px;
+  height: 9px;
+  padding: 0 2px;
+  border-radius: 5px;
   background: var(--red);
   color: #000;
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 700;
-  line-height: 11px;
+  line-height: 9px;
   text-align: center;
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
 }
 
 .phone-scrim {
