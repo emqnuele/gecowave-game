@@ -260,6 +260,8 @@ export class GameScene extends Phaser.Scene {
     private replacedBossX = 0;
     private replacedBossY = 0;
     private nextWildGlitchAt = 0;
+    /** anti-spam del parry quando la hitbox resta sopra un nemico schermato */
+    private parryUntil = 0;
     // il primo custode attacca sul beat: metronomo interno a 120 bpm
     private beatMs = 500;
     private nextBeatAt = 0;
@@ -724,6 +726,9 @@ export class GameScene extends Phaser.Scene {
 
     /** lo scudo para: clang, rinculo, nessun flow */
     private parry(enemy: Enemy): void {
+        const now = this.time.now;
+        if (now < this.parryUntil) return;
+        this.parryUntil = now + 350;
         sfx.clang();
         const dir = Math.sign(this.player.x - enemy.x) || 1;
         (this.player.body as Phaser.Physics.Arcade.Body).setVelocityX(dir * 260);
@@ -1596,7 +1601,12 @@ export class GameScene extends Phaser.Scene {
             this.destroyBreakableWall(proj as Phaser.Physics.Arcade.Sprite);
         });
         this.physics.add.overlap(this.player.attackHitbox, this.level.breakableWalls, (_hb, obj) => {
-            if (!this.player.attackActive) return;
+            if (!this.player.attackActive && !this.player.slamming) return;
+            if (this.player.slamming) {
+                // schianto: sfonda e continua a scendere, senza pogo
+                this.destroyBreakableWall(obj as Phaser.Physics.Arcade.Sprite);
+                return;
+            }
             this.player.attackActive = false;
             this.player.onAttackHit();
             this.hitstop();
@@ -1604,7 +1614,7 @@ export class GameScene extends Phaser.Scene {
         });
 
         this.physics.add.overlap(this.player.attackHitbox, this.enemies, (_hb, obj) => {
-            if (!this.player.attackActive) return;
+            if (!this.player.attackActive && !this.player.slamming) return;
             const enemy = obj as Enemy;
             if (enemy.blocks(this.player.x, this.player.attackDir)) {
                 this.player.attackActive = false;
@@ -2205,6 +2215,7 @@ export class GameScene extends Phaser.Scene {
         this.updateVoid(time, delta);
         this.updateBaruffoni(time, delta);
         this.updateFakeWalls();
+        if (this.player.consumeSlamLanding()) this.slamLand(this.player.x, this.player.y);
         this.updateDoomsday(time, delta);
         this.updateRhythm(time);
 
@@ -2316,6 +2327,7 @@ export class GameScene extends Phaser.Scene {
 
     private destroyBreakableWall(wall: Phaser.Physics.Arcade.Sprite): void {
         sfx.hit();
+        sfx.crumble();
         this.cameras.main.shake(80, 0.005);
         const burst = this.add.particles(wall.x, wall.y, 'p-spark', {
             speed: { min: 60, max: 200 },
@@ -2328,6 +2340,32 @@ export class GameScene extends Phaser.Scene {
         this.time.delayedCall(800, () => burst.destroy());
         this.nav.open(Math.floor(wall.x / TILE), Math.floor(wall.y / TILE));
         wall.destroy();
+    }
+
+    /** l'impatto dello schianto: sfonda sotto i piedi e investe i nemici */
+    private slamLand(x: number, y: number): void {
+        const r = COMBAT.slamRadius;
+        sfx.crumble();
+        this.cameras.main.shake(180, 0.008);
+        const dust = this.add.particles(x, y + 10, 'p-dot', {
+            speed: { min: 60, max: 220 }, angle: { min: 200, max: 340 },
+            scale: { start: 0.6, end: 0 }, alpha: { start: 0.6, end: 0 },
+            tint: 0xa8a29e, lifespan: 450, quantity: 12, stopAfter: 12,
+        }).setDepth(6);
+        this.time.delayedCall(850, () => dust.destroy());
+        const walls = this.level.breakableWalls.getChildren().filter((c) => {
+            const w = c as Phaser.Physics.Arcade.Sprite;
+            return Math.abs(w.x - x) < r && w.y > y - 20 && w.y < y + TILE * 1.5;
+        });
+        for (const w of walls) this.destroyBreakableWall(w as Phaser.Physics.Arcade.Sprite);
+        for (const child of this.enemies.getChildren()) {
+            const e = child as Enemy;
+            if (e.active && Math.hypot(e.x - x, e.y - y) < r + 40) e.takeDamage(COMBAT.slamDamage, x);
+        }
+        if (!state.hasFlag('spiegato-schianto')) {
+            state.setFlag('spiegato-schianto');
+            bus.emit('toast', { text: 'schianto! giù+attacco in aria sfonda i muri dall\u2019alto.' });
+        }
     }
 
     /* ---------- ivan maggini contro guggu ---------- */

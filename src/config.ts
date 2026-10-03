@@ -40,6 +40,10 @@ export const COMBAT = {
     attackCooldownMs: 300,
     attackActiveMs: 140,
     attackRange: 78,
+    /** schianto: giù+attacco in aria, picchiata che sfonda i muri dall'alto */
+    slamFall: 950,
+    slamRadius: 110,
+    slamDamage: 3,
     /** finestra per concatenare la combo a 3 colpi */
     comboWindowMs: 650,
     invulnMs: 900,

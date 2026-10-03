@@ -27,6 +27,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private wallUntil = 0;
     private wallLockUntil = 0;
     private wallDustAt = 0;
+    /** schianto: picchiata giù+attacco che sfonda i muri dall'alto */
+    slamming = false;
+    private slamUntil = 0;
+    private slamDustAt = 0;
     private dashing = false;
     private dashUntil = 0;
     private dashCooldownUntil = 0;
@@ -191,6 +195,20 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         } else if (this.grounded) {
             this.wallUntil = 0;
+        }
+
+        // schianto: giù+attacco in aria, picchiata che sfonda dall'alto
+        if (this.slamming && !this.grounded) {
+            if (body.velocity.y < COMBAT.slamFall) body.setVelocityY(COMBAT.slamFall);
+            if (now >= this.slamDustAt) {
+                this.slamDustAt = now + 120;
+                const dust = this.scene.add.particles(this.x, this.y - 20, 'p-dot', {
+                    speed: { min: 10, max: 50 }, angle: { min: 230, max: 310 },
+                    scale: { start: 0.4, end: 0 }, alpha: { start: 0.5, end: 0 },
+                    tint: 0xd6d3d1, lifespan: 300, quantity: 1, stopAfter: 1,
+                });
+                this.scene.time.delayedCall(650, () => dust.destroy());
+            }
         }
 
         // movimento orizzontale (subito dopo un salto dal muro i comandi aspettano un attimo)
@@ -413,6 +431,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.attackAnimUntil = now + 260;
         this.attackActive = true;
         this.attackDir = dir;
+        if (dir === 'down' && !this.grounded) {
+            // schianto: parte la picchiata, si ferma a terra o sul pogo
+            this.slamming = true;
+            this.slamUntil = now + 4000;
+            const slamBody = this.body as Phaser.Physics.Arcade.Body;
+            slamBody.setVelocityY(Math.max(slamBody.velocity.y, COMBAT.slamFall));
+        }
         this.comboResetAt = now + COMBAT.comboWindowMs;
         sfx.slash();
         this.attacking = true;
@@ -421,6 +446,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.play('p-attack', true);
         this.slashVisual(dir, this.comboStep);
         this.comboStep = (this.comboStep + 1) % 3;
+    }
+
+    /** atterraggio dello schianto: una sola volta, consuma la picchiata */
+    consumeSlamLanding(): boolean {
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        if (this.slamming && body.blocked.down && this.scene.time.now < this.slamUntil) {
+            this.slamming = false;
+            return true;
+        }
+        if (this.scene.time.now >= this.slamUntil) this.slamming = false;
+        return false;
     }
 
     /** danno del colpo corrente: il terzo della combo spacca */
@@ -496,6 +532,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         sfx.hit();
         state.run.flow = Math.min(state.maxFlow, state.run.flow + COMBAT.flowPerHit * state.mods.flowPerHit);
         this.emitVitals(false);
+        // il pogo chiude la picchiata: rimbalzi invece di sprofondare
+        this.slamming = false;
         if (this.attackDir === 'down') {
             // pogo: rimbalzo sul colpo dal basso
             body.setVelocityY(-PHYSICS.pogoVelocity);
@@ -507,6 +545,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     hurt(amount: number, fromX?: number): boolean {
         if (this.dead || this.invulnerable) return false;
+        this.slamming = false;
         if (state.run.santino) {
             // il santo incassa al posto tuo, una volta
             state.run.santino = false;
@@ -537,6 +576,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // instant death
     kill(): void {
         if (this.dead) return;
+        this.slamming = false;
         state.run.hp = 0;
         this.emitVitals(true);
         this.burst(0xf87171, 14);
