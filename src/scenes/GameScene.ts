@@ -172,6 +172,9 @@ export class GameScene extends Phaser.Scene {
     private nextAnalisiTick = 0;
     private analisiGlyphs: Phaser.GameObjects.Image[] = [];
     private guide: RegionGuide | null = null;
+    /** percorso della freccia: ricalcolato solo cambiando stanza */
+    private guideCacheKey = '';
+    private guideCache: { x: number; y: number; rooms: number } | null = null;
     private folk!: FolkManager;
     private traps!: TrapManager;
     private hazards!: HazardManager;
@@ -293,6 +296,8 @@ export class GameScene extends Phaser.Scene {
         this.npcAt.clear();
         this.lastRoom = -1;
         this.guide = this.layout ? new RegionGuide(this.layout) : null;
+        this.guideCacheKey = '';
+        this.guideCache = null;
         this.checkpointSprites.clear();
         this.lamettaCenter = null;
         this.lamettaActive = false;
@@ -2681,7 +2686,14 @@ export class GameScene extends Phaser.Scene {
         regionView.player = { x: this.player.x, y: this.player.y };
         regionView.goal = goal;
         if (!goal || !state.settings.guide || this.player.dead || this.boss?.engaged || this.chaseSprite) return;
-        const next = this.guide ? this.guide.nextPoint(this.player.x, this.player.y, goal.x, goal.y) : { x: goal.x, y: goal.y, rooms: 0 };
+        // la BFS costa: vale finché player e bersaglio restano nelle stesse stanze
+        const key = this.guide ? `${this.guide.roomAt(this.player.x, this.player.y)?.id ?? -1}:${this.guide.roomAt(goal.x, goal.y)?.id ?? -1}` : 'direct';
+        let next = key === this.guideCacheKey ? this.guideCache : null;
+        if (!next) {
+            next = this.guide ? this.guide.nextPoint(this.player.x, this.player.y, goal.x, goal.y) : { x: goal.x, y: goal.y, rooms: 0 };
+            this.guideCacheKey = key;
+            this.guideCache = next;
+        }
         if (!next) return;
         const dx = next.x - this.player.x;
         const dy = next.y - this.player.y;
