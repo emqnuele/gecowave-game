@@ -88,11 +88,11 @@ export const REGION_NOTES: Record<string, Note[]> = {
 export const PAGE_REGIONS = ['bus', 'santuario', 'rio', 'ruhra', 'ricordi'] as const;
 
 const PAGES: string[] = [
-    '«giorno 3. ho scoperto i bus. girano in tondo e la gente sopra ride lo stesso. stasera in piazza, su un muro, c\'era un geco. gli ho detto ciao. non ha risposto. i gechi non rispondono. è stata la conversazione migliore della giornata.»',
-    '«giorno 12. lametta mi ha fatto un ritratto. ci sono venuto bene, dice. stasera il geco del muro c\'era di nuovo e gliel\'ho raccontato. ha fatto un verso. credo fosse un complimento. ho deciso che è mio amico.»',
-    '«giorno 24. ho chiesto alla wave come si protegge qualcuno. ha detto: scegli. ho scelto. se un giorno mi succede qualcosa, la wave deve andare a chi è sveglio su quel muro alle quattro del mattino. l\'ho scritto nel codice, in un commento. nessuno legge i commenti.»',
-    '«giorno 38. lametta beve sempre di più. piema scrive sempre di più. io prendo appunti. stasera ho detto al geco: "se un giorno divento storto, raddrizzami tu". ha fatto il verso. lo prendo per un sì.»',
-    '«giorno 41, sera. domani devo fare una cosa che lametta mi ha chiesto. non mi piace come suona. strappo queste pagine, così nessuno sa chi ho scelto e nessuno gli fa del male. ma se le stai leggendo tutte: il custode non l\'ha scelto la wave. l\'ho scelto io. — p.»',
+    '«giorno 6. ho scoperto i bus. girano in tondo e la gente sopra ride lo stesso. stasera in piazza, su un muro, c\'era un geco. gli ho detto ciao. non ha risposto. i gechi non rispondono. è stata la conversazione migliore della giornata. notte 1.»',
+    '«giorno 12. lametta mi ha fatto un ritratto. ci sono venuto bene, dice. stasera il geco del muro c\'era di nuovo e gliel\'ho raccontato. ha fatto un verso. credo fosse un complimento. ho deciso che è mio amico. notte 7.»',
+    '«giorno 24. ho chiesto alla wave come si protegge qualcuno. ha detto: scegli. ho scelto. se un giorno mi succede qualcosa, la wave deve andare a chi è sveglio su quel muro alle quattro del mattino. l\'ho scritto nel codice, in un commento. nessuno legge i commenti. notte 19.»',
+    '«giorno 38. lametta beve sempre di più. piema scrive sempre di più. io prendo appunti. stasera ho detto al geco: "se un giorno divento storto, raddrizzami tu". ha fatto il verso. lo prendo per un sì. notte 33.»',
+    '«giorno 41, sera. domani devo fare una cosa che lametta mi ha chiesto. non mi piace come suona. strappo queste pagine, così nessuno sa chi ho scelto e nessuno gli fa del male. ma se le stai leggendo tutte: il custode non l\'ha scelto la wave. l\'ho scelto io. e non sei provvisorio. non lo sei mai stato. — p.»',
 ];
 
 export const TOTAL_PAGES = PAGES.length;
@@ -124,14 +124,13 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
 
     /* ---------- il quaderno di pedro ---------- */
     'quaderno-completo': [
-        { speaker: 'il geco', color: 'green', text: '*cinque pagine. le metti in fila sul pavimento, col nastro adesivo dello zaino. la calligrafia è pulita, quella di prima del glitch.*', mood: 'grave' },
-        { speaker: 'il geco', color: 'green', text: '*il muro della piazza. le quattro del mattino. i "ciao" a cui non rispondevi. eri tu. sei sempre stato tu.*', mood: 'grave' },
-        { speaker: 'il geco', color: 'green', text: '*la wave non ti ha scelto perché eri l\'unico sveglio a quell\'ora. ti ha scelto perché qualcuno gliel\'aveva chiesto.*', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*cinque pagine. le metti in fila col nastro adesivo dello zaino. la grafia è pulita, quella di prima del glitch.*', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*il muro della piazza. le quattro del mattino. trentatré notti di "ciao". eri tu. sei sempre stato tu. e i 33 sui muri hanno la stessa grafia.*', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*tiri fuori il cartellino. "provvisorio", a matita. lo cancelli col pollice. resta solo "custode", a penna.*', mood: 'grave' },
     ],
     'pedro-quaderno': [
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che tira fuori cinque pagine strappate, ricomposte col nastro adesivo. le tiene in alto, verso di lui.*', mood: 'grave' },
-        { speaker: 'pedro', color: 'cyan', text: 'il mio q̸u̵a̶d̷e̸r̵n̶o̷. le pagine che ho strappato io, il giorno 41, perché nessuno sapesse c̸h̵i̶ avevo scelto.', mood: 'grave' },
-        { speaker: 'pedro', color: 'cyan', text: 'il muro. le q̸u̵a̶t̷t̸r̵o̶. sei tu. il geco del muro. ti avevo chiesto di raddrizzarmi se fossi diventato storto. e sei v̷e̸n̵u̶t̷o̸.', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*verso di geco che alza cinque pagine ricomposte col nastro adesivo. e il cartellino, senza più la parola a matita.*', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: 'il mio q̸u̵a̶d̷e̸r̵n̶o̷. il muro. le q̸u̵a̶t̷t̸r̵o̶. sei tu. ti avevo chiesto di raddrizzarmi. e sei v̷e̸n̵u̶t̷o̸.', mood: 'grave' },
         { speaker: 'pedro', color: 'cyan', text: 'il glitch dice di cancellarti. io dico di a̸s̵p̶e̷t̸t̵a̶r̷e̸. per adesso vince il glitch. ma solo di poco.', mood: 'grave' },
     ],
     'pedro-sconfitto-quaderno': [

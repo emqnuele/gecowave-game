@@ -1168,7 +1168,7 @@ export class Phone {
     private renderProfile(root: HTMLElement): void {
         const card = el('div', 'player-card glass-panel glass-acid-green');
         const who = el('div');
-        who.append(text('div', 'pname', state.save.playerName), text('div', 'phone-note', 'custode provvisorio della gecowave'));
+        who.append(text('div', 'pname', state.save.playerName), text('div', 'phone-note', state.hasFlag('quaderno-completo') ? 'custode della gecowave' : 'custode provvisorio della gecowave'));
         card.append(text('span', 'avatar', '🦎'), who);
         root.append(card);
 

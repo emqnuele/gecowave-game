@@ -12,7 +12,7 @@ export interface FlashbackDef {
     /** chi c'è in scena: due sagome bastano (alto/basso, dio/bambino...) */
     cast: [string, string];
     /** il gesto: passa-carta, versa-boccetta, dipinge-occhi, spinge-bus... */
-    gesture: 'passa-carta' | 'versa' | 'dipinge' | 'spinge' | 'saluta' | 'registra' | 'conclude' | 'spegne';
+    gesture: 'passa-carta' | 'versa' | 'dipinge' | 'spinge' | 'saluta' | 'registra' | 'conclude' | 'spegne' | 'riscrive' | 'salva';
     note: string;
 }
 
@@ -113,6 +113,30 @@ export const FLASHBACKS: Record<string, FlashbackDef> = {
         gesture: 'spegne',
         note: 'sorveglianza scheda-2 / cantina: il rimorso registrato',
     },
+    // piema corregge il log di nascita di pedro per coprire il socio
+    'fb-riscrive': {
+        id: 'fb-riscrive', tint: 0x60a5fa,
+        captions: [
+            'notte del giorno 42, archivio della ruhra. piema aprì il registro di nascita di pedro.',
+            'riga sette: «lametta ordina a pedro di raddrizzare il realm». la cancellò, e sopra scrisse in blu.',
+            '«piema indaga sull\u2019anomalia.» chiuse il cassetto. il socio era salvo. il realm, si sarebbe visto.',
+        ],
+        cast: ['piema', 'lametta'],
+        gesture: 'riscrive',
+        note: 'pensiero sepolto / revisore: la copertura, in una riga',
+    },
+    // giorno 30: la frase che pedro salva nella cartella IMPORTANTE
+    'fb-giorno30': {
+        id: 'fb-giorno30', tint: 0x67e8f9,
+        captions: [
+            'giorno 30. l\u2019atelier di lametta, una mattina buona. pedro chiese perché avesse la sua faccia.',
+            'lametta posò il pennello: «perché sei la cosa migliore che ho disegnato.»',
+            'pedro salvò la frase in una cartella e la chiamò IMPORTANTE. non l\u2019ha mai più chiusa.',
+        ],
+        cast: ['lametta', 'pedro'],
+        gesture: 'salva',
+        note: 'ricordo-lametta / giorno30: l\'unica cosa sua',
+    },
 };
 
 /** quale flashback prima di quale dialogo (mostra, poi 1-2 righe al max) */
@@ -123,8 +147,10 @@ export const FLASHBACK_BEFORE: Record<string, string> = {
     'delegato-intro': 'fb-ordine',
     'notturno-intro': 'fb-notte',
     'modello-intro': 'fb-ritratto',
-    'revisore-intro': 'fb-telecamera',
-    'garante-intro': 'fb-telecamera',
+    'pensiero-sepolto': 'fb-riscrive',
+    'revisore-intro': 'fb-riscrive',
+    'lametta-cantina': 'fb-telecamera',
+    'ricordo-lametta': 'fb-giorno30',
     'pedro-quaderno': 'fb-muro',
     'quaderno-completo': 'fb-muro',
     'ricordo-ordine': 'fb-notte',
@@ -134,6 +160,6 @@ export const FLASHBACK_BEFORE: Record<string, string> = {
     'ticummi-intro-cliente': 'fb-ombra',
     'ivan-ricordo': 'fb-bus',
     'barrato-ingresso': 'fb-bus',
-    'pedro-giorno30': 'fb-muro',
+    'pedro-giorno30': 'fb-giorno30',
     'glitchpedro-intro': 'fb-glitch',
 };

@@ -31,10 +31,10 @@ export function codexSections(collected: string[], hasFlag: (f: string) => boole
     const has = (id: string) => collected.includes(id);
     const sections: CodexSection[] = [];
 
-    // i misteri: 33 / Margherita / IMPORTANTE, sempre visibili come domande
+    // i misteri del cratere: il 33, il cartellino, la cartella IMPORTANTE. tutti e tre pagano
     const mysteries: CodexEntry[] = [
         { id: 'seme-33', title: 'il 33', region: 'perduta', index: 0, total: 0, collected: hasFlag('visto-bus'), gated: false },
-        { id: 'seme-margherita', title: 'Margherita', region: 'santuario', index: 0, total: 0, collected: hasFlag('visto-santuario'), gated: false },
+        { id: 'seme-cartellino', title: hasFlag('quaderno-completo') ? 'il cartellino — custode' : 'il cartellino — custode provvisorio', region: 'perduta', index: 0, total: 0, collected: true, gated: false },
         { id: 'seme-importante', title: 'la cartella IMPORTANTE', region: 'ricordi', index: 0, total: 0, collected: hasFlag('ricordi-visti'), gated: false },
     ];
     sections.push({ id: 'misteri', title: 'i misteri', sub: 'tre domande aperte fin dal cratere', entries: mysteries });

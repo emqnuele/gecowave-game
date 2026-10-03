@@ -5,7 +5,7 @@ import type { ZoneColor } from '../types';
 
 /** obiettivo principale mostrato nel diario, per capitolo */
 export const OBJECTIVES: Record<string, string> = {
-    perduta: 'esplora il cratere: la mappa (qui nel telefono) si disegna mentre giri, la ✶ segna l\'obiettivo. trova il primo frammento della wave. e conta i 33: sono ovunque.',
+    perduta: 'esplora il cratere: la mappa (qui nel telefono) si disegna mentre giri, la ✶ segna l\'obiettivo. trova il primo frammento della wave. e dove vedi un 33 dipinto, guarda dietro.',
     bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea. romero ti cerca: parlargli non è opzionale, è utile.',
     santuario: 'attraversa il santuario polarizzante. breccio custodisce un riflesso, lametta il resto. cerca il ritratto con gli occhi storti: romero lo vuole.',
     tecnokill: 'sopravvivi al server di notino. torre radio, dune, e poi lui. armato di "BUM". pedro ti guarda già: senti la statica?',
@@ -51,7 +51,7 @@ export const CONTACTS: Contact[] = [
         id: 'markolino', name: 'markolino', color: 'green', icon: '🟢',
         call(ctx) {
             const hint: Record<string, string> = {
-                perduta: 'apri la MAPPA e cerca la ✶. se trovi un muro con le crepe, terzo colpo della combo. se trovi un geco anziano, ascoltalo, ma non troppo. e conta i 33: non sono un caso.',
+                perduta: 'apri la MAPPA e cerca la ✶. se trovi un muro con le crepe, terzo colpo della combo. se trovi un geco anziano, ascoltalo, ma non troppo. e i 33 dipinti: guarda sempre dietro. non sbagliano mai.',
                 bus: 'ivan è l\'unico che può tagliare guggu. senza di lui il capolinea non lo vedi neanche col binocolo. e se vedi romero, parlagli: indaga sul glitch da prima di te.',
                 santuario: 'gli specchi mentono, ma alcuni sono porte. e lametta dipinge con rabbia: schiva i colori. cerca il ritratto con gli occhi storti.',
                 tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI. carica F da lontano invece di andare sotto.',

@@ -51,6 +51,8 @@ import { ENEMIES } from '../content/enemies';
 import { Player } from '../entities/Player';
 import { BossVoice } from '../engine/BossVoice';
 import { OmbraBrain } from '../engine/OmbraBrain';
+import { PedroApparition } from '../engine/PedroApparition';
+import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { barksFor, LAMETTA_BARKS } from '../content/barks';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
 
@@ -188,6 +190,8 @@ export class GameScene extends Phaser.Scene {
     private hazards!: HazardManager;
     private trial: TimeTrial | null = null;
     private story: StoryManager | null = null;
+    private pedroGhost: PedroApparition | null = null;
+    private marks33: TrentatreMarks | null = null;
     private staging: StagingManager | null = null;
     private quests!: QuestManager;
     private atmosphere!: Atmosphere;
@@ -455,6 +459,11 @@ export class GameScene extends Phaser.Scene {
             ...this.level.entities.filter((e) => e.spec.type !== 'enemy').map((e) => ({ x: e.x, y: e.y })),
         ]);
         this.interactables.push(...this.story.talkables);
+        // pedro in scena una volta per regione: due righe, poi si sfalda
+        this.pedroGhost = new PedroApparition(this, this.lighting);
+        this.pedroGhost.setup(this.def.id, this.layout);
+        this.marks33 = new TrentatreMarks(this);
+        this.marks33.build(this.def.id, [this.level.fakeWalls, this.level.breakableWalls]);
         // staging muto: una scena ambientale per regione, zero dialoghi
         this.staging = new StagingManager(this, this.lighting);
         this.staging.setup(this.def.id, this.layout, this.player);
@@ -487,6 +496,10 @@ export class GameScene extends Phaser.Scene {
             (_p, slab) => this.hazards.canLand(this.player, slab as Phaser.GameObjects.GameObject));
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.silenceBoss();
+            this.pedroGhost?.destroy();
+            this.pedroGhost = null;
+            this.marks33?.destroy();
+            this.marks33 = null;
             this.folk.destroy();
             this.traps.destroy();
             this.hazards.destroy();
@@ -1853,26 +1866,11 @@ export class GameScene extends Phaser.Scene {
             waveOnce('pedro-eco-perduta', WAVESUNG.pedroEcoPerduta, 6000);
             waveOnce('tease-maschere-perduta', WAVESUNG.markolinoMaschereTease, 45000);
         }
-        if (this.def.id === 'bus') {
-            waveOnce('pedro-eco-bus', WAVESUNG.pedroEcoBus, 8000);
-            waveOnce('romero-prima-bus', WAVESUNG.romeroBus, 25000);
-        }
-        if (this.def.id === 'santuario') {
-            waveOnce('pedro-eco-santuario', WAVESUNG.pedroEcoSantuario, 8000);
-            waveOnce('romero-prima-santuario', WAVESUNG.romeroSantuario, 30000);
-        }
-        if (this.def.id === 'tecnokill') {
-            waveOnce('pedro-eco-tecnokill', WAVESUNG.pedroEcoTecnokill, 8000);
-            waveOnce('tutorial-risonante-visto', WAVESUNG.markolinoRisonante, 35000);
-        }
-        if (this.def.id === 'trenbolone') {
-            waveOnce('pedro-eco-trenbolone', WAVESUNG.pedroEcoTrenbolone, 10000);
-            waveOnce('tutorial-pogo-visto', WAVESUNG.markolinoPogo, 40000);
-        }
-        if (this.def.id === 'rio') {
-            waveOnce('pedro-osserva-rio', WAVESUNG.pedroEcoRio, 10000);
-            waveOnce('smela-opzionale-detta', WAVESUNG.markolinoSmelaSkip, 40000);
-        }
+        if (this.def.id === 'bus') waveOnce('romero-prima-bus', WAVESUNG.romeroBus, 25000);
+        if (this.def.id === 'santuario') waveOnce('romero-prima-santuario', WAVESUNG.romeroSantuario, 30000);
+        if (this.def.id === 'tecnokill') waveOnce('tutorial-risonante-visto', WAVESUNG.markolinoRisonante, 35000);
+        if (this.def.id === 'trenbolone') waveOnce('tutorial-pogo-visto', WAVESUNG.markolinoPogo, 40000);
+        if (this.def.id === 'rio') waveOnce('smela-opzionale-detta', WAVESUNG.markolinoSmelaSkip, 40000);
         if (this.def.id === 'ruhra') {
             waveOnce('tease-corse-ruhra', WAVESUNG.markolinoCorseTease, 30000);
         }
@@ -2232,6 +2230,8 @@ export class GameScene extends Phaser.Scene {
         this.updateEnemies(time, delta, target);
         this.boss?.update(time, delta, target);
         this.voice?.update();
+        this.pedroGhost?.update(this.player);
+        this.marks33?.update(this.player);
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
         this.parallax.update(time);
