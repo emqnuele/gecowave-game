@@ -12,12 +12,14 @@ import { materialCanvas } from './art/materials';
    si buttano quando restano indietro */
 
 const CHUNK = 512;
-/** pezzi dipinti in anticipo fuori dalla vista, per lato */
-const AHEAD = 1;
+/** pezzi dipinti in anticipo fuori dalla vista, per lato: l'anello profondo
+    fa sì che entrando in una stanza nuova ci sia già quasi tutto pronto */
+const AHEAD = 2;
 /** oltre questa distanza in pezzi dalla vista, un pezzo si butta */
 const KEEP = 3;
-/** pezzi fuori vista dipinti per frame: la vista invece si dipinge sempre tutta */
-const PER_FRAME = 1;
+/** pezzi fuori vista dipinti per frame: la vista invece si dipinge sempre tutta.
+    tre tele da 512 in un frame costano meno di una raffica da cinque all'ingresso */
+const PER_FRAME = 3;
 /** celle attorno al pezzo da cui si ricavano i contorni: i bordi finti della finestra
     restano più lontani di quanto arrivino la banda e il tratteggio */
 const WINDOW = 8;
