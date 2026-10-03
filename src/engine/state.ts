@@ -100,8 +100,8 @@ class GameState {
                 }
                 // i punteggi vecchi usavano un'altra scala: si azzerano, non si mescolano
                 const oldScale =
-                    Object.values(this.save.runScores ?? {}).some((v) => v > 1500) ||
-                    Object.values(this.save.scores ?? {}).some((s) => s.score > 1500);
+                    Object.values(this.save.runScores ?? {}).some((v) => v > 500) ||
+                    Object.values(this.save.scores ?? {}).some((s) => s.score > 500);
                 if (oldScale) {
                     this.save.runScores = {};
                     this.save.scores = {};

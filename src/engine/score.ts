@@ -16,25 +16,25 @@ export interface ChapterInput {
 }
 
 export function chapterParts(c: ChapterInput): [string, number][] {
-    // numeri piccoli: un capitolo vale centinaia, non migliaia
+    // numeri piccoli: un capitolo vale un centinaio, non migliaia
     const parts: [string, number][] = [
-        ['esplorazione', Math.round(c.explored * 300)],
-        ['segreti', c.secrets * 15],
-        ['nemici', c.kills * 2],
-        ['boss senza un graffio', c.noHitBosses * 60],
-        ['morti', -c.deaths * 25],
+        ['esplorazione', Math.round(c.explored * 100)],
+        ['segreti', c.secrets * 5],
+        ['nemici', c.kills],
+        ['boss senza un graffio', c.noHitBosses * 20],
+        ['morti', -c.deaths * 10],
     ];
-    if (c.minutes !== undefined) parts.splice(3, 0, ['tempo', Math.max(0, Math.round(300 - c.minutes * 12))]);
+    if (c.minutes !== undefined) parts.splice(3, 0, ['tempo', Math.max(0, Math.round(100 - c.minutes * 4))]);
     return parts;
 }
 
 export const sumParts = (parts: [string, number][]) => Math.max(0, parts.reduce((s, [, v]) => s + v, 0));
 
 export const ENDING_BONUS: Record<string, number> = {
-    riscatto: 800,
-    consegna: 500,
-    dei: 600,
-    pedro: 150,
+    riscatto: 300,
+    consegna: 200,
+    dei: 250,
+    pedro: 50,
     sconfitta: 0,
 };
 
@@ -46,7 +46,7 @@ export function runAssisted(): boolean {
 export function runScore(live = 0): number | null {
     if (runAssisted()) return null;
     const done = Object.values(state.save.runScores).reduce((s, v) => s + v, 0);
-    return done + Math.max(0, live) + state.save.achievements.length * 25;
+    return done + Math.max(0, live) + state.save.achievements.length * 10;
 }
 
 export interface BoardEntry {
@@ -56,7 +56,7 @@ export interface BoardEntry {
     at: number;
 }
 
-const BOARD_KEY = 'gecowave-classifica-v2';
+const BOARD_KEY = 'gecowave-classifica-v3';
 
 export function loadBoard(): BoardEntry[] {
     try {

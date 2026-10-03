@@ -171,8 +171,8 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 
 ### ADR-026 — punteggi piccoli
 **Contesto**: un capitolo valeva migliaia di punti (esplorazione e tempo fino a 3000, segreti 150 l'uno): 4k già a perduta, numeri senza peso.
-**Decisione**: scala ridotta di un ordine di grandezza. Il capitolo vale centinaia: esplorazione fino a 300, segreti 15 l'uno, nemici 2 l'uno, boss intoccabile 60, tempo fino a 300, morti −25. Bonus finali e trofei divisi per dieci, classifica locale separata (`gecowave-classifica-v2`).
-**Conseguenze**: i salvataggi con punteggi in vecchia scala azzerano score e conti (sopra 1500 a capitolo è impossibile nella nuova) invece di mescolare le scale. I record restano comparabili solo dentro la stessa scala.
+**Decisione**: scala ridotta due volte, fino a un centinaio a capitolo: esplorazione fino a 100, segreti 5 l'uno, nemici 1 l'uno, boss intoccabile 20, tempo fino a 100, morti −10. Bonus finali 50–300, trofei 10 l'uno, classifica locale separata (`gecowave-classifica-v3`).
+**Conseguenze**: i salvataggi con punteggi in vecchia scala azzerano score e conti (sopra 500 a capitolo è impossibile nella nuova) invece di mescolare le scale. I record restano comparabili solo dentro la stessa scala.
 
 ---
 
