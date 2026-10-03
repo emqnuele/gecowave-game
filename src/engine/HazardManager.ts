@@ -42,6 +42,8 @@ interface Flood {
     warned: boolean;
     cx: number;
     cy: number;
+    /** ultimo ridisegno: la grafica va a 20fps, la logica resta ogni frame */
+    lastDraw: number;
 }
 
 const QUIET = new Set(['start', 'rest', 'arena', 'exit', 'secret']);
@@ -223,7 +225,7 @@ export class HazardManager {
         const period = 70000 + rnd() * 40000;
         this.floods.push({
             room, low, high: top * TILE + 6, level: low, period, phase: rnd() * period, toxic, runs, gfx, color, clock: 0, warned: false,
-            cx: (R.x + R.w / 2) * TILE, cy: (R.y + R.h / 2) * TILE,
+            cx: (R.x + R.w / 2) * TILE, cy: (R.y + R.h / 2) * TILE, lastDraw: 0,
         });
     }
 
@@ -296,7 +298,12 @@ export class HazardManager {
                 continue;
             }
             f.gfx.setVisible(true);
-            this.draw(f, time);
+            // ridisegnare la grafica ogni frame costa (triangolazione + upload):
+            // a 20fps l'acqua resta liscia, la logica di immersione no
+            if (time - f.lastDraw >= 50) {
+                f.lastDraw = time;
+                this.draw(f, time);
+            }
             const R = f.room.rect;
             const inRoom = player.x > R.x * TILE && player.x < (R.x + R.w) * TILE && player.y > R.y * TILE && player.y < (R.y + R.h) * TILE;
             if (inRoom && player.y + 10 > level) {
