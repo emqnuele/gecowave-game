@@ -9,6 +9,7 @@ export function npcTexture(id: string): string {
     if (id.startsWith('filippus')) return 'npc-filippus';
     if (id.startsWith('piema')) return 'npc-piema';
     if (id.startsWith('lochef')) return 'npc-lochef';
+    if (id.startsWith('ospite-12')) return 'npc-studente';
     if (id.startsWith('lametta')) return 'npc-lametta';
     if (id.startsWith('samatt')) return 'npc-samatt';
     if (id.startsWith('guastalla')) return 'npc-guastalla';

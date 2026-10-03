@@ -33,11 +33,6 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'ridà 3 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
         punch: 'c\'è dentro amore e mortadella.',
     },
-    'brodo-lochef': {
-        id: 'brodo-lochef', name: 'brodo tiepido di lochef', icon: '🍲', kind: 'consumabile',
-        desc: 'ridà tutta la vita. tiepido. sempre tiepido. non chiederti chi l\'ha assaggiato prima.',
-        punch: '"come piace a te".',
-    },
 
     /* ---------- amuleti ---------- */
     'catena-lametta': {
@@ -69,8 +64,8 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'la scivolata si ricarica il 40% prima. sono di guggu: le perde a ogni capolinea.',
     },
     'pancia-lochef': {
-        id: 'pancia-lochef', name: 'pancia di lochef', icon: '🍖', kind: 'amuleto', cost: 2,
-        desc: '+2 vite massime. c\'è sempre posto.',
+        id: 'pancia-lochef', name: 'la chiave della tana', icon: '🗝️', kind: 'amuleto', cost: 2,
+        desc: '+2 vite massime. la porta si apriva solo da fuori. adesso no.',
     },
     'teorema-tascabile': {
         id: 'teorema-tascabile', name: 'teorema tascabile', icon: '📐', kind: 'amuleto', cost: 1,
@@ -102,8 +97,8 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'le barre arrivano da più lontano e ne cadono un po\' di più. abboccano solo i sacchetti.',
     },
     'grembiule-cuoco': {
-        id: 'grembiule-cuoco', name: 'grembiule dell\'aiuto-cuoco', icon: '🧑‍🍳', kind: 'amuleto', cost: 2,
-        desc: '+1 vita massima e ti curi più in fretta. macchiato di cose che è meglio non sapere.',
+        id: 'grembiule-cuoco', name: 'grembiule strappato', icon: '🧑‍🍳', kind: 'amuleto', cost: 2,
+        desc: '+1 vita massima e ti curi più in fretta. qualcuno l\'ha usato per legare una porta da dentro.',
     },
     'casco-operaio': {
         id: 'casco-operaio', name: 'caschetto del sindacato', icon: '⛑️', kind: 'amuleto', cost: 2,
@@ -158,7 +153,7 @@ export const ITEMS: Record<string, ItemDef> = {
 };
 
 /** vecchi consumabili tolti dall'economia: chi li aveva li ritrova in barre, al prezzo di wavezon */
-export const LEGACY_ITEMS: Record<string, number> = { energetico: 22, 'caffe-mensa': 35, rubinetto: 10, santino: 50 };
+export const LEGACY_ITEMS: Record<string, number> = { energetico: 22, 'caffe-mensa': 35, rubinetto: 10, santino: 50, 'brodo-lochef': 80 };
 
 /** prezzi crescenti delle tacche extra su wavezon */
 export const NOTCH_PRICES = [120, 280, 520];

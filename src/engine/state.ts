@@ -91,6 +91,11 @@ class GameState {
                     if (n > 0) this.save.barre += n * value;
                     if (this.save.inventory) delete this.save.inventory[id];
                 }
+                // la tana non perdona più: chi l'aveva lasciato andare lo ritrova in cella
+                if (this.save.flags.includes('lochef-libero')) {
+                    this.save.flags = this.save.flags.filter((f) => f !== 'lochef-libero');
+                    if (!this.save.flags.includes('lochef-arrestato')) this.save.flags.push('lochef-arrestato');
+                }
                 // fallback for backward compatibility
                 if (parsed.collassoMode !== undefined && this.save.doomsdayMode === false) {
                     this.save.doomsdayMode = parsed.collassoMode;

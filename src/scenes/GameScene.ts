@@ -251,6 +251,9 @@ export class GameScene extends Phaser.Scene {
     private chaseZoneIdx = -1;
     private chaseStartedAt = 0;
     private chaseDone: boolean[] = [];
+    /** l'ospite n.12 dopo l'arresto: si parla e poi torna a casa */
+    private ospite12Sprite: Phaser.GameObjects.Sprite | null = null;
+    private ospite12Interact: Interactable | null = null;
     // ivan maggini nello scontro con guggu
     private ivanSprite: Phaser.GameObjects.Sprite | null = null;
     private ivanInArena = false;
@@ -352,6 +355,8 @@ export class GameScene extends Phaser.Scene {
         this.chaseEnds = [];
         this.chaseZoneIdx = -1;
         this.chaseDone = [];
+        this.ospite12Sprite = null;
+        this.ospite12Interact = null;
         this.ivanSprite = null;
         this.ivanInArena = false;
         this.ivanBusy = false;
@@ -930,7 +935,31 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         if (id === 'ivan-incontro') this.ivanSprite = npc;
-        this.interactables.push({ x, y, range: 70, onInteract: () => this.interactNpc(id) });
+        const entry: Interactable = { x, y, range: 70, onInteract: () => this.interactNpc(id) };
+        this.interactables.push(entry);
+        if (id === 'ospite-12') {
+            this.ospite12Sprite = npc;
+            this.ospite12Interact = entry;
+        }
+    }
+
+    /** l'ospite n.12 accanto alle statue del giardino, dopo l'arresto */
+    private spawnOspite12(): void {
+        let x = this.player.x + 80;
+        let y = this.player.y;
+        const statue = this.level.entities.find((e) => e.spec.type === 'lore' && e.spec.id === 'lore-statue');
+        const room = statue ? this.roomAt(statue.x, statue.y) : this.roomAt(x, y);
+        const layout = this.layout;
+        const spots = room && layout ? (layout.spots ?? []).filter((s) => (s[2] ?? -1) === room.id) : [];
+        if (spots.length) {
+            const s = spots[Math.floor(spots.length / 2)]!;
+            x = s[0] * TILE + TILE / 2;
+            y = (s[1] + 1) * TILE - 18;
+        } else if (statue) {
+            x = statue.x + 60;
+            y = statue.y;
+        }
+        this.spawnNpc('ospite-12', x, y);
     }
 
     private interactNpc(id: string): void {
@@ -1100,7 +1129,7 @@ export class GameScene extends Phaser.Scene {
                 this.interactRomeroPiazza();
                 break;
             case 'romero-caso': {
-                const pre = state.hasFlag('lochef-arrestato') ? 'romero-lochef' : state.hasFlag('lochef-libero') ? 'romero-lochef-libero' : null;
+                const pre = state.hasFlag('lochef-arrestato') ? 'romero-lochef' : null;
                 if (pre && !state.hasFlag('romero-lochef-detto')) {
                     state.setFlag('romero-lochef-detto');
                     this.startDialogue(pre, () => this.startDialogue(id));
@@ -1124,6 +1153,20 @@ export class GameScene extends Phaser.Scene {
             case 'lochef-cameo':
                 music.playCustom("assets/music/lochef85's OST 1.mp3");
                 this.startDialogue(id);
+                break;
+            case 'ospite-12':
+                this.startDialogue(id, () => {
+                    state.setFlag('ospite-12-libero');
+                    state.persist();
+                    const npc = this.ospite12Sprite;
+                    const entry = this.ospite12Interact;
+                    if (entry) this.interactables = this.interactables.filter((it) => it !== entry);
+                    this.ospite12Sprite = null;
+                    this.ospite12Interact = null;
+                    if (npc?.active) {
+                        this.tweens.add({ targets: npc, alpha: 0, y: npc.y - 20, duration: 1200, onComplete: () => npc.destroy() });
+                    }
+                });
                 break;
             case 'oracolo-mappa':
                 this.startDialogue(id, () => this.startLines(this.oracleLines()));
@@ -1169,7 +1212,7 @@ export class GameScene extends Phaser.Scene {
             this.spawnNpc('mamma-notino-piazza', 116 * TILE, feet);
             this.spawnNpc('notino-piazza', 119 * TILE + 8, feet);
         }
-        if (state.hasFlag('lochef-libero') && state.hasFlag('boss-down-lochef')) this.spawnNpc('lochef-trattoria', 58 * TILE, feet);
+        if (state.hasFlag('ospite-12-libero')) this.spawnNpc('ospite-12-piazza', 58 * TILE, feet);
         if (state.hasFlag('caso-risolto')) this.spawnNpc('romero-piazza', 18 * TILE, feet);
     }
 
@@ -4369,28 +4412,14 @@ export class GameScene extends Phaser.Scene {
             case 'lochef':
                 this.startDialogue('lochef-sconfitto', () => {
                     this.spawnCuore(x, y + 40, 'cuore-lochef', true);
-                    if (state.hasFlag('lochef-arrestato') || state.hasFlag('lochef-libero')) return;
-                    bus.emit('choice-show', {
-                        title: 'lochef85 è a terra, tra le statue. dodici ospiti prima di te.',
-                        options: [{ label: 'chiama la questura' }, { label: 'lascialo andare' }],
-                        onPick: (i) => {
-                            if (i === 0) {
-                                state.setFlag('lochef-arrestato');
-                                this.startDialogue('lochef-consegna', () => {
-                                    state.save.barre += 200;
-                                    state.persist();
-                                    bus.emit('barre-changed', { barre: state.save.barre, gained: true });
-                                    bus.emit('toast', { text: 'taglia della questura: +200 barre.' });
-                                });
-                            } else {
-                                state.setFlag('lochef-libero');
-                                this.startDialogue('lochef-libero', () => {
-                                    state.addItem('brodo-lochef', 3);
-                                    bus.emit('inventory-changed', {});
-                                    bus.emit('toast', { text: '🍲 brodo tiepido di lochef ×3 nello zaino' });
-                                });
-                            }
-                        },
+                    if (state.hasFlag('lochef-arrestato')) return;
+                    state.setFlag('lochef-arrestato');
+                    this.startDialogue('lochef-consegna', () => {
+                        state.save.barre += 200;
+                        state.persist();
+                        bus.emit('barre-changed', { barre: state.save.barre, gained: true });
+                        bus.emit('toast', { text: 'taglia della questura: +200 barre.' });
+                        this.spawnOspite12();
                     });
                 });
                 break;

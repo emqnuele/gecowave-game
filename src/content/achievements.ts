@@ -26,7 +26,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     { id: 'critico-d-arte', icon: '🎨', name: 'critico d\'arte', desc: 'spacca la simmetria di breccio.', check: flag('boss-down-breccio') },
     { id: 'failrp', icon: '🔫', name: 'fail rp', desc: 'chiudi il server di notino.', check: flag('boss-down-notino') },
     { id: 'astemio', icon: '🍾', name: 'astemio per forza', desc: 'manda a dormire flauto speroindio.', check: flag('boss-down-flauto') },
-    { id: 'chef-stellato', icon: '🔪', name: 'chef stellato', desc: 'sopravvivi alla tana e batti lochef85.', check: flag('boss-down-lochef') },
+    { id: 'chef-stellato', icon: '🚪', name: 'la porta da dentro', desc: 'esci dalla tana e consegna lochef85 alla questura.', check: flag('boss-down-lochef') },
     { id: 'sindaco-decaduto', icon: '🐜', name: 'sindaco decaduto', desc: 'sfratta la formicona.', check: flag('boss-down-formicona') },
     { id: 'acqua-passata', icon: '💧', name: 'acqua passata', desc: 'chiudi lo stabilimento di smela.', check: flag('stabilimento-chiuso') },
     { id: 'qed', icon: '∎', name: 'come volevasi dimostrare', desc: 'completa il teorema nella mente di piema.', check: flag('boss-down-teorema') },
