@@ -149,10 +149,20 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
 
     /** attacco ordinato dalla scena (l'ombra che punisce una cura prevedibile) */
     strike(attack: BossAttack, player: Phaser.GameObjects.Sprite): boolean {
-        if (!this.active || !this.engaged || this.busy) return false;
+        if (!this.canStrike()) return false;
         this.execute(attack, player, this.phase);
         this.nextAttackAt = this.scene.time.now + this.def.cooldownMs[this.phase];
         return true;
+    }
+
+    /** l'ombra ordina un contrattacco solo a boss libero e ingaggiato */
+    canStrike(): boolean {
+        return !!this.active && this.engaged && !this.busy;
+    }
+
+    /** letto lo scudo, l'ombra non spara dentro il perfetto: rimanda l'attacco */
+    delayAttack(ms: number): void {
+        this.nextAttackAt = Math.max(this.nextAttackAt, this.scene.time.now + ms);
     }
 
     /** la cutscene può ammazzare i tween a metà attacco: si riparte liberi */

@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { Bark, BarkSet, BarkTrigger } from '../content/barks';
 import { bus } from './events';
+import type { PlayerAct } from './OmbraProfile';
 import { sfx } from './sfx';
 
 /* la voce di un boss durante lo scontro: decide quando parlare, così le
@@ -43,7 +44,7 @@ export class BossVoice {
             this.hitAt = now;
             this.say('hit');
         }));
-        const onAct = ({ act }: { act: string }) => {
+        const onAct = ({ act }: PlayerAct) => {
             if (act !== 'heal' || !this.active) return;
             const now = this.scene.time.now;
             if (now - this.healAt < HEAL_COOLDOWN_MS || Math.random() > 0.7) return;

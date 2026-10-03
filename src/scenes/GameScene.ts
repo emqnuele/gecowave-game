@@ -53,7 +53,7 @@ import { ENEMIES } from '../content/enemies';
 import { Player } from '../entities/Player';
 import { BossVoice } from '../engine/BossVoice';
 import { OmbraBrain } from '../engine/OmbraBrain';
-import type { PlayerAct } from '../engine/OmbraProfile';
+import type { OmbraInsight, PlayerAct } from '../engine/OmbraProfile';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { AbilitySeals } from '../engine/AbilitySeals';
@@ -2071,9 +2071,9 @@ export class GameScene extends Phaser.Scene {
         on('boss-engaged', this.onBossEngaged as never);
         on('boss-dying', (() => this.silenceBoss()) as never);
         // ogni mossa del geco nutre il profilo: l'ombra lo leggerà alla fine
-        // (la finestra live si collega col cervello nuovo, fase b)
         on('player-act', ((act: PlayerAct) => {
             state.observeOmbra(act);
+            this.ombraBrain?.observeLive(act);
         }) as never);
         on('boss-phase', (({ phase }: { phase: number }) => this.voice?.say(phase === 2 ? 'phase2' : 'phase3', true)) as never);
     }
@@ -2561,6 +2561,7 @@ export class GameScene extends Phaser.Scene {
         this.updateEnemies(time, delta, target);
         this.boss?.update(time, delta, target);
         this.voice?.update();
+        this.ombraBrain?.update(time);
         this.pedroGhost?.update(this.player);
         this.marks33?.update(this.player);
         this.seals?.update(time);
@@ -4933,10 +4934,45 @@ export class GameScene extends Phaser.Scene {
         else if (kind === 'ticummi' && state.hasFlag('tommasorveglianza')) this.voice.event('engage-cliente');
         else this.voice.say('engage', true);
         if (kind === 'ombra') {
-            // ogni ripresa delle telecamere del centro dati è un pezzo di modello in più
-            boss.empower(1 + state.run.ombraDati * 0.07);
-            this.ombraBrain = new OmbraBrain(this, boss, this.voice, this.player);
+            const voice = this.voice;
+            if (!voice) return;
+            // la difficoltà è osservazione, non vita: un ritocco, mai una spugna
+            const premium = state.save.ombra.premium;
+            boss.empower(1 + Math.min(premium ? 0.12 : 0.03, state.save.ombra.sightings * 0.015));
+            this.ombraBrain = new OmbraBrain({
+                scene: this,
+                boss,
+                voice,
+                player: this.player,
+                profile: state.save.ombra,
+                onInsight: (insight) => this.onOmbraInsight(insight),
+            });
         }
+    }
+
+    /** l'ombra ha letto una mossa: etichetta, una riga, chip hud. niente numeri */
+    private onOmbraInsight(insight: OmbraInsight): void {
+        const boss = this.boss;
+        if (!boss?.active || !this.voice) return;
+        const label = `ha letto: ${insight.label}`;
+        const txt = this.add.text(boss.x, boss.y - 100, label, {
+            fontFamily: '"Martian Mono", monospace',
+            fontSize: '12px',
+            color: '#22d3ee',
+            backgroundColor: 'rgba(0,0,0,0.55)',
+        }).setOrigin(0.5).setDepth(9);
+        this.tweens.add({ targets: txt, alpha: 0, y: boss.y - 118, duration: 1200, onComplete: () => txt.destroy() });
+        const a = insight.action;
+        let bark: string | null = null;
+        if (a === 'attack-side') bark = 'spam-side';
+        else if (a === 'attack-up') bark = 'spam-up';
+        else if (a === 'attack-down') bark = 'spam-down';
+        else if (a === 'dash') bark = 'learn-dash';
+        else if (a === 'heal-start' || a === 'heal-done') bark = 'learn-heal';
+        else if (a === 'wave-risonante' || a === 'wave-analisi') bark = 'learn-shot';
+        else if ((a === 'wave-riflesso' || a === 'wave-acquatossica') && Math.random() < 0.3) bark = 'learn-shot';
+        if (bark) this.voice.event(bark);
+        bus.emit('ombra-read', { label });
     }
 
     private silenceBoss(): void {

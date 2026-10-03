@@ -1,6 +1,7 @@
 import type { AbilityId, OmbraAction, OmbraProfile } from '../types';
 
 /* un solo vocabolario per le mosse: lo usano player, scena e cervello dell'ombra */
+export type { OmbraAction, OmbraProfile } from '../types';
 
 /** una decisione del geco, mai un tasto fisico */
 export interface PlayerAct {

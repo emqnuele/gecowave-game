@@ -50,6 +50,8 @@ export class Hud {
     private doomsdayFill: HTMLElement;
     private bossBar: HTMLElement | null = null;
     private trial: HTMLElement;
+    private ombraChip: HTMLElement;
+    private ombraTimer = 0;
     private seenAbilities: AbilityId[] = [];
 
     constructor() {
@@ -86,7 +88,11 @@ export class Hud {
         this.trial = el('div', 'hud-trial', '');
         this.trial.style.display = 'none';
 
-        this.root.append(topleft, this.barre, this.tommaso, this.zone, this.waves, this.food, this.doomsday, this.trenboBorder, this.trial);
+        // l'ombra ha appena letto una mossa: un cenno, mai numeri
+        this.ombraChip = el('div', 'hud-ombra', '');
+        this.ombraChip.style.display = 'none';
+
+        this.root.append(topleft, this.barre, this.tommaso, this.zone, this.waves, this.food, this.doomsday, this.trenboBorder, this.trial, this.ombraChip);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -128,6 +134,7 @@ export class Hud {
         bus.on('inventory-changed', () => this.refreshFood());
         bus.on('wave-cooldowns', ({ cds, flow }) => this.setCooldowns(cds, flow));
         bus.on('boss-hp', (payload) => this.setBoss(payload));
+        bus.on('ombra-read', ({ label }) => this.flashOmbra(label));
         bus.on('doomsday-changed', ({ value, active }) => {
             this.doomsday.style.display = active ? '' : 'none';
             this.doomsdayFill.style.width = `${Math.min(100, value * 100)}%`;
@@ -253,6 +260,19 @@ export class Hud {
             const cost = (WAVE_MIN_COST[id] ?? 0) * mult;
             chip.classList.toggle('noflow', flow < cost);
         }
+    }
+
+    /** cenno da 1,2 s quando l'ombra legge: appare e sparisce da sola */
+    private flashOmbra(label: string): void {
+        this.ombraChip.textContent = `👁 ${label}`;
+        this.ombraChip.style.display = '';
+        this.ombraChip.classList.remove('read');
+        void this.ombraChip.offsetWidth;
+        this.ombraChip.classList.add('read');
+        window.clearTimeout(this.ombraTimer);
+        this.ombraTimer = window.setTimeout(() => {
+            this.ombraChip.style.display = 'none';
+        }, 1200);
     }
 
     private setBoss(payload: { hp: number; maxHp: number; name: string } | null): void {

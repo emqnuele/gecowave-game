@@ -712,12 +712,14 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'ombra-intro': [
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'bentornato, CLIENTE PREMIUM. ricorda quando ha pagato 0,09€ per "protezione totale da ogni pericolo esterno"? ecco. lei non ha mai letto la parte sui pericoli INTERNI. 👍' },
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'da quel giorno l\'abbiamo guardata SEMPRE: 41.077 secondi di lei che salta, mena, scivola e si cura nei momenti sbagliati. con quei dati abbiamo costruito... questo.' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'ha guardato tutto quello che ripeti. e lei ripete tanto. 👍' },
         { speaker: 'la tua ombra', color: 'cyan', text: '*si accende un proiettore. ne esce un geco fatto di registrazioni: salta come te, scivola come te, sbaglia il tempismo della cura come te. è TE, comprato per 0,09€.*' },
         { speaker: 'il geco', color: 'green', text: '*il geco guarda il proiettore. il proiettore guarda il geco. con la sua faccia.*' },
     ],
     'ombra-intro-scarsa': [
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'UTENTE NON REGISTRATO RILEVATO. lei non ha mai comprato l\'abbonamento. complimenti per la prudenza. e condoglianze: il protocollo finale parte lo stesso. 👍' },
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'senza abbonamento abbiamo una telecamera sola su di lei: regalata da un cliente, puntata su un muro della piazza. 1.200 secondi di lei che dorme. il clone è... come dire... una beta che dorme benissimo.' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'ha pochi fotogrammi, ma guarda lo stesso. 👀' },
         { speaker: 'la tua ombra', color: 'cyan', text: '*si accende un proiettore. ne esce un geco sgranato e incompleto che salta tipo te, ma con la fisica sbagliata. ogni tanto glitcha su un frame di un altro cliente.*' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco quasi offeso dalla qualità*' },
     ],

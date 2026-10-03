@@ -157,6 +157,10 @@ export const BOSS_BARKS: Partial<Record<BossKind, BarkSet>> = {
             'heal-punish': ['previsto. si cura sempre lì. sempre adesso.'],
             dash: ['scivolata ogni due secondi. il modello scivola con lei.'],
             'learn-count': ['ogni telecamera che l\'ha vista oggi ha lavorato per me.'],
+            'learn-dash': ['hai fatto quella scivolata 28 volte. adesso la faccio io.'],
+            'learn-heal': ['un cuore. sempre quando pensi di aver tempo.'],
+            'learn-shot': ['onda in arrivo. archiviata.'],
+            'learn-varied': ['...questa non era nel modello.'],
         },
     },
     ticummi: {
