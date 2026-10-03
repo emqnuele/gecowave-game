@@ -10,7 +10,7 @@ import { QUIET_ROOMS, seeded, type Mechanic, type MechanicCtx } from './types';
 /* la tana di lochef85: buio, sussurri e nascondigli.
    tutto a runtime come trappole e lastre: la griglia verificata non si tocca */
 
-const DARK_AMBIENT = 0x07040a;
+const DARK_AMBIENT = 0x1b1523;
 const HIDE_MAX_MS = 6000;
 
 interface Hideout {
@@ -33,6 +33,8 @@ export class Tana implements Mechanic {
     private rnd = seeded('tana:sussurri');
     private nextWhisperAt = 0;
     private lastWhisper = -1;
+    private nextRumbleAt = 0;
+    private lastRumble = -1;
     private hiddenIn: Hideout | null = null;
     private hiddenSince = 0;
     private nextBeatAt = 0;
@@ -43,9 +45,12 @@ export class Tana implements Mechanic {
         this.ctx = ctx;
         this.ensureTextures();
         this.darken();
+        // musica bassa per tutto il capitolo, con sfx lontani sopra
+        music.setLevelDuck(true);
         this.offStart = bus.on('dialogue-start', () => { this.dialogueOpen = true; });
         this.offEnd = bus.on('dialogue-end', () => { this.dialogueOpen = false; });
         this.nextWhisperAt = ctx.scene.time.now + 25000 + this.rnd() * 20000;
+        this.nextRumbleAt = ctx.scene.time.now + 18000 + this.rnd() * 20000;
         const rnd = seeded('tana:nascondigli');
         const ranges = ctx.chaseRanges();
         const rooms = ctx.layout.rooms
@@ -128,6 +133,11 @@ export class Tana implements Mechanic {
             this.nextWhisperAt = now + 25000 + this.rnd() * 20000;
             this.whisper();
         }
+        // la casa scricchiola: sfx lontani sopra la musica bassa, mai sopra un dialogo
+        if (!this.dialogueOpen && !p.dead && now >= this.nextRumbleAt) {
+            this.nextRumbleAt = now + 20000 + this.rnd() * 20000;
+            this.rumble();
+        }
     }
 
     private tryHide(wh: Hideout): void {
@@ -177,6 +187,17 @@ export class Tana implements Mechanic {
         } catch { /* senza audio non si muore */ }
     }
 
+    /** un respiro della casa, senza sottotitoli: passa nel riverbero del posto */
+    private rumble(): void {
+        const names = ['growlFar', 'creak', 'whisper'] as const;
+        let i = Math.floor(this.rnd() * names.length);
+        if (names.length > 1 && i === this.lastRumble) i = (i + 1) % names.length;
+        this.lastRumble = i;
+        try {
+            sfx[names[i]!]((this.rnd() * 2 - 1) * 0.8, 0.3 + this.rnd() * 0.3);
+        } catch { /* senza audio non si muore */ }
+    }
+
     /** il buio della tana: la luce la porti tu, e ne porti poca */
     private darken(): void {
         const lights = this.ctx.scene.lights;
@@ -185,8 +206,8 @@ export class Tana implements Mechanic {
         lights.setAmbientColor(DARK_AMBIENT);
         const pl = this.ctx.playerLight;
         this.lightBefore = { radius: pl.radius, intensity: pl.intensity };
-        pl.setRadius(230);
-        pl.setIntensity(1.1);
+        pl.setRadius(300);
+        pl.setIntensity(1.25);
     }
 
     private ensureTextures(): void {
@@ -227,6 +248,7 @@ export class Tana implements Mechanic {
         p.hidden = false;
         if (p.active) p.setAlpha(1);
         music.setGraveDuck(false);
+        music.setLevelDuck(false);
         for (const wh of this.hideouts) {
             wh.removeInteract();
             if (wh.light) this.ctx.lighting.remove(wh.light);

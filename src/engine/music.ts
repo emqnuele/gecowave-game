@@ -11,6 +11,8 @@ class MusicManager {
     private unlockListener: (() => void) | null = null;
     /** true durante una battuta grave: la musica resta sotto i dialoghi seri */
     private graveDuck = false;
+    /** true per tutto un capitolo cupo: la musica resta bassa (vedi Tana) */
+    private levelDuck = false;
     init(): void {
         bus.on('boss-hp', (payload) => {
             if (payload) {
@@ -62,7 +64,7 @@ class MusicManager {
 
     setVolume(vol: number): void {
         if (this.currentAudio) {
-            this.currentAudio.volume = vol * MUSIC_VOLUME_MULT * (this.graveDuck ? 0.3 : 1);
+            this.currentAudio.volume = vol * MUSIC_VOLUME_MULT * this.duckFactor();
         }
     }
 
@@ -70,8 +72,21 @@ class MusicManager {
     setGraveDuck(on: boolean): void {
         this.graveDuck = on;
         if (this.currentAudio) {
-            this.currentAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * (on ? 0.3 : 1);
+            this.currentAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor();
         }
+    }
+
+    /** abbassa/alza la musica per tutto un capitolo */
+    setLevelDuck(on: boolean): void {
+        this.levelDuck = on;
+        if (this.currentAudio) {
+            this.currentAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor();
+        }
+    }
+
+    /** 0.3 sotto le gravi, 0.55 nel capitolo cupo: si moltiplicano */
+    private duckFactor(): number {
+        return (this.graveDuck ? 0.3 : 1) * (this.levelDuck ? 0.55 : 1);
     }
 
     playMenu(): void {
@@ -288,7 +303,7 @@ class MusicManager {
             if (oldAudio) {
                 oldAudio.volume = Math.max(0, startVol * (1 - progress));
             }
-            newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * (this.graveDuck ? 0.3 : 1) * progress;
+            newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor() * progress;
 
             if (currentStep >= steps) {
                 if (this.fadeInterval) {
@@ -299,7 +314,7 @@ class MusicManager {
                     oldAudio.pause();
                     oldAudio.remove();
                 }
-                newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * (this.graveDuck ? 0.3 : 1);
+                newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor();
             }
         }, stepTime);
     }
