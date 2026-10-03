@@ -7,6 +7,7 @@ import { LEVELS, LEVEL_ORDER } from '../content/levels';
 import { ITEMS } from '../content/items';
 import { ABILITY_CARDS, CREDITS, deathPunchline } from '../content/story';
 import { bus } from '../engine/events';
+import { ACTIONS, ACTION_LABEL, bindingLabel, bindingsFor, keyNameForCode, PRESETS, type Action, type PresetId } from '../engine/input/actions';
 import { formatKeys } from '../engine/input/keyText';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -27,23 +28,7 @@ export interface GameController {
     travel(levelId: string): void;
 }
 
-const CONTROLS: [string, string][] = [
-    ['muoviti', 'A / D'],
-    ['salta (e rimbalzo a mezz\'aria)', 'SPAZIO'],
-    ['attacca — 3 colpi = combo', 'J / clic'],
-    ['attacca in alto', 'W+J in aria'],
-    ['schianto (sfonda muri e nemici)', 'attacca mentre cadi'],
-    ['scivolata', 'SHIFT / K'],
-    ['colpo risonante (carica)', 'F tieni premuto'],
-    ['riflesso distorto', 'G'],
-    ['analisi 1', 'H'],
-    ['tommasoscudo', 'R'],
-    ['cura (tieni premuto)', 'Q'],
-    ['interagisci', 'E'],
-    ['telefono: zaino, amuleti, mappa', 'TAB / P'],
-    ['mangia al volo', 'C'],
-    ['pausa', 'ESC'],
-];
+/* ---------- comandi ---------- */
 
 interface MenuItem {
     label: string;
@@ -508,21 +493,198 @@ export class Screens {
 
     /* ---------- comandi ---------- */
 
+    /** righe dei comandi per gruppo, coi nomi del piano */
+    private controlGroups(): [string, Action[]][] {
+        return [
+            ['movimento', ['left', 'right', 'up', 'down', 'jump', 'dash']],
+            ['combattimento', ['attack', 'wave', 'scudo', 'riflesso', 'heal']],
+            ['altro', ['eat', 'interact', 'phone', 'pause']],
+        ];
+    }
+
+    private saveControls(): void {
+        state.persistSettings();
+        bus.emit('controls-changed', {});
+    }
+
+    /** se il tasto era di un'altra azione i due si scambiano, ritorna l'altra */
+    private assignKey(action: Action, code: string): Action | null {
+        const controls = state.settings.controls;
+        const custom = { ...controls.custom };
+        const old = bindingsFor(action);
+        let other: Action | null = null;
+        for (const a of ACTIONS) {
+            if (a !== action && bindingsFor(a).includes(code)) {
+                other = a;
+                break;
+            }
+        }
+        custom[action] = [code];
+        if (other) custom[other] = old.filter((k) => k !== code);
+        // chi torna come il preset esce dalle eccezioni
+        for (const a of [action, other] as const) {
+            if (!a) continue;
+            const preset = PRESETS[controls.preset][a];
+            const now = custom[a] ?? [];
+            if (now.length === preset.length && now.every((k, i) => k === preset[i])) delete custom[a];
+        }
+        controls.custom = custom;
+        this.saveControls();
+        return other;
+    }
+
     showControls(back: () => void, fromPause = false): void {
         const s = this.openOverlay(`screen sx${fromPause ? '' : ' menu-screen'}`);
         const page = el('div', 'sx-page');
         page.append(...this.heading('comandi'));
         const body = el('div', 'sx-body narrow');
-        const grid = el('div', 'sx-keys');
-        for (const [action, key] of CONTROLS) {
-            const a = el('span');
-            a.textContent = action;
-            const k = el('kbd');
-            k.textContent = key;
-            grid.append(a, k);
-        }
-        body.append(grid, el('div', 'sx-note', 'le wave si sbloccano giocando. tranquillo.'));
         page.append(body);
+
+        const rows = new Map<Action, HTMLElement>();
+        let capturing: Action | null = null;
+
+        const render = (flash?: Action | null): void => {
+            capturing = null;
+            body.replaceChildren();
+            const controls = state.settings.controls;
+            const hasCustom = Object.keys(controls.custom).length > 0;
+
+            // il preset: cambiarlo azzera le personalizzazioni, dopo conferma
+            const presets = el('div', 'sx-ctl-presets');
+            for (const p of ['classico', 'frecce'] as PresetId[]) {
+                const b = el('button', `sx-ctl-preset${controls.preset === p ? ' on' : ''}`);
+                b.dataset.nav = '1';
+                b.textContent = p === 'classico' ? 'classico · wasd' : 'frecce · ←↑↓→';
+                b.addEventListener('click', () => {
+                    if (state.settings.controls.preset === p) return;
+                    if (hasCustom && b.dataset.armed !== '1') {
+                        b.dataset.armed = '1';
+                        b.textContent = 'sicuro? azzera tutto';
+                        sfx.menuMove();
+                        return;
+                    }
+                    state.settings.controls = { preset: p, custom: {} };
+                    this.saveControls();
+                    sfx.menuSelect();
+                    render();
+                });
+                presets.append(b);
+            }
+            body.append(presets);
+
+            for (const [group, actions] of this.controlGroups()) {
+                body.append(el('div', 'sx-group', group));
+                for (const action of actions) {
+                    const row = el('div', 'sx-ctl-row');
+                    const name = el('span', 'name', ACTION_LABEL[action]);
+                    const kbd = el('kbd');
+                    kbd.textContent = bindingsFor(action).map(bindingLabel).join(' / ');
+                    const change = el('button', 'sx-ctl-change', 'cambia');
+                    change.dataset.nav = '1';
+                    change.setAttribute('aria-label', `cambia tasto di ${ACTION_LABEL[action]}`);
+                    change.addEventListener('click', () => startCapture(action, row, kbd, change));
+                    row.append(name, kbd, change);
+                    rows.set(action, row);
+                    body.append(row);
+                }
+            }
+
+            // lo schema delle wave: un tasto solo, la direzione sceglie
+            body.append(el('div', 'sx-group', 'le wave'));
+            for (const [keys, what] of [
+                ['{k:wave} tieni e rilascia', 'colpo risonante: eco, onda, onda piena'],
+                ['{k:up} + {k:wave}', 'analisi 1: ipotesi, passaggi, q.e.d.'],
+                ['{k:down} + {k:wave}', 'bottiglia di smela: ad arco a terra, giù in aria'],
+                ['{k:scudo}', 'tommasoscudo: il rimando perfetto torna al mittente'],
+                ['{k:riflesso}', 'riflesso distorto: di nuovo per scambiarti di posto'],
+            ] as [string, string][]) {
+                const row = el('div', 'sx-ctl-row still');
+                row.append(el('span', 'name', what), el('kbd', '', formatKeys(keys)));
+                body.append(row);
+            }
+
+            // il gamepad non si rimappa: si legge e basta
+            body.append(el('div', 'sx-group', 'gamepad'));
+            for (const [what, keys] of [
+                ['muoviti', 'levetta, croce'],
+                ['salta', 'A'],
+                ['attacca', 'X'],
+                ['scivolata', 'B'],
+                ['wave', 'Y'],
+                ['scudo', 'RB'],
+                ['riflesso', 'LB'],
+                ['cura (tieni)', 'RT'],
+                ['mangia', 'LT'],
+                ['interagisci', '↑ da fermo'],
+                ['telefono', 'view'],
+                ['pausa', 'start'],
+            ] as [string, string][]) {
+                const row = el('div', 'sx-ctl-row still');
+                row.append(el('span', 'name', what), el('kbd', '', keys));
+                body.append(row);
+            }
+
+            const reset = el('button', 'sx-ctl-reset', 'ripristina il preset');
+            reset.dataset.nav = '1';
+            if (!hasCustom) reset.setAttribute('disabled', '');
+            reset.addEventListener('click', () => {
+                state.settings.controls.custom = {};
+                this.saveControls();
+                sfx.menuBack();
+                render();
+            });
+            body.append(reset);
+            body.append(el('div', 'sx-note', 'le wave si sbloccano giocando. tranquillo.'));
+
+            if (flash) {
+                const row = rows.get(flash);
+                if (row) {
+                    row.classList.add('flash');
+                    setTimeout(() => row.classList.remove('flash'), 1100);
+                }
+            }
+        };
+
+        const startCapture = (action: Action, row: HTMLElement, kbd: HTMLElement, btn: HTMLButtonElement): void => {
+            if (capturing) return;
+            capturing = action;
+            btn.blur();
+            row.classList.add('capturing');
+            kbd.textContent = 'premi un tasto…';
+            sfx.menuMove();
+            const done = (): void => {
+                window.removeEventListener('keydown', onKey, true);
+                window.removeEventListener('mousedown', onMouse, true);
+                document.removeEventListener('contextmenu', onCtx);
+            };
+            const onCtx = (e: Event): void => e.preventDefault();
+            document.addEventListener('contextmenu', onCtx);
+            const onKey = (e: KeyboardEvent): void => {
+                if (e.repeat) return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.code === 'Escape') {
+                    done();
+                    render();
+                    return;
+                }
+                const code = keyNameForCode(e.code);
+                done();
+                render(code ? this.assignKey(action, code) : null);
+            };
+            const onMouse = (e: MouseEvent): void => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.button !== 0 && e.button !== 2) return;
+                const code = e.button === 0 ? 'MOUSE_LEFT' : 'MOUSE_RIGHT';
+                done();
+                render(this.assignKey(action, code));
+            };
+            window.addEventListener('keydown', onKey, true);
+            window.addEventListener('mousedown', onMouse, true);
+        };
+
+        render();
         const goBack = () => { this.closeOverlay(); back(); };
         page.append(this.menu([{ label: 'indietro', back: true, onPick: goBack }]));
         s.append(page);
