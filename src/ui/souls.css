@@ -820,32 +820,142 @@ input.sx-range::-moz-range-thumb {
   animation: sx-breathe 2.8s ease-in-out infinite;
 }
 
-/* ---------- titoli di coda ---------- */
+/* ---------- titoli di coda: tre atti ---------- */
+
+.sx-credits {
+  background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(10, 8, 6, 0.6), rgba(0, 0, 0, 0.97));
+}
+
+.credits-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 .sx-credits .credits-end {
   font-family: var(--font-fell);
   font-weight: 400;
-  letter-spacing: 0.2em;
+  font-size: clamp(64px, 12vmin, 150px);
+  letter-spacing: 0.18em;
+  margin: 0 0 0 0.18em;
   color: var(--sx-bone);
   filter: url(#sx-ink);
+  text-shadow: 0 0 60px rgba(255, 150, 70, 0.15), 0 3px 0 #000;
+  animation: sx-end-in 4.5s ease both;
 }
 
 .sx-credits .credits-sub {
   font-family: var(--font-fell-it);
   font-style: italic;
   text-transform: none;
+  font-size: clamp(15px, 2.4vmin, 22px);
+  letter-spacing: 0.06em;
   color: var(--sx-gold);
+  transform: none;
+  animation: sx-fade 2s 1.2s ease both;
 }
 
-.sx-credits .credits-game,
-.sx-credits .credits-role {
+.sx-credits.credits-lose .credits-sub {
+  color: #d58b82;
+}
+
+.sx-credits .credits-roll {
+  width: min(520px, 86vw);
+  height: 38vh;
+  margin-top: 3vh;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+.sx-credits.phase-2 .credits-roll {
+  opacity: 1;
+}
+
+.sx-credits .credits-inner {
+  gap: 0;
+  animation-duration: 38s;
+  animation-play-state: paused;
+}
+
+.sx-credits.phase-2 .credits-inner {
+  animation-play-state: running;
+}
+
+.sx-credits .credits-game {
   font-family: var(--font-fell);
-  letter-spacing: 0.14em;
+  font-size: 30px;
+  letter-spacing: 0.12em;
+  color: var(--sx-gold);
+  filter: url(#sx-ink);
+  margin: 0 0 26px 0.12em;
+}
+
+.sx-credits .credits-role {
+  font-family: var(--font-martian);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--sx-gold);
+  opacity: 0.85;
+  margin: 30px 0 10px 0.32em;
 }
 
 .sx-credits .credits-name {
   font-family: var(--font-fell-it);
   font-style: italic;
+  font-size: clamp(19px, 2.6vmin, 25px);
+  line-height: 1.5;
+  color: var(--sx-bone);
+}
+
+.sx-credits .credits-inner .sx-orn {
+  width: min(300px, 60vw);
+  margin: 26px auto 4px;
+}
+
+.sx-credits .credits-final {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.5s ease, visibility 1.5s;
+}
+
+.sx-credits.phase-3 .credits-final {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sx-credits.phase-3 .credits-head,
+.sx-credits.phase-3 .credits-roll {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.2s ease, visibility 1.2s;
+}
+
+.sx-credits .credits-final .sx-run {
+  justify-content: center;
+  margin-top: 0;
+}
+
+.sx-credits .credits-closing {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: clamp(17px, 2.2vmin, 22px);
+  color: var(--sx-ash);
+  text-align: center;
+  max-width: min(520px, 86vw);
+}
+
+@keyframes sx-end-in {
+  from { opacity: 0; letter-spacing: 0.34em; }
+  to { opacity: 1; letter-spacing: 0.18em; }
 }
 
 /* ---------- forgia del personaggio ---------- */

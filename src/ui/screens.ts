@@ -819,19 +819,25 @@ export class Screens {
     private showCredits(opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number }, onDone: () => void): void {
         const win = opts.outcome === 'win';
         const s = this.openOverlay(`screen sx opaque credits-screen sx-credits ${win ? 'credits-win' : 'credits-lose'}`);
+        const ROLL_MS = 38000;
 
+        const head = el('div', 'credits-head');
         const end = el('h1', 'credits-end');
         end.textContent = 'fine';
         const sub = el('div', 'credits-sub');
         sub.textContent = opts.title.toLowerCase();
+        head.append(end, sub);
 
         const roll = el('div', 'credits-roll');
         const inner = el('div', 'credits-inner');
         const game = el('div', 'credits-game');
         game.textContent = 'gecowave';
         inner.append(game);
+        let first = true;
         for (const c of CREDITS) {
             if (c.role) {
+                if (!first) inner.append(this.orn());
+                first = false;
                 const r = el('div', 'credits-role');
                 r.textContent = c.role;
                 inner.append(r);
@@ -843,33 +849,74 @@ export class Screens {
             }
         }
         roll.append(inner);
-        s.append(end, sub);
-        if (opts.score !== undefined) s.append(this.scoreBadge(opts.score, 'punteggio finale', opts.rank ?? 0));
-        s.append(roll);
+
+        const final = el('div', 'credits-final');
+        if (opts.score !== undefined) final.append(this.scoreBadge(opts.score, 'punteggio finale', opts.rank ?? 0));
+        const closing = el('div', 'credits-closing');
+        closing.textContent = win ? 'grazie per aver viaggiato fino in fondo.' : 'ogni caduta insegna la strada.';
+        final.append(closing);
 
         let fw: ReturnType<typeof setInterval> | null = null;
+        const timers: number[] = [];
         const finish = () => {
+            for (const t of timers) clearTimeout(t);
             if (fw) { clearInterval(fw); fw = null; }
             this.closeOverlay();
             onDone();
         };
         const back = this.menu([{ label: 'torna al menu', onPick: finish }]);
         back.classList.add('credits-btn');
-        s.append(back);
+        final.append(back);
+        s.append(head, roll, final);
 
-        if (win) {
-            const colors = ['#4ade80', '#facc15', '#60a5fa', '#f472b6', '#22d3ee', '#fb923c'];
-            fw = setInterval(() => {
-                if (this.overlay !== s) { if (fw) clearInterval(fw); return; }
-                const f = el('div', 'firework');
-                f.style.left = `${8 + Math.random() * 84}%`;
-                f.style.top = `${12 + Math.random() * 56}%`;
-                f.style.setProperty('--fw', colors[Math.floor(Math.random() * colors.length)]);
-                s.append(f);
-                setTimeout(() => f.remove(), 1100);
-            }, 420);
-        }
-        this.bindNav(s, finish);
+        // atto secondo: il rotolo parte e i fuochi si accendono
+        const startRoll = () => {
+            if (phase !== 1 || this.overlay !== s) return;
+            phase = 2;
+            s.classList.add('phase-2');
+            if (win && !fw) {
+                const colors = ['#facc15', '#e8dfc8', '#ff9a4a', '#cfa75c'];
+                fw = setInterval(() => {
+                    if (this.overlay !== s) { if (fw) clearInterval(fw); fw = null; return; }
+                    const f = el('div', 'firework');
+                    f.style.left = `${8 + Math.random() * 84}%`;
+                    f.style.top = `${12 + Math.random() * 56}%`;
+                    f.style.setProperty('--fw', colors[Math.floor(Math.random() * colors.length)]);
+                    s.append(f);
+                    setTimeout(() => f.remove(), 1100);
+                }, 420);
+            }
+            timers[1] = window.setTimeout(showEnd, ROLL_MS);
+        };
+        // atto terzo: resta solo la chiusura
+        const showEnd = () => {
+            if (phase === 3 || this.overlay !== s) return;
+            phase = 3;
+            s.classList.add('phase-3');
+            this.closeNavOnly();
+            this.bindNav(final, finish);
+        };
+        let phase = 1;
+        timers.push(window.setTimeout(startRoll, 4600));
+        timers.push(window.setTimeout(showEnd, 4600 + ROLL_MS));
+        s.addEventListener('click', () => {
+            if (phase === 1) {
+                clearTimeout(timers[0]);
+                startRoll();
+            } else if (phase === 2) {
+                showEnd();
+            }
+        });
+        this.escHandler = (e) => {
+            if (e.code === 'Escape') {
+                e.preventDefault();
+                finish();
+            } else if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE') {
+                e.preventDefault();
+                s.dispatchEvent(new Event('click'));
+            }
+        };
+        window.addEventListener('keydown', this.escHandler);
     }
 
     /* ---------- forgia del personaggio ---------- */
