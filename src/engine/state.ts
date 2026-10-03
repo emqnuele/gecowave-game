@@ -98,6 +98,15 @@ class GameState {
                 if (parsed.collasso !== undefined && this.save.doomsday === 0) {
                     this.save.doomsday = parsed.collasso;
                 }
+                // i punteggi vecchi usavano un'altra scala: si azzerano, non si mescolano
+                const oldScale =
+                    Object.values(this.save.runScores ?? {}).some((v) => v > 1500) ||
+                    Object.values(this.save.scores ?? {}).some((s) => s.score > 1500);
+                if (oldScale) {
+                    this.save.runScores = {};
+                    this.save.scores = {};
+                    this.save.chapterLog = {};
+                }
             }
             const s = localStorage.getItem(SETTINGS_KEY);
             if (s) this.settings = { ...this.settings, ...JSON.parse(s) };

@@ -169,6 +169,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Cosa conta**: lore e note di regione, pagine di pedro (attribuite alla loro regione), pensiero sepolto, maschere, tacche piazzate, amuleti dei boss, sparacchino, completamento delle quest (l'amuleto quando c'è, la missione altrimenti), vittoria dell'arena rossa. Frammenti e abilità, barre, drop, cure, flow, checkpoint, corse contro il citelis, acquisti in negozio, quaderno ricomposto e oggetti chiave da flag di storia restano fuori: il primo gruppo è progressione, il secondo è globale o non attribuibile con certezza.
 **Conseguenze**: l'input `segreti` del punteggio ora viene dal catalogo invece che dalla regex su `collectedLore` (che contava anche i sacchetti di barre): i punteggi dei capitoli cambiano, in meglio. La mappa del telefono mostra gli stessi numeri dell'overlay, solo per i capitoli col catalogo sigillato e mai per quelli mai visitati. Senza ui pronta o in caso di errore la transizione prosegue normale: la campagna non si blocca mai. Nessun nuovo salvataggio, nessuna nuova valuta.
 
+### ADR-026 — punteggi piccoli
+**Contesto**: un capitolo valeva migliaia di punti (esplorazione e tempo fino a 3000, segreti 150 l'uno): 4k già a perduta, numeri senza peso.
+**Decisione**: scala ridotta di un ordine di grandezza. Il capitolo vale centinaia: esplorazione fino a 300, segreti 15 l'uno, nemici 2 l'uno, boss intoccabile 60, tempo fino a 300, morti −25. Bonus finali e trofei divisi per dieci, classifica locale separata (`gecowave-classifica-v2`).
+**Conseguenze**: i salvataggi con punteggi in vecchia scala azzerano score e conti (sopra 1500 a capitolo è impossibile nella nuova) invece di mescolare le scale. I record restano comparabili solo dentro la stessa scala.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -214,6 +219,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 
 ## 5. Cronologia
 - **riepilogo di capitolo**: carta animata a fine livello con mappa, cuori, cose e score, catalogo centrale dei collezionabili (ADR-025).
+- **punteggi piccoli**: la scala dei punti divisa per dieci, classifica separata (ADR-026).
 - **gioco vero**: boss che parlano in battaglia e ombra che impara, volere del geco e pedro in scena, 33 con un significato, flashback al posto degli spiegoni, una meccanica per bioma, economia a due uscite, nemici simbolo che insegnano una mossa.
 - **trama esponenziale**: pedro echi precoci, romero anticipato, scelte leggibili, codex nel telefono, stabilimento attraversabile, semi 33/Margherita/IMPORTANTE, teaser opzionali, economia ribilanciata.
 - **fix totale**: simulatore, bot, ricompense, boss per stanza, arene, lochef, guide.
