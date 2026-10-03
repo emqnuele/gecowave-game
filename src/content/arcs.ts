@@ -185,17 +185,19 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
 
     /* ---------- lochef, dopo la tana ---------- */
     'lochef-consegna': [
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che lega lochef85 col suo stesso grembiule e chiama la questura dal telefono.*' },
-        { speaker: 'lochef85', color: 'red', text: 'la questura?? per me?? ...che pensiero gentile. nessuno mi aveva mai fatto arrestare. è... intimo.' },
-        { speaker: 'commissario romero', color: 'blue', text: '(al telefono) lochef85? ricercato numero due. arrivo col mattarello di servizio. custode: c\'è una taglia. le barre te le lascio sul conto.' },
+        { speaker: 'il geco', color: 'green', text: '*il geco lega lochef85 al tavolo apparecchiato per due e chiama la questura dal telefono.*', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: '(al telefono) lochef85. ricercato da troppo tempo. arrivo. non toccare niente, custode: in quella casa ogni cosa è una prova.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'e custode... la dodicesima statua. controllala. se è tiepida, non è una statua.', mood: 'grave' },
     ],
-    'lochef-libero': [
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che indica l\'uscita a lochef85. vai. vattene. lontano.*' },
-        { speaker: 'lochef85', color: 'red', text: '...mi lasci andare? tu? dopo il poster? allora è AMORE. ok, ok, scherzo. vado. ti lascio il brodo: tre porzioni. tiepido. sempre tiepido.' },
-        { speaker: 'lochef85', color: 'red', text: 'aprirò una trattoria. una cosa onesta. dove si mangia per due e si esce... quasi sempre.' },
+    'ospite-12': [
+        { speaker: 'ospite n.12', color: 'red', text: '...sei vero? non è un\'altra prova? lui faceva così. apriva la porta e poi la richiudeva.', mood: 'grave' },
+        { speaker: 'ospite n.12', color: 'red', text: '...la mia mamma mi aspetta ancora? ...va bene. allora vado. piano. non correre mi diceva sempre lei.', mood: 'grave' },
+    ],
+    'ospite-12-piazza': [
+        { speaker: 'ospite n.12', color: 'red', text: 'ogni giovedì accendo le candele alla fontana. undici. una per ognuno. la dodicesima no: io sono qui.', mood: 'grave' },
     ],
     'romero-lochef': [
-        { speaker: 'commissario romero', color: 'blue', text: 'prima di tutto: lochef85 è in cella. cucina per gli altri detenuti, e nessuno ha mai mangiato così bene né così a disagio. bel lavoro, custode. la bacheca dei ricercati ha una riga in meno.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'prima di tutto: lochef85 è in cella. la tana l\'abbiamo murata. dentro c\'erano undici nomi. li ho scritti tutti, a penna.', mood: 'grave' },
     ],
     /* ---------- la piazza dopo le scelte ---------- */
     'notino-piazza': [
@@ -205,11 +207,6 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
     'mamma-notino-piazza': [
         { speaker: 'la mamma di notino', color: 'red', text: 'sei tu che me l\'hai rimandato a casa? ...grazie. adesso fa gli agguati solo dopo cena e si lava le mani prima. è un inizio.' },
         { speaker: 'la mamma di notino', color: 'red', text: 'la porta resta aperta lo stesso. non si sa mai chi torna.' },
-    ],
-    'lochef-trattoria': [
-        { speaker: 'lochef85', color: 'red', text: 'benvenuto da lochef: si mangia per due. siediti, siediti. ...no? va bene. il brodo te lo tengo in caldo. cioè tiepido.' },
-        { speaker: 'lochef85', color: 'red', text: 'ho tolto il poster dal locale. l\'ho messo a casa. è più intimo.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che non si siederà mai, in nessun caso*' },
     ],
     'romero-piazza': [
         { speaker: 'commissario romero', color: 'blue', text: 'custode. caso chiuso, o quasi. mi sono seduto al bar per la prima volta in quarant\'anni. non so cosa si ordina. la gente cosa ordina?' },
@@ -221,8 +218,5 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'romero-caffe-dopo': [
         { speaker: 'commissario romero', color: 'blue', text: 'sto ancora finendo il caffè. lo bevo piano. ho quarant\'anni di arretrati.' },
-    ],
-    'romero-lochef-libero': [
-        { speaker: 'commissario romero', color: 'blue', text: 'prima di tutto: mi dicono che lochef85 gira libero e parla di "una trattoria". hai visto la tana e l\'hai lasciato andare. non ti giudico, custode. mi segno il tuo nome e basta. a matita.' },
     ],
 };

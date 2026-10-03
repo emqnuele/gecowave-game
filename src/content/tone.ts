@@ -26,7 +26,7 @@ const TONE: Record<string, ToneDef> = {
     tecnokill: { level: 15, act: 1, folk: 'meme', deaths: 'meme' },
     trenbolone: { level: 22, act: 1, folk: 'meme', deaths: 'meme' },
     barrato: { level: 35, act: 2, folk: 'misto', deaths: 'miste' },
-    tana: { level: 40, act: 2, folk: 'misto', deaths: 'miste' },
+    tana: { level: 70, act: 2, folk: 'quieto', deaths: 'serie' },
     rio: { level: 45, act: 2, folk: 'misto', deaths: 'miste' },
     stabilimento: { level: 52, act: 2, folk: 'misto', deaths: 'miste' },
     ruhra: { level: 60, act: 2, folk: 'misto', deaths: 'miste' },

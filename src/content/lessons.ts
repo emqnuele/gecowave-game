@@ -60,7 +60,7 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
     },
     ammiratore: {
         ability: 'riflesso',
-        hint: 'gli ammiratori di lochef inseguono chiunque ti somigli. evoca il riflesso (G): perdono la testa per lui e tu li meni alle spalle.',
+        hint: 'i fan di lochef inseguono chiunque ti somigli. evoca il riflesso: perdono la testa per lui e tu li colpisci alle spalle.',
     },
     formica: {
         ability: 'aggrappo',

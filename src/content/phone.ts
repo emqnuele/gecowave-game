@@ -10,7 +10,7 @@ export const OBJECTIVES: Record<string, string> = {
     santuario: 'attraversa il santuario polarizzante. breccio custodisce un riflesso, lametta il resto. cerca il ritratto con gli occhi storti: romero lo vuole.',
     tecnokill: 'sopravvivi al server di notino. torre radio, dune, e poi lui. armato di "BUM". pedro ti guarda già: senti la statica?',
     trenbolone: 'la via per il rio è sbarrata. per passare ti serve il trenbolone. purtroppo. ticummi ti offre la sorveglianza: leggi bene prima di firmare.',
-    tana: 'sei nella tana di lochef85. scappa. due volte. non guardare i poster.',
+    tana: 'sei nella tana di lochef85. la porta è chiusa da fuori. trova un\'altra uscita. non mangiare niente.',
     rio: 'risali il rio merdone fino al villaggio di formica. il fiume rigenera, se lo rispetti. lo stabilimento dopo è opzionale: truffa, non destino.',
     stabilimento: 'OPZIONALE: chiudi la catena dell\'acqua premium di smela per l\'acqua tossica (V). puoi attraversare senza fermarti: l\'uscita resta aperta.',
     ruhra: 'trova piema alla ruhra prima che analisi 1 lo consumi. occhio alla riba. porta il dispositivo nella mente.',
@@ -164,10 +164,11 @@ export const POSTS: Post[] = [
     { author: 'markolino', handle: '@markolino', color: 'green', likes: 5, text: 'maschere con la faccia del custode in giro per il realm. cercate dietro i muri finti. non chiedetemi di chi è la faccia.', needs: 'visto-perduta' },
     { author: 'guastalla', handle: '@guastalla.guida', color: 'yellow', likes: 7, text: 'se qualcuno batte il citelis in 3 corse, prendo la patente e guido io. piano.', needs: 'visto-bus' },
     { author: 'samatt', handle: '@samatt851', color: 'yellow', likes: 44, text: 'il microfono rosso: ci sono salito una volta. sono sceso dopo un secondo. parola di ex pendolare.', needs: 'visto-rio' },
-    { author: 'lochef85', handle: '@lochef85', color: 'red', likes: 85, text: 'c\'è posto. c\'è sempre posto. 🍖', needs: 'visto-tana' },
+    { author: 'lochef85', handle: '@lochef85', color: 'red', likes: 85, text: 'c\'è posto. c\'è sempre posto.', needs: 'visto-tana' },
     { author: 'filippus il dodo', handle: '@filippus.lifts', color: 'blue', likes: 40000, text: 'panca piana 40.000 kg. estinzione: annullata. leg day: MAI saltato. ticummi: lumaca.', needs: 'visto-cantina' },
     { author: 'guggu', handle: '@guggu.citelis', color: 'yellow', likes: 7, text: 'servizio sospeso per custode. la 14 barrato tornerà. la 14 barrato torna sempre.', needs: 'boss-down-guggu' },
     { author: 'walter baruffoni', handle: '@autoscuole.marcetti', color: 'orange', likes: 3, text: 'patente in 3 annetti. garantito. i maranza fuori dalla sede non sono nostri dipendenti. purtroppo.', needs: 'visto-galliate' },
+    { author: 'romero', handle: '@det.romero', color: 'blue', likes: 0, text: 'tana di lochef85 murata. undici nomi a verbale. una persona tornata a casa. oggi non scrivo altro.', needs: 'boss-down-lochef' },
     { author: 'gecowave', handle: '@gecowave', color: 'green', likes: 9999, text: 'il disco esce quando il realm smette di collassare. quindi mai. quindi presto.' },
 ];
 

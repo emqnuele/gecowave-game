@@ -103,12 +103,12 @@ export const FOLK: Record<string, FolkKind[]> = {
         ]),
     ],
     burrow: [
-        C('cuoco', 'aiuto-cuoco terrorizzato', 'red', 58, ['lochef è nervoso oggi.', 'non fare rumore. sta impiattando.', 'il frigo... non aprire il frigo.'], [
-            ['lavoro qui da tre turni.', 'il primo l\'ho passato a pelare. il secondo a scappare. il terzo è adesso.'],
-            ['lochef ha una collezione.', 'di cosa, non lo so. so solo che ha uno spazio vuoto della mia misura.'],
+        C('cuoco', 'ospite nascosto', 'red', 40, ['zitto. ascolta.', 'quando fischietta, nasconditi.', 'non mangiare il dolce.'], [
+            ['sono qui da tre inverni.', 'ho smesso di contare quando lui ha smesso di chiamarmi per nome.'],
+            ['dietro il frigo c\'è un passaggio.', 'l\'ospite numero undici l\'ha trovato. io non ho il coraggio.'],
         ]),
-        C('vecchio', 'assaggiatore', 'red', 30, ['tutto squisito. ho solo un po\' di febbre.', 'il brodo parla. ascoltalo.'], [
-            ['assaggio i piatti prima di lochef.', 'sono ancora vivo. lavoro precario, però.'],
+        C('vecchio', 'ospite che non dorme', 'red', 24, ['non dormire qui.', 'lui entra quando dormi.', 'conta le porte. sono sempre una in più.'], [
+            ['ero venuto per un regalo.', 'tanti anni fa. il regalo l\'ho ancora in tasca. non l\'ho mai aperto.'],
         ]),
     ],
     swamp: [
@@ -194,8 +194,8 @@ export const FOLK: Record<string, FolkKind[]> = {
             ['abitavo al rio. poi è arrivata la formica.', 'adesso abito qui. la formica no. per ora.'],
             ['mio nipote fa il custode come te.', 'cioè, fa il custode di un parcheggio. ma con lo stesso impegno.'],
         ]),
-        C('cuoco', 'profugo della tana', 'yellow', 46, ['niente pesto qui. niente!', 'sento ancora l\'odore della pentola.', 'lochef? non ne parliamo.'], [
-            ['lavoravo per lochef.', 'paga in assaggi. ho assaggiato tutto. anche il contratto.'],
+        C('cuoco', 'profugo della tana', 'yellow', 46, ['non parlo della tana.', 'ho ancora le chiavi in tasca. non aprono niente.', 'la notte lascio la luce accesa.'], [
+            ['sono uscito dal passaggio dietro il frigo.', 'ero l\'undicesimo. ho lasciato il biglietto per il dodicesimo. spero l\'abbia letto.'],
         ]),
         C('operaio', 'ex operaio dello stabilimento', 'yellow', 50, ['turno di notte, turno di giorno, turno di piazza.', 'il casco lo tengo, non si sa mai.'], [
             ['mi hanno licenziato via loop.', 'ogni volta che rientro mi rilicenziano. almeno è un lavoro fisso.'],
@@ -232,7 +232,7 @@ export const FOLK_AFTER: { flag: string; biome: string; line: string }[] = [
     { flag: 'boss-down-guggu', biome: 'depot', line: 'i bus... si fermano?? alle fermate??' },
     { flag: 'boss-down-breccio', biome: 'sanctum', line: 'il maestro breccio è caduto. finalmente possiamo sbagliare.' },
     { flag: 'boss-down-notino', biome: 'wasteland', line: 'la musica è finita. che si fa adesso, si parla?' },
-    { flag: 'boss-down-lochef', biome: 'burrow', line: 'lochef è giù. stasera si cucina vegano. per vendetta.' },
+    { flag: 'boss-down-lochef', biome: 'burrow', line: 'lochef è in cella. stanotte, nella tana, per la prima volta non fischietta nessuno.' },
     { flag: 'stabilimento-chiuso', biome: 'factory', line: 'lo stabilimento ha chiuso. siamo liberi. e disoccupati.' },
     { flag: 'boss-down-teorema', biome: 'library', line: 'piema ha ritrovato la pace. ci ha dato tutti 18.' },
     { flag: 'caso-risolto', biome: 'noir', line: 'caso chiuso. smetterà di piovere? no. ma meglio.' },

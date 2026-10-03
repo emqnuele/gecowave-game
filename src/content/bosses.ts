@@ -184,7 +184,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
     // chef stalker: ti viene addosso, schianti + cariche in cucina
     lochef: {
         kind: 'lochef',
-        name: 'lochef85, il perverso',
+        name: 'lochef85',
         texture: 'boss-lochef',
         hp: 70,
         glowColor: 0xf87171,

@@ -22,7 +22,7 @@ export const PEDRO_APPARITIONS: Record<string, [string, string]> = {
         `non bere niente, custode. alla fine ti voglio ${gl('pulito')}.`,
     ],
     tana: [
-        'lochef cucina per due. io per nessuno. corri.',
+        'lochef apparecchia per due. tu non sederti. corri.',
         `...perché ti sto aiutando? non lo so. il 99% di me dice di ${gl('smettere')}.`,
     ],
     rio: [

@@ -51,8 +51,19 @@ export const DEATH_LATE = [
 
 export const DEATH_PUNCHLINES = [...DEATH_EARLY];
 
+/* nella tana non si scherza nemmeno da morti */
+export const DEATH_TANA = [
+    'la porta è chiusa da fuori. rialzati.',
+    'lui aspetta che ti stanchi. non stancarti.',
+    'gli altri si sono fermati. tu no.',
+    'il passaggio dietro il frigo esiste. trovalo.',
+];
+
 /** una frase di morte col tono del capitolo in cui sei morto */
 export function deathPunchline(levelId: string): string {
+    if (levelId === 'tana') {
+        return DEATH_TANA[Math.floor(Math.random() * DEATH_TANA.length)];
+    }
     const pool = toneFor(levelId).deaths === 'serie' ? DEATH_LATE
         : toneFor(levelId).deaths === 'miste' && Math.random() < 0.5 ? DEATH_LATE : DEATH_EARLY;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -133,6 +144,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'bimbo-rp-2': [
         { speaker: 'bimbo del server', color: 'red', text: 'ehi, ancora tu! aggiornamento regole: notino ha aggiunto la 5: "vietato sopravvivere agli agguati". tu l\'hai già infranta tipo tante volte. sei una LEGGENDA del server.' },
         { speaker: 'bimbo del server', color: 'red', text: 'se lo rivedi non dirgli dove sto. mi sono ritirato dal roleplay. faccio il neutrale. tipo la svizzera, ma con più sabbia.' },
+        { speaker: 'bimbo del server', color: 'red', text: '...e se vedi uno col grembiule che regala le skin, non prenderle. il mio amico le ha prese. non fa più il login.', mood: 'crepa' },
     ],
     'lore-clienti': [
         { speaker: 'parete dei clienti', color: 'cyan', text: '«clienti attivi della tommasorveglianza: 3. schermi dedicati: 47.000. rapporto qualità prezzo: dipende da che lato dello schermo stai.»' },
@@ -392,9 +404,9 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'notino', color: 'red', text: 'UNO STABILIMENTO?! perfetto!! gli agguati industriali sono i miei preferiti: rumore di fondo GRATIS!! BUM BUM CATENA DI MONTAGGIO!!' },
     ],
     'notino-tana': [
-        { speaker: 'notino', color: 'red', text: 'TROVATO!! adesso ti... aspetta. aspetta aspetta. questa è... la tana di LOCHEF85??' },
-        { speaker: 'notino', color: 'red', text: 'no no no NO. ci sono REGOLE anche nel failrp. qui non entro manco da admin. ciao. CIAO. scappo io per primo!!' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che per una volta è d\'accordo con notino*' },
+        { speaker: 'notino', color: 'red', text: 'TROVATO!! adesso ti... aspetta. questa è la tana di LOCHEF85.' },
+        { speaker: 'notino', color: 'red', text: 'no. no no no. qui non entro. lui al server regalava le skin ai bimbi piccoli. poi i bimbi non facevano più il login. io qui NON ENTRO.', mood: 'crepa' },
+        { speaker: 'il geco', color: 'green', text: '*notino scappa. la porta resta chiusa da fuori.*' },
     ],
     'notino-sorveglianza': [
         { speaker: 'notino', color: 'red', text: 'ULTIMO AGGUATO, GIURO!! stavolta nessuno può veder—' },
@@ -635,58 +647,56 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
 
     'lochef-cameo': [
-        { speaker: 'lochef85', color: 'red', text: 'ciao bello... cioè, ciao custode. dicono che i frammenti ti rendano... divino. passa dalla mia tana quando vuoi. c\'è posto. c\'è sempre posto.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che accelera il passo*' },
+        { speaker: 'lochef85', color: 'red', text: 'ciao. tu sei il custode nuovo? sei più piccolo di come ti immaginavo.' },
+        { speaker: 'lochef85', color: 'red', text: 'ai bimbi del server regalo sempre qualcosa. una skin, una caramella. poi vengono a trovarmi. da me c\'è posto. c\'è sempre posto.' },
+        { speaker: 'il geco', color: 'green', text: '*il geco fa un passo indietro.*' },
     ],
 
     /* ---------- capitolo 7: la tana di lochef85 ---------- */
     'tana-risveglio': [
-        { speaker: 'il geco', color: 'green', text: '*il geco chiude gli occhi un attimo. UN attimo.*' },
-        { speaker: '???', color: 'red', text: '...dorme. che carino. portatelo dentro, piano. non sciupatelo.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che si sveglia in un posto SBAGLIATISSIMO*' },
+        { speaker: 'il geco', color: 'green', text: '*il trenbolone pesa sugli occhi. il geco li chiude un attimo. UN attimo.*' },
+        { speaker: '???', color: 'red', text: '...dorme. bene. piano, non svegliatelo. mettetelo con gli altri.' },
+        { speaker: 'il geco', color: 'green', text: '*un letto piccolo. una porta chiusa da fuori. sul muro, un poster con la sua faccia.*', mood: 'grave' },
     ],
     'lochef-benvenuto': [
-        { speaker: 'lochef85', color: 'red', text: 'oh! sei sveglio! benvenuto nella mia tana, divinità mia. non guardare il poster. ok guardalo. l\'ho fatto stampare in A0.' },
-        { speaker: 'lochef85', color: 'red', text: 'tu resti qui. per sempre. ho già cucinato per due. per duecento, in realtà, ma il concetto è l\'intimità.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che cerca l\'uscita con TUTTO il corpo*' },
-        { speaker: 'lochef85', color: 'red', text: 'scappi? scappano sempre. va bene. mi piace... il brivido della caccia.' },
+        { speaker: 'lochef85', color: 'red', text: 'ben svegliato, piccolo. non avere paura. qui nessuno ti fa del male. qui ti voglio bene io.', mood: 'grave' },
+        { speaker: 'lochef85', color: 'red', text: 'lo spaccino del bancone porta sempre bene. due boccette e dormite come angeli. tutti quanti.', mood: 'grave' },
+        { speaker: 'lochef85', color: 'red', text: 'adesso mangi, poi dormi, poi restiamo così. gli altri all\'inizio facevano come te. poi hanno imparato.', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*il geco cerca la porta.*' },
+        { speaker: 'lochef85', color: 'red', text: 'scappi? la prima volta scappano tutti.', mood: 'grave' },
     ],
     'lochef-perso': [
-        { speaker: 'lochef85', color: 'red', text: 'dove... DOVE SEI?? vabbè. tanto la porta di casa è una sola e io conosco le scorciatoie. ci vediamo all\'uscita, amore. CI VEDIAMO ALL\'USCITA.' },
+        { speaker: 'lochef85', color: 'red', text: 'dove sei? ...va bene. la porta di casa è una sola. ti aspetto lì. io aspetto sempre.', mood: 'grave' },
     ],
     'lochef-ritorno': [
-        { speaker: 'lochef85', color: 'red', text: 'pss. psss. lo sapevi che il giardino è la parte più ROMANTICA della tana? no? te la faccio vedere io. DA VICINO.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che riconosce il rumore dei muri attraversati*' },
+        { speaker: 'lochef85', color: 'red', text: 'ti ho lasciato andare in giardino apposta. volevo che vedessi gli altri. così capisci.', mood: 'grave' },
     ],
     'lochef-perso-2': [
-        { speaker: 'lochef85', color: 'red', text: 'di nuovo?! DI NUOVO?? ok. ok. calma. respira. ...sai che c\'è? mi piaci ancora di più. all\'uscita. STAVOLTA DAVVERO.' },
+        { speaker: 'lochef85', color: 'red', text: 'di nuovo. non mi arrabbio. con voi non mi arrabbio mai. vi aspetto e basta.', mood: 'grave' },
     ],
     'lore-statue': [
-        { speaker: 'statua nel giardino', color: 'red', text: '«galleria degli ospiti: dodici statue a grandezza naturale, tutte in pose di fuga. la targhetta dice "arte". la dodicesima è ancora tiepida.»' },
+        { speaker: 'statua nel giardino', color: 'red', text: '«galleria degli ospiti: dodici statue a grandezza naturale, tutte in pose di fuga. le più piccole hanno ancora le scarpe slacciate. la dodicesima è tiepida.»', mood: 'grave' },
     ],
     'lochef-intro': [
-        { speaker: 'lochef85', color: 'red', text: 'eccoti. lo sapevo. nessuno lascia la tana di lochef85. è una regola che ho scritto io, sul frigo.' },
-        { speaker: 'lochef85', color: 'red', text: 'ultima offerta: resti qui spontaneamente, oppure ti tengo qui... col mattarello. romantico, no?' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che sceglie il mattarello*' },
+        { speaker: 'lochef85', color: 'red', text: 'eccoti. lo sapevo. nessuno esce dalla tana. è una regola che ho scritto io, sul frigo.', mood: 'grave' },
+        { speaker: 'lochef85', color: 'red', text: 'non è colpa tua, piccolo. è che ti voglio bene. e chi vuole bene non lascia andare.', mood: 'grave' },
     ],
     'lochef-sconfitto': [
-        { speaker: 'lochef85', color: 'red', text: 'ahi... ok... ho capito... non era amore, era reato. me l\'hanno già detto in tanti...' },
-        { speaker: 'lochef85', color: 'red', text: 'vai pure. ma sappi che nel mio cuore c\'è una mensola... con il tuo nome... scritto col pennarello indelebile...', mood: 'crepa' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*dodici statue nel giardino. dodici che non sono uscite. io sono il tredicesimo. corro.*', mood: 'crepa' },
+        { speaker: 'lochef85', color: 'red', text: 'no... voi non capite... io vi volevo bene... a tutti e dodici...', mood: 'grave' },
     ],
     'vavleeh-corpo': [
-        { speaker: 'il geco', color: 'green', text: '*verso di geco bassissimo*' },
-        { speaker: 'vavleeh (ciò che resta)', color: 'purple', text: '...lo specchio... diceva il vero... non fidarti... di chi cucina... per due...' },
-        { speaker: 'il geco', color: 'green', text: '*il geco capisce che da questa tana bisogna USCIRE. subito.*' },
+        { speaker: 'il geco', color: 'green', text: '*una stanza senza finestre. quello che resta di vavleeh.*', mood: 'grave' },
+        { speaker: 'vavleeh (ciò che resta)', color: 'purple', text: '...lo specchio... diceva il vero... non mangiare... non dormire... non credergli quando dice che ti vuole bene...', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*il geco esce dalla stanza camminando all\'indietro.*' },
     ],
     'lore-poster': [
-        { speaker: 'poster in A0', color: 'red', text: '«un poster del custode. di te. in pose che non ricordi di aver fatto. la data di stampa è precedente al vostro primo incontro. meglio non pensarci.»' },
+        { speaker: 'poster in A0', color: 'red', text: '«un poster del custode. di te. foto prese da lontano, di notte, mentre dormivi sul muro della piazza. la data di stampa è di mesi prima che qualcuno ti chiamasse custode.»', mood: 'grave' },
     ],
     'lore-frigo': [
-        { speaker: 'frigo della tana', color: 'red', text: '«regole della tana, scritte sul frigo: 1. gli ospiti non escono. 2. il brodo si serve tiepido. 3. vavleeh non contava come ospite. era famiglia. (la regola 3 è sbarrata)»' },
+        { speaker: 'frigo della tana', color: 'red', text: '«regole della tana, con le lettere calamitate colorate: 1. gli ospiti non escono. 2. gli ospiti non chiamano la mamma. 3. è un segreto nostro. la regola 3 è scritta più grande.»', mood: 'grave' },
     ],
     'lore-collezione': [
-        { speaker: 'vetrinetta chiusa a chiave', color: 'red', text: '«oggetti di dubbia provenienza e gusto pessimo. un\'intera mensola dedicata a "cose dei custodi precedenti". c\'è uno spazio vuoto con un bigliettino: "riservato".»' },
+        { speaker: 'vetrinetta chiusa a chiave', color: 'red', text: '«dentro: un cappellino del server di notino, uno zaino con le spille, un biglietto del citelis mai convalidato, dodici paia di scarpe piccole in fila. uno spazio vuoto con un bigliettino: "riservato".»', mood: 'grave' },
     ],
 
     /* ---------- capitolo 8: la tommasorveglianza ---------- */
@@ -1126,7 +1136,8 @@ export const CREDITS: { role: string; names: string[] }[] = [
     { role: 'il dipartimento bus', names: ['guggu', 'ivan maggini', 'samatt', 'guastalla'] },
     { role: 'gli dei minori e i guardiani', names: ['breccio', 'la formicona', 'il teorema incompiuto', 'il limite notevole', 'flauto speroindio'] },
     { role: 'libera impresa del realm', names: ['ticummi', 'smela', 'danjilo', 'filippus il dodo'] },
-    { role: 'roleplay non richiesto', names: ['notino', 'lochef85'] },
+    { role: 'roleplay non richiesto', names: ['notino'] },
+    { role: 'nella tana', names: ['lochef85', 'gli undici ospiti', 'l\'ospite n.12'] },
     { role: 'l\'indagine che nessuno voleva', names: ['commissario romero', 'i cinque rimpianti'] },
     { role: 'i capitoli segreti', names: ['il 7:40', 'il primo custode'] },
     { role: 'menzioni d\'onore', names: ['markolino', 'la riba', 'vavleeh'] },
@@ -1180,10 +1191,7 @@ export function endingEpilogues(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' |
         out.push('notino non ti ha mai perdonato lo sparacchino. ha aperto un server tutto per te: "il geco ladro". ha un iscritto. è sua madre, per controllarlo.');
     }
     if (flags.includes('lochef-arrestato')) {
-        out.push('lochef85 cucina per la mensa del carcere. i detenuti non hanno mai mangiato così bene né così a disagio. il brodo è tiepido. sempre.');
-    }
-    if (flags.includes('lochef-libero')) {
-        out.push('la trattoria di lochef in piazza ha quattro stelle. la quinta l\'ha tolta un ispettore che non è più tornato a casa. indagini in corso.');
+        out.push('lochef85 sconta la pena in una cella senza cucina. la tana è murata. in piazza, il giovedì, l\'ospite n.12 accende undici candele alla fontana.');
     }
     if (flags.includes('caffe-romero')) {
         out.push('romero ha preso l\'abitudine del caffè al bar, ogni mattina, con lo zucchero. dice che quarant\'anni di arretrati non si recuperano. ma si addolciscono.');

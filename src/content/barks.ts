@@ -126,12 +126,15 @@ export const BOSS_BARKS: Partial<Record<BossKind, BarkSet>> = {
     lochef: {
         by: 'lochef85', color: 'red',
         lines: {
-            engage: ['finalmente soli. il mattarello è per te. con affetto.'],
-            phase2: ['non scappare! il brodo si intiepidisce!'],
-            phase3: ['dodici statue... tredici... che bel numero, tredici.'],
-            hit: ['scusa amore. no, non è vero.'],
-            heal: ['mangi roba non mia?? GELOSIA.'],
+            engage: ['finalmente soli, piccolo. non avere paura.'],
+            phase2: ['non scappare. scappare fa arrabbiare la casa.'],
+            phase3: ['dodici... tredici... tredici è un bel numero tondo.'],
+            hit: ['non volevo. lo dico sempre. non volevo.'],
+            heal: ['chi ti ha dato da mangiare? solo io ti do da mangiare.'],
             idle: ['ti ho preparato la camera. la serratura è fuori.'],
+        },
+        extra: {
+            whisper: ['dove sei, piccolo?', 'la casa ti sente.', 'gli altri all\'inizio facevano così.', 'ho apparecchiato. vieni.', 'è un segreto nostro.', 'non chiamare la mamma. non serve.'],
         },
     },
     ombra: {
