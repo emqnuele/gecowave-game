@@ -72,9 +72,15 @@ async function boot(): Promise<void> {
     window.addEventListener('beforeunload', () => state.flushPersist(true));
 
     // il falò del titolo: vive solo mentre il menu è aperto
+    // livello garantito (bus) e scena sempre fresca: il menu non resta mai nero
     screens.setBackdrop((on) => {
         if (on) {
-            if (!game.scene.isActive('MenuScene')) game.scene.start('MenuScene', { levelId: state.hasSave ? state.save.levelId : undefined });
+            const gameEl = document.getElementById('game')!;
+            gameEl.style.display = '';
+            const wanted = state.hasSave ? state.save.levelId : undefined;
+            const levelId = wanted && LEVELS[wanted] ? wanted : 'bus';
+            if (game.scene.isActive('MenuScene')) game.scene.stop('MenuScene');
+            game.scene.start('MenuScene', { levelId });
         } else if (game.scene.isActive('MenuScene')) {
             game.scene.stop('MenuScene');
         }
