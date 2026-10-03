@@ -5,8 +5,8 @@ import type { ChapterSummary } from '../engine/ChapterCompletion';
 import { el, ui } from './dom';
 import './chapterSummary.css';
 
-/* il riepilogo cinematico di fine capitolo: schermo nero, tutto appare
-   piano e in ordine. chi tocca salta alla fine, chi tocca ancora va oltre */
+/* il riepilogo cinematico: un protagonista alla volta al centro, poi vola
+   piccolo al suo posto. chi tocca salta alla fine, chi tocca ancora va oltre */
 
 let open = false;
 
@@ -64,99 +64,21 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     root.append(flash);
     const stage = el('div', 'chsum-stage');
     root.append(stage);
-    // tutto il contenuto scala per entrare in un'inquadratura sola, senza scorrere
     const fit = el('div', 'chsum-fit');
     stage.append(fit);
     ui().append(root);
 
-    const kick = el('div', 'chsum-kick', 'capitolo completato');
-    const title = el('h1', 'chsum-title');
-    title.textContent = `${summary.title.toLowerCase()} `;
-    const em = el('em');
-    em.textContent = summary.accentWord;
-    title.append(em);
-    const sub = el('div', 'chsum-sub', 'il realm tiene ancora. per ora.');
-    fit.append(kick, title, sub);
-    if (summary.punchline) {
-        const punch = el('div', 'chsum-punch');
-        punch.textContent = summary.punchline;
-        fit.append(punch);
-    }
-
-    // esplorazione
-    const exploreBlock = el('section', 'chsum-block');
-    exploreBlock.append(el('div', 'chsum-label', 'mappa esplorata'));
-    const pctEl = el('div', 'chsum-hero-num', '0<small>%</small>');
-    const roomsEl = el('div', 'chsum-subline', '');
-    const bar = el('div', 'chsum-bar');
-    const fill = el('div', 'chsum-fill');
-    bar.append(fill);
-    const mapStamp = el('div', 'chsum-stamp', 'mappa completa');
-    exploreBlock.append(pctEl, roomsEl, bar, mapStamp);
-    fit.append(exploreBlock);
-
-    // cuori
-    const heartBlock = el('section', 'chsum-block');
-    heartBlock.append(el('div', 'chsum-label', 'cuori del realm'));
-    const heartNum = el('div', 'chsum-mid', '');
-    const heartRow = el('div', 'chsum-hearts');
-    const heartNote = el('div', 'chsum-subline', '');
-    heartBlock.append(heartNum, heartRow, heartNote);
-    fit.append(heartBlock);
-
-    // cose
-    const thingBlock = el('section', 'chsum-block');
-    thingBlock.append(el('div', 'chsum-label', 'cose trovate'));
-    const thingNum = el('div', 'chsum-mid', '');
-    const thingNote = el('div', 'chsum-subline', 'lore, maschere, tacche, amuleti, missioni');
-    thingBlock.append(thingNum, thingNote);
-    fit.append(thingBlock);
-
-    // punteggio
-    const scoreBox = el('section', 'chsum-score');
-    scoreBox.append(el('div', 'chsum-label', 'score capitolo'));
-    const rowEls: HTMLElement[] = [];
-    for (const [name] of summary.score.lines) {
-        const row = el('div', 'chsum-row');
-        const n = el('span');
-        n.textContent = name;
-        const v = el('b');
-        v.textContent = '';
-        row.append(n, v);
-        scoreBox.append(row);
-        rowEls.push(row);
-    }
-    const totalBox = el('div', 'chsum-total');
-    totalBox.append(el('div', 'chsum-label', 'totale capitolo'));
-    const totalNum = el('div', 'chsum-mid', '+ 0');
-    totalBox.append(totalNum);
-    scoreBox.append(totalBox);
-    let recordStamp: HTMLElement | null = null;
-    if (summary.score.best && !summary.score.assisted) {
-        recordStamp = el('div', 'chsum-stamp', 'nuovo record');
-        scoreBox.append(recordStamp);
-    }
-    if (summary.score.assisted) {
-        scoreBox.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
-    }
-    fit.append(scoreBox);
-
-    // run totale
-    const runBox = el('section', 'chsum-score chsum-run');
-    runBox.append(el('div', 'chsum-label', 'score attuale'));
-    const runNum = el('div', 'chsum-hero-num', '0');
-    runBox.append(runNum);
-    fit.append(runBox);
-
+    // cornice persistente: testata, palco, dock dei verdetti, invito
+    const head = el('div', 'chsum-head');
+    const hero = el('div', 'chsum-hero');
+    const dock = el('div', 'chsum-dock');
     const hint = el('div', 'chsum-go-hint', 'clicca ovunque per continuare');
-    fit.append(hint);
-
-    /* ---------- regia: battiti lenti, salto alla fine, poi oltre ---------- */
+    fit.append(head, hero, dock, hint);
 
     const t0 = performance.now();
     const timers: number[] = [];
     const rafs = new Set<number>();
-    const finals: (() => void)[] = [];
+    const flights: HTMLElement[] = [];
     let seq = 0;
     let skipped = false;
     let closed = false;
@@ -164,11 +86,10 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     let continued = false;
     let lastTick = 0;
 
-    // l'inquadratura contiene tutto: se lo schermo è basso si rimpicciolisce
     const fitToScreen = (): void => {
         fit.style.transform = '';
         const h = fit.scrollHeight;
-        const avail = window.innerHeight * 0.9;
+        const avail = window.innerHeight * 0.92;
         const s = h > 0 ? Math.min(1, avail / h) : 1;
         if (s < 1) fit.style.transform = `scale(${s})`;
     };
@@ -205,7 +126,6 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     };
 
     const later = (ms: number, fn: () => void): void => {
-        // movimento ridotto: la stessa sequenza, compressa e scaglionata
         if (reduced) {
             ms = Math.min(150 + seq * 80, 1600);
             seq++;
@@ -245,10 +165,72 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         rafs.add(id);
     };
 
+    /** il protagonista vola piccolo al suo posto */
+    const flyTo = (from: HTMLElement, parent: HTMLElement, chip: HTMLElement, done: () => void): void => {
+        parent.append(chip);
+        if (reduced) {
+            chip.classList.add('lit');
+            done();
+            return;
+        }
+        const r1 = from.getBoundingClientRect();
+        const r2 = chip.getBoundingClientRect();
+        if (r1.width === 0 || r2.width === 0) {
+            chip.classList.add('lit');
+            done();
+            return;
+        }
+        const clone = from.cloneNode(true) as HTMLElement;
+        clone.style.cssText += `;position:fixed;left:${r1.left}px;top:${r1.top}px;width:${r1.width}px;height:${r1.height}px;margin:0;z-index:5;pointer-events:none;transform-origin:center center;`;
+        root.append(clone);
+        flights.push(clone);
+        const dx = r2.left + r2.width / 2 - (r1.left + r1.width / 2);
+        const dy = r2.top + r2.height / 2 - (r1.top + r1.height / 2);
+        const s = Math.max(0.05, Math.min(1, r2.width / r1.width));
+        try {
+            const anim = clone.animate(
+                [
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${dx}px, ${dy}px) scale(${s})`, opacity: 0.85 },
+                ],
+                { duration: 650, easing: 'cubic-bezier(.3,.7,.3,1)' },
+            );
+            anim.finished.then(() => {
+                clone.remove();
+                chip.classList.add('lit');
+                done();
+            }).catch(() => {
+                clone.remove();
+                chip.classList.add('lit');
+                done();
+            });
+        } catch {
+            clone.remove();
+            chip.classList.add('lit');
+            done();
+        }
+    };
+
+    const chip = (text: string, bad: boolean): HTMLElement => {
+        const c = el('div', `chsum-chip${bad ? ' bad' : ''}`, text);
+        return c;
+    };
+
+    const setHero = (node: HTMLElement): void => {
+        hero.replaceChildren(node);
+        requestAnimationFrame(() => node.classList.add('enter'));
+    };
+
+    const clearFlights = (): void => {
+        for (const c of flights) c.remove();
+        flights.length = 0;
+    };
+
     const cleanup = (): void => {
         for (const t of timers) window.clearTimeout(t);
         for (const id of rafs) cancelAnimationFrame(id);
         rafs.clear();
+        clearFlights();
         window.removeEventListener('keydown', onKey, true);
         window.removeEventListener('resize', onResize);
         root.remove();
@@ -263,20 +245,53 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         onContinue();
     };
 
-    const finishAll = (): void => {
+    /* ---------- schermata finale: tutto piccolo, il numero grande ---------- */
+
+    const renderFinal = (): void => {
         skipped = true;
         for (const t of timers) window.clearTimeout(t);
         timers.length = 0;
-        for (const f of finals) f();
-        finals.length = 0;
+        clearFlights();
+        const explore = summary.exploration;
+        head.replaceChildren();
+        const headChip = chip(`${summary.title.toLowerCase()} ${summary.accentWord}`, false);
+        headChip.classList.add('lit', 'head');
+        head.append(headChip);
+        dock.replaceChildren();
+        const exploreText = explore.percent === null ? 'mappa non disponibile' : `mappa ${explore.percent}% · ${explore.visited}/${explore.total}`;
+        const eChip = chip(exploreText, explore.percent !== null && explore.percent < 100);
+        const hearts = summary.hearts;
+        const hChip = chip(hearts.total === 0 ? 'nessun cuore qui' : `cuori ${hearts.found}/${hearts.total}`, hearts.total > 0 && hearts.found < hearts.total);
+        const things = summary.things;
+        const tChip = chip(`cose ${things.found}/${things.total}`, things.found < things.total);
+        const sChip = chip(`capitolo + ${fmt(summary.score.chapter)}`, false);
+        for (const c of [eChip, hChip, tChip, sChip]) {
+            c.classList.add('lit');
+            dock.append(c);
+        }
+        hero.replaceChildren();
+        const run = el('div', 'chsum-beat enter');
+        run.append(el('div', 'chsum-label', 'score attuale'));
+        const runNum = el('div', 'chsum-hero-num', summary.score.runTotal === null ? '—' : fmt(summary.score.runTotal));
+        if (summary.score.runTotal !== null) runNum.style.color = 'var(--chsum-accent)';
+        run.append(runNum);
+        if (summary.score.runTotal === null) {
+            run.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
+        }
+        if (summary.score.best && !summary.score.assisted) {
+            const stamp = el('div', 'chsum-stamp on', 'nuovo record');
+            run.append(stamp);
+        }
+        hero.append(run);
         hint.classList.add('lit');
         ready = true;
+        fitToScreen();
     };
 
     const onTap = (): void => {
         if (closed || continued) return;
         if (performance.now() - t0 < 1000) return;
-        if (!ready) finishAll();
+        if (!ready) renderFinal();
         else proceed();
     };
 
@@ -295,50 +310,64 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     let at = 0;
     const after = (ms: number): number => (at += ms);
 
-    // titolo
-    later(after(800), () => kick.classList.add('lit'));
-    finals.push(() => kick.classList.add('lit'));
-    later(after(700), () => {
+    // atto primo: il titolo enorme
+    const titleBeat = el('div', 'chsum-beat');
+    const kick = el('div', 'chsum-kick', 'capitolo completato');
+    const title = el('h1', 'chsum-title huge');
+    title.textContent = `${summary.title.toLowerCase()} `;
+    const em = el('em');
+    em.textContent = summary.accentWord;
+    title.append(em);
+    const sub = el('div', 'chsum-sub', 'il realm tiene ancora. per ora.');
+    titleBeat.append(kick, title, sub);
+    if (summary.punchline) {
+        const punch = el('div', 'chsum-punch');
+        punch.textContent = summary.punchline;
+        titleBeat.append(punch);
+    }
+    later(after(600), () => {
+        setHero(titleBeat);
+        kick.classList.add('lit');
+    });
+    later(after(600), () => {
         title.classList.add('lit');
         sfx.checkpoint();
     });
-    finals.push(() => title.classList.add('lit'));
-    later(after(800), () => {
+    later(after(700), () => {
         sub.classList.add('lit');
-        const punch = stage.querySelector('.chsum-punch');
+        const punch = titleBeat.querySelector('.chsum-punch');
         if (punch) punch.classList.add('lit');
     });
-    finals.push(() => {
-        sub.classList.add('lit');
-        const punch = stage.querySelector('.chsum-punch');
-        if (punch) punch.classList.add('lit');
+    later(after(1900), () => {
+        const headChip = chip(`${summary.title.toLowerCase()} ${summary.accentWord}`, false);
+        flyTo(titleBeat, head, headChip, () => {
+            headChip.classList.add('lit', 'head');
+        });
+        titleBeat.classList.add('leaving');
     });
 
-    // esplorazione
+    // atto secondo: la mappa
     const explore = summary.exploration;
+    const exploreBeat = el('div', 'chsum-beat');
+    exploreBeat.append(el('div', 'chsum-label', 'mappa esplorata'));
+    const pctEl = el('div', 'chsum-hero-num', '0<small>%</small>');
+    const roomsEl = el('div', 'chsum-subline', '');
+    const bar = el('div', 'chsum-bar');
+    const fill = el('div', 'chsum-fill');
+    bar.append(fill);
+    const mapStamp = el('div', 'chsum-stamp', 'mappa completa');
+    exploreBeat.append(pctEl, roomsEl, bar, mapStamp);
     const exploreVerdict = (): void => {
         if (explore.percent === 100) {
             mapStamp.classList.add('on');
             sfx.unlock();
         } else {
-            boom(exploreBlock);
+            boom(exploreBeat);
         }
     };
-    const exploreFinal = (): void => {
-        exploreBlock.classList.add('lit');
-        if (explore.percent === null) {
-            pctEl.textContent = '—';
-            roomsEl.textContent = 'mappa non disponibile';
-            return;
-        }
-        pctEl.innerHTML = `${fmt(explore.percent)}<small>%</small>`;
-        roomsEl.textContent = `${explore.visited} / ${explore.total} stanze`;
-        fill.style.width = `${explore.percent}%`;
-        if (explore.percent === 100) mapStamp.classList.add('on');
-        else exploreBlock.classList.add('bad');
-    };
-    later(after(800), () => {
-        exploreBlock.classList.add('lit');
+    later(after(900), () => {
+        setHero(exploreBeat);
+        exploreBeat.classList.add('lit');
         if (explore.percent === null) {
             pctEl.textContent = '—';
             roomsEl.textContent = 'mappa non disponibile';
@@ -350,30 +379,24 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
             fill.style.width = `${Math.min(100, v)}%`;
         }, exploreVerdict);
     });
-    finals.push(exploreFinal);
-    after(2100);
+    later(after(2300), () => {
+        const text = explore.percent === null ? 'mappa non disponibile' : `mappa ${explore.percent}% · ${explore.visited}/${explore.total}`;
+        const c = chip(text, explore.percent !== null && explore.percent < 100);
+        flyTo(exploreBeat, dock, c, () => {});
+        exploreBeat.classList.add('leaving');
+    });
 
-    // cuori
+    // atto terzo: i cuori
     const hearts = summary.hearts;
-    const heartsFinal = (): void => {
-        heartBlock.classList.add('lit');
-        if (hearts.total === 0) {
-            heartNum.textContent = '—';
-            heartNote.textContent = 'nessun cuore in questo capitolo';
-            return;
-        }
-        heartNum.textContent = `${hearts.found} / ${hearts.total}`;
-        heartRow.replaceChildren();
-        for (let i = 0; i < hearts.total; i++) {
-            const icon = heartIcon(i < hearts.found);
-            icon.classList.add(i < hearts.found ? 'pop' : 'miss');
-            heartRow.append(icon);
-        }
-        heartNote.textContent = hearts.found === hearts.total ? 'tutti. il realm ti deve la vita.' : 'il resto è ancora là fuori';
-        if (hearts.found < hearts.total) heartBlock.classList.add('bad');
-    };
-    later(after(700), () => {
-        heartBlock.classList.add('lit');
+    const heartBeat = el('div', 'chsum-beat');
+    heartBeat.append(el('div', 'chsum-label', 'cuori del realm'));
+    const heartNum = el('div', 'chsum-mid', '');
+    const heartRow = el('div', 'chsum-hearts');
+    const heartNote = el('div', 'chsum-subline', '');
+    heartBeat.append(heartNum, heartRow, heartNote);
+    later(after(900), () => {
+        setHero(heartBeat);
+        heartBeat.classList.add('lit');
         if (hearts.total === 0) {
             heartNum.textContent = '—';
             heartNote.textContent = 'nessun cuore in questo capitolo';
@@ -398,33 +421,32 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
                     if (i < hearts.found) sfx.heartbeat();
                     if (i === hearts.total - 1) {
                         if (hearts.found === hearts.total) sfx.unlock();
-                        else boom(heartBlock);
+                        else boom(heartBeat);
                     }
                 }, showAt));
             }
             if (reduced) {
                 if (hearts.found === hearts.total) sfx.unlock();
-                else boom(heartBlock);
+                else boom(heartBeat);
             }
         });
     });
-    finals.push(heartsFinal);
-    after(1400 + 700 + hearts.total * 400 + 500);
+    later(after(1400 + 700 + hearts.total * 400 + 1100), () => {
+        const c = chip(hearts.total === 0 ? 'nessun cuore qui' : `cuori ${hearts.found}/${hearts.total}`, hearts.total > 0 && hearts.found < hearts.total);
+        flyTo(heartBeat, dock, c, () => {});
+        heartBeat.classList.add('leaving');
+    });
 
-    // cose
+    // atto quarto: le cose
     const things = summary.things;
-    const thingsFinal = (): void => {
-        thingBlock.classList.add('lit');
-        if (things.total === 0) {
-            thingNum.textContent = '—';
-            thingNote.textContent = 'niente da raccogliere qui';
-            return;
-        }
-        thingNum.textContent = `${things.found} / ${things.total}`;
-        if (things.found < things.total) thingBlock.classList.add('bad');
-    };
-    later(after(700), () => {
-        thingBlock.classList.add('lit');
+    const thingBeat = el('div', 'chsum-beat');
+    thingBeat.append(el('div', 'chsum-label', 'cose trovate'));
+    const thingNum = el('div', 'chsum-mid', '');
+    const thingNote = el('div', 'chsum-subline', 'lore, maschere, tacche, amuleti, missioni');
+    thingBeat.append(thingNum, thingNote);
+    later(after(900), () => {
+        setHero(thingBeat);
+        thingBeat.classList.add('lit');
         if (things.total === 0) {
             thingNum.textContent = '—';
             thingNote.textContent = 'niente da raccogliere qui';
@@ -434,77 +456,96 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
             thingNum.textContent = `${Math.floor(v)} / ${things.total}`;
         }, () => {
             if (things.found === things.total) sfx.unlock();
-            else boom(thingBlock);
+            else boom(thingBeat);
         });
     });
-    finals.push(thingsFinal);
-    after(1400 + 700 + 500);
+    later(after(1400 + 700 + 1100), () => {
+        const c = chip(`cose ${things.found}/${things.total}`, things.found < things.total);
+        flyTo(thingBeat, dock, c, () => {});
+        thingBeat.classList.add('leaving');
+    });
 
-    // punteggio voce per voce
-    later(after(700), () => scoreBox.classList.add('lit'));
-    finals.push(() => scoreBox.classList.add('lit'));
-    summary.score.lines.forEach(([, value], i) => {
-        later(after(450), () => {
-            const row = rowEls[i];
-            if (!row) return;
-            row.classList.add('lit');
-            row.querySelector('b')!.textContent = value;
-            tick();
+    // atto quinto: lo score voce per voce
+    const scoreBeat = el('div', 'chsum-beat');
+    scoreBeat.append(el('div', 'chsum-label', 'score capitolo'));
+    const rowEls: HTMLElement[] = [];
+    for (const [name] of summary.score.lines) {
+        const row = el('div', 'chsum-row');
+        const n = el('span');
+        n.textContent = name;
+        const v = el('b');
+        v.textContent = '';
+        row.append(n, v);
+        scoreBeat.append(row);
+        rowEls.push(row);
+    }
+    const totalNum = el('div', 'chsum-mid total', '+ 0');
+    scoreBeat.append(totalNum);
+    let recordStamp: HTMLElement | null = null;
+    if (summary.score.best && !summary.score.assisted) {
+        recordStamp = el('div', 'chsum-stamp', 'nuovo record');
+        scoreBeat.append(recordStamp);
+    }
+    if (summary.score.assisted) {
+        scoreBeat.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
+    }
+    later(after(900), () => {
+        setHero(scoreBeat);
+        scoreBeat.classList.add('lit');
+        summary.score.lines.forEach(([, value], i) => {
+            later(i * 450, () => {
+                const row = rowEls[i];
+                if (!row || closed || skipped) return;
+                row.classList.add('lit');
+                row.querySelector('b')!.textContent = value;
+                tick();
+            });
         });
-        finals.push(() => {
-            const row = rowEls[i];
-            if (!row) return;
-            row.classList.add('lit');
-            row.querySelector('b')!.textContent = value;
+        const rowsMs = summary.score.lines.length * 450;
+        later(rowsMs + 400, () => {
+            if (closed || skipped) return;
+            count(1400, summary.score.chapter, (v) => {
+                totalNum.textContent = `+ ${fmt(v)}`;
+            }, () => {
+                if (recordStamp) {
+                    recordStamp.classList.add('on');
+                    sfx.unlock();
+                } else if (!summary.score.assisted) {
+                    sfx.pickup();
+                }
+            });
         });
     });
-    later(after(500), () => {
-        count(1400, summary.score.chapter, (v) => {
-            totalNum.textContent = `+ ${fmt(v)}`;
-        }, () => {
-            if (recordStamp) {
-                recordStamp.classList.add('on');
-                sfx.unlock();
-            } else if (!summary.score.assisted) {
-                sfx.pickup();
-            }
-        });
+    later(after(2600 + summary.score.lines.length * 450 + 1100), () => {
+        for (const row of rowEls) row.classList.add('faded');
+        const c = chip(`capitolo + ${fmt(summary.score.chapter)}`, false);
+        flyTo(totalNum, dock, c, () => {});
+        scoreBeat.classList.add('leaving');
     });
-    finals.push(() => {
-        totalNum.textContent = `+ ${fmt(summary.score.chapter)}`;
-        if (recordStamp) recordStamp.classList.add('on');
-    });
-    after(1400 + 500);
 
-    // score attuale
-    later(after(600), () => {
-        runBox.classList.add('lit');
+    // atto finale: lo score in numeri
+    const runBeat = el('div', 'chsum-beat');
+    runBeat.append(el('div', 'chsum-label', 'score attuale'));
+    const runNum = el('div', 'chsum-hero-num accent', '0');
+    runBeat.append(runNum);
+    later(after(1100), () => {
+        setHero(runBeat);
+        runBeat.classList.add('lit');
         if (summary.score.runTotal === null) {
             runNum.textContent = '—';
-            runBox.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
+            runBeat.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
             return;
         }
         count(1600, summary.score.runTotal, (v) => {
             runNum.textContent = fmt(v);
         }, () => sfx.checkpoint());
     });
-    finals.push(() => {
-        runBox.classList.add('lit');
-        if (summary.score.runTotal === null) {
-            runNum.textContent = '—';
-            if (!runBox.querySelector('.chsum-note')) runBox.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
-            return;
+    later(after(1600 + 900), () => {
+        if (summary.score.best && !summary.score.assisted) {
+            const stamp = el('div', 'chsum-stamp', 'nuovo record');
+            runBeat.append(stamp);
+            requestAnimationFrame(() => stamp.classList.add('on'));
         }
-        runNum.textContent = fmt(summary.score.runTotal);
-    });
-    after(1600 + 600);
-
-    // invito a continuare
-    later(after(400), () => {
-        hint.classList.add('lit');
-        ready = true;
-    });
-    finals.push(() => {
         hint.classList.add('lit');
         ready = true;
     });

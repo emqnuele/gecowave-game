@@ -1,5 +1,5 @@
-/* riepilogo di fine capitolo, versione cinematica: schermo nero, niente
-   finestre. un'inquadratura sola, tutto visibile senza scorrere */
+/* riepilogo di fine capitolo, versione cinematica: un protagonista alla
+   volta al centro, poi vola piccolo al suo posto. niente finestre */
 
 .chsum-overlay {
   --chsum-accent: #4ade80;
@@ -85,16 +85,85 @@
   animation: chsum-shake 0.45s ease;
 }
 
-/* tutto il contenuto scala per entrare nell'inquadratura */
+/* tutto il contenuto scala per entrare in un'inquadratura sola */
 .chsum-fit {
   width: min(880px, 94vw);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
   transform-origin: center center;
 }
 
+/* testata: il titolo rimpicciolito dopo il volo */
+.chsum-head {
+  min-height: 4vh;
+  display: flex;
+  justify-content: center;
+}
+
+/* il palco: un protagonista alla volta */
+.chsum-hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.chsum-beat {
+  width: 100%;
+  opacity: 0;
+}
+
+.chsum-beat.enter {
+  opacity: 1;
+  animation: chsum-rise 0.7s ease both;
+}
+
+.chsum-beat.leaving {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+/* il dock dei verdetti: piccoli, in fila */
+.chsum-dock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8vh 26px;
+  justify-content: center;
+  min-height: 3vh;
+  margin-top: 1vh;
+}
+
+.chsum-chip {
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #9a917e;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.chsum-chip.lit {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.chsum-chip.bad {
+  color: var(--chsum-bad);
+}
+
+.chsum-chip.head {
+  font-size: 13px;
+  color: #e8dfc8;
+}
+
 .chsum-kick {
   font-family: 'Martian Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.45em;
   text-transform: uppercase;
   color: var(--chsum-accent);
@@ -118,6 +187,10 @@
   filter: url(#sx-ink);
 }
 
+.chsum-title.huge {
+  font-size: clamp(56px, 12vh, 132px);
+}
+
 .chsum-title.lit {
   opacity: 1;
   animation: chsum-slam 0.7s cubic-bezier(0.2, 1.4, 0.3, 1) both;
@@ -130,10 +203,10 @@
 
 .chsum-sub {
   font-family: 'Permanent Marker', cursive;
-  font-size: clamp(14px, 2.2vh, 20px);
+  font-size: clamp(16px, 2.6vh, 24px);
   color: rgba(232, 223, 200, 0.9);
   transform: rotate(-1deg);
-  margin-top: 1vh;
+  margin-top: 1.4vh;
   opacity: 0;
 }
 
@@ -147,7 +220,7 @@
   font-style: italic;
   font-size: clamp(12px, 1.8vh, 15px);
   color: #9a917e;
-  margin-top: 0.6vh;
+  margin-top: 0.8vh;
   opacity: 0;
 }
 
@@ -156,19 +229,9 @@
   transition: opacity 1.2s ease;
 }
 
-.chsum-block {
-  margin-top: 2.2vh;
-  opacity: 0;
-}
-
-.chsum-block.lit {
-  opacity: 1;
-  transition: opacity 0.8s ease;
-}
-
 .chsum-label {
   font-family: 'Martian Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.35em;
   text-transform: uppercase;
   color: #9a917e;
@@ -176,10 +239,10 @@
 
 .chsum-hero-num {
   font-family: 'IM Fell English SC', serif;
-  font-size: clamp(52px, 9.5vh, 104px);
+  font-size: clamp(72px, 15vh, 170px);
   line-height: 0.95;
   color: #e8dfc8;
-  margin-top: 0.4vh;
+  margin-top: 1vh;
   font-variant-numeric: tabular-nums;
 }
 
@@ -188,37 +251,46 @@
   color: #9a917e;
 }
 
+.chsum-hero-num.accent {
+  color: var(--chsum-accent);
+}
+
 .chsum-subline {
   font-family: 'IM Fell English', serif;
   font-style: italic;
-  font-size: clamp(12px, 1.9vh, 16px);
+  font-size: clamp(13px, 2.1vh, 17px);
   color: #9a917e;
-  margin-top: 0.3vh;
+  margin-top: 0.6vh;
 }
 
 /* la sezione che fa male diventa rossa */
-.chsum-block.bad .chsum-label,
-.chsum-block.bad .chsum-hero-num,
-.chsum-block.bad .chsum-mid,
-.chsum-block.bad .chsum-subline {
+.chsum-beat.bad .chsum-label,
+.chsum-beat.bad .chsum-hero-num,
+.chsum-beat.bad .chsum-mid,
+.chsum-beat.bad .chsum-subline {
   color: var(--chsum-bad);
 }
 
-.chsum-block.bad .chsum-hero-num small {
+.chsum-beat.bad .chsum-hero-num small {
   color: var(--chsum-bad);
 }
 
 .chsum-mid {
   font-family: 'IM Fell English SC', serif;
-  font-size: clamp(44px, 7vh, 80px);
+  font-size: clamp(56px, 10vh, 110px);
   line-height: 1;
   color: #e8dfc8;
-  margin-top: 0.4vh;
+  margin-top: 1vh;
   font-variant-numeric: tabular-nums;
 }
 
+.chsum-mid.total {
+  font-size: clamp(64px, 12vh, 130px);
+  margin-top: 2vh;
+}
+
 .chsum-bar {
-  margin: 1.2vh auto 0;
+  margin: 1.6vh auto 0;
   max-width: 460px;
   height: 10px;
   border: 1px solid rgba(232, 223, 200, 0.3);
@@ -237,7 +309,7 @@
   box-shadow: 0 0 22px color-mix(in srgb, var(--chsum-accent) 60%, transparent);
 }
 
-.chsum-block.bad .chsum-fill {
+.chsum-beat.bad .chsum-fill {
   background:
     repeating-linear-gradient(-55deg, rgba(0, 0, 0, 0.3) 0 5px, transparent 5px 10px),
     var(--chsum-bad);
@@ -246,16 +318,16 @@
 
 .chsum-hearts {
   display: flex;
-  gap: 10px;
-  margin-top: 1vh;
-  min-height: 30px;
+  gap: 14px;
+  margin-top: 1.4vh;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
 }
 
 .chsum-hearts svg {
-  width: clamp(24px, 3.6vh, 34px);
-  height: clamp(24px, 3.6vh, 34px);
+  width: clamp(30px, 4.6vh, 44px);
+  height: clamp(30px, 4.6vh, 44px);
   opacity: 0;
   transform: scale(0.4);
 }
@@ -278,13 +350,13 @@
 .chsum-stamp {
   display: inline-block;
   font-family: 'Permanent Marker', cursive;
-  font-size: clamp(13px, 2vh, 18px);
+  font-size: clamp(14px, 2.2vh, 20px);
   color: var(--chsum-accent);
   border: 2px solid var(--chsum-accent);
   border-radius: 6px;
   padding: 1px 12px;
   transform: rotate(-4deg);
-  margin-top: 1vh;
+  margin-top: 1.4vh;
   opacity: 0;
 }
 
@@ -293,30 +365,16 @@
   animation: chsum-stamp-in 0.4s cubic-bezier(0.2, 2.4, 0.4, 1) both;
 }
 
-.chsum-score {
-  margin-top: 2.2vh;
-  opacity: 0;
-}
-
-.chsum-score.lit {
-  opacity: 1;
-  transition: opacity 0.8s ease;
-}
-
-.chsum-score .chsum-label {
-  margin-bottom: 0.6vh;
-}
-
 .chsum-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 16px;
-  max-width: 560px;
+  max-width: 520px;
   margin: 0 auto;
-  padding: 0.35vh 2px;
+  padding: 0.5vh 2px;
   font-family: 'Martian Mono', monospace;
-  font-size: clamp(11px, 1.7vh, 14px);
+  font-size: clamp(11px, 1.9vh, 14px);
   color: #9a917e;
   opacity: 0;
   transform: translateY(8px);
@@ -328,47 +386,34 @@
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
+.chsum-row.faded {
+  opacity: 0.12;
+  transition: opacity 0.5s ease;
+}
+
 .chsum-row b {
   color: #e8dfc8;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-.chsum-total {
-  margin-top: 1.4vh;
-  border-top: 1px dashed rgba(232, 223, 200, 0.35);
-  padding-top: 1.4vh;
-}
-
-.chsum-total .chsum-mid {
-  font-size: clamp(52px, 9vh, 100px);
-}
-
-.chsum-run {
-  margin-top: 2vh;
-}
-
-.chsum-run .chsum-hero-num {
-  font-size: clamp(52px, 9vh, 100px);
-  color: var(--chsum-accent);
-}
-
 .chsum-note {
   font-family: 'IM Fell English', serif;
   font-style: italic;
-  font-size: clamp(12px, 1.8vh, 15px);
+  font-size: clamp(12px, 1.9vh, 15px);
   color: #9a917e;
-  margin-top: 0.6vh;
+  margin-top: 1vh;
 }
 
 .chsum-go-hint {
-  margin-top: 2.6vh;
+  margin-top: 1.6vh;
   font-family: 'Martian Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: #9a917e;
   opacity: 0;
+  min-height: 2vh;
 }
 
 .chsum-go-hint.lit {
@@ -390,6 +435,11 @@
 @keyframes chsum-slam {
   from { opacity: 0; transform: scale(1.07); letter-spacing: 0.12em; }
   to { opacity: 1; transform: scale(1); letter-spacing: 0.05em; }
+}
+
+@keyframes chsum-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes chsum-stamp-in {
@@ -424,8 +474,7 @@
   .chsum-title.lit,
   .chsum-sub.lit,
   .chsum-punch.lit,
-  .chsum-block.lit,
-  .chsum-score.lit,
+  .chsum-beat.enter,
   .chsum-row.lit,
   .chsum-stamp.on,
   .chsum-go-hint.lit {
