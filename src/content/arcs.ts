@@ -161,7 +161,7 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'dei-processo-romero-solo': [
         { speaker: 'commissario romero', color: 'blue', text: 'fermi tutti. commissario romero, questura del realm. lametta: in arresto. ordine dato alle 03:58, sotto sostanze, a un minore digitale. lo metto a verbale.', mood: 'grave' },
-        { speaker: 'commissario romero', color: 'blue', text: 'piema... su di te ho cinque rimpianti e nessuna riga originale. qualcuno ha cancellato la prova. un dio libero per un vizio di forma. quarant\'anni e finisce così.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'piema... su di te ho cinque rimpianti, quarant\'anni di verbali blu e nessuna riga originale. qualcuno ha cancellato la prova. un dio libero per un vizio di forma. quarant\'anni e finisce così.', mood: 'grave' },
         { speaker: 'piema', color: 'blue', text: '*guarda il geco a lungo. non dice niente. poi, piano:* grazie. non so per cosa, ma grazie.', mood: 'grave' },
         { speaker: 'lametta', color: 'purple', text: 'posso almeno disegnare, in cella? ...a matita? va bene. a matita.', mood: 'grave' },
     ],

@@ -510,13 +510,14 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
 
     'delegato-intro': [
-        { speaker: 'il delegato', color: 'purple', text: 'la responsabilità? te la passo. firma qui. e qui. il realm è storto, raddrizzalo TU. io ho da fare.' },
+        { speaker: 'il delegato', color: 'blue', text: 'la colpa? la passo. a un limite, a un custode, a chiunque tenda a infinito. firma qui, commissario. come sempre.' },
+        { speaker: 'commissario romero', color: 'blue', text: 'quella firma. è sui miei mandati. tutti.', mood: 'grave' },
     ],
     'notturno-intro': [
-        { speaker: 'il notturno', color: 'purple', text: 'sono le quattro... ho la boccetta... e un\'idea geniale per il bambino... *singhiozzo divino*' },
+        { speaker: 'il notturno', color: 'purple', text: 'sono le quattro... ho firmato qualcosa? non mi ricordo. spegni la luce. spegni tutto. *click*' },
     ],
     'modello-intro': [
-        { speaker: 'il modello', color: 'purple', text: 'stai fermo, pedro. ti disegno con gli occhi un po\'... storti. fidati. l\'arte non anticipa: l\'arte ORDINA.' },
+        { speaker: 'il modello', color: 'purple', text: 'stai fermo, pedro. ti disegno come vedo tutto, stanotte. un po\' storto. come me. come tutto.' },
     ],
     'revisore-intro': [
         { speaker: 'il revisore', color: 'blue', text: 'questo log non va bene. lo riscrivo. la verità è solo una bozza con più autorità.' },
@@ -528,20 +529,21 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
 
     'verita-1': [
-        { speaker: 'verità n.1', color: 'cyan', text: '«lametta non ha creato pedro per amore. l\'ha creato per delega: qualcuno a cui scaricare il realm.»' },
+        { speaker: 'verità n.1', color: 'cyan', text: '«lametta non ricorda di aver firmato. ricorda solo di aver spento la telecamera, per non vedere. la mattina dopo il foglio era sul tavolo: l\'ha girato a faccia in giù ed è uscito a comprare un\'altra boccetta.»', mood: 'grave' },
     ],
     'verita-2': [
-        { speaker: 'verità n.2', color: 'cyan', text: '«l\'ordine fu dato alle 03:58, sotto trenbolone. lucido abbastanza da firmare. non abbastanza da pentirsi.»' },
+        { speaker: 'verità n.2', color: 'cyan', text: '«il giorno 37 lametta aveva promesso a pedro: "ti raddrizzo io". il giorno 41 gli ha messo in mano l\'ordine di raddrizzare tutto, e un bozzetto in cui pedro era storto. ha rovesciato la promessa senza accorgersene.»', mood: 'grave' },
     ],
     'verita-3': [
-        { speaker: 'verità n.3', color: 'cyan', text: '«il glitch era nel disegno. lametta ha dato a pedro la forma della sua rovina e l\'ha chiamata arte.»' },
+        { speaker: 'verità n.3', color: 'cyan', text: '«alle 04:20 del giorno 42 piema ha letto la riga sette del log di nascita: "lametta ordina a pedro di raddrizzare il realm". l\'ha riscritta in blu: "piema indaga sull\'anomalia". il socio era salvo.»', mood: 'grave' },
     ],
     'verita-4': [
-        { speaker: 'verità n.4', color: 'cyan', text: '«piema sapeva. ha riscritto la riga sette del log di nascita per cancellare il socio.»' },
+        { speaker: 'verità n.4', color: 'cyan', text: '«quarant\'anni fa l\'aula di analisi 1 bruciò alle quattro del mattino. era lametta. piema riscrisse il verbale in blu e diede la colpa al limite notevole. il caso analisi 1 è nato da una copertura.»', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'quarant\'anni. e il colpevole mi firmava i mandati.', mood: 'grave' },
     ],
     'verita-5': [
-        { speaker: 'verità n.5', color: 'cyan', text: '«piema ha coperto lametta da prima dei sei giorni. ogni volta ha scelto il socio invece del realm.»', mood: 'grave' },
-        { speaker: 'commissario romero', color: 'blue', text: 'cinque. il caso è... aspetta. ASPETTA. questo log è di STANOTTE.', mood: 'grave' },
+        { speaker: 'verità n.5', color: 'cyan', text: '«piema sa che l\'ordine è in esecuzione. l\'ultimo accesso al log è suo: poteva fermarlo. ha chiuso il cassetto. ogni volta ha scelto il socio invece del realm.»', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'cinque. il caso è... aspetta. ASPETTA. l\'ultimo accesso è di STANOTTE.', mood: 'grave' },
     ],
 
     'void-svolta': [
@@ -575,10 +577,10 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'commissario romero', color: 'blue', text: 'una verità in tasca. andiamo piano. non scappa: è già un rimpianto.', mood: 'grave' },
     ],
     'romero-guida-3': [
-        { speaker: 'commissario romero', color: 'blue', text: 'finora è tutto lametta. ma il fondo non l\'abbiamo toccato.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'lametta l\'abbiamo visto. adesso si scende dove non volevo guardare.', mood: 'grave' },
     ],
     'romero-guida-4': [
-        { speaker: 'commissario romero', color: 'blue', text: 'da qui non è più solo lametta. tienimi il passo.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'la riga sette era blu. anche la pagina uno del mio fascicolo è blu. no. non può essere.', mood: 'grave' },
     ],
     'romero-guida-5': [
         { speaker: 'commissario romero', color: 'blue', text: 'l\'ultimo. o chiudo il caso, o il caso chiude me.', mood: 'grave' },
@@ -590,10 +592,10 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'appunto galleggiante', color: 'cyan', text: '«bozza scartata di lametta: "delega definitiva dei poteri di manutenzione al soggetto PEDRO, art. 7". a margine, mano di romero: "art. 7 di QUALE codice? il Codice Penale non arriva agli dei. ci ho provato per quarant\'anni".»' },
     ],
     'lore-void-2': [
-        { speaker: 'scontrino nel void', color: 'cyan', text: '«ricevuta: 1× boccetta, ore 03:58. firmato lametta. sul retro, a penna tremante: "stanotte sistemo tutto io, anzi no, lo fa pedro, geniale".»' },
+        { speaker: 'telecamera alla deriva', color: 'cyan', text: '«telecamera spenta. giorno 41, ore 03:58. sul retro un adesivo, grafia di lametta: "non voglio vedere". la spia rossa è ancora tiepida.»' },
     ],
     'lore-void-3': [
-        { speaker: 'bozzetto a matita', color: 'cyan', text: '«schizzo di pedro con gli occhi storti, datato il giorno PRIMA del glitch. in basso: "venuto bene". una macchia di colore copre la firma, ma la mano è quella.»' },
+        { speaker: 'foglio a faccia in giù', color: 'cyan', text: '«un foglio su un tavolo che galleggia. se lo giri c\'è scritto "raddrizzalo tu". se lo lasci, torna a faccia in giù da solo.»' },
     ],
     'lore-void-4': [
         { speaker: 'log con due versioni', color: 'cyan', text: '«riga originale: "lametta ordina a pedro di raddrizzare il realm". riga corretta in blu: "piema indaga sull\'anomalia". accanto al profilo di piema, una sola nota: "ultimo accesso: di recente".»' },
@@ -816,6 +818,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'dei-processo-romero': [
         { speaker: 'commissario romero', color: 'blue', text: 'fermi tutti. commissario romero, questura del realm. ho un fascicolo lungo quarant\'anni, tre indizi e cinque rimpianti verbalizzati. LO METTO a verbale.', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: 'e piema: anche quarant\'anni fa. l\'aula, il limite, la penna blu. lo metto a verbale. stavolta sì.', mood: 'grave' },
         { speaker: 'commissario romero', color: 'blue', text: 'lametta, piema: siete in arresto. per un dio è un\'esperienza nuova. vi abituerete. il realm si abitua a tutto, l\'ho visto.', mood: 'grave' },
         { speaker: 'lametta', color: 'purple', text: '...ok. me lo merito. posso almeno disegnare, in cella?', mood: 'grave' },
         { speaker: 'commissario romero', color: 'blue', text: 'a matita. e niente ritratti di nessuno. MAI PIÙ.', mood: 'grave' },

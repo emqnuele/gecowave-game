@@ -1,9 +1,9 @@
 import type { LevelDef } from '../../types';
 
 /* il void dei rimpianti: subito dopo i ricordi, romero ti porta dove
-   galleggiano gli appunti e i backup di pedro. cinque rimpianti — persone
-   deformi del passato — custodiscono ognuno una verità su lametta (1-3) e
-   piema (4-5). sconfiggi il rimpianto, la verità si rivela. all'ultima,
+   galleggiano gli appunti e i backup di pedro. cinque rimpianti — due di
+   lametta, tre di piema — custodiscono ognuno una verità nuova, mai vista
+   al caso. sconfiggi il rimpianto, la verità si rivela. all'ultima,
    pedro sta già eseguendo l'ordine: arriva markolino e si corre al nucleo.
    in alto, opzionale, l'altare del 33: il miniboss più potente del void. */
 
