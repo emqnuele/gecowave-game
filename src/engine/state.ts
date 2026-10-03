@@ -69,6 +69,8 @@ class GameState {
     /** vita, flow e malus della run corrente: non si salvano, si vivono */
     run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false };
     private modsCache: CharmMods | null = null;
+    private lastPersist = 0;
+    private dirty = false;
     /** dove tornare uscendo da un capitolo segreto (transient, non persistito) */
     portalReturn: PortalReturn | null = null;
     private doomsdaySinceSave = 0;
@@ -141,6 +143,26 @@ class GameState {
     }
 
     persist(): void {
+        // scrittura sincrona su disco: in combattimento arrivano a raffica,
+        // quindi si scrive al massimo ogni 1.5s e il resto si accoda
+        const now = performance.now();
+        if (now - this.lastPersist < 1500) {
+            this.dirty = true;
+            return;
+        }
+        this.writeSave();
+    }
+
+    /** scrive se c'è qualcosa in coda (ogni frame) o subito (cambi di stato) */
+    flushPersist(force = false): void {
+        if (!this.dirty) return;
+        if (!force && performance.now() - this.lastPersist < 2000) return;
+        this.writeSave();
+    }
+
+    private writeSave(): void {
+        this.lastPersist = performance.now();
+        this.dirty = false;
         localStorage.setItem(SAVE_KEY, JSON.stringify(this.save));
     }
 
@@ -153,6 +175,9 @@ class GameState {
         this.modsCache = null;
         this.dropped = null;
         this.resetRun();
+        // il prossimo persist scrive subito: hasSave torna vero immediatamente
+        this.lastPersist = 0;
+        this.dirty = false;
         localStorage.removeItem(SAVE_KEY);
     }
 

@@ -2166,6 +2166,7 @@ export class GameScene extends Phaser.Scene {
 
         this.trackSafePosition(delta);
         state.save.record.playMs += delta;
+        state.flushPersist();
         state.run.nearMic = this.level.checkpoints.some((cp) => Math.abs(cp.x - this.player.x) < 110 && Math.abs(cp.y - this.player.y) < 110);
         this.checkExits();
         this.updatePrompt();

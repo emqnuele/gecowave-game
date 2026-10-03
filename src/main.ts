@@ -64,6 +64,8 @@ async function boot(): Promise<void> {
 
     // handle di debug in sviluppo, mai nel build
     if (import.meta.env.DEV) Object.assign(window, { __game: game, __bus: bus, __state: state, __music: music, __acoustics: acoustics, __sfx: sfx });
+    // chiusura a sorpresa: meglio un write in più che due secondi persi
+    window.addEventListener('beforeunload', () => state.flushPersist(true));
 
     // il falò del titolo: vive solo mentre il menu è aperto
     screens.setBackdrop((on) => {
@@ -75,6 +77,7 @@ async function boot(): Promise<void> {
     });
 
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
+        state.flushPersist(true);
         game.scene.stop('MenuScene');
         inGame = true;
         sfx.init();
@@ -105,6 +108,7 @@ async function boot(): Promise<void> {
             startLevel(state.save.levelId, state.save.checkpointId, false);
         },
         pause() {
+            state.flushPersist(true);
             game.scene.pause('GameScene');
             acoustics.setPaused(true);
         },
@@ -114,6 +118,7 @@ async function boot(): Promise<void> {
         },
         quitToMenu() {
             inGame = false;
+            state.flushPersist(true);
             sfx.stopPad();
             acoustics.reset();
             game.scene.stop('GameScene');
@@ -122,6 +127,7 @@ async function boot(): Promise<void> {
             music.playMenu();
         },
         travel(levelId: string) {
+            state.flushPersist(true);
             screens.closeOverlay();
             startLevel(levelId, null);
         },
@@ -137,6 +143,7 @@ async function boot(): Promise<void> {
 
     bus.on('ending', ({ id, score, rank }) => {
         inGame = false;
+        state.flushPersist(true);
         state.setFlag(`finale-${id}`);
         checkAchievements();
         if (phone.isOpen) phone.close();
