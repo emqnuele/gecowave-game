@@ -1503,7 +1503,6 @@ input.sx-range::-moz-range-thumb {
 }
 
 .hud-barre,
-.hud-fragments,
 .hud-tommaso,
 .hud-zone {
   transform: none;
@@ -1518,7 +1517,8 @@ input.sx-range::-moz-range-thumb {
 
 .hud-zone {
   font-family: var(--font-fell);
-  font-size: 15px;
+  font-size: 22px;
+  letter-spacing: 0.06em;
   padding: 6px 4px;
 }
 
