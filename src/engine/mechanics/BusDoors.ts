@@ -61,7 +61,8 @@ export class BusDoors implements Mechanic {
         const pb = this.ctx.player.getBounds();
         for (const d of this.doors) {
             const t = (time + d.offset) % PERIOD;
-            let next: DoorState = t < OPEN_MS ? 'open' : t < OPEN_MS + WARN_MS ? 'warn' : 'closed';
+            // durante la corsa il citelis ha la precedenza: verde ovunque
+            let next: DoorState = this.ctx.trialRunning() ? 'open' : t < OPEN_MS ? 'open' : t < OPEN_MS + WARN_MS ? 'warn' : 'closed';
             // mai chiudersi addosso al geco: se è nel vano, la porta aspetta che esca
             if (next === 'closed' && d.state !== 'closed' && Phaser.Geom.Intersects.RectangleToRectangle(pb, d.gap.rect)) next = 'warn';
             // aperta: secondi alla chiusura; chiusa: secondi alla riapertura

@@ -132,6 +132,32 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 **Contesto**: a fine capitolo un riquadro in sovrimpressione al centro dello schermo con tutte le voci del punteggio; l'utente lo trovava invasivo e brutto.
 **Decisione**: a schermo solo una **notifica del telefono** che entra da destra (`src/ui/banner.ts`, superfici piene come il telefono, si chiude da sola o al tocco, si impila). Anche i messaggi wavesung passano di lì, così non si sovrappongono. Il conto voce per voce dell'ultima uscita da ogni capitolo si salva in `SaveData.chapterLog` e si legge nella **bacheca** (telefono e menu): ogni capitolo è una riga che si apre; compaiono anche i capitoli chiusi in modalità assistita.
 
+### ADR-020 — i boss parlano mentre si combatte
+**Contesto**: i boss parlavano solo prima e dopo lo scontro, in dialoghi che fermano il gioco.
+**Decisione**: sottotitoli non bloccanti (`src/ui/subtitles.ts`, evento `bark`), una riga alla volta sopra la barra del boss, coda corta, le urgenti scavalcano. Le battute stanno in `src/content/barks.ts` per momento (`engage`, `phase2`, `phase3`, `hit`, `heal`, `low`, `idle`) più momenti propri (`extra`); `BossVoice` decide quando parlare (pausa minima 3,2 s, borbottii ogni 11–17 s, colpi e cure con probabilità e attesa). `Boss` emette `boss-engaged`, `boss-phase`, `boss-dying`; `Player` emette `player-act` (attacco con direzione, scivolata, inizio e fine cura). Lametta parla a ogni goccia del santuario; pedro ha battute diverse se hai ricomposto il quaderno; il glitch del finale vero alterna l'ordine e pedro che lo buca.
+**L'ombra impara davvero** (`OmbraBrain`): conta le mosse ripetute e para la direzione abusata (`Boss.guard`, 4,2 s con l'abbonamento, 2,6 s da beta), punisce la cura a vita bassa con un cecchino, ti ricompare addosso se scivoli troppo. Le telecamere della sorveglianza la nutrono (`state.run.ombraDati`: più vita, soglia più bassa).
+
+### ADR-021 — trama: il volere del geco, pedro in scena, il 33
+- **volere**: dal cratere il geco ha un cartellino "CUSTODE" a penna, "provvisorio" a matita, e vuole che la parola sparisca. Il rio la sbava, il quaderno ricomposto la cancella (profilo e codex cambiano), ogni finale dice cosa ne è stato.
+- **pedro in scena** (`PedroApparition`, `content/pedro.ts`): dal bus al void, una volta per regione a metà percorso, due righe chiare in sottotitolo e si sfalda. Sostituisce gli echi per messaggio.
+- **33**: sono le notti in cui pedro ha detto "ciao" al geco del muro (giorno 6 → giorno 38, la trentatreesima è la promessa "raddrizzami tu"). L'1% di pedro che non ha eseguito l'ordine dipinge 33 azzurri accanto ai muri finti e rompibili (`TrentatreMarks`, 60% dei grumi, deterministico): dove c'è un 33 dietro c'è qualcosa. Margherita resta solo nella lettera della 14 barrato.
+- **meno spiegoni**: due flashback nuovi (`riscrive`: piema corregge la riga sette; `salva`: il giorno 30 e la cartella IMPORTANTE), romero e il void ridotti a una riga dopo ogni film.
+
+### ADR-022 — una meccanica per bioma (`src/engine/mechanics/`)
+Tutte additive come trappole e lastre: costano vita o tempo, mai una strada verificata.
+- **bus**: porte del citelis sui varchi del percorso, a orario (aperte 3,4 s, avviso 0,9, chiuse 2,6) con tabellone dei secondi; non si chiudono mai addosso al geco.
+- **rio / stabilimento**: torrenti e nastri sui pavimenti (`FloorFlow`) che spingono e invertono il verso con una pausa; nel rio trascinano anche le piene. `Player.drift` insegue la velocità del posto più quella dei comandi.
+- **cantina / sorveglianza**: telecamere a cono dal soffitto; la scivolata non si vede. In cantina buio pesto e allarmi che chiamano gente; nella sorveglianza ogni ripresa nutre l'ombra.
+- **tecnokill**: il cecchino di notino all'aperto (laser rosso che insegue, bianco, sparo) finché notino non perde.
+- **mente**: tre porte del dubbio in più sui varchi; un mazzo di dodici domande che ruota; sbagliare costa due cuori e due pensieri che mordono, non la vita.
+- Durante la corsa contro il citelis porte e correnti si fermano: i tempi sono misurati senza.
+
+### ADR-023 — economia a due uscite
+Le barre servono a curarti (crocchetta, panino; la ricarica della bottega) e a costruirti (amuleti, tacche, anche in bottega). Tolti energetico, caffè, santino e acqua del rubinetto: i salvataggi li ritrovano in barre (`LEGACY_ITEMS`), le regioni già generate li trasformano in sacchetti di barre. Missioni e rami pagano barre, amuleti o cure; il caffè a romero si offre dal bar.
+
+### ADR-024 — nemici simbolo che insegnano (`src/content/lessons.ts`)
+Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markolino alla prima vista (solo se hai già l'abilità): citelis e fiat tipo sbandano se ci scivoli attraverso mentre caricano (doppio danno), pendolari del bus e tossici del trenbolone tengono lo scudo (pogo), specchietti riflettono metà dei colpi di lato e prendono il doppio dal basso, tecnodroni blindati che si aprono per un attimo dopo aver sparato, numeri ×3 contro analisi, bottiglie sciolte dall'acqua tossica, telecamere spente dal rimando dello scudo. Scintille gialle sul punto debole, grigie e un clang sulla corazza.
+
 ### ADR-007 — contenuti procedurali su posizioni verificate
 **Decisione**: missioni, oggetti da cercare e destinatari si piazzano solo su `layout.spots`. I passanti usano i segmenti del grafo ma restano nella loro stanza.
 
@@ -179,6 +205,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 ---
 
 ## 5. Cronologia
+- **gioco vero**: boss che parlano in battaglia e ombra che impara, volere del geco e pedro in scena, 33 con un significato, flashback al posto degli spiegoni, una meccanica per bioma, economia a due uscite, nemici simbolo che insegnano una mossa.
 - **trama esponenziale**: pedro echi precoci, romero anticipato, scelte leggibili, codex nel telefono, stabilimento attraversabile, semi 33/Margherita/IMPORTANTE, teaser opzionali, economia ribilanciata.
 - **fix totale**: simulatore, bot, ricompense, boss per stanza, arene, lochef, guide.
 - **mondo vivo**: navigazione, nemici a stati, passanti, meteo, giorno/notte, élite.

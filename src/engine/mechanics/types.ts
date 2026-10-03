@@ -27,6 +27,8 @@ export interface MechanicCtx {
     awakeEnemies: () => number;
     /** una porta della mente con la sua domanda: la logica vive nella scena */
     quizDoor: (id: string, x: number, y: number) => void;
+    /** la corsa contro il citelis è in corso: i tempi sono stati misurati senza porte */
+    trialRunning: () => boolean;
 }
 
 export interface Mechanic {

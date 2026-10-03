@@ -518,6 +518,7 @@ export class GameScene extends Phaser.Scene {
                 },
                 awakeEnemies: () => this.awakeEnemies(),
                 quizDoor: (id, x, y) => this.spawnQuizDoor(id, x, y),
+                trialRunning: () => !!this.trial?.active,
             });
         }
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

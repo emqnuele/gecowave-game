@@ -105,7 +105,8 @@ export class FloorFlow implements Mechanic {
         }
         // nel rio anche le piene trascinano, col verso del torrente più vicino
         if (!drift && this.style.kind === 'stream' && p.submerged) drift = this.nearest(p.x, p.y)?.speedNow ?? 0;
-        p.drift = drift;
+        // le corse a tempo sono misurate sul pavimento fermo: durante la corsa la corrente non conta
+        p.drift = this.ctx.trialRunning() ? 0 : drift;
     }
 
     private nearest(x: number, y: number): Flow | null {
