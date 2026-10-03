@@ -54,6 +54,7 @@ import { OmbraBrain } from '../engine/OmbraBrain';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { createMechanic, type Mechanic } from '../engine/mechanics';
+import { hitMult, LESSONS } from '../content/lessons';
 import { barksFor, LAMETTA_BARKS } from '../content/barks';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
 
@@ -279,6 +280,7 @@ export class GameScene extends Phaser.Scene {
     private playerLightRef: Phaser.GameObjects.Light | null = null;
     /** quante volte hai sbagliato ogni porta della mente: la domanda cambia */
     private quizAttempts = new Map<string, number>();
+    private nextLessonCheck = 0;
     /** chi parla durante lo scontro, e l'ombra che ti studia */
     private voice: BossVoice | null = null;
     private ombraBrain: OmbraBrain | null = null;
@@ -764,6 +766,9 @@ export class GameScene extends Phaser.Scene {
         const b = ENEMIES[kind].behavior;
         const biome = this.biome.id;
         const roll = (h >>> 10) % 1000;
+        // il nemico simbolo della regione porta il suo tratto quasi sempre: è lui che insegna il pogo
+        const lesson = LESSONS[kind];
+        if (lesson?.trait && lesson.regions?.includes(this.def.id) && roll < 650) return lesson.trait;
         const hard = (list: string[], hi: number, lo: number) => (list.includes(biome) ? hi : lo);
         if ((b === 'walker' || b === 'charger') && roll < hard(['sanctum', 'factory', 'servers', 'core', 'noir', 'library', 'province', 'depot'], 200, 100)) return 'scudo';
         if ((b === 'walker' || b === 'hopper' || b === 'chaser') && !room.surface && roll >= 300 && roll < 300 + hard(['burrow', 'cellar', 'memory', 'mind', 'lab', 'void', 'swamp'], 170, 80)) return 'soffitto';
@@ -1694,11 +1699,26 @@ export class GameScene extends Phaser.Scene {
             this.player.attackActive = false;
             this.player.onAttackHit();
             this.hitstop();
-            enemy.takeDamage(this.player.attackDamage, this.player.x);
+            const open = LESSONS[enemy.arch.kind]?.openAfterShot;
+            const mult = open && enemy.justFired ? open : hitMult(enemy.arch.kind, this.player.attackDir);
+            enemy.takeDamage(this.player.attackDamage * mult, this.player.x);
+            this.weakFeedback(enemy, mult);
+            // lo specchietto colpito dal basso perde quota e resta lì un attimo
+            if (enemy.active && enemy.arch.kind === 'specchietto' && this.player.attackDir === 'up') {
+                enemy.stun(650);
+                (enemy.body as Phaser.Physics.Arcade.Body).setVelocityY(240);
+            }
         });
 
         this.physics.add.overlap(this.player, this.enemies, (_p, obj) => {
             const enemy = obj as Enemy;
+            // la lezione del citelis: attraverso la carica in scivolata, e lui sbanda
+            if (this.player.isDashing && enemy.isCharging && LESSONS[enemy.arch.kind]?.staggerOnDash) {
+                enemy.stagger(1700);
+                sfx.clang();
+                this.weakFeedback(enemy, 2);
+                return;
+            }
             this.player.hurt(1, enemy.x);
         });
 
@@ -1717,7 +1737,9 @@ export class GameScene extends Phaser.Scene {
             hitSet.add(enemy);
             bullet.setData('hit', hitSet);
             const dmg = (bullet.getData('dmg') as number | undefined) ?? state.risonanteDamage * state.damageMult;
-            enemy.takeDamage(dmg, bullet.x);
+            const mult = hitMult(enemy.arch.kind, bullet.getData('reflected') ? 'reflect' : 'shot');
+            enemy.takeDamage(dmg * mult, bullet.x);
+            this.weakFeedback(enemy, mult);
             this.player.onAttackHit();
         });
 
@@ -1910,8 +1932,6 @@ export class GameScene extends Phaser.Scene {
         if (hint && this.mechanic) waveOnce(`meccanica-${this.def.id}`, hint, 12000);
         if (this.def.id === 'bus') waveOnce('romero-prima-bus', WAVESUNG.romeroBus, 25000);
         if (this.def.id === 'santuario') waveOnce('romero-prima-santuario', WAVESUNG.romeroSantuario, 30000);
-        if (this.def.id === 'tecnokill') waveOnce('tutorial-risonante-visto', WAVESUNG.markolinoRisonante, 35000);
-        if (this.def.id === 'trenbolone') waveOnce('tutorial-pogo-visto', WAVESUNG.markolinoPogo, 40000);
         if (this.def.id === 'rio') waveOnce('smela-opzionale-detta', WAVESUNG.markolinoSmelaSkip, 40000);
         if (this.def.id === 'ruhra') {
             waveOnce('tease-corse-ruhra', WAVESUNG.markolinoCorseTease, 30000);
@@ -2275,6 +2295,7 @@ export class GameScene extends Phaser.Scene {
         this.voice?.update();
         this.pedroGhost?.update(this.player);
         this.marks33?.update(this.player);
+        this.updateLessons(time);
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
         this.parallax.update(time);
@@ -3318,7 +3339,9 @@ export class GameScene extends Phaser.Scene {
                 hits.push(this.boss);
             }
             for (const h of hits) {
-                h.takeDamage(1 * state.damageMult, this.player.x);
+                const mult = h instanceof Enemy ? hitMult(h.arch.kind, 'analisi') : 1;
+                h.takeDamage(1 * state.damageMult * mult, this.player.x);
+                if (h instanceof Enemy) this.weakFeedback(h, mult);
                 this.player.onAttackHit();
             }
         }
@@ -3387,7 +3410,7 @@ export class GameScene extends Phaser.Scene {
                 const body = e.body as Phaser.Physics.Arcade.Body;
                 body.velocity.x *= 0.45;
                 if (tick) {
-                    e.takeDamage(COMBAT.acquaDamage, e.x);
+                    e.takeDamage(COMBAT.acquaDamage * hitMult(e.arch.kind, 'acqua'), e.x);
                     const splash = this.add.particles(e.x, e.y, 'p-dot', {
                         speed: { min: 10, max: 30 }, angle: { min: 240, max: 300 },
                         scale: { start: 0.4, end: 0 }, tint: 0x22d3ee, lifespan: 400, quantity: 3, stopAfter: 3,
@@ -3411,6 +3434,7 @@ export class GameScene extends Phaser.Scene {
         back.setTint(0x22d3ee);
         // scudo nerfato: il rimando fa solo il 40% del danno nemico (1 -> 0.4)
         back.setData('dmg', 0.4);
+        back.setData('reflected', true);
         const speed = Math.max(360, Math.hypot(vx, vy));
         const angle = Math.atan2(-vy, -vx);
         back.setVelocity(Math.cos(angle) * speed * 1.15, Math.sin(angle) * speed * 1.15);
@@ -3979,6 +4003,36 @@ export class GameScene extends Phaser.Scene {
         const at = this.openSpotNear(x, y, 6);
         const e = this.spawnEnemy(kind, at.x, at.y, { hunting: true });
         this.physics.add.collider(e, this.level.layer);
+    }
+
+    /** la prima volta che vedi un nemico simbolo, markolino ti dice come si batte */
+    private updateLessons(time: number): void {
+        if (time < this.nextLessonCheck || this.player.dead) return;
+        this.nextLessonCheck = time + 300;
+        for (const obj of this.enemies.getChildren()) {
+            const e = obj as Enemy;
+            if (!e.active || e.dormant) continue;
+            const lesson = LESSONS[e.arch.kind];
+            const flag = `lezione-${e.arch.kind}`;
+            if (!lesson || state.hasFlag(flag) || (lesson.ability && !state.hasAbility(lesson.ability))) continue;
+            if (Math.abs(e.x - this.player.x) > 520 || Math.abs(e.y - this.player.y) > 340) continue;
+            if (!this.nav.sight(this.player.x, this.player.y - 10, e.x, e.y)) continue;
+            state.setFlag(flag);
+            bus.emit('wavesung', { sender: 'markolino', text: lesson.hint });
+            return;
+        }
+    }
+
+    /** la corazza suona, il punto debole brilla: la lezione si sente prima di leggerla */
+    private weakFeedback(enemy: Enemy, mult: number): void {
+        if (mult === 1) return;
+        const weak = mult > 1;
+        if (!weak) sfx.clang();
+        const sparks = this.add.particles(enemy.x, enemy.y, 'p-spark', {
+            speed: { min: 60, max: weak ? 260 : 140 }, scale: { start: weak ? 0.9 : 0.5, end: 0 },
+            tint: weak ? 0xfacc15 : 0x9ca3af, lifespan: weak ? 380 : 220, quantity: weak ? 12 : 6, stopAfter: weak ? 12 : 6,
+        }).setDepth(6);
+        this.time.delayedCall(500, () => sparks.destroy());
     }
 
     /** il boss entra in scena: da qui parla, e se è l'ombra comincia a studiarti */

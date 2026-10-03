@@ -53,6 +53,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private facingDir: 1 | -1 = Math.random() < 0.5 ? -1 : 1;
     private chargingUntil = 0;
     private stunnedUntil = 0;
+    /** sbandato: gli hai insegnato qualcosa, ora prende il doppio */
+    private staggeredUntil = 0;
     private modeUntil = 0;
     private lastSeenAt = -99999;
     private path: NavEdge[] | null = null;
@@ -305,6 +307,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (this.arch.fireRateMs && sees && this.mode === 'chase' && now >= this.nextShotAt) {
             this.nextShotAt = now + this.arch.fireRateMs;
             this.scene.events.emit('enemy-shoot', { x: this.x, y: this.y, tx: target.x, ty: target.y, color: this.arch.glowColor });
+            // la torretta che ha appena sparato resta scoperta: si vede dal colore caldo
+            if (this.arch.behavior === 'turret') {
+                this.setTint(0xfde68a);
+                this.scene.time.delayedCall(900, () => this.active && this.clearTint());
+            }
         }
     }
 
@@ -578,7 +585,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (!this.active) return;
         // chi è appeso e viene colpito molla la presa
         if (this.hanging) this.drop();
-        this.hp -= amount;
+        this.hp -= this.staggered ? amount * 2 : amount;
         const body = this.body as Phaser.Physics.Arcade.Body;
         if (this.arch.behavior !== 'charger') {
             body.velocity.x += Math.sign(this.x - fromX) * 240;
@@ -641,6 +648,31 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.shield?.destroy();
         this.shield = null;
         super.destroy(fromScene);
+    }
+
+    /** ha appena sparato: per un attimo è scoperto */
+    get justFired(): boolean {
+        const rate = this.arch.fireRateMs;
+        return !!rate && this.nextShotAt > 0 && this.scene.time.now - (this.nextShotAt - rate) < 900;
+    }
+
+    /** in piena carica: chi ci scivola attraverso lo fa sbandare */
+    get isCharging(): boolean {
+        return this.scene.time.now < this.chargingUntil;
+    }
+
+    get staggered(): boolean {
+        return this.scene.time.now < this.staggeredUntil;
+    }
+
+    /** la lezione riuscita: fermo, storditi i sensi, il doppio dei danni */
+    stagger(ms: number): void {
+        this.chargingUntil = 0;
+        this.staggeredUntil = this.scene.time.now + ms;
+        this.stun(ms);
+        this.showMark('✶ ✶', '#facc15');
+        this.scene.tweens.add({ targets: this, angle: { from: -12, to: 12 }, duration: 140, yoyo: true, repeat: Math.floor(ms / 280), onComplete: () => this.active && this.setAngle(0) });
+        this.scene.time.delayedCall(ms, () => this.active && this.mode !== 'sleep' && this.mode !== 'alert' && this.mode !== 'flee' && this.hideMark());
     }
 
     /** chi viene evocato o piomba in un agguato parte già all'attacco */
