@@ -43,18 +43,18 @@ export class Hud {
         this.root.id = 'hud';
         this.root.style.display = 'none';
 
-        const topleft = el('div', 'hud-topleft glass-chip glass-acid-orange');
+        const topleft = el('div', 'hud-topleft');
         this.hpRow = el('div', 'hp-row');
         const flowWrap = el('div', 'flow-wrap');
         this.flowBar = el('div', 'flow-bar');
         flowWrap.append(this.flowBar);
         topleft.append(this.hpRow, flowWrap);
 
-        this.barre = el('div', 'hud-barre sticker glass-acid-yellow', '♪ 0 barre');
-        this.fragments = el('div', 'hud-fragments sticker glass-acid-green', '');
-        this.tommaso = el('div', 'hud-tommaso sticker glass-acid-blue', '🛡️ protetto da tommasorveglianza 👍');
+        this.barre = el('div', 'hud-barre', '♪ 0 barre');
+        this.fragments = el('div', 'hud-fragments', '');
+        this.tommaso = el('div', 'hud-tommaso', '🛡️ protetto da tommasorveglianza 👍');
         this.trenboBorder = el('div', 'trenbo-border');
-        this.zone = el('div', 'hud-zone sticker', '');
+        this.zone = el('div', 'hud-zone', '');
         this.waves = el('div', 'hud-waves');
 
         this.doomsday = el('div', 'doomsday-meter');
@@ -63,7 +63,7 @@ export class Hud {
         this.doomsday.append(this.doomsdayFill, doomsdayLabel);
         this.doomsday.style.display = 'none';
 
-        this.trial = el('div', 'hud-trial sticker glass-acid-yellow', '');
+        this.trial = el('div', 'hud-trial', '');
         this.trial.style.display = 'none';
 
         this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.doomsday, this.trenboBorder, this.trial);
@@ -170,7 +170,7 @@ export class Hud {
         for (const { id, key } of ACTIVE_ORDER) {
             if (!abilities.includes(id)) continue;
             const card = ABILITY_CARDS[id];
-            const chip = el('div', 'wave-chip glass-chip');
+            const chip = el('div', 'wave-chip');
             const kbd = el('kbd');
             kbd.textContent = key;
             const name = el('span', 'wave-name');

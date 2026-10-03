@@ -1266,3 +1266,93 @@ input.sx-range::-moz-range-thumb {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
+
+/* ---------- hud: inchiostro piatto, i cuori non si toccano ---------- */
+
+.hud-topleft {
+  transform: none;
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.72), rgba(5, 5, 5, 0.45));
+  border: 1px solid var(--sx-line);
+  border-radius: 4px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.hud-barre,
+.hud-fragments,
+.hud-tommaso,
+.hud-zone {
+  transform: none;
+  background: rgba(5, 5, 5, 0.66);
+  border: 1px solid var(--sx-line);
+  border-radius: 4px;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.hud-zone {
+  font-family: var(--font-fell);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+}
+
+.hud-trial {
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  font-family: var(--font-fell);
+  font-size: 28px;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 0 #000, 0 0 24px rgba(250, 204, 21, 0.25);
+}
+
+@keyframes trial-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.08); }
+}
+
+.wave-chip {
+  transform: none;
+  background: rgba(5, 5, 5, 0.66);
+  border: 1px solid var(--sx-line);
+  border-radius: 4px;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.wave-chip:nth-child(even) {
+  transform: none;
+}
+
+.wave-chip kbd {
+  border-color: rgba(207, 167, 92, 0.4);
+  color: var(--sx-gold);
+}
+
+#bossbar.glass-panel {
+  background: rgba(5, 5, 5, 0.78);
+  border: none;
+  border-bottom: 1px solid rgba(248, 113, 113, 0.5);
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  transform: translateX(-50%);
+}
+
+#bossbar .boss-name {
+  font-family: var(--font-fell);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  transform: none;
+}
+
+.doomsday-label {
+  font-family: var(--font-fell);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  transform: translateX(-50%) skewX(12deg);
+}
