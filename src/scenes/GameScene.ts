@@ -2075,6 +2075,11 @@ export class GameScene extends Phaser.Scene {
             state.observeOmbra(act);
             this.ombraBrain?.observeLive(act);
         }) as never);
+        // mangiare cura d'un colpo: le voci reagiscono, il profilo no (instant)
+        const offHealed = bus.on('player-healed', () => {
+            this.events.emit('player-act', { act: 'heal', instant: true });
+        });
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offHealed());
         on('boss-phase', (({ phase }: { phase: number }) => this.voice?.say(phase === 2 ? 'phase2' : 'phase3', true)) as never);
     }
 
@@ -5303,7 +5308,7 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player.attackHitbox, this.boss, () => {
             if (!this.player.attackActive || !this.boss) return;
             this.player.attackActive = false;
-            if (this.dmgTo(this.boss, this.player.attackDamage, this.player.x)) {
+            if (this.dmgTo(this.boss, this.player.attackDamage, this.player.x, this.player.attackDir)) {
                 this.player.onAttackHit();
                 this.hitstop();
             }
@@ -5317,10 +5322,10 @@ export class GameScene extends Phaser.Scene {
             const level = (bullet.getData('level') as number | undefined) ?? -1;
             if (bullet.getData('reflected')) {
                 const dmg = (bullet.getData('dmg') as number | undefined) ?? COMBAT.scudoReflectNormal;
-                if (this.dmgTo(this.boss, dmg, bullet.x)) this.player.onAttackHit();
+                if (this.dmgTo(this.boss, dmg, bullet.x, 'shot')) this.player.onAttackHit();
             } else {
                 const step = level === 2 ? 2 : level === 1 ? 1 : 0.5;
-                if (this.dmgTo(this.boss, state.risonanteDamage * state.damageMult * step, bullet.x)) {
+                if (this.dmgTo(this.boss, state.risonanteDamage * state.damageMult * step, bullet.x, 'shot')) {
                     this.player.onAttackHit();
                 }
                 if (level === 0) this.popProjectile(bullet);

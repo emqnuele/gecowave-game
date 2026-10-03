@@ -9,6 +9,8 @@ export interface PlayerAct {
     dir?: 'side' | 'up' | 'down' | 'shot';
     wave?: AbilityId;
     level?: number;
+    /** cura istantanea non interrompibile (il cibo): la voce reagisce, il modello no */
+    instant?: boolean;
 }
 
 export interface OmbraInsight {
@@ -75,7 +77,8 @@ export function normalizeOmbraAct(act: PlayerAct): OmbraAction | null {
         case 'heal-start':
             return 'heal-start';
         case 'heal':
-            return 'heal-done';
+            // il cibo cura d'un colpo: non c'è un canale da interrompere
+            return act.instant ? null : 'heal-done';
         case 'wave':
             if (act.wave === 'risonante') return 'wave-risonante';
             if (act.wave === 'riflesso') return 'wave-riflesso';

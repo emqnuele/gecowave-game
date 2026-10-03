@@ -25,6 +25,7 @@ export function useItem(id: string): { ok: boolean; text: string } {
     state.removeItem(id);
     sfx.heal();
     emitVitals();
+    bus.emit('player-healed', {});
     return { ok: true, text: `${def.name}: fatto.` };
 }
 

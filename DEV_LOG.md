@@ -241,6 +241,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Deviazioni dal piano**: niente rami cura attivi (dall'ADR-036 il cibo non emette eventi: le categorie restano per compatibilità, il ramo non scatta mai); `state.run.ombraDati` rimosso del tutto invece di restare come contatore temporaneo (una sola fonte di verità); il risonante emette solo `wave` (via `attack/shot`); il riflesso contava doppio (lancio + nascita clone: resta solo il lancio, lo scambio resta perché è una decisione nuova); premium sempre a precisione piena per formula, le riprese gli danno solo HP.
 **Conseguenze**: salti riusciti emessi una volta sola; salvataggi vecchi migrano con profilo a zero e premium ricostruito dal flag; `reset()` azzera tutto, morte e restart no; calibrazione statica su tre profili (70% fendente → guardia 3.2 s; misto → `learn-varied`, zero meccaniche; risonante 40% → guardia `shot` 2.2 s); beta sotto 12 azioni non punisce mai; la prova in gioco premium/beta richiede permesso browser.
 
+### ADR-040 — mangiare fa rumore
+**Contesto**: dall'ADR-036 il cibo non emetteva eventi: le battute `heal` di tutti i boss erano morte e il ponte voce era muto. Ma la cura col cibo è istantanea, senza canale da interrompere: darla in pasto al modello avrebbe punito l'unica cura rimasta senza controgioco.
+**Decisione**: `useItem` emette `player-healed` su cura riuscita (vale per tasto rapido e telefono); la scena lo gira in `player-act { act: 'heal', instant: true }`. `BossVoice` torna a parlare senza toccarlo; `normalizeOmbraAct` scarta le cure `instant` (profilo e finestra live intoccati, zero scritture). Il ramo cura del cervello resta per una futura cura incanalata. Stesso intervento: i collider degli dei evocati dopo il `create` ora passano la direzione come gli altri (`attackDir`, `'shot'`), così le guardie valgono anche lì.
+**Conseguenze**: mangiare in battaglia fa reagire i boss; l'ombra non snipa chi mangia; nessuna migrazione, nessun save toccato.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -285,6 +290,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **mangiare fa rumore**: il cibo emette la cura istantanea, i boss tornano a parlare, l'ombra non punisce (ADR-040).
 - **l'ombra impara localmente**: profilo per partita nel save, cervello con finestra live e cooldown, segnali prima di ogni contromossa, HP quasi piatti (ADR-039).
 - **le abilità riaprono il realm**: sigilli laterali per ogni wave, premi persistenti, mappa coi 33, nota di markolino (ADR-038).
 - **flashback nel mondo**: niente più stanze finte, il livello fa da scena, ritorno esatto del geco (ADR-037).

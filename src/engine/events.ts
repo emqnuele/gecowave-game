@@ -40,6 +40,8 @@ export interface GameEvents {
     'tana-sniffed': {};
     /** l'ombra ha appena letto una mossa: etichetta in scena e chip hud */
     'ombra-read': { label: string };
+    /** il geco ha mangiato davvero: la scena lo gira alle voci in battaglia */
+    'player-healed': {};
     /** ultimo dispositivo usato: i testi mostrano i tasti veri */
     'input-device': { device: 'tastiera' | 'gamepad' };
     /** comandi cambiati: chi legge input si ricostruisce */
