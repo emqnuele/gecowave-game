@@ -37,6 +37,9 @@ export class Input {
 
     /** da chiamare una volta per fotogramma, prima di Player.update */
     update(): void {
+        // prima prev = fotogramma scorso, poi curr = adesso: gli spigoli
+        // restano visibili a chi legge dopo update, fino al fotogramma dopo
+        for (const a of ACTIONS) this.prev.set(a, this.curr.get(a) ?? false);
         for (const a of ACTIONS) {
             const kb = this.readKb(a);
             const pad = this.readPad(a);
@@ -57,7 +60,6 @@ export class Input {
                 }
             }
         }
-        for (const a of ACTIONS) this.prev.set(a, this.curr.get(a) ?? false);
     }
 
     down(a: Action): boolean {
