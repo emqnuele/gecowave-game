@@ -4,7 +4,7 @@
 
 .phone-hint {
   position: absolute;
-  right: 18px;
+  left: 18px;
   bottom: 18px;
   padding: 7px 0;
   font-family: var(--font-martian);

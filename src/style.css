@@ -310,9 +310,9 @@ body {
 
 .hud-barre {
   position: absolute;
-  bottom: 18px;
-  left: 18px;
-  padding: 8px 18px;
+  top: 52px;
+  right: 18px;
+  padding: 8px 14px 8px 18px;
   transform: rotate(1.5deg);
   font-family: var(--font-fell);
   font-size: 20px;
@@ -321,17 +321,6 @@ body {
 
 .hud-barre.bump {
   animation: tick-pop 0.3s ease;
-}
-
-.hud-fragments {
-  position: absolute;
-  bottom: 64px;
-  left: 18px;
-  padding: 6px 14px;
-  transform: rotate(-1.5deg);
-  font-family: var(--font-fell);
-  font-size: 15px;
-  color: var(--green);
 }
 
 .hud-tommaso {
@@ -348,7 +337,7 @@ body {
 
 .hud-food {
   position: absolute;
-  right: 18px;
+  left: 18px;
   bottom: 54px;
   font-family: var(--font-martian);
   font-size: 10px;
@@ -409,9 +398,8 @@ body {
 .hud-waves {
   position: absolute;
   bottom: 18px;
-  /* a sinistra della chip del telefono, che sta nell'angolo */
-  right: 112px;
-  max-width: calc(100vw - 112px - 200px);
+  right: 18px;
+  max-width: calc(100vw - 220px);
   display: flex;
   flex-wrap: wrap-reverse;
   justify-content: flex-end;

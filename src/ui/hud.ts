@@ -38,7 +38,6 @@ export class Hud {
     private hpRow: HTMLElement;
     private flowBar: HTMLElement;
     private barre: HTMLElement;
-    private fragments: HTMLElement;
     private zone: HTMLElement;
     private waves: HTMLElement;
     private food: HTMLElement;
@@ -69,7 +68,6 @@ export class Hud {
         topleft.append(this.hpRow, flowWrap);
 
         this.barre = el('div', 'hud-barre', '♪ 0 barre');
-        this.fragments = el('div', 'hud-fragments', '');
         this.tommaso = el('div', 'hud-tommaso', '🛡️ protetto da tommasorveglianza 👍');
         this.trenboBorder = el('div', 'trenbo-border');
         this.zone = el('div', 'hud-zone', '');
@@ -84,7 +82,7 @@ export class Hud {
         this.trial = el('div', 'hud-trial', '');
         this.trial.style.display = 'none';
 
-        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.food, this.doomsday, this.trenboBorder, this.trial);
+        this.root.append(topleft, this.barre, this.tommaso, this.zone, this.waves, this.food, this.doomsday, this.trenboBorder, this.trial);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -106,12 +104,11 @@ export class Hud {
             }
             this.updateTommaso();
         });
-        bus.on('fragments-changed', ({ count, total }) => {
-            this.fragments.textContent = `✦ wave ${count}/${total}`;
-        });
         bus.on('zone-changed', ({ title, accentWord, color }) => {
             this.zone.textContent = `${title.toLowerCase()} ${accentWord}`;
             this.zone.style.color = ZONE_CSS[color];
+            // le barre stanno sotto il titolo, del suo stesso colore
+            this.barre.style.color = ZONE_CSS[color];
             this.updateDoomsdayColors(color);
         });
         bus.on('trial-timer', (t) => {
