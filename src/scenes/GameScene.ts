@@ -1824,74 +1824,46 @@ export class GameScene extends Phaser.Scene {
     /* ---------- script per capitolo ---------- */
 
     private setupScript(): void {
-        // pedro prima del nucleo: echi glitchati nei primi capitoli, una volta sola
-        const ecoOnce = (flag: string, dialogue: string, wave?: { sender: string; text: string }, delay = 3500) => {
+        // trama per messaggi: niente dialoghi bloccanti senza npc.
+        // solo wavesung, max 2 per capitolo, distanziati. chi vuole legge, chi no gioca.
+        const waveOnce = (flag: string, wave: { sender: string; text: string }, delay: number) => {
             if (state.hasFlag(flag)) return;
             state.setFlag(flag);
-            if (wave) this.time.delayedCall(delay, () => bus.emit('wavesung', wave));
-            this.time.delayedCall(delay + 1800, () => this.startDialogue(dialogue));
+            this.time.delayedCall(delay, () => bus.emit('wavesung', wave));
         };
-        if (this.def.id === 'perduta') ecoOnce('pedro-eco-perduta', 'pedro-eco-perduta', WAVESUNG.pedroEcoPerduta);
+        if (this.def.id === 'perduta') {
+            waveOnce('pedro-eco-perduta', WAVESUNG.pedroEcoPerduta, 6000);
+            waveOnce('tease-maschere-perduta', WAVESUNG.markolinoMaschereTease, 45000);
+        }
         if (this.def.id === 'bus') {
-            ecoOnce('pedro-eco-bus', 'pedro-eco-bus', WAVESUNG.pedroEcoBus);
-            if (!state.hasFlag('romero-prima-bus')) {
-                state.setFlag('romero-prima-bus');
-                this.time.delayedCall(9000, () => this.startDialogue('romero-prima-bus'));
-                this.time.delayedCall(2000, () => bus.emit('wavesung', WAVESUNG.romeroBus));
-            }
-            if (!state.hasFlag('seme-33-visto')) {
-                state.setFlag('seme-33-visto');
-                this.time.delayedCall(14000, () => bus.emit('wavesung', WAVESUNG.markolino33));
-            }
+            waveOnce('pedro-eco-bus', WAVESUNG.pedroEcoBus, 8000);
+            waveOnce('romero-prima-bus', WAVESUNG.romeroBus, 25000);
         }
         if (this.def.id === 'santuario') {
-            ecoOnce('pedro-eco-santuario', 'pedro-eco-santuario', WAVESUNG.pedroEcoSantuario);
-            if (!state.hasFlag('romero-prima-santuario')) {
-                state.setFlag('romero-prima-santuario');
-                this.time.delayedCall(11000, () => this.startDialogue('romero-prima-santuario'));
-                this.time.delayedCall(3000, () => bus.emit('wavesung', WAVESUNG.romeroSantuario));
-            }
+            waveOnce('pedro-eco-santuario', WAVESUNG.pedroEcoSantuario, 8000);
+            waveOnce('romero-prima-santuario', WAVESUNG.romeroSantuario, 30000);
         }
-        if (this.def.id === 'tecnokill') ecoOnce('pedro-eco-tecnokill', 'pedro-eco-tecnokill');
-        if (this.def.id === 'trenbolone') ecoOnce('pedro-eco-trenbolone', 'pedro-eco-trenbolone');
+        if (this.def.id === 'tecnokill') {
+            waveOnce('pedro-eco-tecnokill', WAVESUNG.pedroEcoTecnokill, 8000);
+            waveOnce('tutorial-risonante-visto', WAVESUNG.markolinoRisonante, 35000);
+        }
+        if (this.def.id === 'trenbolone') {
+            waveOnce('pedro-eco-trenbolone', WAVESUNG.pedroEcoTrenbolone, 10000);
+            waveOnce('tutorial-pogo-visto', WAVESUNG.markolinoPogo, 40000);
+        }
         if (this.def.id === 'rio') {
-            ecoOnce('pedro-osserva-rio', 'pedro-osserva-rio');
-            if (!state.hasFlag('smela-opzionale-detta')) {
-                state.setFlag('smela-opzionale-detta');
-                this.time.delayedCall(2500, () => bus.emit('wavesung', WAVESUNG.markolinoSmelaSkip));
-                this.time.delayedCall(7000, () => this.startDialogue('smela-opzionale'));
-            }
-            if (!state.hasFlag('tease-opzionali-rio')) {
-                state.setFlag('tease-opzionali-rio');
-                this.time.delayedCall(12000, () => bus.emit('wavesung', WAVESUNG.markolinoMaschereTease));
-                this.time.delayedCall(20000, () => bus.emit('wavesung', WAVESUNG.markolinoCorseTease));
-                this.time.delayedCall(28000, () => bus.emit('wavesung', WAVESUNG.markolinoArenaTease));
-            }
+            waveOnce('pedro-osserva-rio', WAVESUNG.pedroEcoRio, 10000);
+            waveOnce('smela-opzionale-detta', WAVESUNG.markolinoSmelaSkip, 40000);
         }
-        if (this.def.id === 'sorveglianza' && !state.hasFlag('pedro-footage-visto')) {
-            state.setFlag('pedro-footage-visto');
-            this.time.delayedCall(6000, () => this.startDialogue('pedro-footage-sorveglianza'));
+        if (this.def.id === 'ruhra') {
+            waveOnce('tease-corse-ruhra', WAVESUNG.markolinoCorseTease, 30000);
         }
-        // tutorial boss mirati: una riga sola, prima del boss
-        if (this.def.id === 'bus' && !state.hasFlag('tutorial-pogo-visto')) {
-            state.setFlag('tutorial-pogo-visto');
-            this.time.delayedCall(6000, () => this.startDialogue('tutorial-pogo'));
+        if (this.def.id === 'sorveglianza') {
+            waveOnce('pedro-footage-visto', WAVESUNG.pedroFootage, 12000);
+            waveOnce('tutorial-ombra-visto', WAVESUNG.markolinoOmbra, 45000);
         }
-        if (this.def.id === 'tecnokill' && !state.hasFlag('tutorial-risonante-visto')) {
-            state.setFlag('tutorial-risonante-visto');
-            this.time.delayedCall(6000, () => this.startDialogue('tutorial-risonante'));
-        }
-        if (this.def.id === 'sorveglianza' && !state.hasFlag('tutorial-ombra-visto')) {
-            state.setFlag('tutorial-ombra-visto');
-            this.time.delayedCall(9000, () => this.startDialogue('tutorial-ombra'));
-        }
-        if (this.def.id === 'perduta' && !state.hasFlag('tease-maschere-perduta')) {
-            state.setFlag('tease-maschere-perduta');
-            this.time.delayedCall(16000, () => this.startDialogue('tease-maschere'));
-        }
-        if (this.def.id === 'stabilimento' && !state.hasFlag('smela-skip-detta')) {
-            state.setFlag('smela-skip-detta');
-            this.time.delayedCall(3000, () => this.startDialogue('smela-skip'));
+        if (this.def.id === 'cantina') {
+            waveOnce('tease-arena-cantina', WAVESUNG.markolinoArenaTease, 30000);
         }
         if (this.def.script === 'trenbolone') {
             if (!state.hasFlag('rio-curato') && !state.run.trenbolone) {
