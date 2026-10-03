@@ -42,11 +42,15 @@ export class AmbienceManager {
             const shape = zone?.source as Phaser.Geom.Rectangle | undefined;
             if (shape) shape.setSize(v.width + f.pad * 2, v.height + f.pad * 2);
         }
-        // al coperto non piove: si risparmiano ~280 particelle e smette
-        // di piovere in testa dentro le stanze
+        // al coperto non piove: si risparmiano le particelle e smette
+        // di piovere in testa dentro le stanze. se gli fps crollano,
+        // la pioggia si sfoltisce da sola e torna fitta quando risalgono
+        const fps = this.scene.game.loop.actualFps;
+        const q = fps >= 55 ? 1 : fps >= 35 ? 0.6 : 0.35;
         for (const r of this.rain) {
             r.emitter.setVisible(outdoor);
             r.emitter.quantity = outdoor ? 1 : 0;
+            if (outdoor) r.emitter.frequency = Math.round(r.baseFreq / q);
         }
     }
 
