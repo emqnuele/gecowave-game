@@ -178,6 +178,8 @@ export class GameScene extends Phaser.Scene {
     private safeTimer = 0;
     private exiting = false;
     private checkpointSprites = new Map<string, Phaser.GameObjects.Sprite>();
+    /** microfoni e pali che spariscono durante i film */
+    private propDressing: { img: Phaser.GameObjects.Sprite | Phaser.GameObjects.Image; light: Phaser.GameObjects.Light | null; glow: number }[] = [];
     private lighting!: LightingManager;
     private parallax!: ParallaxManager;
     private biome!: BiomeDef;
@@ -378,6 +380,7 @@ export class GameScene extends Phaser.Scene {
         this.lastDashWaveAt = 0;
         this.homing = [];
         this.busStops = [];
+        this.propDressing = [];
         this.npcAt.clear();
         this.lastRoom = -1;
         this.guide = this.layout ? new RegionGuide(this.layout) : null;
@@ -1578,11 +1581,20 @@ export class GameScene extends Phaser.Scene {
             if (!this.textures.exists(art.id)) this.textures.addCanvas(art.id, art.canvas);
             const sx = cp.x + 58;
             const sy = cp.y + TILE / 2;
-            this.add.image(sx, sy + 1, art.id).setOrigin(0.5, 1).setDepth(3).setPipeline('Light2D');
-            this.lighting.static(sx, sy - 70, 0xfacc15, 150, 0.7);
+            const pole = this.add.image(sx, sy + 1, art.id).setOrigin(0.5, 1).setDepth(3).setPipeline('Light2D');
+            const glow = this.lighting.static(sx, sy - 70, 0xfacc15, 150, 0.7);
+            this.propDressing.push({ img: pole, light: glow, glow: 0.7 });
             const key = `${this.def.id}:${cp.id}`;
             this.busStops.push({ key, x: sx, y: sy - 30 });
             this.interactables.push({ x: sx, y: sy - 30, range: 56, onInteract: () => this.openTravel(key) });
+        }
+    }
+
+    /** durante i film restano solo roccia e attori: si spengono i servizi */
+    setPropsVisible(v: boolean): void {
+        for (const p of this.propDressing) {
+            if (p.img.active) p.img.setVisible(v);
+            if (p.light) p.light.intensity = v ? p.glow : 0;
         }
     }
 
@@ -1643,13 +1655,17 @@ export class GameScene extends Phaser.Scene {
         for (const cp of this.level.checkpoints) {
             const mic = this.castSprite(cp.x, cp.y - 12, 'mic').setDepth(4);
             this.checkpointSprites.set(cp.id, mic);
+            let glow: Phaser.GameObjects.Light | null = null;
+            let level = 0;
             const used = state.save.collectedLore.includes(this.micKey(cp.id));
             if (state.save.checkpointId === cp.id) {
                 mic.setTint(0x4ade80);
-                this.lighting.static(cp.x, cp.y - 20, 0x4ade80, 160, 0.8);
+                glow = this.lighting.static(cp.x, cp.y - 20, 0x4ade80, 160, 0.8);
+                level = 0.8;
             } else if (used) {
                 mic.setTint(0x64748b).setAlpha(0.55);
             }
+            this.propDressing.push({ img: mic, light: glow, glow: level });
             // checkpoints are one-time use
             if (used) continue;
             const entry: Interactable = {

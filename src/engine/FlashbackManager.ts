@@ -81,8 +81,10 @@ export class FlashbackManager {
         const host = scene as unknown as {
             folk?: { setSuspended(v: boolean): void };
             enemies?: Phaser.GameObjects.Group;
+            setPropsVisible?: (v: boolean) => void;
         };
         host.folk?.setSuspended(true);
+        host.setPropsVisible?.(false);
         const hiddenFoes: Phaser.GameObjects.Sprite[] = [];
         for (const child of host.enemies?.getChildren() ?? []) {
             const e = child as Phaser.GameObjects.Sprite;
@@ -365,6 +367,7 @@ export class FlashbackManager {
                 } catch { /* test */ }
                 clearDressing();
                 host.folk?.setSuspended(false);
+                host.setPropsVisible?.(true);
                 for (const e of hiddenFoes) {
                     try { if (e.active) e.setVisible(true); } catch { /* test */ }
                 }
