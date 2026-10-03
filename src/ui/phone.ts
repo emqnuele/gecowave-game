@@ -17,6 +17,7 @@ import { realmClock } from '../engine/Atmosphere';
 import { buildTrophyCabinet } from './trophies';
 import { assistToggle } from './assist';
 import { QUESTS } from '../content/quests';
+import { chapterCompletion } from '../engine/ChapterCompletion';
 import { TOTAL_MASCHERE } from '../scenes/GameScene';
 import type { ZoneColor } from '../types';
 import './phone.css';
@@ -953,6 +954,20 @@ export class Phone {
         map.append(svg);
         root.append(text('div', 'phone-section', `${lv ? lv.accentWord : 'regione'} · ${explored.size}/${L.rooms.length} stanze`), map);
         if (goal) root.append(text('div', 'region-goal', `✶ obiettivo: ${goal.label}`));
+        // completamento del capitolo: gli stessi numeri del riepilogo di fine livello
+        const comp = regionView.id ? chapterCompletion(regionView.id) : null;
+        if (comp) {
+            const lines: [string, string][] = [
+                ['esplorazione', comp.total > 0 ? `${comp.visited}/${comp.total} · ${comp.percent}%` : 'mappa non disponibile'],
+                ['cuori', comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : 'nessun cuore qui'],
+                ['cose', `${comp.things.found}/${comp.things.total}`],
+            ];
+            for (const [k, v] of lines) {
+                const line = el('div', 'stat-line');
+                line.append(text('span', '', k), text('b', '', v));
+                root.append(line);
+            }
+        }
         root.append(text('div', 'phone-section', 'il gecorealm'));
     }
 
@@ -1027,6 +1042,12 @@ export class Phone {
                     card.append(text('div', 'name', `${lv.title.toLowerCase()} ${lv.accentWord}`), text('p', '', lv.punchline));
                     const mask = state.save.collectedLore.includes(`maschera-${id}`);
                     card.append(text('div', 'punch', mask ? 'maschera trovata' : 'qui potrebbe esserci una maschera'));
+                    // conti del capitolo già visitato: gli stessi del riepilogo
+                    const comp = chapterCompletion(id);
+                    if (comp) {
+                        const done = el('div', 'punch', `esplorazione: ${comp.total > 0 ? `${comp.visited}/${comp.total} · ${comp.percent}%` : 'mappa non disponibile'} · cuori: ${comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : '—'} · cose: ${comp.things.found}/${comp.things.total}`);
+                        card.append(done);
+                    }
                     info.append(card);
                     card.scrollIntoView({ block: 'nearest' });
                 };

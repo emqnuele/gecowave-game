@@ -36,7 +36,7 @@ import { acoustics } from '../engine/audio/acoustics';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
 import { REGION_COUNT } from '../content/achievements';
 import { chapterParts, ENDING_BONUS, pushBoard, runScore, sumParts } from '../engine/score';
-import { countsFor, expectBossRewards, expectCollectible, expectLoreKey, sealLevel } from '../engine/ChapterCompletion';
+import { buildChapterSummary, countsFor, expectBossRewards, expectCollectible, expectLoreKey, sealLevel } from '../engine/ChapterCompletion';
 import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
@@ -2694,7 +2694,7 @@ export class GameScene extends Phaser.Scene {
             if (!target) return;
             const spawnAt = ret && ret.levelId === target ? { x: ret.x, y: ret.y } : undefined;
             state.portalReturn = null;
-            this.gotoLevel(target, spawnAt);
+            this.completeChapterAndGo(target, spawnAt);
             return;
         }
         const hit = this.level.exits.some((r) => r.contains(this.player.x, this.player.y));
@@ -2742,11 +2742,11 @@ export class GameScene extends Phaser.Scene {
             const next = this.def.next;
             this.startDialogue('stabilimento-pensiero', () => {
                 this.exiting = false;
-                this.gotoLevel(next);
+                this.completeChapterAndGo(next);
             });
             return;
         }
-        this.gotoLevel(this.def.next);
+        this.completeChapterAndGo(this.def.next);
     }
 
     /** rientro da un capitolo segreto verso il varco d'origine (o il returnTo) */
@@ -2760,8 +2760,67 @@ export class GameScene extends Phaser.Scene {
             if (!target) return;
             const spawnAt = ret && ret.levelId === target ? { x: ret.x, y: ret.y } : undefined;
             state.portalReturn = null;
-            this.gotoLevel(target, spawnAt);
+            this.completeChapterAndGo(target, spawnAt);
         });
+    }
+
+    /** uscita del capitolo con riepilogo animato: score una volta sola, poi la ui decide quando partire */
+    private completeChapterAndGo(next: string, spawnAt?: { x: number; y: number }): void {
+        if (this.exiting || this.player.dead || this.def.hub) {
+            if (!this.exiting && !this.player.dead && this.def.hub) this.gotoLevel(next, spawnAt);
+            return;
+        }
+        this.exiting = true;
+        let summary = null;
+        try {
+            // finishChapter calcola, persiste ed emette chapter-score: da qui è idempotente
+            const result = this.finishChapter();
+            if (result) {
+                const seen = new Set(state.save.explored[this.def.id] ?? []);
+                summary = buildChapterSummary({
+                    levelId: this.def.id,
+                    title: this.def.title,
+                    accentWord: this.def.accentWord,
+                    color: this.def.color,
+                    punchline: this.def.punchline,
+                    visited: seen.size,
+                    rooms: this.layout?.rooms.length ?? 0,
+                    hearts: countsFor(this.def.id, 'heart'),
+                    things: countsFor(this.def.id, 'thing'),
+                    chapter: result.score,
+                    lines: result.lines,
+                    best: result.best,
+                    assisted: result.assisted,
+                    runTotal: runScore(0),
+                });
+            }
+        } catch (e) {
+            if (import.meta.env.DEV) console.warn('riepilogo capitolo saltato:', e);
+        }
+        if (!summary) {
+            this.gotoLevel(next, spawnAt);
+            return;
+        }
+        // il mondo aspetta dietro la carta: musica bassa, scena ferma
+        music.setGraveDuck(true);
+        this.scene.pause();
+        let continued = false;
+        const onContinue = (): void => {
+            if (continued) return;
+            continued = true;
+            music.setGraveDuck(false);
+            if (this.scene.isPaused()) this.scene.resume();
+            this.gotoLevel(next, spawnAt);
+        };
+        try {
+            bus.emit('chapter-summary-show', { summary, onContinue });
+        } catch (e) {
+            if (import.meta.env.DEV) console.warn('riepilogo capitolo saltato:', e);
+            onContinue();
+            return;
+        }
+        // senza ui pronta non si resta bloccati: transizione normale
+        if (!document.querySelector('.chsum-overlay')) onContinue();
     }
 
     private gotoLevel(next: string, spawnAt?: { x: number; y: number }): void {
@@ -4357,7 +4416,7 @@ export class GameScene extends Phaser.Scene {
                         this.time.delayedCall(1000, () => {
                             this.player.stun(999999);
                             this.startDialogue('trenbo-addormentato', () => {
-                                this.gotoLevel('tana');
+                                this.completeChapterAndGo('tana');
                             });
                         });
                     }
