@@ -48,6 +48,8 @@ async function boot(): Promise<void> {
         },
         render: {
             maxLights: 24,
+            // hint al browser: il gioco vuole la GPU vera, non il risparmio energetico
+            powerPreference: 'high-performance',
         },
         physics: {
             default: 'arcade',
