@@ -226,6 +226,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 - **riepilogo di capitolo**: carta animata a fine livello con mappa, cuori, cose e score, catalogo centrale dei collezionabili (ADR-025).
 - **punteggi piccoli**: la scala dei punti divisa per dieci, classifica separata (ADR-026).
 - **riepilogo di fine gioco**: stesso palco del riepilogo di capitolo, un piano sopra (ADR-027).
+- **boss fight che si chiude**: patto, giorno 30, morte ed endgame spengono barra, voce e battute.
 - **gioco vero**: boss che parlano in battaglia e ombra che impara, volere del geco e pedro in scena, 33 con un significato, flashback al posto degli spiegoni, una meccanica per bioma, economia a due uscite, nemici simbolo che insegnano una mossa.
 - **trama esponenziale**: pedro echi precoci, romero anticipato, scelte leggibili, codex nel telefono, stabilimento attraversabile, semi 33/Margherita/IMPORTANTE, teaser opzionali, economia ribilanciata.
 - **fix totale**: simulatore, bot, ricompense, boss per stanza, arene, lochef, guide.

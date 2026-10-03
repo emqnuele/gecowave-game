@@ -2925,6 +2925,10 @@ export class GameScene extends Phaser.Scene {
     /** la partita finisce: prima il riepilogo cinematico, poi i titoli di coda */
     private endGame(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto'): void {
         this.scene.pause();
+        // a partita finita nessuno scontro resta aperto: barra, voce e battute si chiudono qui
+        bus.emit('boss-hp', null);
+        this.silenceBoss();
+        bus.emit('bark-clear', {});
         const base = runScore(this.liveChapterScore());
         const bonus = ENDING_BONUS[id] ?? 0;
         const score = base === null ? null : base + bonus;
@@ -4032,6 +4036,10 @@ export class GameScene extends Phaser.Scene {
     private startPatto(): void {
         const pedro = this.boss;
         this.boss = null;
+        // il patto chiude lo scontro: barra via, voce zitta, niente code
+        bus.emit('boss-hp', null);
+        this.silenceBoss();
+        bus.emit('bark-clear', {});
         state.run.patto = true;
         state.run.hp = state.maxHp;
         state.run.flow = state.maxFlow;
@@ -4543,6 +4551,10 @@ export class GameScene extends Phaser.Scene {
                 if (!pedro) return;
                 const { x, y } = pedro;
                 this.boss = null;
+                // pedro esce di scena spento: lo scontro con lui finisce qui
+                bus.emit('boss-hp', null);
+                this.silenceBoss();
+                bus.emit('bark-clear', {});
                 const boom = this.add.particles(x, y, 'p-spark', { speed: { min: 80, max: 260 }, scale: { start: 1.2, end: 0 }, tint: [0x22d3ee, 0xf87171], lifespan: 600, quantity: 30, stopAfter: 30 });
                 this.time.delayedCall(1000, () => boom.destroy());
                 this.tweens.add({ targets: pedro, alpha: 0.35, duration: 500 });
@@ -4635,6 +4647,10 @@ export class GameScene extends Phaser.Scene {
     private onPlayerDead(): void {
         state.save.record.deaths++;
         const lost = state.save.barre;
+        // morto in uno scontro: la voce tace e la barra si toglie, alla ripresa si ricomincia
+        this.silenceBoss();
+        bus.emit('bark-clear', {});
+        bus.emit('boss-hp', null);
         // le barre restano dove sei morto, stile souls
         state.dropped = lost > 0 ? { levelId: this.def.id, x: this.lastSafe.x, y: this.lastSafe.y, amount: lost } : null;
         state.save.barre = 0;
