@@ -5,8 +5,8 @@ import type { ChapterSummary } from '../engine/ChapterCompletion';
 import { el, ui } from './dom';
 import './chapterSummary.css';
 
-/* il riepilogo animato di fine capitolo: una carta d'inchiostro che conta
-   da sola, poi lascia andare. contatori col rAF, tutto distrutto all'uscita */
+/* il riepilogo cinematico di fine capitolo: schermo nero, tutto appare
+   piano e in ordine. chi tocca salta alla fine, chi tocca ancora va oltre */
 
 let open = false;
 
@@ -30,16 +30,15 @@ export function initChapterSummary(): void {
 
 const HEART_PATH = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
 
-function heartIcon(on: boolean): SVGElement {
+function heartIcon(found: boolean): SVGElement {
     const ns = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(ns, 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('aria-hidden', 'true');
-    if (!on) svg.setAttribute('class', 'off');
     const p = document.createElementNS(ns, 'path');
     p.setAttribute('d', HEART_PATH);
-    p.setAttribute('fill', on ? '#f87171' : 'none');
-    p.setAttribute('stroke', on ? '#7f1d1d' : '#5d574b');
+    p.setAttribute('fill', found ? '#f87171' : 'none');
+    p.setAttribute('stroke', found ? '#7f1d1d' : '#f87171');
     p.setAttribute('stroke-width', '1.6');
     svg.append(p);
     return svg;
@@ -60,9 +59,11 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     root.setAttribute('role', 'dialog');
     root.setAttribute('aria-label', 'riepilogo del capitolo');
     root.style.setProperty('--chsum-accent', accent);
-
-    const card = el('div', 'chsum-card');
-    root.append(card);
+    root.append(el('div', 'chsum-glow'), el('div', 'chsum-bar-top'), el('div', 'chsum-bar-bot'));
+    const flash = el('div', 'chsum-flash');
+    root.append(flash);
+    const stage = el('div', 'chsum-stage');
+    root.append(stage);
     ui().append(root);
 
     const kick = el('div', 'chsum-kick', 'capitolo completato');
@@ -72,52 +73,45 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     em.textContent = summary.accentWord;
     title.append(em);
     const sub = el('div', 'chsum-sub', 'il realm tiene ancora. per ora.');
-    card.append(kick, title, sub);
+    stage.append(kick, title, sub);
     if (summary.punchline) {
         const punch = el('div', 'chsum-punch');
         punch.textContent = summary.punchline;
-        card.append(punch);
+        stage.append(punch);
     }
 
-    const grid = el('div', 'chsum-grid');
-    card.append(grid);
-
-    // esplora
-    const exploreCell = el('section', 'chsum-cell hero');
-    exploreCell.append(el('div', 'chsum-label', 'mappa esplorata'));
-    const pctEl = el('div', 'chsum-big', '0<small>%</small>');
-    exploreCell.append(pctEl);
-    const roomsEl = el('div', 'chsum-note', '');
-    exploreCell.append(roomsEl);
+    // esplorazione
+    const exploreBlock = el('section', 'chsum-block');
+    exploreBlock.append(el('div', 'chsum-label', 'mappa esplorata'));
+    const pctEl = el('div', 'chsum-hero-num', '0<small>%</small>');
+    const roomsEl = el('div', 'chsum-subline', '');
     const bar = el('div', 'chsum-bar');
     const fill = el('div', 'chsum-fill');
     bar.append(fill);
-    exploreCell.append(bar);
     const mapStamp = el('div', 'chsum-stamp', 'mappa completa');
-    exploreCell.append(mapStamp);
-    grid.append(exploreCell);
+    exploreBlock.append(pctEl, roomsEl, bar, mapStamp);
+    stage.append(exploreBlock);
 
     // cuori
-    const heartCell = el('section', 'chsum-cell');
-    heartCell.append(el('div', 'chsum-label', 'cuori del realm'));
+    const heartBlock = el('section', 'chsum-block');
+    heartBlock.append(el('div', 'chsum-label', 'cuori del realm'));
     const heartNum = el('div', 'chsum-mid', '');
     const heartRow = el('div', 'chsum-hearts');
-    const heartNote = el('div', 'chsum-note', '');
-    heartCell.append(heartNum, heartRow, heartNote);
-    grid.append(heartCell);
+    const heartNote = el('div', 'chsum-subline', '');
+    heartBlock.append(heartNum, heartRow, heartNote);
+    stage.append(heartBlock);
 
     // cose
-    const thingCell = el('section', 'chsum-cell');
-    thingCell.append(el('div', 'chsum-label', 'cose trovate'));
+    const thingBlock = el('section', 'chsum-block');
+    thingBlock.append(el('div', 'chsum-label', 'cose trovate'));
     const thingNum = el('div', 'chsum-mid', '');
-    const thingNote = el('div', 'chsum-note', 'lore, maschere, tacche, amuleti, missioni');
-    thingCell.append(thingNum, thingNote);
-    grid.append(thingCell);
+    const thingNote = el('div', 'chsum-subline', 'lore, maschere, tacche, amuleti, missioni');
+    thingBlock.append(thingNum, thingNote);
+    stage.append(thingBlock);
 
     // punteggio
     const scoreBox = el('section', 'chsum-score');
     scoreBox.append(el('div', 'chsum-label', 'score capitolo'));
-    const rowsBox = el('div', '');
     const rowEls: HTMLElement[] = [];
     for (const [name] of summary.score.lines) {
         const row = el('div', 'chsum-row');
@@ -126,80 +120,91 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         const v = el('b');
         v.textContent = '';
         row.append(n, v);
-        rowsBox.append(row);
+        scoreBox.append(row);
         rowEls.push(row);
     }
-    scoreBox.append(rowsBox);
-    const totalLine = el('div', 'chsum-total-line');
-    totalLine.append(el('div', 'chsum-label', 'totale capitolo'));
+    const totalBox = el('div', 'chsum-total');
+    totalBox.append(el('div', 'chsum-label', 'totale capitolo'));
     const totalNum = el('div', 'chsum-mid', '+ 0');
-    totalLine.append(totalNum);
-    scoreBox.append(totalLine);
+    totalBox.append(totalNum);
+    scoreBox.append(totalBox);
+    let recordStamp: HTMLElement | null = null;
     if (summary.score.best && !summary.score.assisted) {
-        const stamp = el('div', 'chsum-stamp', 'nuovo record');
-        stamp.style.top = '8px';
-        scoreBox.append(stamp);
-        scoreBox.dataset.stamp = '1';
+        recordStamp = el('div', 'chsum-stamp', 'nuovo record');
+        scoreBox.append(recordStamp);
     }
     if (summary.score.assisted) {
-        const note = el('div', 'chsum-note', 'partita assistita · senza punteggio');
-        scoreBox.append(note);
+        scoreBox.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
     }
-    card.append(scoreBox);
+    stage.append(scoreBox);
 
     // run totale
-    const runBox = el('div', 'chsum-run');
+    const runBox = el('section', 'chsum-score chsum-run');
     runBox.append(el('div', 'chsum-label', 'score attuale'));
-    const runNum = el('div', 'chsum-big', '0');
+    const runNum = el('div', 'chsum-hero-num', '0');
     runBox.append(runNum);
-    card.append(runBox);
+    stage.append(runBox);
 
-    // continua
-    const foot = el('div', 'chsum-foot');
-    const hint = el('div', 'chsum-hint');
-    hint.innerHTML = 'premi <kbd>invio</kbd> o tocca';
-    const goBtn = el('button', 'chsum-go', 'continua →') as HTMLButtonElement;
-    goBtn.disabled = true;
-    foot.append(hint, goBtn);
-    card.append(foot);
+    const hint = el('div', 'chsum-go-hint', 'clicca ovunque per continuare');
+    stage.append(hint);
 
-    /* ---------- animazione: contatori interpolati col rAF, niente intervalli ---------- */
+    /* ---------- regia: battiti lenti, salto alla fine, poi oltre ---------- */
 
-    let raf = 0;
-    const timers: number[] = [];
-    let lastTick = 0;
-    let enabled = false;
-    let done = false;
     const t0 = performance.now();
+    const timers: number[] = [];
+    const rafs = new Set<number>();
+    const finals: (() => void)[] = [];
+    let seq = 0;
+    let skipped = false;
+    let closed = false;
+    let ready = false;
+    let continued = false;
+    let lastTick = 0;
 
     const tick = (): void => {
-        if (Math.floor(performance.now()) - lastTick > 85) {
-            lastTick = Math.floor(performance.now());
+        const now = performance.now();
+        if (now - lastTick > 85) {
+            lastTick = now;
             sfx.barra();
         }
     };
 
-    const later = (ms: number, fn: () => void): void => {
-        if (reduced) timers.push(window.setTimeout(fn, Math.min(ms, 400)));
-        else timers.push(window.setTimeout(fn, ms));
+    /** il colpo di chi muore: la sezione diventa rossa e lo schermo trema */
+    const boom = (block: HTMLElement): void => {
+        block.classList.add('bad');
+        sfx.die();
+        if (reduced) return;
+        flash.classList.remove('hit');
+        void flash.offsetWidth;
+        flash.classList.add('hit');
+        stage.classList.remove('shake');
+        void stage.offsetWidth;
+        stage.classList.add('shake');
     };
 
-    const count = (at: number, dur: number, to: number, render: (v: number) => void, onEnd?: () => void): void => {
-        if (reduced || dur <= 0) {
+    const later = (ms: number, fn: () => void): void => {
+        // movimento ridotto: la stessa sequenza, compressa e scaglionata
+        if (reduced) {
+            ms = Math.min(150 + seq * 80, 1600);
+            seq++;
+        }
+        timers.push(window.setTimeout(() => {
+            if (closed || skipped) return;
+            fn();
+        }, ms));
+    };
+
+    const count = (dur: number, to: number, render: (v: number) => void, onEnd?: () => void): void => {
+        if (reduced) {
             render(to);
             if (onEnd) onEnd();
             return;
         }
-        let started = false;
+        const start = performance.now();
         let prev = -1;
         const step = (now: number): void => {
-            if (done) return;
-            const k = Math.min(1, Math.max(0, (now - t0 - at) / dur));
-            if (k > 0 && !started) started = true;
-            if (k <= 0) {
-                raf = requestAnimationFrame(step);
-                return;
-            }
+            if (closed || skipped) return;
+            const k = Math.min(1, (now - start) / dur);
             const eased = 1 - Math.pow(1 - k, 3);
             const v = to * eased;
             render(v);
@@ -207,157 +212,277 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
                 prev = Math.floor(v);
                 tick();
             }
-            if (k < 1) raf = requestAnimationFrame(step);
-            else if (onEnd) onEnd();
+            if (k < 1) {
+                const id = requestAnimationFrame(step);
+                rafs.add(id);
+            } else if (onEnd) {
+                onEnd();
+            }
         };
-        raf = requestAnimationFrame(step);
-    };
-
-    const bits = (n: number): void => {
-        if (reduced) return;
-        for (let i = 0; i < n; i++) {
-            const b = el('i', 'chsum-bit');
-            b.style.left = `${8 + Math.random() * 84}%`;
-            b.style.top = `${20 + Math.random() * 50}%`;
-            b.style.background = i % 3 === 0 ? '#e8dfc8' : accent;
-            card.append(b);
-            requestAnimationFrame(() => b.classList.add('fly'));
-            timers.push(window.setTimeout(() => b.remove(), 1300));
-        }
+        const id = requestAnimationFrame(step);
+        rafs.add(id);
     };
 
     const cleanup = (): void => {
-        cancelAnimationFrame(raf);
         for (const t of timers) window.clearTimeout(t);
+        for (const id of rafs) cancelAnimationFrame(id);
+        rafs.clear();
         window.removeEventListener('keydown', onKey, true);
         root.remove();
         open = false;
     };
 
-    const go = (): void => {
-        if (done || !enabled) return;
-        done = true;
+    const proceed = (): void => {
+        if (continued) return;
+        continued = true;
         sfx.menuSelect();
         cleanup();
         onContinue();
+    };
+
+    const finishAll = (): void => {
+        skipped = true;
+        for (const t of timers) window.clearTimeout(t);
+        timers.length = 0;
+        for (const f of finals) f();
+        finals.length = 0;
+        hint.classList.add('lit');
+        ready = true;
+    };
+
+    const onTap = (): void => {
+        if (closed || continued) return;
+        if (performance.now() - t0 < 1000) return;
+        if (!ready) finishAll();
+        else proceed();
     };
 
     const onKey = (e: KeyboardEvent): void => {
         if (e.code === 'Enter' || e.code === 'Space') {
             e.preventDefault();
             e.stopPropagation();
-            go();
+            onTap();
         }
     };
     window.addEventListener('keydown', onKey, true);
-    root.addEventListener('click', () => go());
+    root.addEventListener('click', onTap);
 
     /* ---------- sequenza ---------- */
 
+    let at = 0;
+    const after = (ms: number): number => (at += ms);
+
+    // titolo
+    later(after(800), () => kick.classList.add('lit'));
+    finals.push(() => kick.classList.add('lit'));
+    later(after(700), () => {
+        title.classList.add('lit');
+        sfx.checkpoint();
+    });
+    finals.push(() => title.classList.add('lit'));
+    later(after(800), () => {
+        sub.classList.add('lit');
+        const punch = stage.querySelector('.chsum-punch');
+        if (punch) punch.classList.add('lit');
+    });
+    finals.push(() => {
+        sub.classList.add('lit');
+        const punch = stage.querySelector('.chsum-punch');
+        if (punch) punch.classList.add('lit');
+    });
+
+    // esplorazione
     const explore = summary.exploration;
-    later(250, () => {
-        exploreCell.classList.add('lit');
+    const exploreVerdict = (): void => {
+        if (explore.percent === 100) {
+            mapStamp.classList.add('on');
+            sfx.unlock();
+        } else {
+            boom(exploreBlock);
+        }
+    };
+    const exploreFinal = (): void => {
+        exploreBlock.classList.add('lit');
         if (explore.percent === null) {
-            pctEl.innerHTML = '—';
+            pctEl.textContent = '—';
+            roomsEl.textContent = 'mappa non disponibile';
+            return;
+        }
+        pctEl.innerHTML = `${fmt(explore.percent)}<small>%</small>`;
+        roomsEl.textContent = `${explore.visited} / ${explore.total} stanze`;
+        fill.style.width = `${explore.percent}%`;
+        if (explore.percent === 100) mapStamp.classList.add('on');
+        else exploreBlock.classList.add('bad');
+    };
+    later(after(800), () => {
+        exploreBlock.classList.add('lit');
+        if (explore.percent === null) {
+            pctEl.textContent = '—';
             roomsEl.textContent = 'mappa non disponibile';
             return;
         }
         roomsEl.textContent = `${explore.visited} / ${explore.total} stanze`;
-        count(0, 950, explore.percent, (v) => {
+        count(1800, explore.percent, (v) => {
             pctEl.innerHTML = `${fmt(v)}<small>%</small>`;
             fill.style.width = `${Math.min(100, v)}%`;
-        }, () => {
-            if (explore.percent === 100) {
-                mapStamp.classList.add('on');
-                sfx.unlock();
-                bits(12);
-            } else {
-                sfx.pickup();
-            }
-        });
+        }, exploreVerdict);
     });
+    finals.push(exploreFinal);
+    after(2100);
 
+    // cuori
     const hearts = summary.hearts;
-    later(1000, () => {
-        heartCell.classList.add('lit');
+    const heartsFinal = (): void => {
+        heartBlock.classList.add('lit');
+        if (hearts.total === 0) {
+            heartNum.textContent = '—';
+            heartNote.textContent = 'nessun cuore in questo capitolo';
+            return;
+        }
+        heartNum.textContent = `${hearts.found} / ${hearts.total}`;
+        heartRow.replaceChildren();
+        for (let i = 0; i < hearts.total; i++) {
+            const icon = heartIcon(i < hearts.found);
+            icon.classList.add(i < hearts.found ? 'pop' : 'miss');
+            heartRow.append(icon);
+        }
+        heartNote.textContent = hearts.found === hearts.total ? 'tutti. il realm ti deve la vita.' : 'il resto è ancora là fuori';
+        if (hearts.found < hearts.total) heartBlock.classList.add('bad');
+    };
+    later(after(700), () => {
+        heartBlock.classList.add('lit');
         if (hearts.total === 0) {
             heartNum.textContent = '—';
             heartNote.textContent = 'nessun cuore in questo capitolo';
             return;
         }
         heartNote.textContent = hearts.found === hearts.total ? 'tutti. il realm ti deve la vita.' : 'il resto è ancora là fuori';
-        count(0, 700, hearts.found, (v) => {
+        count(1400, hearts.found, (v) => {
             heartNum.textContent = `${Math.floor(v)} / ${hearts.total}`;
         }, () => {
             heartRow.replaceChildren();
-            for (let i = 0; i < hearts.total; i++) heartRow.append(heartIcon(i < hearts.found));
-            heartRow.classList.remove('chsum-beat');
-            void heartRow.offsetWidth;
-            heartRow.classList.add('chsum-beat');
-            sfx.pickup();
+            for (let i = 0; i < hearts.total; i++) {
+                const icon = heartIcon(i < hearts.found);
+                heartRow.append(icon);
+                const showAt = i * 400;
+                if (reduced) {
+                    icon.classList.add(i < hearts.found ? 'pop' : 'miss');
+                    continue;
+                }
+                timers.push(window.setTimeout(() => {
+                    if (closed || skipped) return;
+                    icon.classList.add(i < hearts.found ? 'pop' : 'miss');
+                    if (i < hearts.found) sfx.heartbeat();
+                    if (i === hearts.total - 1) {
+                        if (hearts.found === hearts.total) sfx.unlock();
+                        else boom(heartBlock);
+                    }
+                }, showAt));
+            }
+            if (reduced) {
+                if (hearts.found === hearts.total) sfx.unlock();
+                else boom(heartBlock);
+            }
         });
     });
+    finals.push(heartsFinal);
+    after(1400 + 700 + hearts.total * 400 + 500);
 
+    // cose
     const things = summary.things;
-    later(1600, () => {
-        thingCell.classList.add('lit');
+    const thingsFinal = (): void => {
+        thingBlock.classList.add('lit');
         if (things.total === 0) {
             thingNum.textContent = '—';
             thingNote.textContent = 'niente da raccogliere qui';
             return;
         }
-        count(0, 700, things.found, (v) => {
+        thingNum.textContent = `${things.found} / ${things.total}`;
+        if (things.found < things.total) thingBlock.classList.add('bad');
+    };
+    later(after(700), () => {
+        thingBlock.classList.add('lit');
+        if (things.total === 0) {
+            thingNum.textContent = '—';
+            thingNote.textContent = 'niente da raccogliere qui';
+            return;
+        }
+        count(1400, things.found, (v) => {
             thingNum.textContent = `${Math.floor(v)} / ${things.total}`;
-        }, () => sfx.pickup());
+        }, () => {
+            if (things.found === things.total) sfx.unlock();
+            else boom(thingBlock);
+        });
     });
+    finals.push(thingsFinal);
+    after(1400 + 700 + 500);
 
-    later(2250, () => {
-        scoreBox.classList.add('lit');
-        summary.score.lines.forEach(([, value], i) => {
-            later(i * 130, () => {
-                const row = rowEls[i];
-                if (!row) return;
-                row.classList.add('lit');
-                row.querySelector('b')!.textContent = value;
-                tick();
-            });
+    // punteggio voce per voce
+    later(after(700), () => scoreBox.classList.add('lit'));
+    finals.push(() => scoreBox.classList.add('lit'));
+    summary.score.lines.forEach(([, value], i) => {
+        later(after(450), () => {
+            const row = rowEls[i];
+            if (!row) return;
+            row.classList.add('lit');
+            row.querySelector('b')!.textContent = value;
+            tick();
         });
-        const rowsMs = summary.score.lines.length * 130;
-        later(rowsMs + 120, () => {
-            count(0, 900, summary.score.chapter, (v) => {
-                totalNum.textContent = `+ ${fmt(v)}`;
-            }, () => {
-                const stamp = scoreBox.querySelector('.chsum-stamp');
-                if (stamp) {
-                    stamp.classList.add('on');
-                    sfx.unlock();
-                    bits(10);
-                } else if (!summary.score.assisted) {
-                    sfx.pickup();
-                }
-            });
+        finals.push(() => {
+            const row = rowEls[i];
+            if (!row) return;
+            row.classList.add('lit');
+            row.querySelector('b')!.textContent = value;
         });
-        const runAt = rowsMs + 120 + 950;
-        later(runAt, () => {
-            runBox.classList.add('lit');
-            if (summary.score.runTotal === null) {
-                runNum.textContent = '—';
-                const note = el('div', 'chsum-note', 'partita assistita · senza punteggio');
-                runBox.append(note);
-                return;
+    });
+    later(after(500), () => {
+        count(1400, summary.score.chapter, (v) => {
+            totalNum.textContent = `+ ${fmt(v)}`;
+        }, () => {
+            if (recordStamp) {
+                recordStamp.classList.add('on');
+                sfx.unlock();
+            } else if (!summary.score.assisted) {
+                sfx.pickup();
             }
-            count(0, 1000, summary.score.runTotal, (v) => {
-                runNum.textContent = fmt(v);
-            }, () => {
-                sfx.checkpoint();
-                bits(14);
-            });
         });
     });
+    finals.push(() => {
+        totalNum.textContent = `+ ${fmt(summary.score.chapter)}`;
+        if (recordStamp) recordStamp.classList.add('on');
+    });
+    after(1400 + 500);
 
-    later(1700, () => {
-        enabled = true;
-        goBtn.disabled = false;
-        goBtn.focus();
+    // score attuale
+    later(after(600), () => {
+        runBox.classList.add('lit');
+        if (summary.score.runTotal === null) {
+            runNum.textContent = '—';
+            runBox.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
+            return;
+        }
+        count(1600, summary.score.runTotal, (v) => {
+            runNum.textContent = fmt(v);
+        }, () => sfx.checkpoint());
+    });
+    finals.push(() => {
+        runBox.classList.add('lit');
+        if (summary.score.runTotal === null) {
+            runNum.textContent = '—';
+            if (!runBox.querySelector('.chsum-note')) runBox.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
+            return;
+        }
+        runNum.textContent = fmt(summary.score.runTotal);
+    });
+    after(1600 + 600);
+
+    // invito a continuare
+    later(after(400), () => {
+        hint.classList.add('lit');
+        ready = true;
+    });
+    finals.push(() => {
+        hint.classList.add('lit');
+        ready = true;
     });
 }

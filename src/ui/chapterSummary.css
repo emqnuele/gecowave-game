@@ -1,66 +1,121 @@
-/* il riepilogo di fine capitolo: carta d'inchiostro celebrativa, un colore
-   di zona a guidare, numeri enormi, timbri storti. niente bootstrap qui */
+/* riepilogo di fine capitolo, versione cinematica: schermo nero, niente
+   finestre. letterbox, dissolvenze lente, numeri enormi, il rosso fa male */
 
 .chsum-overlay {
   --chsum-accent: #4ade80;
+  --chsum-bad: #f87171;
   position: fixed;
   inset: 0;
   z-index: 60;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background:
-    radial-gradient(ellipse 90% 70% at 50% 40%, color-mix(in srgb, var(--chsum-accent) 13%, transparent), transparent 65%),
-    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.9));
+  background: #000;
   overflow-y: auto;
-  animation: chsum-in 0.28s ease both;
+  animation: chsum-black 0.9s ease both;
+  cursor: pointer;
 }
 
-/* scanline crt leggerissime sopra tutto */
+/* alone d'accento quasi spento dietro tutto */
+.chsum-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 70% 55% at 50% 42%, color-mix(in srgb, var(--chsum-accent) 9%, transparent), transparent 70%);
+}
+
+/* grana + scanline da cinema */
+.chsum-overlay::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+}
+
 .chsum-overlay::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
-  mix-blend-mode: overlay;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 4px);
 }
 
-.chsum-card {
+/* barre da letterbox che scendono piano */
+.chsum-bar-top,
+.chsum-bar-bot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #000;
+  z-index: 2;
+  animation: chsum-letter 1.4s ease 0.2s both;
+}
+
+.chsum-bar-top { top: 0; }
+.chsum-bar-bot { bottom: 0; }
+
+/* lampo rosso quando qualcosa manca */
+.chsum-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(163, 34, 28, 0.5));
+  opacity: 0;
+}
+
+.chsum-flash.hit {
+  animation: chsum-flash 0.7s ease both;
+}
+
+.chsum-stage {
   position: relative;
-  width: min(880px, 94vw);
-  max-height: 92vh;
-  overflow-y: auto;
-  background:
-    repeating-linear-gradient(-45deg, rgba(232, 223, 200, 0.022) 0 2px, transparent 2px 7px),
-    linear-gradient(180deg, #101014 0%, #0a0a0d 100%);
-  border: 2px solid rgba(232, 223, 200, 0.85);
-  border-radius: 18px;
-  box-shadow: 8px 8px 0 #000, 8px 8px 0 2px color-mix(in srgb, var(--chsum-accent) 55%, transparent), 0 30px 90px rgba(0, 0, 0, 0.8);
-  padding: clamp(20px, 4vw, 44px);
-  transform: rotate(-0.5deg);
-  animation: chsum-card-in 0.26s ease both;
-  scrollbar-width: thin;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12vh 24px 10vh;
+  text-align: center;
+}
+
+.chsum-stage.shake {
+  animation: chsum-shake 0.45s ease;
 }
 
 .chsum-kick {
   font-family: 'Martian Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.35em;
+  font-size: 11px;
+  letter-spacing: 0.45em;
   text-transform: uppercase;
   color: var(--chsum-accent);
+  opacity: 0;
+}
+
+.chsum-kick.lit {
+  opacity: 1;
+  transition: opacity 1s ease;
 }
 
 .chsum-title {
   font-family: 'IM Fell English SC', serif;
   font-weight: 400;
-  font-size: clamp(34px, 5.4vw, 58px);
-  letter-spacing: 0.06em;
-  line-height: 1.02;
+  font-size: clamp(46px, 9vw, 110px);
+  letter-spacing: 0.05em;
+  line-height: 1;
   color: #e8dfc8;
-  margin: 8px 0 0;
+  margin: 18px 0 0;
+  opacity: 0;
   filter: url(#sx-ink);
+}
+
+.chsum-title.lit {
+  opacity: 1;
+  animation: chsum-slam 0.7s cubic-bezier(0.2, 1.4, 0.3, 1) both;
 }
 
 .chsum-title em {
@@ -70,177 +125,202 @@
 
 .chsum-sub {
   font-family: 'Permanent Marker', cursive;
-  font-size: clamp(15px, 2.2vw, 20px);
-  color: rgba(232, 223, 200, 0.88);
+  font-size: clamp(17px, 2.6vw, 24px);
+  color: rgba(232, 223, 200, 0.9);
   transform: rotate(-1deg);
-  margin: 10px 0 0;
+  margin-top: 14px;
+  opacity: 0;
+}
+
+.chsum-sub.lit {
+  opacity: 1;
+  transition: opacity 1.2s ease;
 }
 
 .chsum-punch {
   font-family: 'IM Fell English', serif;
   font-style: italic;
-  font-size: 14px;
+  font-size: 15px;
   color: #9a917e;
-  margin-top: 6px;
-}
-
-.chsum-grid {
-  display: grid;
-  grid-template-columns: 1.25fr 1fr 1fr;
-  gap: 14px;
-  margin-top: 22px;
-}
-
-.chsum-cell {
-  position: relative;
-  border: 1px solid rgba(232, 223, 200, 0.22);
-  border-radius: 12px;
-  padding: 14px 14px 12px;
-  background: rgba(0, 0, 0, 0.35);
+  margin-top: 8px;
   opacity: 0;
-  transform: translateY(10px);
 }
 
-.chsum-cell.lit {
+.chsum-punch.lit {
   opacity: 1;
-  transform: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 1.2s ease;
 }
 
-.chsum-cell.hero {
-  grid-row: span 1;
+.chsum-block {
+  width: min(720px, 100%);
+  margin-top: 7vh;
+  opacity: 0;
+}
+
+.chsum-block.lit {
+  opacity: 1;
+  transition: opacity 0.8s ease;
 }
 
 .chsum-label {
   font-family: 'Martian Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.28em;
+  font-size: 10px;
+  letter-spacing: 0.35em;
   text-transform: uppercase;
   color: #9a917e;
 }
 
-.chsum-big {
+.chsum-hero-num {
   font-family: 'IM Fell English SC', serif;
-  font-size: clamp(44px, 6vw, 68px);
-  line-height: 1;
+  font-size: clamp(96px, 18vw, 190px);
+  line-height: 0.95;
   color: #e8dfc8;
-  margin-top: 4px;
+  margin-top: 6px;
   font-variant-numeric: tabular-nums;
 }
 
-.chsum-big small {
-  font-size: 0.45em;
+.chsum-hero-num small {
+  font-size: 0.35em;
   color: #9a917e;
+}
+
+.chsum-subline {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: #9a917e;
+  margin-top: 4px;
+}
+
+/* la sezione che fa male diventa rossa */
+.chsum-block.bad .chsum-label,
+.chsum-block.bad .chsum-hero-num,
+.chsum-block.bad .chsum-mid,
+.chsum-block.bad .chsum-subline {
+  color: var(--chsum-bad);
+}
+
+.chsum-block.bad .chsum-hero-num small {
+  color: var(--chsum-bad);
 }
 
 .chsum-mid {
   font-family: 'IM Fell English SC', serif;
-  font-size: clamp(30px, 3.6vw, 42px);
+  font-size: clamp(64px, 11vw, 120px);
+  line-height: 1;
   color: #e8dfc8;
-  margin-top: 4px;
+  margin-top: 6px;
   font-variant-numeric: tabular-nums;
 }
 
-.chsum-note {
-  font-family: 'IM Fell English', serif;
-  font-style: italic;
-  font-size: 13px;
-  color: #9a917e;
-  margin-top: 2px;
-}
-
-/* barra a pennellata: contenitore storto, riempimento a pennello */
 .chsum-bar {
-  margin-top: 10px;
-  height: 14px;
-  border: 1px solid rgba(232, 223, 200, 0.35);
-  border-radius: 8px;
-  transform: rotate(-0.6deg);
+  margin: 18px auto 0;
+  max-width: 520px;
+  height: 12px;
+  border: 1px solid rgba(232, 223, 200, 0.3);
+  border-radius: 7px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .chsum-fill {
   height: 100%;
   width: 0%;
-  border-radius: 7px;
+  border-radius: 6px;
   background:
-    repeating-linear-gradient(-55deg, rgba(0, 0, 0, 0.28) 0 4px, transparent 4px 8px),
+    repeating-linear-gradient(-55deg, rgba(0, 0, 0, 0.3) 0 5px, transparent 5px 10px),
     var(--chsum-accent);
-  box-shadow: 0 0 14px color-mix(in srgb, var(--chsum-accent) 70%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--chsum-accent) 60%, transparent);
 }
 
-/* cuori disegnati: svg inline, mai emoji */
+.chsum-block.bad .chsum-fill {
+  background:
+    repeating-linear-gradient(-55deg, rgba(0, 0, 0, 0.3) 0 5px, transparent 5px 10px),
+    var(--chsum-bad);
+  box-shadow: 0 0 22px rgba(248, 113, 113, 0.55);
+}
+
 .chsum-hearts {
   display: flex;
-  gap: 6px;
-  margin-top: 8px;
-  min-height: 26px;
+  gap: 14px;
+  margin-top: 16px;
+  min-height: 44px;
   align-items: center;
+  justify-content: center;
 }
 
 .chsum-hearts svg {
-  width: 24px;
-  height: 24px;
-  filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.55));
+  width: 40px;
+  height: 40px;
+  opacity: 0;
+  transform: scale(0.4);
 }
 
-.chsum-hearts svg.off {
+.chsum-hearts svg.pop {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.2, 2.2, 0.4, 1);
+  filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.5));
+}
+
+.chsum-hearts svg.miss {
+  opacity: 0.9;
+  transform: scale(1);
+  transition: opacity 0.25s ease;
   filter: none;
-  opacity: 0.35;
 }
 
-/* timbro storto che atterra sopra la card */
+/* timbro storto */
 .chsum-stamp {
-  position: absolute;
-  top: -14px;
-  right: 10px;
+  display: inline-block;
   font-family: 'Permanent Marker', cursive;
-  font-size: 14px;
+  font-size: clamp(16px, 2.4vw, 22px);
   color: var(--chsum-accent);
   border: 2px solid var(--chsum-accent);
   border-radius: 6px;
-  padding: 2px 10px;
-  transform: rotate(6deg);
-  background: rgba(0, 0, 0, 0.85);
-  box-shadow: 2px 2px 0 #000;
+  padding: 2px 14px;
+  transform: rotate(-4deg);
+  margin-top: 16px;
   opacity: 0;
 }
 
 .chsum-stamp.on {
   opacity: 1;
-  animation: chsum-stamp-in 0.3s cubic-bezier(0.2, 2.4, 0.4, 1) both;
+  animation: chsum-stamp-in 0.4s cubic-bezier(0.2, 2.4, 0.4, 1) both;
 }
 
 .chsum-score {
-  margin-top: 18px;
-  border-top: 1px solid rgba(232, 223, 200, 0.18);
-  padding-top: 14px;
+  width: min(720px, 100%);
+  margin-top: 8vh;
   opacity: 0;
 }
 
 .chsum-score.lit {
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.8s ease;
+}
+
+.chsum-score .chsum-label {
+  margin-bottom: 12px;
 }
 
 .chsum-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
-  padding: 3px 2px;
+  gap: 16px;
+  padding: 6px 2px;
   font-family: 'Martian Mono', monospace;
-  font-size: 12px;
+  font-size: clamp(12px, 1.8vw, 14px);
   color: #9a917e;
   opacity: 0;
-  transform: translateX(-8px);
+  transform: translateY(8px);
 }
 
 .chsum-row.lit {
   opacity: 1;
   transform: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .chsum-row b {
@@ -249,157 +329,109 @@
   font-variant-numeric: tabular-nums;
 }
 
-.chsum-total-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(232, 223, 200, 0.3);
+.chsum-total {
+  margin-top: 3vh;
+  border-top: 1px dashed rgba(232, 223, 200, 0.35);
+  padding-top: 3vh;
 }
 
-.chsum-total-line .chsum-mid {
-  margin-top: 0;
+.chsum-total .chsum-mid {
+  font-size: clamp(72px, 13vw, 140px);
 }
 
 .chsum-run {
-  margin-top: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  border: 1px solid color-mix(in srgb, var(--chsum-accent) 45%, transparent);
-  border-radius: 12px;
-  padding: 12px 16px;
-  background: color-mix(in srgb, var(--chsum-accent) 7%, transparent);
-  opacity: 0;
+  margin-top: 5vh;
 }
 
-.chsum-run.lit {
-  opacity: 1;
-  transition: opacity 0.4s ease;
-}
-
-.chsum-run .chsum-big {
-  font-size: clamp(38px, 5vw, 54px);
+.chsum-run .chsum-hero-num {
+  font-size: clamp(72px, 13vw, 140px);
   color: var(--chsum-accent);
 }
 
-.chsum-foot {
-  margin-top: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
-}
-
-.chsum-hint {
-  font-family: 'Martian Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: #5d574b;
-}
-
-.chsum-hint kbd {
-  font-family: inherit;
-  border: 1px solid #5d574b;
-  border-radius: 4px;
-  padding: 1px 6px;
+.chsum-note {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 15px;
   color: #9a917e;
+  margin-top: 8px;
 }
 
-.chsum-go {
+.chsum-go-hint {
+  margin-top: 9vh;
   font-family: 'Martian Mono', monospace;
-  font-size: 13px;
-  letter-spacing: 0.22em;
+  font-size: 12px;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #0a0a0d;
-  background: var(--chsum-accent);
-  border: 2px solid #0a0a0d;
-  border-radius: 12px;
-  padding: 12px 26px;
-  cursor: pointer;
-  transform: rotate(1deg);
-  box-shadow: 4px 4px 0 #000;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
-}
-
-.chsum-go:hover:not(:disabled) {
-  transform: rotate(0deg) scale(1.04);
-}
-
-.chsum-go:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.chsum-go:focus-visible {
-  outline: 2px dashed #e8dfc8;
-  outline-offset: 3px;
-}
-
-/* coriandoli d'inchiostro: pochi, leggeri, senza canvas */
-.chsum-bit {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
-  background: var(--chsum-accent);
+  color: #9a917e;
   opacity: 0;
-  pointer-events: none;
 }
 
-.chsum-bit.fly {
-  animation: chsum-bit 1.1s ease-out both;
+.chsum-go-hint.lit {
+  opacity: 1;
+  transition: opacity 1s ease;
+  animation: chsum-breathe 2.6s ease-in-out 1s infinite;
 }
 
-@keyframes chsum-in {
+@keyframes chsum-black {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes chsum-card-in {
-  from { opacity: 0; transform: rotate(-0.5deg) translateY(18px) scale(0.985); }
-  to { opacity: 1; transform: rotate(-0.5deg) translateY(0) scale(1); }
+@keyframes chsum-letter {
+  from { height: 0; }
+  to { height: 9vh; }
+}
+
+@keyframes chsum-slam {
+  from { opacity: 0; transform: scale(1.07); letter-spacing: 0.12em; }
+  to { opacity: 1; transform: scale(1); letter-spacing: 0.05em; }
 }
 
 @keyframes chsum-stamp-in {
-  from { opacity: 0; transform: rotate(6deg) scale(2.1); }
-  to { opacity: 1; transform: rotate(6deg) scale(1); }
+  from { opacity: 0; transform: rotate(-4deg) scale(2.2); }
+  to { opacity: 1; transform: rotate(-4deg) scale(1); }
 }
 
-@keyframes chsum-beat {
-  0%, 100% { transform: scale(1); }
-  30% { transform: scale(1.22); }
+@keyframes chsum-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-9px, 3px); }
+  40% { transform: translate(8px, -4px); }
+  60% { transform: translate(-6px, -3px); }
+  80% { transform: translate(5px, 2px); }
 }
 
-.chsum-beat {
-  animation: chsum-beat 0.5s ease;
+@keyframes chsum-flash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
-@keyframes chsum-bit {
-  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
-  100% { opacity: 0; transform: translateY(-70px) rotate(220deg); }
-}
-
-@media (max-width: 640px) {
-  .chsum-grid {
-    grid-template-columns: 1fr;
-  }
+@keyframes chsum-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .chsum-overlay,
-  .chsum-card,
-  .chsum-cell.lit,
+  .chsum-bar-top,
+  .chsum-bar-bot,
+  .chsum-kick.lit,
+  .chsum-title.lit,
+  .chsum-sub.lit,
+  .chsum-punch.lit,
+  .chsum-block.lit,
   .chsum-score.lit,
   .chsum-row.lit,
-  .chsum-run.lit,
-  .chsum-stamp.on {
+  .chsum-stamp.on,
+  .chsum-go-hint.lit {
     animation: none;
-    transition: opacity 0.15s ease;
+    transition: opacity 0.2s ease;
   }
-  .chsum-overlay::before {
+  .chsum-overlay::before,
+  .chsum-overlay::after {
     display: none;
+  }
+  .chsum-stage.shake {
+    animation: none;
   }
 }
