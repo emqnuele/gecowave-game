@@ -229,6 +229,12 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: il palco è il livello vero. La camera lascia il geco e inquadra un punto accanto a lui, il buio segue la vista ogni frame, le barre sono nel dom, gli attori recitano nel mondo con una luce calda vera, luna a alone e comparse che dissolvono. Le stanze finte (carta, legno, intonaco, notte) spariscono dal codice. Alla fine il geco torna esattamente dov'era e com'era (posizione, velocità, visibilità, stordimento azzerato, camera che lo segue): niente restart. Se un dialogo con film parte mentre un altro gira, aspetta il suo turno invece di aprirsi sopra.
 **Conseguenze**: sottotitoli senza riquadro, niente più tasto E in sovrimpressione, i suoni partono sempre perché l'audio si sveglia all'inizio.
 
+### ADR-038 — le abilità riaprono il realm
+**Contesto**: i frammenti aggiungevano solo un'icona all'hud; niente diceva "ora posso tornare lì". Le fondamenta c'erano già: cancelli fisici verificati (`gates.ts`), stanze laterali con spot verificati, mappa che si rivela, evento `wave-world` del piano 5.
+**Decisione**: sistema di sigilli, sempre opzionali e solo laterali. Metadata nei json (`layout.abilityGates` dai cancelli mensola/camino, `layout.seals` da `scripts/world/seals.ts`, deterministico via hash, senza rigenerare); un solo manager runtime (`src/engine/AbilitySeals.ts`) che ascolta `wave-world`, disegna barriera e 33 azzurro, apre con la sola soluzione primaria e consegna il premio una volta sola (flag `sigillo-<id>`, chiave `sigillo-premio-<id>`); storia, missioni cerca e microfono rosso evitano le stanze sigillate; la mappa mostra il 33 solo a stanza vista e 33 già visto, con riga `33 letti: aperti/visti`; una sola nota wavesung di markolino alla prima vista. Nessuna stanza disegnata a mano, nessuna coordinata pixel nel codice di scena.
+**Deviazioni dal piano**: 8 abilità non 9 (la rigenerazione non esiste più: il miasma chiede l'acquatossica); risonante a livelli 0/1/2 quindi soglia `level >= 1` (l'eco non apre, onda e piena sì); premi di ripiego dove mancava un amuleto libero (specchio: 90 barre, resina: tacca); senza rigenerazione completa gli `abilityGates` mancano e i due sigilli fisici usano stanze normali con avviso (la rigenerazione da decine di minuti resta da approvare); il miasma rallenta solo col contraccolpo, senza toccare la velocità del controller.
+**Conseguenze**: chi non torna vede comunque il finale; morire prima di raccogliere lascia premio e cancello aperto; salvataggi vecchi senza `seals` giocano come prima.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -273,6 +279,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **le abilità riaprono il realm**: sigilli laterali per ogni wave, premi persistenti, mappa coi 33, nota di markolino (ADR-038).
 - **flashback nel mondo**: niente più stanze finte, il livello fa da scena, ritorno esatto del geco (ADR-037).
 - **si cura solo col cibo**: via Q e regen, 8 frammenti, panino +2, amuleti del cibo, il rio cura i malus senza frammenti (ADR-036).
 - **i comandi sono azioni**: livello input unico, preset classico/frecce più gamepad, rimappatura a scambio, testi col tasto vero, schema wave su un tasto solo (ADR-035).

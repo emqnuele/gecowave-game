@@ -1148,6 +1148,10 @@ button.phone-row {
   animation: region-here 1.2s ease-in-out infinite;
 }
 
+.region-map .seal-33 {
+  animation: region-here 2.4s ease-in-out infinite;
+}
+
 @keyframes region-here {
   50% { opacity: 0.35; }
 }

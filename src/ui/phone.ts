@@ -945,6 +945,12 @@ export class Phone {
             if (m.kind === 'mic') add('circle', { cx: m.x / T, cy: m.y / T, r: 3.5, fill: '#22d3ee', stroke: '#000', 'stroke-width': 1 });
             if (m.kind === 'stop') add('rect', { x: m.x / T - 2, y: m.y / T - 5, width: 4, height: 7, fill: '#facc15', stroke: '#000', 'stroke-width': 0.8 });
             if (m.kind === 'exit') add('rect', { x: m.x / T - 3, y: m.y / T - 6, width: 6, height: 9, fill: '#facc15', stroke: '#000', 'stroke-width': 1 });
+            // il 33 azzurro barrato di viola: solo stanze viste, mai dopo l'apertura
+            if (m.kind === 'seal') {
+                const t = add('text', { x: m.x / T, y: m.y / T + 2, 'text-anchor': 'middle', 'font-size': 9, fill: '#7dd3fc', class: 'seal-33' });
+                t.textContent = '33';
+                add('line', { x1: m.x / T - 7, y1: m.y / T + 4, x2: m.x / T + 7, y2: m.y / T + 2, stroke: '#c084fc', 'stroke-width': 1.4 });
+            }
         }
         const goal = regionView.goal;
         if (goal) {
@@ -971,6 +977,15 @@ export class Phone {
                 line.append(text('span', '', k), text('b', '', v));
                 root.append(line);
             }
+        }
+        // i 33 letti nel mondo: aperti su visti, senza dire quanti ne restano
+        const seals = L.seals ?? [];
+        const visti = seals.filter((s) => state.hasFlag(`visto-sigillo-${s.id}`)).length;
+        if (visti > 0) {
+            const aperti = seals.filter((s) => state.hasFlag(`sigillo-${s.id}`)).length;
+            const line = el('div', 'stat-line');
+            line.append(text('span', '', '33 letti'), text('b', '', `${aperti}/${visti}`));
+            root.append(line);
         }
         root.append(text('div', 'phone-section', 'il gecorealm'));
     }

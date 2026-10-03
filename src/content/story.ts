@@ -1408,6 +1408,7 @@ export const WAVESUNG = {
     markolinoRisonante: { sender: 'markolino', text: 'quelli che sparano da lontano? non andare sotto. tieni premuto {k:wave} e molla: il colpo risonante perfora. notino insegna gratis.' },
     markolinoOmbra: { sender: 'markolino', text: 'l\'ombra sei tu. se hai comprato la sorveglianza è forte come te: cambia ritmo, non ripetere le mosse. se l\'hai rifiutata è una beta: mena e basta.' },
     markolino33: { sender: 'markolino', text: 'i 33 dipinti: nascosti nel colore del muro, tratto ordinato, sempre accanto a un muro che non è un muro. guarda dietro. ogni volta.' },
+    markolinoSigilli: { sender: 'markolino', text: 'i 33 non indicano solo muri. indicano cose che pedro non voleva lasciarti perdere.' },
     markolinoSmelaSkip: { sender: 'markolino', text: 'lo stabilimento? puoi attraversarlo senza fermarti, l\'uscita resta aperta. la truffa vive solo se ti fermi. ma l\'acqua tossica è comoda, eh.' },
     markolinoMaschereTease: { sender: 'markolino', text: 'maschere con la tua faccia? primo custode, dischi. a 3 senti il beat, a 5 ritmo perfetto e si apre un varco verde in perduta. stanno dietro muri finti e crepe.' },
     markolinoCorseTease: { sender: 'guastalla', text: 'se batti il citelis in 3 corse prendo la patente e guido io la piazza. piano. mi fermo ovunque.' },
