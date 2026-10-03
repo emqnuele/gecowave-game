@@ -235,6 +235,12 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Deviazioni dal piano**: 8 abilità non 9 (la rigenerazione non esiste più: il miasma chiede l'acquatossica); risonante a livelli 0/1/2 quindi soglia `level >= 1` (l'eco non apre, onda e piena sì); premi di ripiego dove mancava un amuleto libero (specchio: 90 barre, resina: tacca); senza rigenerazione completa gli `abilityGates` mancano e i due sigilli fisici usano stanze normali con avviso (la rigenerazione da decine di minuti resta da approvare); il miasma rallenta solo col contraccolpo, senza toccare la velocità del controller.
 **Conseguenze**: chi non torna vede comunque il finale; morire prima di raccogliere lascia premio e cancello aperto; salvataggi vecchi senza `seals` giocano come prima.
 
+### ADR-039 — l'ombra impara localmente
+**Contesto**: l'ombra puniva solo lo scontro finale (streak di fendenti, quattro scivolate, cura a vita bassa) con HP gonfiati dalle telecamere (`1 + ombraDati * 0.07`, fino a +56%). Il giocatore non sentiva di essere stato guardato per tutta la partita.
+**Decisione**: profilo locale nel save (`OmbraProfile`: conteggi per 12 categorie, riprese 0..8, flag premium), logica pura in `src/engine/OmbraProfile.ts` (normalizzazione, `strongestHabit` con peso 0.35 storico + 0.65 finestra live, soglia 12 azioni, confidenza minima 0.32, margine 0.06). Categorie: fendenti per direzione, scivolata, salti (solo contesto, mai puniti), cure, 5 wave attive. `OmbraBrain` nuovo (contesto esplicito, finestra 18 premium / 10 beta, cooldown 6.5 s / 9.5 s + 2.5 s se ripete, preavviso 350–650 ms sempre, mai nei 1.5 s dopo un dialogo né sotto invulnerabilità): guardia direzionale, teletrasporto su scivolata e analisi, cecchino sulla cura, ritardo di 500 ms sullo scudo, solo un'occhiata su riflesso e pozze. `Boss` guadagna `canStrike()` e `delayAttack()`; in scena etichetta `ha letto: …` da 1.2 s, una riga di bark e chip hud che lampeggia, mai numeri. Empower ridotto a `1 + min(0.12, riprese * 0.015)` premium e massimo 1.03 beta. Battute nuove solo `learn-dash/heal/shot/varied`; intro premium e beta con una riga in più, meme intatti.
+**Deviazioni dal piano**: niente rami cura attivi (dall'ADR-036 il cibo non emette eventi: le categorie restano per compatibilità, il ramo non scatta mai); `state.run.ombraDati` rimosso del tutto invece di restare come contatore temporaneo (una sola fonte di verità); il risonante emette solo `wave` (via `attack/shot`); il riflesso contava doppio (lancio + nascita clone: resta solo il lancio, lo scambio resta perché è una decisione nuova); premium sempre a precisione piena per formula, le riprese gli danno solo HP.
+**Conseguenze**: salti riusciti emessi una volta sola; salvataggi vecchi migrano con profilo a zero e premium ricostruito dal flag; `reset()` azzera tutto, morte e restart no; calibrazione statica su tre profili (70% fendente → guardia 3.2 s; misto → `learn-varied`, zero meccaniche; risonante 40% → guardia `shot` 2.2 s); beta sotto 12 azioni non punisce mai; la prova in gioco premium/beta richiede permesso browser.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -279,6 +285,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **l'ombra impara localmente**: profilo per partita nel save, cervello con finestra live e cooldown, segnali prima di ogni contromossa, HP quasi piatti (ADR-039).
 - **le abilità riaprono il realm**: sigilli laterali per ogni wave, premi persistenti, mappa coi 33, nota di markolino (ADR-038).
 - **flashback nel mondo**: niente più stanze finte, il livello fa da scena, ritorno esatto del geco (ADR-037).
 - **si cura solo col cibo**: via Q e regen, 8 frammenti, panino +2, amuleti del cibo, il rio cura i malus senza frammenti (ADR-036).
