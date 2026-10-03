@@ -8,6 +8,7 @@ import { hashString } from './art/ink';
 import { folkImage } from './art/folk';
 import { animateCreature } from './art/creatureKit';
 import { bus } from './events';
+import { expectCollectible } from './ChapterCompletion';
 import type { LightingManager } from './LightingManager';
 import { sfx } from './sfx';
 import { state } from './state';
@@ -52,6 +53,16 @@ export class QuestManager {
     }
 
     setup(regionId: string, layout: RegionLayout | null, eye: number, player: Phaser.GameObjects.GameObject, avoid: { x: number; y: number }[]): void {
+        // il catalogo aspetta le ricompense uniche: l'amuleto se c'è, la missione altrimenti
+        for (const def of questsFor(regionId)) {
+            const rewardItem = def.reward.item;
+            if (rewardItem && ITEMS[rewardItem]?.kind === 'amuleto') {
+                expectCollectible(regionId, `charm-${rewardItem}`, 'thing', () => state.hasCharm(rewardItem));
+            } else {
+                const qid = def.id;
+                expectCollectible(regionId, `quest-${qid}`, 'thing', () => state.save.quests[qid]?.s === 'fatta');
+            }
+        }
         if (!layout?.spots?.length) return;
         const spots = layout.spots.map(([c, r, room]) => ({ c, r, room: layout.rooms[room] })).filter((s) => s.room);
         this.spots = spots;

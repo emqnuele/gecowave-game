@@ -36,6 +36,7 @@ import { acoustics } from '../engine/audio/acoustics';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
 import { REGION_COUNT } from '../content/achievements';
 import { chapterParts, ENDING_BONUS, pushBoard, runScore, sumParts } from '../engine/score';
+import { countsFor, expectBossRewards, expectCollectible, expectLoreKey, sealLevel } from '../engine/ChapterCompletion';
 import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
@@ -187,6 +188,8 @@ export class GameScene extends Phaser.Scene {
     /** percorso della freccia: ricalcolato solo cambiando stanza */
     private guideCacheKey = '';
     private guideCache: { x: number; y: number; rooms: number } | null = null;
+    /** frammenti della wave vivi nel mondo: la freccia ci punta finché non li prendi */
+    private liveFragments: { x: number; y: number; ability: AbilityId; obj: Phaser.Physics.Arcade.Sprite }[] = [];
     private folk!: FolkManager;
     private traps!: TrapManager;
     private hazards!: HazardManager;
@@ -327,6 +330,7 @@ export class GameScene extends Phaser.Scene {
         this.guide = this.layout ? new RegionGuide(this.layout) : null;
         this.guideCacheKey = '';
         this.guideCache = null;
+        this.liveFragments = [];
         this.checkpointSprites.clear();
         this.lamettaCenter = null;
         this.lamettaActive = false;
@@ -468,6 +472,8 @@ export class GameScene extends Phaser.Scene {
             ...this.level.entities.filter((e) => e.spec.type !== 'enemy').map((e) => ({ x: e.x, y: e.y })),
         ]);
         this.interactables.push(...this.story.talkables);
+        // catalogo completo: da qui i denominatori del riepilogo sono stabili
+        sealLevel(this.def.id, this.layout?.rooms.length ?? 0);
         // pedro in scena una volta per regione: due righe, poi si sfalda
         this.pedroGhost = new PedroApparition(this, this.lighting);
         this.pedroGhost.setup(this.def.id, this.layout);
@@ -629,6 +635,8 @@ export class GameScene extends Phaser.Scene {
                     this.spawnItemPickup(x, y, spec.item, spec.amount ?? 1, `item-${this.def.id}-${Math.round(x)}-${Math.round(y)}`);
                     break;
                 case 'boss': {
+                    // i premi attesi si registrano al caricamento, anche a boss già caduto
+                    expectBossRewards(this.def.id, spec.kind);
                     // i boss sconfitti restano sconfitti, regola souls
                     if (state.hasFlag(`boss-down-${spec.kind}`)) {
                         this.recoverBossReward(spec.kind, x, y);
@@ -654,6 +662,14 @@ export class GameScene extends Phaser.Scene {
 
     /** sacchetto o amuleto a terra: si raccoglie una volta sola per salvataggio */
     private spawnItemPickup(x: number, y: number, item: string, amount: number, persistKey: string, loose = false): void {
+        // il denominatore si registra prima del controllo: vale anche a oggetto già preso
+        const kind = ITEMS[item]?.kind;
+        if (!LEGACY_ITEMS[item] && (kind === 'amuleto' || kind === 'potenziamento')) {
+            const id = item;
+            const key = persistKey;
+            const charm = kind === 'amuleto';
+            expectCollectible(this.def.id, key, 'thing', () => state.save.collectedLore.includes(key) || (charm && state.hasCharm(id)));
+        }
         // le regioni già generate nascondono ancora i vecchi consumabili: diventano barre
         if (LEGACY_ITEMS[item] && !state.save.collectedLore.includes(persistKey)) {
             state.save.collectedLore.push(persistKey);
@@ -1126,6 +1142,18 @@ export class GameScene extends Phaser.Scene {
                 this.startDialogue(n >= TOTAL_FRAGMENTS - 1 ? 'markolino-piazza-fine' : n >= 4 ? 'markolino-piazza-dopo' : id);
                 break;
             }
+            case 'markolino-dono':
+                this.startDialogue(id, () => {
+                    state.setFlag('markolino-dono-visto');
+                    // il frammento promesso ("prendilo") cade accanto a lui: senza questo
+                    // il dialogo lasciava il player a mani vuote e l'unica scivolata
+                    // restava il pickup libero a ~30 tile di distanza
+                    if (!state.hasAbility('scivolata') && !this.liveFragments.some((f) => f.ability === 'scivolata')) {
+                        const dono = this.npcAt.get('markolino-dono');
+                        if (dono) this.spawnFragment(dono.x, dono.y - 50, 'scivolata');
+                    }
+                });
+                break;
             default:
                 this.startDialogue(id);
         }
@@ -1371,8 +1399,13 @@ export class GameScene extends Phaser.Scene {
         this.tweens.add({ targets: shard, y: y - 10, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.tweens.add({ targets: shard, angle: { from: -8, to: 8 }, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         if (loose) this.homeIn(shard);
+        this.liveFragments.push({ x, y, ability, obj: shard });
         this.physics.add.overlap(this.player, shard, () => {
+            if (!shard.active) return;
+            this.liveFragments = this.liveFragments.filter((f) => f.obj !== shard);
             shard.destroy();
+            // doppione (es. dono di markolino + pickup libero): sparisce in silenzio
+            if (state.hasAbility(ability)) return;
             state.unlockAbility(ability);
             sfx.unlock();
             bus.emit('abilities-changed', { abilities: state.abilities });
@@ -1382,6 +1415,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     private spawnLore(id: string, x: number, y: number): void {
+        expectLoreKey(this.def.id, id, 'thing');
         const collected = state.save.collectedLore.includes(id);
         const tablet = this.add.sprite(x, y + 1, 'lore-tablet').setDepth(4).setPipeline('Light2D').setAlpha(collected ? 0.5 : 1);
         this.interactables.push({
@@ -1527,6 +1561,7 @@ export class GameScene extends Phaser.Scene {
 
     /** cuore del realm: +1 vita massima, per sempre */
     private spawnCuore(x: number, y: number, persistKey: string, loose = false): void {
+        expectLoreKey(this.def.id, persistKey, 'heart');
         if (state.save.collectedLore.includes(persistKey)) return;
         if (loose) ({ x, y } = this.rewardSpot(x, y));
         const heart = this.physics.add.sprite(x, y, 'cuore').setDepth(5);
@@ -1555,6 +1590,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     private spawnMaschera(x: number, y: number, persistKey: string): void {
+        expectLoreKey(this.def.id, persistKey, 'thing');
         if (state.save.collectedLore.includes(persistKey)) return;
         const mask = this.physics.add.sprite(x, y, 'maschera').setDepth(5);
         (mask.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
@@ -1928,6 +1964,13 @@ export class GameScene extends Phaser.Scene {
         if (this.def.id === 'perduta') {
             waveOnce('pedro-eco-perduta', WAVESUNG.pedroEcoPerduta, 6000);
             waveOnce('tease-maschere-perduta', WAVESUNG.markolinoMaschereTease, 45000);
+            // chi ha già sentito il dono (anche prima di questa fix) ma non ha la wave:
+            // il frammento lo aspetta da markolino, non va perso per strada
+            if (state.hasFlag('markolino-dono-visto') && !state.hasAbility('scivolata')
+                && !this.liveFragments.some((f) => f.ability === 'scivolata')) {
+                const dono = this.npcAt.get('markolino-dono');
+                if (dono) this.spawnFragment(dono.x, dono.y - 50, 'scivolata');
+            }
         }
         const hint = MECHANIC_HINTS[this.def.id];
         if (hint && this.mechanic) waveOnce(`meccanica-${this.def.id}`, hint, 12000);
@@ -2780,15 +2823,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     /** punteggio del capitolo quando lo lasci per andare avanti */
-    private finishChapter(): void {
+    private finishChapter(): { id: string; score: number; best: boolean; assisted: boolean; timeMs: number; lines: [string, string][] } | null {
         const run = state.save.chapterRun;
-        if (!run || run.id !== this.def.id) return;
+        if (!run || run.id !== this.def.id) return null;
         const timeMs = state.save.record.playMs - run.startMs;
         const deaths = state.save.record.deaths - run.deaths0;
         const kills = state.save.record.kills - run.kills0;
         const explored = this.layout ? (state.save.explored[this.def.id]?.length ?? 0) / this.layout.rooms.length : 1;
         const id = this.def.id;
-        const secrets = state.save.collectedLore.filter((k) => k.startsWith(`item-${id}-`) || k.startsWith(`cuore-${id}-`) || k === `maschera-${id}` || k.startsWith(`${id}-`)).length;
+        const secrets = countsFor(id, 'thing').found;
         const minutes = timeMs / 60000;
         const parts = chapterParts({ explored, secrets, kills, noHitBosses: run.noHitBosses, deaths, minutes });
         const score = sumParts(parts);
@@ -2805,6 +2848,7 @@ export class GameScene extends Phaser.Scene {
         state.save.chapterRun = null;
         state.persist();
         bus.emit('chapter-score', { id, score, best, assisted, timeMs });
+        return { id, score, best, assisted, timeMs, lines };
     }
 
     /** il capitolo in corso, stimato come se finisse adesso (senza il bonus del tempo) */
@@ -2813,7 +2857,7 @@ export class GameScene extends Phaser.Scene {
         if (!run || run.id !== this.def.id) return 0;
         const id = this.def.id;
         const explored = this.layout ? (state.save.explored[id]?.length ?? 0) / this.layout.rooms.length : 0;
-        const secrets = state.save.collectedLore.filter((k) => k.startsWith(`item-${id}-`) || k.startsWith(`cuore-${id}-`) || k === `maschera-${id}` || k.startsWith(`${id}-`)).length;
+        const secrets = countsFor(id, 'thing').found;
         return sumParts(chapterParts({
             explored, secrets, kills: state.save.record.kills - run.kills0, noHitBosses: run.noHitBosses, deaths: state.save.record.deaths - run.deaths0,
         }));
@@ -2830,6 +2874,15 @@ export class GameScene extends Phaser.Scene {
 
     /** cosa serve adesso per andare avanti, in ordine di urgenza */
     private currentObjective(): { x: number; y: number; label: string } | null {
+        // la wave libera prima dell'uscita: se il capitolo nasconde un frammento
+        // non ancora preso (es. la scivolata in perduta), la freccia ci porta lì.
+        // in perduta markolino la annuncia: prima lui, poi il frammento, poi l'uscita.
+        if (this.def.id === 'perduta' && !state.hasAbility('scivolata')) {
+            const dono = this.npcAt.get('markolino-dono');
+            if (dono && !state.hasFlag('markolino-dono-visto')) return { ...dono, label: 'markolino' };
+        }
+        const free = this.freeFragment();
+        if (free) return free;
         const boss = this.boss;
         if (boss?.active && !boss.engaged && boss.def.guardsExit !== false) return { x: boss.x, y: boss.y, label: boss.def.name.split(',')[0] };
         const npc = (id: string, label: string) => {
@@ -2852,6 +2905,30 @@ export class GameScene extends Phaser.Scene {
         return null;
     }
 
+    /** frammento della wave ancora a terra in questo capitolo, il più vicino: la freccia ci porta prima qui */
+    private freeFragment(): { x: number; y: number; label: string } | null {
+        if (!this.player) return null;
+        let bx = 0;
+        let by = 0;
+        let bd = Infinity;
+        let found = false;
+        // prima quelli vivi nel mondo (es. il dono appena caduto ai piedi di markolino)
+        for (const f of this.liveFragments) {
+            if (state.hasAbility(f.ability)) continue;
+            const d = Math.hypot(f.x - this.player.x, f.y - this.player.y);
+            if (d < bd) { bd = d; bx = f.x; by = f.y; found = true; }
+        }
+        // fallback: piazzamenti statici del capitolo non ancora presi
+        if (!found) {
+            for (const e of this.level.entities) {
+                if (e.spec.type !== 'ability' || state.hasAbility(e.spec.ability)) continue;
+                const d = Math.hypot(e.x - this.player.x, e.y - this.player.y);
+                if (d < bd) { bd = d; bx = e.x; by = e.y; found = true; }
+            }
+        }
+        return found ? { x: bx, y: by, label: 'frammento della wave' } : null;
+    }
+
     private buildGuide(): void {
         this.guideGfx = this.add.graphics().setDepth(9);
         regionView.id = this.def.id;
@@ -2871,8 +2948,9 @@ export class GameScene extends Phaser.Scene {
         regionView.player = { x: this.player.x, y: this.player.y };
         regionView.goal = goal;
         if (!goal || !state.settings.guide || this.player.dead || this.boss?.engaged || this.chaseSprite) return;
-        // la BFS costa: vale finché player e bersaglio restano nelle stesse stanze
-        const key = this.guide ? `${this.guide.roomAt(this.player.x, this.player.y)?.id ?? -1}:${this.guide.roomAt(goal.x, goal.y)?.id ?? -1}` : 'direct';
+        // la BFS costa: vale finché player e bersaglio restano nelle stesse stanze;
+        // l'obiettivo cambia (wave presa → uscita), quindi la chiave include anche il bersaglio
+        const key = this.guide ? `${this.guide.roomAt(this.player.x, this.player.y)?.id ?? -1}:${this.guide.roomAt(goal.x, goal.y)?.id ?? -1}:${Math.round(goal.x)}:${Math.round(goal.y)}` : `direct:${Math.round(goal.x)}:${Math.round(goal.y)}`;
         let next = key === this.guideCacheKey ? this.guideCache : null;
         if (!next) {
             next = this.guide ? this.guide.nextPoint(this.player.x, this.player.y, goal.x, goal.y) : { x: goal.x, y: goal.y, rooms: 0 };
@@ -2992,6 +3070,9 @@ export class GameScene extends Phaser.Scene {
             const won = state.hasFlag(`arena-vinta-${this.def.id}`);
             const mic = this.castSprite(x, y - 12, 'mic').setDepth(4).setTint(won ? 0x64748b : 0xef4444);
             if (!won) this.lighting.static(x, y - 30, 0xef4444, 170, 0.9);
+            const arenaKey = `arena-vinta-${this.def.id}`;
+            const arenaLevel = this.def.id;
+            expectCollectible(arenaLevel, arenaKey, 'thing', () => state.hasFlag(arenaKey));
             this.challengeSpot = { room: cand.room, x, y, mic };
             this.interactables.push({ x, y, range: 60, onInteract: () => this.offerChallenge() });
             return;
@@ -4141,6 +4222,7 @@ export class GameScene extends Phaser.Scene {
                             } else {
                                 state.setFlag('notino-disarmato');
                                 this.startDialogue('notino-disarmato', () => {
+                                    expectCollectible(this.def.id, 'charm-sparacchino', 'thing', () => state.hasCharm('sparacchino'));
                                     state.giveCharm('sparacchino');
                                     bus.emit('charm-found', { id: 'sparacchino' });
                                 });

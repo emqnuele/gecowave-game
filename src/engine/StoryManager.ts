@@ -3,6 +3,7 @@ import { TILE } from '../config';
 import { noteId, pageId, PAGE_REGIONS, REGION_NOTES, TOTAL_PAGES } from '../content/arcs';
 import { hashString } from './art/ink';
 import { bus } from './events';
+import { expectCollectible, expectLoreKey } from './ChapterCompletion';
 import type { LightingManager } from './LightingManager';
 import { sfx } from './sfx';
 import { state } from './state';
@@ -42,6 +43,13 @@ export class StoryManager {
     }
 
     setup(regionId: string, layout: RegionLayout | null, avoid: { x: number; y: number }[]): void {
+        // note, pagina e pensiero si registrano prima del piazzamento: valgono anche già letti
+        for (let i = 0; i < (REGION_NOTES[regionId] ?? []).length; i++) expectLoreKey(regionId, noteId(regionId, i), 'thing');
+        const pageIndex = (PAGE_REGIONS as readonly string[]).indexOf(regionId);
+        if (pageIndex >= 0) expectLoreKey(regionId, pageId(pageIndex), 'thing');
+        if (regionId === 'mente') {
+            expectCollectible(regionId, 'pensiero-sepolto', 'thing', () => state.hasFlag('pensiero-cancellato') || state.hasFlag('pensiero-portato'));
+        }
         if (!layout?.spots?.length) return;
         const used = [...avoid];
         const free = (x: number, y: number) => used.every((p) => Math.abs(p.x - x) > 170 || Math.abs(p.y - y) > 120);
@@ -81,7 +89,6 @@ export class StoryManager {
         };
 
         // le pagine di pedro stanno nelle stanze segrete, se ce ne sono: premiano chi cerca
-        const pageIndex = (PAGE_REGIONS as readonly string[]).indexOf(regionId);
         if (pageIndex >= 0) {
             const secrets = side.filter((r) => r.kind === 'secret');
             const at = claim(secrets.length ? secrets : side, 0.6) ?? claim(pathRooms, 0.7);
