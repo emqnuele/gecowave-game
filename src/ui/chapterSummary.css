@@ -364,6 +364,11 @@
   animation: chsum-stamp-in 0.4s cubic-bezier(0.2, 2.4, 0.4, 1) both;
 }
 
+.chsum-stamp.faded {
+  opacity: 0.12;
+  transition: opacity 0.5s ease;
+}
+
 .chsum-row {
   display: flex;
   justify-content: space-between;

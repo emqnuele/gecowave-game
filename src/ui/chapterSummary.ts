@@ -184,7 +184,10 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         clone.style.cssText += `;position:fixed;left:${r1.left}px;top:${r1.top}px;width:${r1.width}px;height:${r1.height}px;margin:0;z-index:5;pointer-events:none;transform-origin:center center;`;
         root.append(clone);
         flights.push(clone);
-        // l'originale sparisce subito: quello che vola è l'unico visibile
+        // l'originale sparisce subito e per davvero: il fill delle animazioni
+        // di entrata non deve poterlo tenere acceso
+        from.classList.remove('enter');
+        from.style.visibility = 'hidden';
         from.classList.add('leaving');
         const dx = r2.left + r2.width / 2 - (r1.left + r1.width / 2);
         const dy = r2.top + r2.height / 2 - (r1.top + r1.height / 2);
@@ -521,6 +524,10 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
     });
     later(after(2600 + summary.score.lines.length * 450 + 1100), () => {
         for (const row of rowEls) row.classList.add('faded');
+        if (recordStamp) {
+            recordStamp.classList.remove('on');
+            recordStamp.classList.add('faded');
+        }
         const c = chip(`capitolo + ${fmt(summary.score.chapter)}`, false);
         flyTo(totalNum, dock, c, () => {});
         scoreBeat.classList.add('leaving');
