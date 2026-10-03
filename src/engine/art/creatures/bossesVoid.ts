@@ -213,16 +213,16 @@ const delegato: CreatureSpec = {
     draw(p, t, f) {
         const y = sin(t) * 1.4;
         const open = sin(t) * 3;
-        arm(p, [{ x: 17, y: 28 + y }, { x: 8, y: 25 + y - open * 0.5 }, { x: 1, y: 18 + y - open }], 4.4, 0x3b2a52, 0x7a6a8a);
-        arm(p, [{ x: 36, y: 28 + y }, { x: 44, y: 25 + y - open * 0.5 }, { x: 50, y: 20 + y - open }], 4.4, 0x3b2a52, 0x7a6a8a);
-        const h = regret(p, t, 0x3b2a52, 0x7a6a8a, 0xc084fc);
-        // il foglio della delega, sporto in avanti
+        arm(p, [{ x: 17, y: 28 + y }, { x: 8, y: 25 + y - open * 0.5 }, { x: 1, y: 18 + y - open }], 4.4, 0x24304f, 0x6a7a8a);
+        arm(p, [{ x: 36, y: 28 + y }, { x: 44, y: 25 + y - open * 0.5 }, { x: 50, y: 20 + y - open }], 4.4, 0x24304f, 0x6a7a8a);
+        const h = regret(p, t, 0x24304f, 0x6a7a8a, 0x60a5fa);
+        // il verbale, sporto in avanti con la penna blu
         p.shape([{ x: 46, y: 8 + y - open }, { x: 56, y: 10 + y - open }, { x: 54, y: 22 + y - open }, { x: 44, y: 20 + y - open }], 0xf3e8ff, { smooth: 0, hatch: 0.2, shadow: 0.3 });
-        for (const k of [0, 1, 2]) p.line([{ x: 47, y: 12 + k * 3 + y - open }, { x: 53, y: 13 + k * 3 + y - open }], 0.5, 0x6b21a8, 0.7);
+        for (const k of [0, 1, 2]) p.line([{ x: 47, y: 12 + k * 3 + y - open }, { x: 53, y: 13 + k * 3 + y - open }], 0.5, 0x1d4ed8, 0.7);
         // occhi che guardano altrove: non è colpa sua
-        p.eye(h.hx - 3, h.hy - 1, 2, 0xc084fc, { pupil: true, lid: 0.35 });
-        p.eye(h.hx + 4, h.hy - 1, 2, 0xc084fc, { pupil: true, lid: 0.35 });
-        scanlines(p, 0, 0, 52, 80, 0xc084fc, f);
+        p.eye(h.hx - 3, h.hy - 1, 2, 0x60a5fa, { pupil: true, lid: 0.35 });
+        p.eye(h.hx + 4, h.hy - 1, 2, 0x60a5fa, { pupil: true, lid: 0.35 });
+        scanlines(p, 0, 0, 52, 80, 0x60a5fa, f);
     },
 };
 

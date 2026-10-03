@@ -401,22 +401,22 @@ export const BOSSES: Record<BossKind, BossDef> = {
     },
 
     /* ---------- i rimpianti del void: cinque persone-ricordo, deformi,
-       che custodiscono ognuna una verità su lametta (1-3) o piema (4-5).
+       che custodiscono ognuna una verità: lametta (1-2) o piema (3-5).
        sono ricordi sbagliati del passato che non vogliono essere visti. */
 
     // burocrate: ti seppellisce di carte (mine) + raffiche d'ufficio
     delegato: {
         kind: 'delegato',
-        name: 'il delegato (un rimpianto di lametta)',
+        name: 'il delegato (un rimpianto di piema)',
         texture: 'boss-delegato',
-        hp: 28,
-        glowColor: 0xc084fc,
+        hp: 46,
+        glowColor: 0x60a5fa,
         attacks: {
             1: ['mines', 'burst'],
             2: ['mines', 'burst', 'cross'],
             3: ['mines', 'cross', 'snipe'],
         },
-        cooldownMs: { 1: 2400, 2: 2000, 3: 1700 },
+        cooldownMs: { 1: 2200, 2: 1800, 3: 1500 },
         guardsExit: false,
         glitchy: true,
         contactDamage: 1,
