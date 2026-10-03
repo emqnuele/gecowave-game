@@ -1,6 +1,7 @@
 import { COMBAT } from '../config';
 import { BASE_NOTCHES, charmMods, ITEMS, LEGACY_ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
+import type { Action, PresetId } from './input/actions';
 
 const SAVE_KEY = 'gecowave-save-v2';
 const SETTINGS_KEY = 'gecowave-settings-v1';
@@ -10,11 +11,18 @@ const SETTINGS_KEY = 'gecowave-settings-v1';
 const DOOMSDAY_FILL_MS = 22 * 60 * 1000;
 const DOOMSDAY_BOSS_RELIEF = 0.14;
 
+export interface ControlsSettings {
+    preset: PresetId;
+    custom: Partial<Record<Action, string[]>>;
+}
+
 export interface Settings {
     volume: number;
     screenShake: boolean;
     /** modalità assistita: la freccia che indica il prossimo varco verso l'obiettivo */
     guide: boolean;
+    /** comandi rimappati: il preset dice tutto, custom solo le eccezioni */
+    controls: ControlsSettings;
 }
 
 export interface PortalReturn {
@@ -62,7 +70,7 @@ const defaultSave = (): SaveData => ({
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
 class GameState {
     save: SaveData = defaultSave();
-    settings: Settings = { volume: 0.7, screenShake: true, guide: false };
+    settings: Settings = { volume: 0.7, screenShake: true, guide: false, controls: { preset: 'classico', custom: {} } };
     godMode = false;
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
@@ -114,7 +122,13 @@ class GameState {
                 }
             }
             const s = localStorage.getItem(SETTINGS_KEY);
-            if (s) this.settings = { ...this.settings, ...JSON.parse(s) };
+            if (s) {
+                const parsed = JSON.parse(s);
+                // un salvataggio vecchio senza comandi riceve il default
+                const preset = parsed.controls?.preset === 'frecce' ? 'frecce' : 'classico';
+                const custom = parsed.controls?.custom && typeof parsed.controls.custom === 'object' ? parsed.controls.custom : {};
+                this.settings = { ...this.settings, ...parsed, controls: { preset, custom } };
+            }
         } catch {
             // storage corrotto o bloccato: si riparte da zero
         }

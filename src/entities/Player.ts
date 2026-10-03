@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
 import { FX } from '../engine/art/abilityFx';
 import { bus } from '../engine/events';
+import type { Input } from '../engine/input/Input';
 import { quickHeal } from '../engine/inventory';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -18,8 +19,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     /** colpo della combo in corso: 0,1,2 — il terzo spacca */
     comboStep = 0;
 
-    private keys!: Record<'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'dash' | 'dash2' | 'heal' | 'risonante' | 'riflesso' | 'analisi' | 'scudo' | 'acqua' | 'eat', Phaser.Input.Keyboard.Key>;
-    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private controls: Input;
 
     private coyoteUntil = 0;
     private jumpBufferedUntil = 0;
@@ -70,8 +70,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private lastDamageAt = 0;
     private nextRegenAt = 0;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, input: Input) {
         super(scene, x, y, 'player', 0);
+        this.controls = input;
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -90,30 +91,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const hb = this.attackHitbox.body as Phaser.Physics.Arcade.Body;
         hb.setAllowGravity(false);
         hb.moves = false;
-
-        const kb = scene.input.keyboard!;
-        this.cursors = kb.createCursorKeys();
-        this.keys = {
-            left: kb.addKey('A'),
-            right: kb.addKey('D'),
-            up: kb.addKey('W'),
-            down: kb.addKey('S'),
-            jump: kb.addKey('SPACE'),
-            attack: kb.addKey('J'),
-            dash: kb.addKey('SHIFT'),
-            dash2: kb.addKey('K'),
-            heal: kb.addKey('Q'),
-            risonante: kb.addKey('F'),
-            riflesso: kb.addKey('G'),
-            analisi: kb.addKey('H'),
-            scudo: kb.addKey('R'),
-            acqua: kb.addKey('V'),
-            eat: kb.addKey('C'),
-        };
-
-        scene.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-            if (p.leftButtonDown()) this.tryAttack('side');
-        });
 
         this.on('animationcomplete-p-attack', () => {
             this.attacking = false;
@@ -181,9 +158,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     /** tana: da nascosto, un tasto di movimento fa uscire dall'armadio */
     get movePressed(): boolean {
-        return this.keys.left.isDown || this.keys.right.isDown || this.keys.up.isDown || this.keys.down.isDown
-            || this.keys.jump.isDown || this.cursors.left.isDown || this.cursors.right.isDown
-            || this.cursors.up.isDown || this.cursors.down.isDown;
+        return this.controls.down('left') || this.controls.down('right') || this.controls.down('up')
+            || this.controls.down('down') || this.controls.down('jump');
+    }
+
+    /** fermo a terra: per "su" del pad che vale come interagisci */
+    get still(): boolean {
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        return this.grounded && Math.abs(body.velocity.x) < 40;
     }
 
     private emitVitals(hurt: boolean): void {
@@ -209,10 +191,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             return;
         }
 
-        const left = this.keys.left.isDown || this.cursors.left.isDown;
-        const right = this.keys.right.isDown || this.cursors.right.isDown;
-        const upHeld = this.keys.up.isDown || this.cursors.up.isDown;
-        const downHeld = this.keys.down.isDown || this.cursors.down.isDown;
+        const left = this.controls.down('left');
+        const right = this.controls.down('right');
+        const upHeld = this.controls.down('up');
+        const downHeld = this.controls.down('down');
 
         if (this.grounded) {
             this.coyoteUntil = now + PHYSICS.coyoteMs;
@@ -291,7 +273,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.submerged && body.velocity.y > 300) body.setVelocityY(300);
 
         // salto: buffer + coyote + rimbalzo
-        if (Phaser.Input.Keyboard.JustDown(this.keys.jump) || Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+        if (this.controls.pressed('jump')) {
             this.jumpBufferedUntil = now + PHYSICS.jumpBufferMs;
         }
         if (now < this.jumpBufferedUntil) {
@@ -338,24 +320,54 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
         // salto variabile: rilascio = taglio della spinta
-        if (!this.keys.jump.isDown && !this.cursors.up.isDown && body.velocity.y < 0) {
+        if (!this.controls.down('jump') && body.velocity.y < 0) {
             body.setVelocityY(body.velocity.y * (1 - (1 - PHYSICS.jumpCutFactor) * (delta / 100)));
         }
 
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.dash) || Phaser.Input.Keyboard.JustDown(this.keys.dash2))
-            && state.hasAbility('scivolata') && now >= this.dashCooldownUntil) {
+        if (this.controls.pressed('dash') && state.hasAbility('scivolata') && now >= this.dashCooldownUntil) {
             this.startDash();
         }
 
-        if (Phaser.Input.Keyboard.JustDown(this.keys.attack)) {
+        if (this.controls.pressed('attack')) {
             this.tryAttack(upHeld ? 'up' : !this.grounded && downHeld ? 'down' : 'side');
         }
 
+        // la wave si decide alla pressione: su = analisi, giù = bottiglia, da sola = risonante
+        if (this.controls.pressed('wave')) {
+            if (upHeld) {
+                if (state.hasAbility('analisi') && now >= this.analisiReadyAt) {
+                    if (this.spendFlow(COMBAT.analisiCost * state.mods.abilityCost)) {
+                        this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
+                        sfx.unlock();
+                        this.scene.events.emit('player-analisi', {});
+                        this.scene.events.emit('player-act', { act: 'wave', wave: 'analisi' });
+                    }
+                } else {
+                    sfx.ui();
+                }
+            } else if (downHeld) {
+                if (state.hasAbility('acquatossica') && now >= this.acquaReadyAt) {
+                    if (this.spendFlow(COMBAT.acquaCost * state.mods.abilityCost)) {
+                        this.acquaReadyAt = now + COMBAT.acquaCooldownMs;
+                        sfx.unlock();
+                        // in aria la lasci cadere sotto di te, a terra la lanci ad arco
+                        const aim = !this.grounded ? 'drop' : 'lob';
+                        this.scene.events.emit('player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
+                        this.scene.events.emit('player-act', { act: 'wave', wave: 'acquatossica' });
+                    }
+                } else {
+                    sfx.ui();
+                }
+            } else if (!state.hasAbility('risonante')) {
+                // niente ripieghi: il giocatore impara lo schema
+                sfx.ui();
+            }
+        }
         this.updateRisonante(now);
 
-        if (Phaser.Input.Keyboard.JustDown(this.keys.eat)) bus.emit('toast', { text: quickHeal() });
+        if (this.controls.pressed('eat')) bus.emit('toast', { text: quickHeal() });
 
-        if (Phaser.Input.Keyboard.JustDown(this.keys.riflesso) && state.hasAbility('riflesso')) {
+        if (this.controls.pressed('riflesso') && state.hasAbility('riflesso')) {
             // seconda pressione col clone vivo: scambio di posto, non un clone nuovo
             const scene = this.scene as unknown as { cloneAlive?: boolean };
             if (this.riflessoSwapAvailable && scene.cloneAlive) {
@@ -371,33 +383,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        if (Phaser.Input.Keyboard.JustDown(this.keys.analisi) && state.hasAbility('analisi') && now >= this.analisiReadyAt) {
-            if (this.spendFlow(COMBAT.analisiCost * state.mods.abilityCost)) {
-                this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
-                sfx.unlock();
-                this.scene.events.emit('player-analisi', {});
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'analisi' });
-            }
-        }
-
-        if (Phaser.Input.Keyboard.JustDown(this.keys.scudo) && state.hasAbility('scudo') && now >= this.scudoReadyAt) {
+        if (this.controls.pressed('scudo') && state.hasAbility('scudo') && now >= this.scudoReadyAt) {
             if (this.spendFlow(COMBAT.scudoCost * state.mods.abilityCost)) {
                 this.scudoReadyAt = now + COMBAT.scudoCooldownMs;
                 sfx.unlock();
                 this.scene.events.emit('player-scudo', {});
                 this.scene.events.emit('player-act', { act: 'wave', wave: 'scudo' });
-            }
-        }
-
-        if (Phaser.Input.Keyboard.JustDown(this.keys.acqua) && state.hasAbility('acquatossica') && now >= this.acquaReadyAt) {
-            if (this.spendFlow(COMBAT.acquaCost * state.mods.abilityCost)) {
-                this.acquaReadyAt = now + COMBAT.acquaCooldownMs;
-                sfx.unlock();
-                // in aria la lasci cadere sotto di te, a terra la lanci ad arco
-                const body = this.body as Phaser.Physics.Arcade.Body;
-                const aim = !body.blocked.down ? 'drop' : 'lob';
-                this.scene.events.emit('player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'acquatossica' });
             }
         }
 
@@ -579,10 +570,23 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         return base * state.damageMult * (1 + state.save.stats.forza * 0.1);
     }
 
+    /** la carica non parte al rilascio dentro un dialogo: si cancella e basta */
+    cancelCharge(): void {
+        if (!this.charging) return;
+        this.charging = false;
+        this.chargeEmitter?.destroy();
+        this.chargeEmitter = null;
+        this.chargeRing?.destroy();
+        this.chargeRing = null;
+    }
+
     private updateRisonante(now: number): void {
-        if (!state.hasAbility('risonante')) return;
+        if (!state.hasAbility('risonante')) {
+            if (this.charging) this.cancelCharge();
+            return;
+        }
         const ecoCost = COMBAT.risonanteEcoCost * state.mods.abilityCost;
-        if (this.keys.risonante.isDown && !this.charging && state.run.flow >= ecoCost) {
+        if (this.controls.down('wave') && !this.charging && state.run.flow >= ecoCost) {
             this.charging = true;
             this.chargeStart = now;
             this.chargeHit1 = false;
@@ -613,7 +617,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.scene.cameras.main.flash(90, 168, 85, 247);
             }
         }
-        if (this.charging && !this.keys.risonante.isDown) {
+        if (this.charging && this.controls.released('wave')) {
             const held = now - this.chargeStart;
             this.chargeEmitter?.destroy();
             this.chargeEmitter = null;
@@ -667,7 +671,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     private updateHeal(delta: number, downHeld: boolean): void {
         const canHeal = this.grounded && !this.attackActive && !this.charging && state.run.flow >= COMBAT.healCost
-            && state.run.hp < state.maxHp && this.keys.heal.isDown && !downHeld;
+            && state.run.hp < state.maxHp && this.controls.down('heal') && !downHeld;
         if (canHeal) {
             if (this.healHeldMs === 0) this.scene.events.emit('player-act', { act: 'heal-start' });
             this.healHeldMs += delta;

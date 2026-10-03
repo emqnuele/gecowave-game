@@ -23,6 +23,7 @@ import { MenuScene } from './scenes/MenuScene';
 import { DialogueBox } from './ui/dialogue';
 import { Subtitles } from './ui/subtitles';
 import { Phone } from './ui/phone';
+import { startPadBridge } from './engine/input/padBridge';
 import { initChapterSummary, isChapterSummaryOpen } from './ui/chapterSummary';
 import { initFinalSummary, isFinalSummaryOpen } from './ui/finalSummary';
 import { Hud } from './ui/hud';
@@ -63,6 +64,7 @@ async function boot(): Promise<void> {
                 tileBias: 48,
             },
         },
+        input: { gamepad: true },
         scene: [BootScene, GameScene, GalleryScene, MenuScene],
     });
 
@@ -169,6 +171,8 @@ async function boot(): Promise<void> {
     hud.root.append(phone.hintElement);
     initChapterSummary();
     initFinalSummary();
+    // il pad nei menu imita la tastiera, in gioco lo legge il livello input
+    startPadBridge(() => screens.overlayOpen || phone.isOpen || dialogue.open || isChapterSummaryOpen() || isFinalSummaryOpen());
 
     bus.on('ending', ({ id, score, rank }) => {
         inGame = false;

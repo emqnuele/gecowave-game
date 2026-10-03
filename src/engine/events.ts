@@ -38,6 +38,10 @@ export interface GameEvents {
     'wave-cooldowns': { cds: Partial<Record<AbilityId, number>>; flow: number };
     /** la tana ti ha sentito nell'armadio: lochef torna in caccia da vicino */
     'tana-sniffed': {};
+    /** ultimo dispositivo usato: i testi mostrano i tasti veri */
+    'input-device': { device: 'tastiera' | 'gamepad' };
+    /** comandi cambiati: chi legge input si ricostruisce */
+    'controls-changed': {};
 }
 
 type Handler<T> = (payload: T) => void;

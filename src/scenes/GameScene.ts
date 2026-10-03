@@ -56,6 +56,7 @@ import { OmbraBrain } from '../engine/OmbraBrain';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { createMechanic, type Mechanic } from '../engine/mechanics';
+import { Input } from '../engine/input/Input';
 import { hitMult, LESSONS } from '../content/lessons';
 import { BOSS_BARKS, barksFor, LAMETTA_BARKS } from '../content/barks';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
@@ -158,6 +159,8 @@ export class GameScene extends Phaser.Scene {
     /** pavimenti e salti per chi insegue o passeggia */
     private nav!: NavGraph;
     private player!: Player;
+    /** il livello input: nessuno legge più tasti fisici */
+    private controls!: Input;
     private boss: Boss | null = null;
     private enemies!: Phaser.GameObjects.Group;
     /** riusato ogni frame per le minacce: niente array nuovi per il GC */
@@ -478,7 +481,20 @@ export class GameScene extends Phaser.Scene {
         }
         // rientro da un capitolo segreto: spawn accanto al varco d'origine
         if (data.spawnAt) sp = { x: data.spawnAt.x, y: data.spawnAt.y };
-        this.player = new Player(this, sp.x, sp.y);
+        this.controls = new Input(this);
+        // la rimappatura ricostruisce i tasti vivi, la ripresa pulisce gli spigoli
+        const offControls = bus.on('controls-changed', () => this.controls.rebuild());
+        const onResume = (): void => {
+            this.controls.reset();
+            this.player.cancelCharge();
+        };
+        this.events.on(Phaser.Scenes.Events.RESUME, onResume);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            offControls();
+            this.events.off(Phaser.Scenes.Events.RESUME, onResume);
+            this.controls.destroy();
+        });
+        this.player = new Player(this, sp.x, sp.y, this.controls);
         this.player.setDepth(4);
         this.playerLightRef = this.lighting.playerLight(this.player);
         this.lastSafe = { ...sp };
@@ -1998,9 +2014,6 @@ export class GameScene extends Phaser.Scene {
         on('boss-engaged', this.onBossEngaged as never);
         on('boss-dying', (() => this.silenceBoss()) as never);
         on('boss-phase', (({ phase }: { phase: number }) => this.voice?.say(phase === 2 ? 'phase2' : 'phase3', true)) as never);
-
-        this.input.keyboard!.on('keydown-ESC', () => bus.emit('request-pause', {}));
-        this.input.keyboard!.on('keydown-E', () => this.tryInteract());
     }
 
     /* ---------- progresso: la x dei capitoli lineari, il percorso nelle regioni ---------- */
@@ -2466,6 +2479,14 @@ export class GameScene extends Phaser.Scene {
 
     update(time: number, delta: number): void {
         if (!this.player) return;
+        this.controls.update();
+        if (this.controls.pressed('interact')) this.tryInteract();
+        else if (this.controls.device === 'gamepad' && this.controls.pressed('up')
+            && !this.controls.down('wave') && this.player.still && this.findNearestInteractable()) {
+            // col pad interagisci premendo su da fermo, come a hallownest
+            this.tryInteract();
+        }
+        if (this.controls.pressed('pause')) bus.emit('request-pause', {});
         this.player.update(time, delta);
         this.mechanic?.update(time, delta);
 
