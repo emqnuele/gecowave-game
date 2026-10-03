@@ -748,6 +748,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         body.setVelocity(0, 0);
     }
 
+    /** il film è finito: si torna subito svegli, dovunque fossimo */
+    wake(): void {
+        this.stunnedUntil = 0;
+    }
+
     /* ---------- visuale ---------- */
 
     private updateAnimation(body: Phaser.Physics.Arcade.Body): void {

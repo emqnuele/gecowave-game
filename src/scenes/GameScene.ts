@@ -5319,6 +5319,11 @@ export class GameScene extends Phaser.Scene {
             flashback.play(this, this.player, fbId, () => this.startLines(DIALOGUES[id], onEnd));
             return;
         }
+        if (fbId && !already) {
+            // un film sta già girando: si aspetta il suo turno, mai sopra
+            this.time.delayedCall(1200, () => this.startDialogue(id, onEnd));
+            return;
+        }
         this.startLines(DIALOGUES[id], onEnd);
     }
 

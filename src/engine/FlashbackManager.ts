@@ -11,12 +11,10 @@ import { ensureCreature } from './art/creatures';
 import { VortexPipeline, hexToTint } from './fx/VortexPipeline';
 import { MemoryPipeline } from './fx/MemoryPipeline';
 
-/* Flashback come mini-film, v4. Basta quadretti statici.
-   Ogni ricordo = 3 inquadrature con stacco (dip-to-black), ognuna con:
-   scenografia (muri di carta/legno/cielo stellato generati), oggetti,
-   attori che ENTRANO e AGISCONO, polvere/luci vive, foley dedicato.
-   Shader veri dove sicuri: vignetta + zoom camera, blur di profondità
-   sullo sfondo, bagliori in ADD. Max 2 sottotitoli, si salta con un tasto. */
+/* Flashback come mini-film, v5. Il palco è il livello vero: la camera
+   inquadra un punto accanto al geco, il buio cala sul resto, gli attori
+   recitano nel mondo con la sua luce. Alla fine il geco torna esattamente
+   dov'era e com'era: niente restart, niente reset. */
 
 const CAST_TEXTURE: Record<string, string> = {
     lametta: 'npc-lametta',
@@ -80,14 +78,17 @@ export class FlashbackManager {
         // il film è l'unica cosa accesa: hud e scritte di gioco spariscono
         document.body.classList.add('film');
 
-        // --- il mondo trattiene il fiato ---
+        // --- il mondo trattiene il fiato: il geco resta dov'è, congelato ---
         const godPrev = state.godMode;
         state.godMode = true;
+        const pbody = player.body as Phaser.Physics.Arcade.Body | null;
+        const home = { x: player.x, y: player.y, vx: pbody?.velocity.x ?? 0, vy: pbody?.velocity.y ?? 0 };
         try {
             (player as unknown as { stun: (ms: number) => void }).stun?.(dur + 800);
         } catch { /* sprite finto in anteprima */ }
-        const body = player.body as Phaser.Physics.Arcade.Body | null;
-        body?.setVelocity(0, 0);
+        pbody?.setVelocity(0, 0);
+        const wasVisible = player.visible;
+        try { player.setVisible(false); } catch { /* test */ }
         music.setGraveDuck(true);
         // tappeto: solo lo swell. niente whoosh, niente respiri.
         if (canAudio) {
@@ -97,10 +98,11 @@ export class FlashbackManager {
         const cam = scene.cameras.main;
         const W = cam.width;
         const H = cam.height;
-        // palco in screen-space: la camera può seguire chi vuole, il film resta fermo
-        const sx = W / 2;
+        // palco nel mondo, accanto al geco: il livello fa da scenografia
+        const facing = (player as unknown as { facing?: number }).facing ?? 1;
+        const sx = player.x + facing * 260;
         const sy = H * 0.52;
-        const floorY = sy + 108;
+        const floorY = player.y + 24;
         const ctx: Ctx = { cx: sx, floorY, tint: fb.tint };
         this.ensureTextures(scene);
 
@@ -131,7 +133,26 @@ export class FlashbackManager {
             barBot.remove();
             this.playing = false;
         });
-        // shader: vignetta vera sulla camera
+        // occhio di bue sul palco: alone caldo più luce vera per gli attori
+        const dressing: Phaser.GameObjects.GameObject[] = [];
+        const spotGlow = scene.add.image(sx, floorY - 110, 'fb-glow').setDisplaySize(460, 340)
+            .setTint(0xffe2ae).setAlpha(0.5).setDepth(159);
+        try { spotGlow.setBlendMode(Phaser.BlendModes.ADD); } catch { /* test */ }
+        dressing.push(spotGlow);
+        let spotLight: Phaser.GameObjects.Light | null = null;
+        try {
+            spotLight = scene.lights.addLight(sx, floorY - 110, 340, 0xffe2ae, 1.15);
+        } catch { /* test */ }
+        const clearDressing = (): void => {
+            for (const o of dressing) {
+                try { o.destroy(); } catch { /* test */ }
+            }
+            dressing.length = 0;
+            if (spotLight) {
+                try { scene.lights.removeLight(spotLight); } catch { /* test */ }
+                spotLight = null;
+            }
+        };
         try {
             cam.postFX.clear();
             cam.postFX.addVignette(0.5, 0.5, 0.72, 0.42);
@@ -146,6 +167,11 @@ export class FlashbackManager {
 
         // --- il tornado in ingresso: lo shader avvita il frame live, poi il nero ---
         scene.tweens.add({ targets: dark, alpha: 0.97, duration: ENTER * 0.6, ease: 'Quad.easeOut' });
+        try {
+            // la camera lascia il geco e inquadra il palco
+            cam.stopFollow();
+            cam.pan(sx, floorY - 130, ENTER, 'Quad.easeInOut');
+        } catch { /* camera finta nei test */ }
         try {
             // due scosse in crescendo mentre tutto stringe verso il centro
             cam.shake(ENTER * 0.55, 0.004);
@@ -315,6 +341,15 @@ export class FlashbackManager {
                 } catch { /* test */ }
                 music.setGraveDuck(false);
                 state.godMode = godPrev;
+                // il geco torna esattamente dov'era e com'era
+                try {
+                    player.setPosition(home.x, home.y);
+                    pbody?.setVelocity(home.vx, home.vy);
+                    (player as unknown as { wake?: () => void }).wake?.();
+                    if (wasVisible) player.setVisible(true);
+                    cam.startFollow(player, true, 0.12, 0.12);
+                } catch { /* test */ }
+                clearDressing();
                 bus.emit('toast', { text: '' });
                 onEnd?.();
             });
@@ -341,9 +376,9 @@ export class FlashbackManager {
         return { objs: [], timers: [] };
     }
 
-    /** metti in scena: scroll fisso, profondità data, tracciato per la pulizia */
+    /** metti in scena: nel mondo con tutti, profondità data, tracciato per la pulizia */
     put<T extends Phaser.GameObjects.GameObject>(scope: Scope, o: T, depth: number): T {
-        try { (o as unknown as { setScrollFactor: (v: number) => void }).setScrollFactor(0); } catch { /* test */ }
+        try { (o as unknown as { setScrollFactor: (v: number) => void }).setScrollFactor(1); } catch { /* test */ }
         try { (o as unknown as { setDepth: (v: number) => void }).setDepth(depth); } catch { /* test */ }
         scope.objs.push(o);
         return o;
@@ -376,53 +411,9 @@ export class FlashbackManager {
         scope.timers.length = 0;
     }
 
-    /** texture condivise: carta, legno, notte stellata, intonaco. una volta sola. */
+    /** texture condivise: solo l'alone, il resto è il livello vero. una volta sola. */
     private ensureTextures(scene: Phaser.Scene): void {
         try {
-            if (!scene.textures.exists('fb-paper')) {
-                const t = scene.textures.createCanvas('fb-paper', 128, 128)!;
-                const c = t.getContext();
-                c.fillStyle = '#d9cdae';
-                c.fillRect(0, 0, 128, 128);
-                for (let i = 0; i < 420; i++) {
-                    c.fillStyle = Math.random() > 0.5 ? 'rgba(120,100,70,0.16)' : 'rgba(255,250,235,0.14)';
-                    c.fillRect(Math.random() * 128, Math.random() * 128, 1.6, 1.6);
-                }
-                t.refresh();
-            }
-            if (!scene.textures.exists('fb-wood')) {
-                const t = scene.textures.createCanvas('fb-wood', 128, 64)!;
-                const c = t.getContext();
-                c.fillStyle = '#4a3421';
-                c.fillRect(0, 0, 128, 64);
-                for (let r = 0; r < 4; r++) {
-                    c.fillStyle = r % 2 ? '#523a24' : '#43301e';
-                    c.fillRect(0, r * 16, 128, 15);
-                    c.strokeStyle = 'rgba(20,12,6,0.8)';
-                    c.strokeRect(-1, r * 16, 128, 15);
-                    c.strokeStyle = 'rgba(120,85,50,0.35)';
-                    c.beginPath();
-                    c.moveTo(0, r * 16 + 8 + Math.random() * 4);
-                    c.bezierCurveTo(40, r * 16 + 6, 80, r * 16 + 12, 128, r * 16 + 8);
-                    c.stroke();
-                }
-                t.refresh();
-            }
-            if (!scene.textures.exists('fb-night')) {                const t = scene.textures.createCanvas('fb-night', 64, 256)!;
-                const c = t.getContext();
-                const g = c.createLinearGradient(0, 0, 0, 256);
-                g.addColorStop(0, '#0a0f24');
-                g.addColorStop(0.6, '#131a36');
-                g.addColorStop(1, '#05060e');
-                c.fillStyle = g;
-                c.fillRect(0, 0, 64, 256);
-                for (let i = 0; i < 46; i++) {
-                    c.fillStyle = `rgba(235,240,255,${0.25 + Math.random() * 0.65})`;
-                    const s = Math.random() > 0.85 ? 2 : 1;
-                    c.fillRect(Math.random() * 64, Math.random() * 170, s, s);
-                }
-                t.refresh();
-            }
             if (!scene.textures.exists('fb-glow')) {
                 // alone morbido per luna e presenze: nucleo pieno che svanisce
                 const t = scene.textures.createCanvas('fb-glow', 128, 128)!;
@@ -433,19 +424,6 @@ export class FlashbackManager {
                 g.addColorStop(1, 'rgba(255,255,255,0)');
                 c.fillStyle = g;
                 c.fillRect(0, 0, 128, 128);
-                t.refresh();
-            }
-            if (!scene.textures.exists('fb-plaster')) {
-                const t = scene.textures.createCanvas('fb-plaster', 128, 128)!;
-                const c = t.getContext();
-                c.fillStyle = '#8d8474';
-                c.fillRect(0, 0, 128, 128);
-                for (let i = 0; i < 26; i++) {
-                    c.fillStyle = Math.random() > 0.5 ? 'rgba(60,52,42,0.10)' : 'rgba(220,210,190,0.08)';
-                    c.beginPath();
-                    c.arc(Math.random() * 128, Math.random() * 128, 6 + Math.random() * 18, 0, 7);
-                    c.fill();
-                }
                 t.refresh();
             }
         } catch { /* anteprima senza canvas: si va di rettangoli */ }
@@ -603,22 +581,9 @@ export class FlashbackManager {
     }
 
     /** stanza: intonaco + legno + lampada che flickera. ritorna la lampada. */
-    room(scope: Scope, scene: Phaser.Scene, ctx: Ctx, lampX: number): { glow: Phaser.GameObjects.Arc } {
-        const cam = scene.cameras.main;
-        const W = cam.width;
-        const wall = scene.add.tileSprite(ctx.cx, ctx.floorY - 150, W + 40, 260, 'fb-plaster');
-        this.put(scope, wall, 160);
-        try { wall.postFX.addBlur(0.6, 0, 0, 1); } catch { /* canvas/test */ }
-        const floor = scene.add.tileSprite(ctx.cx, ctx.floorY + 62, W + 40, 120, 'fb-wood');
-        this.put(scope, floor, 161);
-        const skirt = scene.add.rectangle(ctx.cx, ctx.floorY - 18, W + 40, 6, 0x2a2118, 1);
-        this.put(scope, skirt, 162);
-        // lampada: filo + paralume + luce che respira male
+    room(scope: Scope, scene: Phaser.Scene, ctx: Ctx, lampX: number): void {
+        // interni: il livello fa da stanza, qui solo un lume che respira male
         const lampY = ctx.floorY - 190;
-        const cord = scene.add.rectangle(lampX, lampY - 40, 3, 90, 0x141018, 1);
-        this.put(scope, cord, 163);
-        const shade = scene.add.triangle(lampX, lampY, 0, 0, 44, 0, 22, -26, 0x8f2f3a, 1);
-        this.put(scope, shade, 164);
         const bulb = scene.add.circle(lampX, lampY + 4, 7, 0xffd98a, 1);
         this.put(scope, bulb, 165);
         const glowC = scene.add.circle(lampX, lampY + 10, 90, 0xffc46b, 0.16);
@@ -631,25 +596,15 @@ export class FlashbackManager {
             } catch { /* test */ }
         });
         this.motes(scope, scene, ctx, lampX, lampY + 40, 220, 150, 0xffd98a);
-        return { glow: bulb };
     }
 
     /** esterno notte: cielo + luna che pulsa + dune + foschia */
     night(scope: Scope, scene: Phaser.Scene, ctx: Ctx, moonDx: number): { moon: Phaser.GameObjects.Image } {
-        const cam = scene.cameras.main;
-        const W = cam.width;
-        const sky = scene.add.tileSprite(ctx.cx, ctx.floorY - 190, W + 40, 340, 'fb-night');
-        this.put(scope, sky, 160);
-        try { sky.postFX.addBlur(0.5, 0, 0, 1); } catch { /* test */ }
-        // luna vera: nucleo che sfuma nel cielo, niente torcia
+        // esterni: il cielo vero sta dietro, qui solo luna, foschia e dune di polvere
         const moon = scene.add.image(ctx.cx + moonDx, ctx.floorY - 210, 'fb-glow').setDisplaySize(120, 120);
         this.put(scope, moon, 161);
         try { moon.setBlendMode(Phaser.BlendModes.ADD); } catch { /* test */ }
         scene.tweens.add({ targets: moon, alpha: 0.85, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        for (let i = 0; i < 3; i++) {
-            const dune = scene.add.ellipse(ctx.cx + (i - 1) * 220, ctx.floorY + 40 - i * 14, 420, 90 - i * 12, [0x1a1626, 0x221c30, 0x2b2338][i] as number, 1);
-            this.put(scope, dune, 162 + i);
-        }
         this.mist(scope, scene, ctx.floorY + 10, 0.5);
         this.motes(scope, scene, ctx, ctx.cx, ctx.floorY - 60, 420, 200, 0xcdd6ea);
         return { moon };
