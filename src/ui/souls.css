@@ -1519,7 +1519,7 @@ input.sx-range::-moz-range-thumb {
   font-family: var(--font-fell);
   font-size: 22px;
   letter-spacing: 0.06em;
-  padding: 6px 4px;
+  padding: 6px 4px 0;
 }
 
 .hud-trial {
