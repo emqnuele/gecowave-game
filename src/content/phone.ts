@@ -67,7 +67,7 @@ export const CONTACTS: Contact[] = [
                 'sono impegnatissimo. sto salvando il realm. tu? ah, anche tu. ok, continua.',
                 'se muori ricordati le barre. le barre sono tutto. le barre sono la vita.',
                 'hai controllato i microfoni? lì puoi cambiare gli amuleti. non chiedermi perché, regola del realm.',
-                'maschere: 5 senti il beat, 10 ritmo perfetto + varco verde in perduta. corse citelis: 3 vinte e guastalla guida. microfono rosso: 3 ondate, 180 barre.',
+                'maschere: a 3 senti il beat, a 5 ritmo perfetto e il varco verde in perduta. corse citelis: 3 vinte e guastalla guida. microfono rosso: 3 ondate, 180 barre.',
             ]);
         },
     },
@@ -148,7 +148,7 @@ export interface Post {
 
 /* wavegram: il social del realm. i post si sbloccano con la storia */
 export const POSTS: Post[] = [
-    { author: 'markolino', handle: '@markolino', color: 'green', likes: 3, text: 'il realm collassa e nessuno mi risponde. ho scelto un custode a caso. è un geco. speriamo bene. #gecowave' },
+    { author: 'markolino', handle: '@markolino', color: 'green', likes: 3, text: 'il realm collassa e nessuno mi risponde. la wave ha scelto un custode. è un geco. speriamo bene. #gecowave' },
     { author: 'smela springs', handle: '@smela.premium', color: 'cyan', likes: 4810, text: 'dona una nuova sete alla tua sete. 💧 acqua premium: ora con il 12% di acqua in più. #sponsorizzato' },
     { author: 'notino', handle: '@notino.tecnokill', color: 'red', likes: 1, text: 'server tecnokill aperto 24/7. regole: 1) BUM. 2) vedi regola 1. mamma metti like', needs: 'visto-tecnokill' },
     { author: 'mamma di notino', handle: '@mamma.notino', color: 'red', likes: 1, text: 'bravo amore 👍', needs: 'visto-tecnokill' },
@@ -161,13 +161,12 @@ export const POSTS: Post[] = [
     { author: 'romero', handle: '@det.romero', color: 'blue', likes: 12, text: 'avvistato glitch sul bus. il custode dice di aver sentito statica. un\'ora, 03:58, e nessun nome: la mia unica pista.', needs: 'visto-bus' },
     { author: 'pedro', handle: '@pedro', color: 'cyan', likes: 0, text: 'g10rn0 43. 1l r34lm è st0rt0. 1o l0 r4ddr1zz0. n0n s3rv3 r1ngr4z14rm1.', needs: 'visto-ricordi' },
     { author: 'pedro', handle: '@pedro', color: 'cyan', likes: 0, text: 'c1 4nc0r4 n0n c1 c0n0sc14m0. m4 1o t1 v3d0 g1à.', needs: 'visto-perduta' },
-    { author: 'markolino', handle: '@markolino', color: 'green', likes: 5, text: 'maschere del primo custode: a 5 senti il beat, a 10 ritmo perfetto + varco verde in perduta. cercate dietro muri finti.', needs: 'visto-perduta' },
+    { author: 'markolino', handle: '@markolino', color: 'green', likes: 5, text: 'maschere del primo custode: a 3 senti il beat, a 5 ritmo perfetto e varco verde in perduta. cercate dietro muri finti.', needs: 'visto-perduta' },
     { author: 'guastalla', handle: '@guastalla.guida', color: 'yellow', likes: 7, text: 'se qualcuno batte il citelis in 3 corse, prendo la patente e guido io. piano.', needs: 'visto-bus' },
     { author: 'samatt', handle: '@samatt851', color: 'yellow', likes: 44, text: 'microfono rosso = arena: 3 ondate, 180 barre. a 5 sei gladiatore. parola di ex pendolare.', needs: 'visto-rio' },
     { author: 'lochef85', handle: '@lochef85', color: 'red', likes: 85, text: 'c\'è posto. c\'è sempre posto. 🍖', needs: 'visto-tana' },
     { author: 'filippus il dodo', handle: '@filippus.lifts', color: 'blue', likes: 40000, text: 'panca piana 40.000 kg. estinzione: annullata. leg day: MAI saltato. ticummi: lumaca.', needs: 'visto-cantina' },
     { author: 'guggu', handle: '@guggu.citelis', color: 'yellow', likes: 7, text: 'servizio sospeso per custode. la 14 barrato tornerà. la 14 barrato torna sempre.', needs: 'boss-down-guggu' },
-    { author: 'pedro', handle: '@pedro', color: 'cyan', likes: 0, text: 'g10rn0 43. 1l r34lm è st0rt0. 1o l0 r4ddr1zz0. n0n s3rv3 r1ngr4z14rm1.', needs: 'visto-ricordi' },
     { author: 'walter baruffoni', handle: '@autoscuole.marcetti', color: 'orange', likes: 3, text: 'patente in 3 annetti. garantito. i maranza fuori dalla sede non sono nostri dipendenti. purtroppo.', needs: 'visto-galliate' },
     { author: 'gecowave', handle: '@gecowave', color: 'green', likes: 9999, text: 'il disco esce quando il realm smette di collassare. quindi mai. quindi presto.' },
 ];

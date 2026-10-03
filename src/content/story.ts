@@ -468,6 +468,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'lore-biblioteca': [
         { speaker: 'registro della biblioteca', color: 'blue', text: '«ultimo prestito: "analisi 1 — teoria, esercizi e conseguenze", ritirato da p. il volume è in ritardo di 4 mesi. la multa cresce esponenzialmente. lui apprezzerebbe.»' },
+        { speaker: 'registro della biblioteca', color: 'blue', text: '«nota d\'archivio, pagina 1 del caso analisi 1: "l\'aula è bruciata alle quattro del mattino. responsabile: il limite notevole." la riga è scritta in blu, sopra una riga cancellata.»' },
     ],
     'lore-ruhra-fondazione': [
         { speaker: 'pietra di fondazione', color: 'blue', text: '«la ruhra: dove stanno le persone intelligenti. fondata sul principio che la risposta a tutto esiste e ha pure i crediti formativi.»' },
@@ -713,7 +714,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'ombra-intro-scarsa': [
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'UTENTE NON REGISTRATO RILEVATO. lei non ha mai comprato l\'abbonamento. complimenti per la prudenza. e condoglianze: il protocollo finale parte lo stesso. 👍' },
-        { speaker: 'tommasorveglianza', color: 'cyan', text: 'purtroppo senza abbonamento abbiamo solo riprese delle telecamere pubbliche: 1.200 secondi, quasi tutti di lei che cammina. il clone è... come dire... una beta.' },
+        { speaker: 'tommasorveglianza', color: 'cyan', text: 'senza abbonamento abbiamo una telecamera sola su di lei: regalata da un cliente, puntata su un muro della piazza. 1.200 secondi di lei che dorme. il clone è... come dire... una beta che dorme benissimo.' },
         { speaker: 'la tua ombra', color: 'cyan', text: '*si accende un proiettore. ne esce un geco sgranato e incompleto che salta tipo te, ma con la fisica sbagliata. ogni tanto glitcha su un frame di un altro cliente.*' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco quasi offeso dalla qualità*' },
     ],
@@ -867,7 +868,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
 
     /* ---------- capitolo segreto: il primo custode ---------- */
     'custode-ingresso': [
-        { speaker: 'il geco', color: 'green', text: '*le dieci... cinque maschere battono il tempo tutte insieme. il varco si apre su uno studio di registrazione fuori dal realm. dischi d\'oro alle pareti. polvere sul mixer.*' },
+        { speaker: 'il geco', color: 'green', text: '*le cinque maschere battono il tempo tutte insieme. il varco si apre su uno studio di registrazione fuori dal realm. dischi d\'oro alle pareti. polvere sul mixer.*' },
         { speaker: 'voce sul beat', color: 'green', text: 'un altro custode. col mio ritmo addosso. le senti, vero? le maschere. erano la mia faccia, prima di essere la tua.' },
     ],
     'custode-intro': [
@@ -1365,7 +1366,7 @@ export const WAVESUNG = {
     markolinoOmbra: { sender: 'markolino', text: 'l\'ombra sei tu. se hai comprato la sorveglianza è forte come te: cambia ritmo, non ripetere le mosse. se l\'hai rifiutata è una beta: mena e basta.' },
     markolino33: { sender: 'markolino', text: 'i 33 dipinti: azzurri, tratto ordinato, sempre accanto a un muro che non è un muro. guarda dietro. ogni volta.' },
     markolinoSmelaSkip: { sender: 'markolino', text: 'lo stabilimento? puoi attraversarlo senza fermarti, l\'uscita resta aperta. la truffa vive solo se ti fermi. ma l\'acqua tossica è comoda, eh.' },
-    markolinoMaschereTease: { sender: 'markolino', text: 'maschere con la tua faccia? primo custode, dischi. a 5 senti il beat, a 10 ritmo perfetto + varco verde in perduta. dietro muri finti e crepe.' },
+    markolinoMaschereTease: { sender: 'markolino', text: 'maschere con la tua faccia? primo custode, dischi. a 3 senti il beat, a 5 ritmo perfetto e si apre un varco verde in perduta. stanno dietro muri finti e crepe.' },
     markolinoCorseTease: { sender: 'guastalla', text: 'se batti il citelis in 3 corse prendo la patente e guido io la piazza. piano. mi fermo ovunque.' },
     markolinoArenaTease: { sender: 'markolino', text: 'microfono rosso = arena: 3 ondate, 180 barre. a 5 sei gladiatore. muori e si azzera.' },
     markolinoPiema: { sender: 'markolino', text: 'HO TROVATO PIEMA!! è alla ruhra e sta impazzendo per analisi 1. SALVALO. occhio alla riba, è scema ma morde.' },

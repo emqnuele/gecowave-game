@@ -2731,7 +2731,7 @@ export class GameScene extends Phaser.Scene {
         if (this.def.id === 'trenbolone' && !state.run.trenbolone) {
             if (this.time.now > this.exitLockToastAt) {
                 this.exitLockToastAt = this.time.now + 3000;
-                bus.emit('toast', { text: 'La via per il rio merdone è sbarrata. Ti serve il trenbolone.' });
+                bus.emit('toast', { text: 'la via per il rio merdone è sbarrata. ti serve il trenbolone.' });
             }
             return;
         }
