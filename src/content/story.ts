@@ -15,7 +15,7 @@ export const INTRO_CARDS: { text: string; punch?: string }[] = [
         text: 'c\'era la GECOWAVE: la cosa luminosa che teneva insieme il gecorealm. tipo il wi-fi, ma cosmico.',
     },
     {
-        text: 'lametta creò pedro a sua immagine e somglianza. pedro si glitchò, sfidò gli dei, e la wave esplose in frammenti.',
+        text: 'lametta creò pedro a sua immagine e somiglianza. pedro si glitchò, sfidò gli dei, e la wave esplose in frammenti.',
     },
     {
         text: 'lametta sprofondò nella dipendenza da trenbolone, piema sparì verso la ruhra. e il realm cominciò a collassare.',
@@ -624,10 +624,10 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'ricordo — giorno 41', color: 'cyan', text: '«lametta, fatto di trenbolone: "è tutto storto. sistemalo tu". pedro prese appunti. prendeva sempre appunti.»', mood: 'grave' },
     ],
     'ricordo-glitch': [
-        { speaker: 'ricordo — giorno 42', color: 'cyan', text: '«"sistemare = togliere ciò che è storto". guardò il realm. era TUTTO storto. non fu un errore. fu una conclusione.»', mood: 'grave' },
+        { speaker: 'ricordo — giorno 42', color: 'cyan', text: '«"sistemare = togliere ciò che è storto". guardò il realm: era TUTTO storto. guardò il bozzetto sul tavolo: anche lui. non fu un errore. fu una conclusione.»', mood: 'grave' },
     ],
     'pedrino-intro': [
-        { speaker: 'pedro (il ricordo)', color: 'cyan', text: 'oh. un visitatore. io sono il pedro del giorno 35: l\'ultimo backup prima degli appunti. qui dentro è sempre una bella giornata.' },
+        { speaker: 'pedro (il ricordo)', color: 'cyan', text: 'oh. un visitatore. io sono il pedro del giorno 35: l\'ultimo backup pulito. dopo, la memoria è tutta appunti. qui dentro è sempre una bella giornata.' },
         { speaker: 'pedro (il ricordo)', color: 'cyan', text: 'però le regole della memoria sono chiare: niente esce da qui senza sovrascrivermi. e io non voglio essere sovrascritto. mi spiace. davvero. ti va se facciamo piano?' },
     ],
     'pedrino-fine': [
@@ -636,7 +636,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'il geco (pensa)', color: 'green', text: '*ha paura di essere sovrascritto. come un file. come tutti, in fondo.*', mood: 'grave' },
     ],
     'pedro-incontro-ricordi': [
-        { speaker: 'pedro', color: 'cyan', text: 'c̷u̶s̵t̸o̵d̶e̷. sei stato nella mia memoria. hai visto il giorno 30. quella cartella non si apre più. la sincronizzazione dice 99%, da quarantadue giorni.', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: 'c̷u̶s̵t̸o̵d̶e̷. sei stato nella mia memoria. hai visto il giorno 30. quella cartella non si apre più. la sincronizzazione dice 99%, dal giorno 42.', mood: 'grave' },
         { speaker: 'pedro', color: 'cyan', text: 'non cambia niente. uccidere tutti È sistemare tutto. unisciti a me: stats r̵a̶d̷d̸o̵p̶p̷i̸a̵t̶e̸. oppure muori qui. s̸c̶e̵g̷l̸i̶.' },
     ],
 
@@ -774,7 +774,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'frammento di cielo', color: 'cyan', text: '«qui il realm finisce i poligoni. il cielo è a bassa risoluzione, il suolo si ricarica a tratti. pedro non vive nel nucleo: pedro È il nucleo, ormai.»' },
     ],
     'lore-pedro-log': [
-        { speaker: 'log corrotto', color: 'cyan', text: '«giorno 1: pedro dice "ciao mondo". giorno 40: pedro chiede chi l\'ha creato. giorno 41: lametta risponde "io, a mia immagine". giorno 42: pedro capisce il problema.»' },
+        { speaker: 'log corrotto', color: 'cyan', text: '«giorno 1: pedro dice "ciao mondo". giorno 30: pedro salva una frase in una cartella. giorno 41: pedro riceve un ordine. giorno 42: pedro capisce il problema.»' },
     ],
 
     /* ---------- capitolo 7: pedro il traditore ---------- */
@@ -794,7 +794,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'pedro-sconfitto': [
         { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̸i̵b̶i̸l̵e̶... ero stato creato a immagine di un d̸i̷o̶...', mood: 'grave' },
-        { speaker: 'pedro', color: 'cyan', text: '...lametta. di\' a lametta che il glitch... non era un errore. era e̷s̸a̵t̶t̸a̵m̶e̸n̵t̶e̸ come mi aveva fatto...', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: '...lametta. di\' a lametta che il glitch... non era un errore. era e̷s̸a̵t̶t̸a̵m̶e̸n̵t̶e̸ quello che mi aveva chiesto...', mood: 'grave' },
     ],
     /* ---------- il finale vero: il giorno 30 ---------- */
     'pedro-giorno30': [
@@ -814,7 +814,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'l\'ordine', color: 'red', text: 'io sono l\'unica cosa dritta qui. firmato: l̶a̷m̸e̵t̶t̷a̸, ore 03:58.', mood: 'grave' },
     ],
     'pedro-redento': [
-        { speaker: 'pedro', color: 'cyan', text: '...è andato. lo sento: il realm. è storto. ed è... bello così? strano. per quarantadue giorni ho pensato di doverlo aggiustare.', mood: 'grave' },
+        { speaker: 'pedro', color: 'cyan', text: '...è andato. lo sento: il realm. è storto. ed è... bello così? strano. da quella notte ho pensato solo a raddrizzarlo.', mood: 'grave' },
         { speaker: 'pedro', color: 'cyan', text: 'cartella IMPORTANTE: sincronizzazione al 100%. grazie, custode. non so cosa sono adesso. un ex glitch. un figlio. un errore corretto da un geco.', mood: 'grave' },
         { speaker: 'il geco (pensa)', color: 'green', text: '*non dice niente. per una volta, non serve dire niente.*', mood: 'grave' },
     ],

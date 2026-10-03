@@ -65,7 +65,7 @@ export const REGION_NOTES: Record<string, Note[]> = {
         { speaker: 'appunto di ticummi, scritto storto', text: '«stanotte l\'ho slegato per un\'ora. "la cosa migliore che ho disegnato l\'ho rovinata io". l\'ho rilegato. avevo paura facesse qualcosa di giusto.»' },
     ],
     ricordi: [
-        { speaker: 'backup, giorno 40', text: '«pedro: "cosa succede se divento storto?" lametta, col pennello in bocca: "ti raddrizzo io". non è mai successo.»' },
+        { speaker: 'backup, giorno 37', text: '«pedro: "cosa succede se divento storto?" lametta, col pennello in bocca: "ti raddrizzo io". la sera dopo pedro fece la stessa domanda al geco del muro. per sicurezza.»' },
     ],
     void: [
         { speaker: 'rimpianto vagante', text: '«ho venduto a lametta la boccetta delle 03:58. era l\'ultima della notte. volevo solo chiudere la cassa.» — lo stagista' },

@@ -47,7 +47,7 @@ export const FLASHBACKS: Record<string, FlashbackDef> = {
         captions: [
             'l\u2019atelier di lametta, luce del pomeriggio. pedro posava impalato, dritto e fiero.',
             'tre pennellate, un passo indietro: «gli occhi un po\u2019 storti. fidati, è arte.»',
-            'la mattina dopo pedro si svegliò glitchato. identico al quadro. pennellata per pennellata.',
+            'quella notte il foglio restò sul tavolo. pedro lo trovò prima dell\'alba: se stesso, storto. "venuto bene".',
         ],
         cast: ['lametta', 'pedro'],
         gesture: 'dipinge',
@@ -71,7 +71,7 @@ export const FLASHBACKS: Record<string, FlashbackDef> = {
         captions: [
             'piazza, quattro del mattino. nebbia bassa, una finestra accesa. un geco vegliava sul suo muro.',
             'pedro si arrampicò piano e si sedette accanto. «ciao.» nessuno rispose, mai.',
-            'anni dopo la wave scelse proprio lui: il geco che non dormiva.',
+            'il giorno 24 pedro scrisse un commento nel codice della wave: se mi succede qualcosa, va a lui.',
         ],
         cast: ['pedro', 'geco'],
         gesture: 'saluta',
