@@ -61,7 +61,7 @@ export class DialogueBox {
         if (crack) this.box.classList.add('dlg-crepa');
         music.setGraveDuck(grave);
         const speed = grave ? 46 : crack ? 28 : 18;
-        const blipEvery = grave ? 9 : 3;
+        const blipEvery = grave ? 12 : 3;
 
         const text = this.box.querySelector<HTMLElement>('.text')!;
         text.textContent = '';
@@ -70,7 +70,11 @@ export class DialogueBox {
         this.typing = window.setInterval(() => {
             this.typed++;
             text.textContent = line.text.slice(0, this.typed);
-            if (this.typed % blipEvery === 0 && !grave) sfx.ui();
+            if (this.typed % blipEvery === 0) {
+                // le gravi respirano piano invece di restare mute
+                if (grave) sfx.graveTick();
+                else sfx.ui();
+            }
             if (this.typed >= line.text.length) {
                 clearInterval(this.typing!);
                 this.typing = null;

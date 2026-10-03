@@ -248,7 +248,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 
 ## curva meme->serio (fase 5)
 - `src/content/tone.ts`: ogni capitolo ha atto 1-4 e livello 0-100; il geco fa versi, poi pensa (da rio), poi dice una frase vera sola (giorno 30).
-- `DialogueLine.mood`: meme/crepa/grave/silenzio. grave = typewriter a 46ms, niente blip, pannello nero (`dlg-grave`), musica al 30% (`music.setGraveDuck`, rispettato anche dai fade).
+- `DialogueLine.mood`: meme/crepa/grave/silenzio. grave = typewriter a 46ms con un colpo basso e rado, pannello nero (`dlg-grave`), musica al 30% (`music.setGraveDuck`, rispettato anche dai fade). Le battute dei boss in battaglia hanno un tocco solo all'apertura.
 - contenuti: atto 1 invariato; atto 2 crepe (notino-sconfitto, lochef-sconfitto, rio-cura, smela-sconfitta); atto 3 sobrio (lametta in cantina riscritto senza battuta sulla sedia, ticummi, mente-ordine, caso, verdetto); atto 4 tutto grave (ricordi, guide di romero, giorno30, verità, glitch, redento, processo); riscatto con coda nuova.
 - `deathPunchline(levelId)` e `FOLK_QUIET` (passanti zitti negli atti finali) via `toneFor`.
 - build + editor typecheck ok.

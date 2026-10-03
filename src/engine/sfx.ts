@@ -222,7 +222,8 @@ class Sfx {
     fuse(): void { [0, 160, 320, 480].forEach((d, i) => this.tone(900 + i * 180, 60, { type: 'square', vol: 0.05, delayMs: d })); }
     shriek(): void { this.tone(1300, 260, { type: 'sawtooth', to: 500, vol: 0.06 }); }
     crack(): void { this.noise(120, { freq: 1400, q: 3, vol: 0.12 }); }
-    crumble(): void {
+    /** battute gravi: un colpo basso e rado, quasi solo un respiro */
+    graveTick(): void { this.tone(150 + Math.random() * 30, 110, { type: 'sine', vol: 0.035 }); }    crumble(): void {
         this.noise(420, { freq: 300, q: 0.7, vol: 0.2 });
         this.tone(120, 300, { type: 'triangle', to: 60, vol: 0.06 });
     }
