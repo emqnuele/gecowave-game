@@ -92,6 +92,11 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
     }
 
+    /** la cutscene può ammazzare i tween a metà attacco: si riparte liberi */
+    release(): void {
+        this.busy = false;
+    }
+
     update(_time: number, delta: number, player: Phaser.GameObjects.Sprite): void {
         if (!this.active) return;
         this.t += delta;

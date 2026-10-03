@@ -2408,6 +2408,8 @@ export class GameScene extends Phaser.Scene {
 
         this.tweens.killTweensOf(ivan);
         this.tweens.killTweensOf(boss);
+        // se lo becca a metà carica, il busy resterebbe incastrato per sempre
+        boss.release();
         this.ivanBusy = true;
         boss.engaged = false;
 
