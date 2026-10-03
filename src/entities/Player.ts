@@ -45,7 +45,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private attacking = false;
     private attackAnimUntil = 0;
     private invulnUntil = 0;
-    private healHeldMs = 0;
     private wasGrounded = true;
     private charging = false;
     private chargeStart = 0;
@@ -74,8 +73,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private stunnedUntil = 0;
     private nextSmelaStun = 0;
     private nextTrenDrain = 0;
-    private lastDamageAt = 0;
-    private nextRegenAt = 0;
 
     constructor(scene: Phaser.Scene, x: number, y: number, input: Input) {
         super(scene, x, y, 'player', 0);
@@ -185,7 +182,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const now = this.scene.time.now;
         const body = this.body as Phaser.Physics.Arcade.Body;
 
-        this.updateMalusERigenerazione(now);
+        this.updateMalus(now);
         this.updateBuffs(delta);
         if (this.hidden) {
             body.setAccelerationX(0);
@@ -403,7 +400,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        this.updateHeal(delta, downHeld);
         this.updateAnimation(body);
         this.updateHitbox();
 
@@ -420,12 +416,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.wasGrounded = this.grounded;
     }
 
-    /* ---------- malus e rigenerazione ---------- */
+    /* ---------- malus ---------- */
 
-    private updateMalusERigenerazione(now: number): void {
-        const immune = state.hasAbility('rigenerazione');
-
-        if (state.run.trenbolone && !immune) {
+    private updateMalus(now: number): void {
+        if (state.run.trenbolone) {
             if (this.nextTrenDrain === 0) this.nextTrenDrain = now + COMBAT.trenboloneDrainMs;
             if (now >= this.nextTrenDrain) {
                 this.nextTrenDrain = now + COMBAT.trenboloneDrainMs;
@@ -438,7 +432,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        if (state.run.smela && !immune) {
+        if (state.run.smela) {
             if (this.nextSmelaStun === 0) this.nextSmelaStun = now + 5000;
             if (now >= this.nextSmelaStun) {
                 this.nextSmelaStun = now + 5000;
@@ -456,31 +450,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.scene.time.delayedCall(900, () => puff.destroy());
             }
         }
-
-        if (immune && state.run.hp < state.maxHp && now - this.lastDamageAt > COMBAT.regenIdleMs) {
-            if (this.nextRegenAt === 0) this.nextRegenAt = now + COMBAT.regenTickMs;
-            if (now >= this.nextRegenAt) {
-                this.nextRegenAt = now + COMBAT.regenTickMs;
-                state.run.hp += 1;
-                // la cura si vede: una goccia scende sul geco
-                const drip = this.scene.add.image(this.x, this.y - 34, FX.regenDrip).setDepth(6);
-                const glow = this.scene.add.image(this.x, this.y - 34, `${FX.regenDrip}~glow`)
-                    .setDepth(5).setBlendMode(Phaser.BlendModes.ADD);
-                this.scene.tweens.add({
-                    targets: [drip, glow], y: this.y - 6, alpha: 0, duration: 420,
-                    onComplete: () => { drip.destroy(); glow.destroy(); },
-                });
-                sfx.regen();
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'rigenerazione' });
-                bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false, regen: true });
-                bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
-            }
-        } else if (now - this.lastDamageAt <= COMBAT.regenIdleMs) {
-            this.nextRegenAt = 0;
-        }
     }
 
-    /** caffè della mensa e sim di pedro: effetti a tempo e rigenerazione del flow */
+    /** caffè della mensa e sim di pedro: effetti a tempo e ricarica del flow */
     private updateBuffs(delta: number): void {
         const regen = state.mods.flowRegen;
         if (regen > 0 && state.run.flow < state.maxFlow) {
@@ -714,28 +686,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         return true;
     }
 
-    private updateHeal(delta: number, downHeld: boolean): void {
-        const canHeal = this.grounded && !this.attackActive && !this.charging && state.run.flow >= COMBAT.healCost
-            && state.run.hp < state.maxHp && this.controls.down('heal') && !downHeld;
-        if (canHeal) {
-            if (this.healHeldMs === 0) this.scene.events.emit('player-act', { act: 'heal-start' });
-            this.healHeldMs += delta;
-            this.setTint(0x4ade80);
-            if (this.healHeldMs >= COMBAT.healHoldMs * state.mods.healTime) {
-                this.healHeldMs = 0;
-                state.run.flow -= COMBAT.healCost;
-                state.run.hp += 1;
-                sfx.heal();
-                this.scene.events.emit('player-act', { act: 'heal' });
-                this.burst(0x4ade80, 12);
-                this.emitVitals(false);
-            }
-        } else {
-            this.healHeldMs = 0;
-            this.clearTint();
-        }
-    }
-
     /* ---------- reazioni ---------- */
 
     onAttackHit(): void {
@@ -759,7 +709,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.slamming = false;
         state.run.hp = Math.max(0, state.run.hp - amount * state.mods.damageTaken);
         this.invulnUntil = this.scene.time.now + COMBAT.invulnMs;
-        this.lastDamageAt = this.scene.time.now;
         sfx.hurt();
         this.emitVitals(true);
         const body = this.body as Phaser.Physics.Arcade.Body;

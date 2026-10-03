@@ -241,8 +241,6 @@ class Sfx {
         this.noise(120, { freq: 2800, q: 2.5, vol: 0.12 });
         this.noise(300, { freq: 900, q: 0.7, vol: 0.1, delayMs: 60, to: 300 });
     }
-    /** nota bassa e morbida della rigenerazione */
-    regen(): void { this.tone(196, 500, { type: 'sine', to: 262, vol: 0.05, attackMs: 80 }); }
     bossRoar(): void {
         this.tone(80, 900, { type: 'sawtooth', to: 45, vol: 0.2 });
         this.noise(800, { freq: 180, q: 0.6, vol: 0.25 });

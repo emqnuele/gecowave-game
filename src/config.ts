@@ -35,8 +35,6 @@ export const COMBAT = {
     maxHp: 5,
     maxFlow: 99,
     flowPerHit: 16,
-    healCost: 33,
-    healHoldMs: 850,
     attackCooldownMs: 300,
     attackActiveMs: 140,
     attackRange: 78,
@@ -111,9 +109,6 @@ export const COMBAT = {
     poisonMs: 4000,
     poisonMult: 1.3,
     poisonBossMult: 1.15,
-    /** rigenerazione del rio merdone */
-    regenIdleMs: 5000,
-    regenTickMs: 6000,
     /** trenbolone: più forte ma ti mangia da dentro */
     trenboloneDrainMs: 22000,
 } as const;

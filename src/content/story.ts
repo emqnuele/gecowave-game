@@ -309,7 +309,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'rio-cura': [
         { speaker: 'il rio merdone', color: 'green', text: '*il fiume sacro ti accoglie. è esattamente come immaginavi dall\'odore. ma il trenbolone scivola via, e con lui tutti i malus.*' },
         { speaker: 'il cartellino', color: 'green', text: '*l\'acqua del fiume passa sul cartellino. "provvisorio" si sbava. non si cancella.*', mood: 'grave' },
-        { speaker: 'il rio merdone', color: 'green', text: '*sul fondale brilla qualcosa: era il frammento a rendere sacre queste acque. il fiume te lo cede. il fiume non giudica.*', mood: 'crepa' },
+        { speaker: 'il rio merdone', color: 'green', text: '*sul fondale brillava qualcosa, ma il fiume se lo tiene. la pulizia resta.*', mood: 'crepa' },
     ],
     /* ---------- lo stabilimento di smela ---------- */
     'smela-tour': [
@@ -1303,11 +1303,6 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
         name: 'colpo risonante',
         desc: 'tieni premuto e rilascia. poco = un\'eco corta. di più = un\'onda che perfora. tanto, se hai flow = l\'onda piena, che spacca anche gli scudi. la tecnokill di notino, ma con giudizio.',
         key: '{k:wave} (tieni)',
-    },
-    rigenerazione: {
-        name: 'frammento del rio merdone',
-        desc: 'se non prendi colpi per un po\', la vita torna da sola. e nessun malus può più toccarti. il fiume non giudica, il fiume rigenera.',
-        key: 'passiva',
     },
     analisi: {
         name: 'analisi 1',

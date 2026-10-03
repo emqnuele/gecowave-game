@@ -6,7 +6,7 @@ import { state } from './state';
 /* usare un oggetto dello zaino: ritorna la frase da mostrare.
    se l'oggetto non serve (vita già piena) non viene consumato */
 
-const HEALS: Record<string, number> = { crocchetta: 1, 'panino-nonna': 3 };
+const HEALS: Record<string, number> = { crocchetta: 1, 'panino-nonna': 2 };
 
 function emitVitals(): void {
     bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
@@ -20,7 +20,7 @@ export function useItem(id: string): { ok: boolean; text: string } {
 
     const heal = HEALS[id] ?? 0;
     if (state.run.hp >= state.maxHp) return { ok: false, text: 'sei già al pieno. conservalo per quando piangi.' };
-    state.run.hp = Math.min(state.maxHp, state.run.hp + heal);
+    state.run.hp = Math.min(state.maxHp, state.run.hp + heal + state.mods.foodHeal);
 
     state.removeItem(id);
     sfx.heal();

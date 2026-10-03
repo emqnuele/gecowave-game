@@ -30,7 +30,7 @@ export const ITEMS: Record<string, ItemDef> = {
     },
     'panino-nonna': {
         id: 'panino-nonna', name: 'panino della nonna di markolino', icon: '🥪', kind: 'consumabile', price: 60,
-        desc: 'ridà 3 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
+        desc: 'ridà 2 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
         punch: 'c\'è dentro amore e mortadella.',
     },
 
@@ -53,7 +53,7 @@ export const ITEMS: Record<string, ItemDef> = {
     },
     'rosario-riba': {
         id: 'rosario-riba', name: 'rosario di riba', icon: '📿', kind: 'amuleto', cost: 2, price: 130,
-        desc: 'ti curi quasi il doppio più in fretta. riba lo ha comprato credendo fosse un braccialetto.',
+        desc: 'il cibo ti ridà 1 vita in più. riba lo ha comprato credendo fosse un braccialetto.',
     },
     'microfono-oro': {
         id: 'microfono-oro', name: 'microfono d\'oro', icon: '🎤', kind: 'amuleto', cost: 2,
@@ -98,7 +98,7 @@ export const ITEMS: Record<string, ItemDef> = {
     },
     'grembiule-cuoco': {
         id: 'grembiule-cuoco', name: 'grembiule strappato', icon: '🧑‍🍳', kind: 'amuleto', cost: 2,
-        desc: '+1 vita massima e ti curi più in fretta. qualcuno l\'ha usato per legare una porta da dentro.',
+        desc: '+1 vita massima e il cibo cura di più. qualcuno l\'ha usato per legare una porta da dentro.',
     },
     'casco-operaio': {
         id: 'casco-operaio', name: 'caschetto del sindacato', icon: '⛑️', kind: 'amuleto', cost: 2,
@@ -110,7 +110,7 @@ export const ITEMS: Record<string, ItemDef> = {
     },
     'quaderno-pedro': {
         id: 'quaderno-pedro', name: 'il quaderno ricomposto di pedro', icon: '📒', kind: 'amuleto', cost: 2,
-        desc: 'il flow torna da solo e ti curi più in fretta. cinque pagine tenute insieme col nastro adesivo.',
+        desc: 'il flow torna da solo. cinque pagine tenute insieme col nastro adesivo.',
         punch: 'c\'è scritto il tuo nome. cioè: "geco". vale lo stesso.',
     },
     sparacchino: {
@@ -182,7 +182,8 @@ export interface CharmMods {
     speed: number;
     magnet: number;
     flowPerHit: number;
-    healTime: number;
+    /** vite in più ogni volta che mangi */
+    foodHeal: number;
     range: number;
     dashCooldown: number;
     maxHp: number;
@@ -197,7 +198,7 @@ export interface CharmMods {
 
 export function charmMods(equipped: readonly string[]): CharmMods {
     const m: CharmMods = {
-        damage: 1, speed: 1, magnet: 1, flowPerHit: 1, healTime: 1, range: 1,
+        damage: 1, speed: 1, magnet: 1, flowPerHit: 1, foodHeal: 0, range: 1,
         dashCooldown: 1, maxHp: 0, abilityCost: 1, barre: 1, damageTaken: 1, flowRegen: 0, risonante: 1,
     };
     for (const id of equipped) {
@@ -206,7 +207,7 @@ export function charmMods(equipped: readonly string[]): CharmMods {
             case 'cuffie-notino': m.magnet *= 3; break;
             case 'scarpe-markolino': m.speed *= 1.15; break;
             case 'occhiali-piema': m.flowPerHit *= 1.4; break;
-            case 'rosario-riba': m.healTime *= 0.55; break;
+            case 'rosario-riba': m.foodHeal += 1; break;
             case 'microfono-oro': m.range *= 1.33; break;
             case 'ciabatte-rio': m.dashCooldown *= 0.6; break;
             case 'pancia-lochef': m.maxHp += 2; break;
@@ -217,11 +218,11 @@ export function charmMods(equipped: readonly string[]): CharmMods {
             case 'biglietto-citelis': m.speed *= 1.08; m.dashCooldown *= 0.85; break;
             case 'pennello-copista': m.damage *= 1.12; break;
             case 'canna-pescatore': m.magnet *= 2; m.barre *= 1.1; break;
-            case 'grembiule-cuoco': m.maxHp += 1; m.healTime *= 0.8; break;
+            case 'grembiule-cuoco': m.maxHp += 1; m.foodHeal += 1; break;
             case 'casco-operaio': m.damageTaken *= 0.75; break;
             case 'tesi-dottorando': m.flowPerHit *= 1.25; break;
             case 'catenina-maranza': m.range *= 1.15; break;
-            case 'quaderno-pedro': m.flowRegen += 3; m.healTime *= 0.85; break;
+            case 'quaderno-pedro': m.flowRegen += 3; break;
             case 'sparacchino': m.risonante *= 1.5; break;
         }
     }

@@ -104,6 +104,10 @@ class GameState {
                     this.save.flags = this.save.flags.filter((f) => f !== 'lochef-libero');
                     if (!this.save.flags.includes('lochef-arrestato')) this.save.flags.push('lochef-arrestato');
                 }
+                // la rigenerazione non esiste più: si cura solo col cibo
+                if ((this.save.abilities as string[]).includes('rigenerazione')) {
+                    this.save.abilities = this.save.abilities.filter((a) => (a as string) !== 'rigenerazione');
+                }
                 // fallback for backward compatibility
                 if (parsed.collassoMode !== undefined && this.save.doomsdayMode === false) {
                     this.save.doomsdayMode = parsed.collassoMode;
@@ -223,7 +227,6 @@ class GameState {
                 'aggrappo',
                 'riflesso',
                 'risonante',
-                'rigenerazione',
                 'analisi',
                 'scudo',
                 'acquatossica'

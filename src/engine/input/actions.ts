@@ -10,14 +10,13 @@ export type Action =
     | 'jump' | 'attack' | 'dash'
     | 'wave'
     | 'scudo' | 'riflesso'
-    | 'heal'
     | 'eat' | 'interact' | 'phone' | 'pause';
 
 export const ACTIONS: Action[] = [
     'left', 'right', 'up', 'down',
     'jump', 'attack', 'dash',
     'wave', 'scudo', 'riflesso',
-    'heal', 'eat', 'interact', 'phone', 'pause',
+    'eat', 'interact', 'phone', 'pause',
 ];
 
 /* nome dell'azione in italiano minuscolo, per la schermata comandi */
@@ -32,7 +31,6 @@ export const ACTION_LABEL: Record<Action, string> = {
     wave: 'wave',
     scudo: 'scudo',
     riflesso: 'riflesso',
-    heal: 'cura',
     eat: 'mangia',
     interact: 'interagisci',
     phone: 'telefono',
@@ -58,7 +56,6 @@ export const PRESETS: Record<PresetId, Record<Action, string[]>> = {
         wave: ['L'],
         scudo: ['I', 'MOUSE_RIGHT'],
         riflesso: ['U'],
-        heal: ['Q'],
         eat: ['C'],
         interact: ['E'],
         phone: ['TAB', 'P'],
@@ -75,7 +72,6 @@ export const PRESETS: Record<PresetId, Record<Action, string[]>> = {
         wave: ['A'],
         scudo: ['S'],
         riflesso: ['D'],
-        heal: ['Q'],
         eat: ['F'],
         interact: ['E'],
         phone: ['TAB'],
@@ -97,7 +93,6 @@ export const GAMEPAD: Record<Action, number[] | 'stick-left' | 'stick-right' | '
     wave: [3],
     scudo: [5],
     riflesso: [4],
-    heal: [7],
     eat: [6],
     interact: [],
     phone: [8],

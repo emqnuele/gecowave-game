@@ -4482,9 +4482,7 @@ export class GameScene extends Phaser.Scene {
         bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
         if (!state.hasFlag('rio-curato')) {
             state.setFlag('rio-curato');
-            this.startDialogue('rio-cura', () => {
-                this.spawnFragment(this.player.x, this.player.y - 50, 'rigenerazione', true);
-            });
+            this.startDialogue('rio-cura');
         } else {
             bus.emit('toast', { text: 'il fiume ti ripulisce. di nuovo. senza giudicare. quasi.' });
         }

@@ -25,7 +25,6 @@ export const FX = {
     puddle: 'fx-puddle',
     mirrorCrack: 'fx-mirror-crack',
     mirrorShard: 'fx-mirror-shard',
-    regenDrip: 'fx-regen-drip',
     slash: 'fx-slash',
     slashBig: 'fx-slash-big',
 } as const;
@@ -375,20 +374,6 @@ function mirrorShard(): HTMLCanvasElement {
     return el;
 }
 
-/* goccia verde della rigenerazione */
-function regenDrip(): HTMLCanvasElement {
-    const { el, ctx } = cv(18, 26);
-    const rnd = mulberry32(4180);
-    inkShape(ctx, [{ x: 9, y: 2 }, { x: 15, y: 14 }, { x: 13, y: 21 }, { x: 5, y: 21 }, { x: 3, y: 14 }], rnd, hex(0x4ade80), hex(INK), 2, 0.4);
-    return el;
-}
-
-function regenGlow(): HTMLCanvasElement {
-    const { el, ctx } = cv(18, 26);
-    glowSpot(ctx, 9, 14, 10, 0x4ade80, 0.5);
-    return el;
-}
-
 /* pennellata del fendente: spessa al centro, sottile alle punte */
 function slash(big: boolean): HTMLCanvasElement {
     const { el, ctx } = cv(big ? 120 : 100, big ? 120 : 100);
@@ -490,8 +475,6 @@ export function ensureAbilityFx(scene: Phaser.Scene): void {
     add(scene, FX.mirrorCrack, mirrorCrack());
     addGlow(scene, FX.mirrorCrack, mirrorCrackGlow());
     add(scene, FX.mirrorShard, mirrorShard());
-    add(scene, FX.regenDrip, regenDrip());
-    addGlow(scene, FX.regenDrip, regenGlow());
     add(scene, FX.slash, slash(false));
     add(scene, FX.slashBig, slash(true));
     // il cristallo rimpiazza il pentagono a linee

@@ -26,7 +26,6 @@ function padLabel(a: Action): string {
         case 'wave': return 'Y';
         case 'scudo': return 'RB';
         case 'riflesso': return 'LB';
-        case 'heal': return 'RT';
         case 'eat': return 'LT';
         case 'interact': return '↑';
         case 'phone': return 'VIEW';

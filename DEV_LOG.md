@@ -219,6 +219,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: livello input unico (`src/engine/input/`): `actions.ts` con 16 azioni, due preset (classico WASD, frecce) e gamepad standard, `bindingsFor` (la rimappatura vince sul preset), `matchesAction` per telefono/dialoghi/flashback, etichette leggibili; `Input.ts` con stato per fotogramma (`down/pressed/released` da confronto, mai lettori una tantum), clic destro senza menu contestuale, levetta con zona morta 0.35, ultimo dispositivo usato su bus `input-device`; `keyText.ts` con segnaposto `{k:azione}` applicato in dialoghi, toast, wavesung, card, telefono (lo storico conserva i segnaposto), bark e chip hud; `padBridge.ts` che nei menu fa imitare la tastiera al pad. `Player` e scena leggono solo azioni; le 5 wave in uno schema solo (wave da sola = risonante in carica, su+wave = analisi, giù+wave = bottiglia, scudo e riflesso dedicati; senza wave sbloccata solo un blip). Schermata comandi con preset, rimappatura a scambio con conferma sullo scambio di preset e ripristino, schema wave e tabella pad in sola lettura; tutto in `settings.controls`, evento `controls-changed` per ricostruire. Freccia su non salta più; alla ripresa gli spigoli si azzerano e la carica si cancella; col pad si interagisce con su da fermo.
 **Conseguenze**: i salvataggi vecchi senza `controls` prendono il classico; in pausa e nei dialoghi la scena è ferma quindi niente spigoli né colpi partiti al rilascio; il bot di gioco usa ancora i tasti vecchi delle wave e va aggiornato prima di rigiocarci la campagna.
 
+### ADR-036 — si cura solo col cibo
+**Contesto**: c'erano tre cure sovrapposte (Q che cambia flow in vita, la rigenerazione passiva del rio, il cibo) più lo scudo: troppe, e Q e regen rendevano il cibo inutile. Q chiedeva 33 flow da fermi e in lotta non partiva quasi mai, la regen curava da sola.
+**Decisione**: via la cura con Q e via la rigenerazione (8 frammenti, non 9; i salvataggi la perdono in migrazione). Resta solo il cibo: crocchetta +1 (15 barre), panino +2 (era +3, 60 barre), prima il piccolo poi il grande, dai microfoni resta la cura piena. Il rio cura ancora i malus (trenbolone e smela) ma non dà più frammenti. Tre amuleti persi dalla cura tornano al cibo (`foodHeal`): rosario e grembiule danno +1 vita a pasto, il quaderno resta solo flow. Lo scudo resta: è parata, non cura.
+**Conseguenze**: senza cibo addosso C dice solo che lo zaino è vuoto; i rami dell'ombra che punivano la cura non scattano più (il cibo non emette eventi).
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -263,6 +268,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **si cura solo col cibo**: via Q e regen, 8 frammenti, panino +2, amuleti del cibo, il rio cura i malus senza frammenti (ADR-036).
 - **i comandi sono azioni**: livello input unico, preset classico/frecce più gamepad, rimappatura a scambio, testi col tasto vero, schema wave su un tasto solo (ADR-035).
 - **le abilità rifatte**: tre colpi risonanti, scambio del riflesso, analisi in tre tempi, rimando perfetto, bottiglia di smela, avvelenamento, grafica a inchiostro, ricariche nell'hud, evento `wave-world` (ADR-034).
 - **eco e tick nella tana**: rimbombo del burrow e colpi gravi udibili (ADR-033).

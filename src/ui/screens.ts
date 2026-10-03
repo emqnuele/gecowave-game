@@ -501,7 +501,7 @@ export class Screens {
     private controlGroups(): [string, Action[]][] {
         return [
             ['movimento', ['left', 'right', 'up', 'down', 'jump', 'dash']],
-            ['combattimento', ['attack', 'wave', 'scudo', 'riflesso', 'heal']],
+            ['combattimento', ['attack', 'wave', 'scudo', 'riflesso']],
             ['altro', ['eat', 'interact', 'phone', 'pause']],
         ];
     }
