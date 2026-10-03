@@ -29,10 +29,12 @@ export class TrentatreMarks {
         this.scene = scene;
     }
 
-    build(levelId: string, groups: Phaser.Physics.Arcade.StaticGroup[]): void {
+    /** tint = roccia del bioma verso il fondo: il segno sta DENTRO il muro */
+    build(levelId: string, groups: Phaser.Physics.Arcade.StaticGroup[], tint: number): void {
         const walls = groups.flatMap((g) => g.getChildren() as Phaser.Physics.Arcade.Sprite[]);
         if (!walls.length) return;
-        this.ensureTexture();
+        const key = `${KEY}-${tint.toString(16)}`;
+        this.ensureTexture(key, tint);
         const byCell = new Map<string, Phaser.Physics.Arcade.Sprite>();
         for (const w of walls) byCell.set(`${Math.floor(w.x / TILE)},${Math.floor(w.y / TILE)}`, w);
         const seen = new Set<string>();
@@ -61,8 +63,8 @@ export class TrentatreMarks {
             const cx = (minX + maxX) / 2;
             const cy = minY + Math.min(maxY - minY, TILE * 3) / 2;
             const rot = ((hashString(start) % 100) / 100 - 0.5) * 0.3;
-            // niente luce, niente pulsazioni: un graffito del colore del muro
-            const img = this.scene.add.image(cx, cy, KEY).setRotation(rot).setAlpha(0.55).setDepth(5.5);
+            // niente luce, niente contorno: solo il tono del muro, appena più caldo
+            const img = this.scene.add.image(cx, cy, key).setRotation(rot).setAlpha(0.75).setDepth(5.5);
             this.marks.push({ img, walls: cluster, box: new Phaser.Geom.Rectangle(minX, minY, maxX - minX, maxY - minY), gone: false });
         }
     }
@@ -78,7 +80,7 @@ export class TrentatreMarks {
                 this.scene.tweens.add({ targets: [m.img], alpha: 0, duration: 400 });
                 continue;
             }
-            m.img.setAlpha(inside ? 0.15 : 0.55);
+            m.img.setAlpha(inside ? 0.25 : 0.75);
             if (!state.hasFlag('seme-33-visto') && Math.abs(player.x - m.img.x) < SEEN_R && Math.abs(player.y - m.img.y) < SEEN_R * 0.7) {
                 state.setFlag('seme-33-visto');
                 this.scene.time.delayedCall(900, () => bus.emit('wavesung', WAVESUNG.markolino33));
@@ -86,20 +88,16 @@ export class TrentatreMarks {
         }
     }
 
-    private ensureTexture(): void {
-        if (this.scene.textures.exists(KEY)) return;
-        const t = this.scene.textures.createCanvas(KEY, 64, 44);
+    private ensureTexture(key: string, tint: number): void {
+        if (this.scene.textures.exists(key)) return;
+        const t = this.scene.textures.createCanvas(key, 64, 44);
         if (!t) return;
         const c = t.getContext();
         c.font = '34px "Permanent Marker", cursive';
         c.textAlign = 'center';
         c.textBaseline = 'middle';
-        c.lineJoin = 'round';
-        // contorno d'inchiostro come il resto del mondo, poi il grigio del muro
-        c.lineWidth = 6;
-        c.strokeStyle = '#0b0c10';
-        c.strokeText('33', 32, 24);
-        c.fillStyle = '#5b6470';
+        // solo tinta, senza contorno: il segno non spicca, affonda
+        c.fillStyle = `#${tint.toString(16).padStart(6, '0')}`;
         c.fillText('33', 32, 24);
         t.refresh();
     }

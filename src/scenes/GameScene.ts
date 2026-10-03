@@ -555,7 +555,15 @@ export class GameScene extends Phaser.Scene {
         this.pedroGhost = new PedroApparition(this, this.lighting);
         this.pedroGhost.setup(this.def.id, this.layout);
         this.marks33 = new TrentatreMarks(this);
-        this.marks33.build(this.def.id, [this.level.fakeWalls, this.level.breakableWalls]);
+        // il 33 affonda nel muro: roccia del bioma verso il fondo
+        const rock = Phaser.Display.Color.IntegerToColor(this.biome.rock);
+        const deep = Phaser.Display.Color.IntegerToColor(this.biome.deep);
+        const tint = Phaser.Display.Color.GetColor(
+            Math.round(rock.red * 0.35 + deep.red * 0.65),
+            Math.round(rock.green * 0.35 + deep.green * 0.65),
+            Math.round(rock.blue * 0.35 + deep.blue * 0.65),
+        );
+        this.marks33.build(this.def.id, [this.level.fakeWalls, this.level.breakableWalls], tint);
         // staging muto: una scena ambientale per regione, zero dialoghi
         this.staging = new StagingManager(this, this.lighting);
         this.staging.setup(this.def.id, this.layout, this.player);
