@@ -73,7 +73,7 @@ export const LESSONS: Partial<Record<EnemyKind, Lesson>> = {
     },
     numero: {
         ability: 'analisi',
-        hint: 'i numeri volanti schivano la spada ma non la matematica. analisi ({k:up}+{k:wave}): i teoremi li fanno a pezzi.',
+        hint: 'i numeri volanti schivano la spada ma non la matematica. analisi ({k:up}+{k:wave}) vicino a loro: li marchia, e alla fine i marchiati pagano.',
         mult: { analisi: 3 },
     },
     telecamera: {

@@ -10,6 +10,9 @@ import type { AbilityId } from '../types';
 
 export type AttackDir = 'side' | 'up' | 'down';
 
+/* quanto la wave aspetta la direzione dopo la pressione da sola */
+const WAVE_GRACE_MS = 250;
+
 export class Player extends Phaser.Physics.Arcade.Sprite {
     facing: 1 | -1 = 1;
     dead = false;
@@ -46,6 +49,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private wasGrounded = true;
     private charging = false;
     private chargeStart = 0;
+    /** la wave da sola aspetta la direzione per un istante, poi resta risonante */
+    private waveArmedUntil = 0;
+    /** dopo un cambio idea la pressione vecchia non ricarica più */
+    private waveConsumed = false;
     private chargeEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
     private chargeRing: Phaser.GameObjects.Image | null = null;
     private chargeHit1 = false;
@@ -332,37 +339,38 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.tryAttack(upHeld ? 'up' : !this.grounded && downHeld ? 'down' : 'side');
         }
 
-        // la wave si decide alla pressione: su = analisi, giù = bottiglia, da sola = risonante
+        // la wave si decide con tolleranza: la direzione vale anche premuta subito dopo
         if (this.controls.pressed('wave')) {
+            this.waveConsumed = false;
             if (upHeld) {
-                if (state.hasAbility('analisi') && now >= this.analisiReadyAt) {
-                    if (this.spendFlow(COMBAT.analisiCost * state.mods.abilityCost)) {
-                        this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
-                        sfx.unlock();
-                        this.scene.events.emit('player-analisi', {});
-                        this.scene.events.emit('player-act', { act: 'wave', wave: 'analisi' });
-                    }
-                } else {
-                    sfx.ui();
-                }
+                // una pressione, una wave: mentre tieni premuto non parte altro
+                this.waveConsumed = true;
+                this.tryAnalisi(now);
             } else if (downHeld) {
-                if (state.hasAbility('acquatossica') && now >= this.acquaReadyAt) {
-                    if (this.spendFlow(COMBAT.acquaCost * state.mods.abilityCost)) {
-                        this.acquaReadyAt = now + COMBAT.acquaCooldownMs;
-                        sfx.unlock();
-                        // in aria la lasci cadere sotto di te, a terra la lanci ad arco
-                        const aim = !this.grounded ? 'drop' : 'lob';
-                        this.scene.events.emit('player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
-                        this.scene.events.emit('player-act', { act: 'wave', wave: 'acquatossica' });
-                    }
-                } else {
-                    sfx.ui();
-                }
-            } else if (!state.hasAbility('risonante')) {
-                // niente ripieghi: il giocatore impara lo schema
+                this.waveConsumed = true;
+                this.tryAcqua(now);
+            } else if (state.hasAbility('risonante') || state.hasAbility('analisi') || state.hasAbility('acquatossica')) {
+                // premi la direzione entro un istante e la wave cambia idea
+                this.waveArmedUntil = now + WAVE_GRACE_MS;
+            } else {
                 sfx.ui();
             }
+        } else if (this.waveArmedUntil !== 0) {
+            if (now >= this.waveArmedUntil) {
+                this.waveArmedUntil = 0;
+            } else if (this.controls.pressed('up')) {
+                this.waveArmedUntil = 0;
+                this.waveConsumed = true;
+                this.cancelCharge();
+                this.tryAnalisi(now);
+            } else if (this.controls.pressed('down')) {
+                this.waveArmedUntil = 0;
+                this.waveConsumed = true;
+                this.cancelCharge();
+                this.tryAcqua(now);
+            }
         }
+        if (this.controls.released('wave')) this.waveConsumed = false;
         this.updateRisonante(now);
 
         if (this.controls.pressed('eat')) bus.emit('toast', { text: quickHeal() });
@@ -572,6 +580,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     /** la carica non parte al rilascio dentro un dialogo: si cancella e basta */
     cancelCharge(): void {
+        this.waveArmedUntil = 0;
         if (!this.charging) return;
         this.charging = false;
         this.chargeEmitter?.destroy();
@@ -580,12 +589,55 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.chargeRing = null;
     }
 
+    private tryAnalisi(now: number): void {
+        if (state.hasAbility('analisi') && now >= this.analisiReadyAt) {
+            if (this.spendFlow(COMBAT.analisiCost * state.mods.abilityCost)) {
+                this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
+                sfx.unlock();
+                this.scene.events.emit('player-analisi', {});
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'analisi' });
+            }
+        } else {
+            sfx.ui();
+        }
+    }
+
+    private tryAcqua(now: number): void {
+        if (state.hasAbility('acquatossica') && now >= this.acquaReadyAt) {
+            if (this.spendFlow(COMBAT.acquaCost * state.mods.abilityCost)) {
+                this.acquaReadyAt = now + COMBAT.acquaCooldownMs;
+                sfx.unlock();
+                // in aria la lasci cadere sotto di te, a terra la lanci ad arco
+                const aim = !this.grounded ? 'drop' : 'lob';
+                this.scene.events.emit('player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
+                this.scene.events.emit('player-act', { act: 'wave', wave: 'acquatossica' });
+            }
+        } else {
+            sfx.ui();
+        }
+    }
+
+    private fireRisonante(level: 0 | 1 | 2, cost: number): void {
+        if (!this.spendFlow(cost)) {
+            sfx.ui();
+            return;
+        }
+        if (level === 2) sfx.shootFull();
+        else if (level === 1) sfx.shoot();
+        else sfx.shootEco();
+        this.scene.cameras.main.flash(80, 168, 85, 247);
+        this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing, level });
+        this.scene.events.emit('player-act', { act: 'attack', dir: 'shot' });
+        this.scene.events.emit('player-act', { act: 'wave', wave: 'risonante', level });
+    }
+
     private updateRisonante(now: number): void {
         if (!state.hasAbility('risonante')) {
             if (this.charging) this.cancelCharge();
             return;
         }
         const ecoCost = COMBAT.risonanteEcoCost * state.mods.abilityCost;
+        if (this.waveConsumed) return;
         if (this.controls.down('wave') && !this.charging && state.run.flow >= ecoCost) {
             this.charging = true;
             this.chargeStart = now;
@@ -640,17 +692,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 bus.emit('toast', { text: 'flow insufficiente. colpisci qualcosa.' });
                 return;
             }
-            if (this.spendFlow(cost)) {
-                if (level === 2) sfx.shootFull();
-                else if (level === 1) sfx.shoot();
-                else sfx.shootEco();
-                this.scene.cameras.main.flash(80, 168, 85, 247);
-                this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing, level });
-                this.scene.events.emit('player-act', { act: 'attack', dir: 'shot' });
-                this.scene.events.emit('player-act', { act: 'wave', wave: 'risonante', level });
-            } else {
-                sfx.ui();
-            }
+            this.fireRisonante(level, cost);
         }
         // tasto mollato mentre non caricavi: niente
         if (!this.charging && this.chargeRing) {

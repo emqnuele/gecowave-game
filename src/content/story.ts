@@ -1311,7 +1311,7 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
     },
     analisi: {
         name: 'analisi 1',
-        desc: 'una dimostrazione in tre tempi: ipotesi (chi è nel cerchio viene segnato), passaggi (i teoremi girano), q.e.d. (chi è ancora segnato paga). piema sarebbe fiero. o spaventato.',
+        desc: 'premi {k:up}+{k:wave} vicino ai nemici: chi è nel cerchio viene marchiato, i teoremi girano, e alla fine chi è marchiato paga. i numeri volanti la temono più della spada.',
         key: '{k:up}+{k:wave}',
     },
     scudo: {

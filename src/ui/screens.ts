@@ -609,6 +609,7 @@ export class Screens {
                 row.append(el('span', 'name', what), el('kbd', '', formatKeys(keys)));
                 body.append(row);
             }
+            body.append(el('div', 'sx-note', 'l\'ordine non conta: la direzione vale anche premuta subito dopo.'));
 
             // il gamepad non si rimappa: si legge e basta
             body.append(el('div', 'sx-group', 'gamepad'));
