@@ -26,15 +26,16 @@ const CAST_TEXTURE: Record<string, string> = {
     stagista: 'npc-studente',
     realm: 'enemy-ricordo',
     piema: 'npc-piema',
+    limite: 'boss-limite',
 };
 
 /** altezza palco per attore: nessuno copre mai l'altro */
 const CAST_H: Record<string, number> = {
     lametta: 150, pedro: 96, ivan: 132, bus: 96, geco: 72,
-    occhio: 64, stagista: 106, realm: 80, piema: 140,
+    occhio: 64, stagista: 106, realm: 80, piema: 140, limite: 110,
 };
 
-type Gesture = 'passa-carta' | 'versa' | 'dipinge' | 'spinge' | 'saluta' | 'registra' | 'conclude' | 'spegne' | 'riscrive' | 'salva';
+type Gesture = 'passa-carta' | 'versa' | 'dipinge' | 'spinge' | 'saluta' | 'registra' | 'conclude' | 'spegne' | 'riscrive' | 'salva' | 'gira-foglio';
 
 interface Scope {
     objs: Phaser.GameObjects.GameObject[];
@@ -633,6 +634,11 @@ export class FlashbackManager {
                 if (shot === 1) { F(300, () => sfx.death('ricordo')); }
                 if (shot === 2) { F(100, () => sfx.clankFar(0, 0.9)); }
                 break;
+            case 'gira-foglio':
+                if (shot === 0) { F(200, () => sfx.step('stone')); F(520, () => sfx.step('stone')); F(750, () => sfx.creak()); }
+                if (shot === 1) { F(300, () => sfx.death('ricordo')); }
+                if (shot === 2) { F(100, () => sfx.clankFar(0, 0.9)); }
+                break;
             case 'versa':
                 if (shot === 0) { F(150, () => sfx.beep(0.4, 1)); F(600, () => sfx.bubble(0, 0.9)); }
                 if (shot === 1) { F(200, () => sfx.bubble()); F(650, () => sfx.death('bottiglia')); }
@@ -738,6 +744,62 @@ const SHOTS: Record<Gesture, ShotBuilder[]> = {
             const ped = mgr['actor'](scope, scene, ctx, 'pedro', 150, { flip: true });
             scene.tweens.add({ targets: ped, scale: 0.88, duration: 700 });
             mgr['gestureSound'](scene, scope, canAudio, 'passa-carta', 2, 0);
+        },
+    ],
+
+    /* la mattina dopo: legge il foglio a metà e lo gira a faccia in giù. */
+    'gira-foglio': [
+        (mgr, scene, scope, ctx, canAudio) => {
+            mgr['room'](scope, scene, ctx, ctx.cx - 150);
+            const desk = scene.add.rectangle(ctx.cx - 40, ctx.floorY - 22, 170, 14, 0x3a2a1a, 1);
+            mgr['put'](scope, desk, 163);
+            const bottle = scene.add.rectangle(ctx.cx - 100, ctx.floorY - 44, 14, 30, 0x8a7a5c, 1).setRotation(1.35);
+            mgr['put'](scope, bottle, 164);
+            const sheet = scene.add.rectangle(ctx.cx, ctx.floorY - 34, 46, 12, 0xe6dcc4, 1).setRotation(-0.08);
+            mgr['put'](scope, sheet, 164);
+            const lam = mgr['actor'](scope, scene, ctx, 'lametta', -170);
+            mgr['enter'](scope, scene, ctx, lam, -350, 1000);
+            // la telecamera spenta sullo sfondo: non guarda più nessuno
+            const eye = mgr['actor'](scope, scene, ctx, 'occhio', 190);
+            try { eye.setAlpha(0.45); } catch { /* test */ }
+            mgr['gestureSound'](scene, scope, canAudio, 'gira-foglio', 0, 0);
+        },
+        (mgr, scene, scope, ctx, canAudio) => {
+            mgr['room'](scope, scene, ctx, ctx.cx);
+            const sheet = scene.add.rectangle(ctx.cx - 20, ctx.floorY - 80, 120, 90, 0xf5efe0, 1).setStrokeStyle(2, 0x3a3128, 1);
+            mgr['put'](scope, sheet, 164);
+            const sign = scene.add.text(ctx.cx - 20, ctx.floorY - 52, 'lametta', {
+                fontFamily: 'Permanent Marker, cursive', fontSize: '20px', color: '#3a3128',
+            }).setOrigin(0.5).setRotation(-0.1);
+            mgr['put'](scope, sign, 165);
+            const lam = mgr['actor'](scope, scene, ctx, 'lametta', -190);
+            scene.tweens.add({ targets: lam, x: lam.x + 40, duration: 800, ease: 'Sine.easeInOut' });
+            mgr['after'](scope, scene, 850, () => {
+                scene.tweens.add({
+                    targets: [sheet, sign], scaleY: 0, duration: 260, ease: 'Quad.easeIn',
+                    onComplete: () => {
+                        try { sign.setAlpha(0); } catch { /* test */ }
+                        scene.tweens.add({ targets: sheet, scaleY: 1, duration: 260, ease: 'Quad.easeOut' });
+                    },
+                });
+                mgr['puff'](scope, scene, sheet.x, sheet.y, 0xf5efe0, 7);
+            });
+            mgr['gestureSound'](scene, scope, canAudio, 'gira-foglio', 1, 0);
+        },
+        (mgr, scene, scope, ctx, canAudio) => {
+            mgr['room'](scope, scene, ctx, ctx.cx + 120);
+            const desk = scene.add.rectangle(ctx.cx, ctx.floorY - 22, 190, 14, 0x3a2a1a, 1);
+            mgr['put'](scope, desk, 163);
+            const back = scene.add.rectangle(ctx.cx, ctx.floorY - 34, 46, 12, 0xd9cdae, 1).setRotation(0.06);
+            mgr['put'](scope, back, 164);
+            const lam = mgr['actor'](scope, scene, ctx, 'lametta', -40);
+            scene.tweens.add({ targets: lam, x: ctx.cx + 330, duration: 1400, ease: 'Quad.easeIn' });
+            for (let i = 0; i < 2; i++) {
+                mgr['after'](scope, scene, 300 + i * 400, () => {
+                    mgr['puff'](scope, scene, lam.x, ctx.floorY, 0x9a8c72, 3);
+                });
+            }
+            mgr['gestureSound'](scene, scope, canAudio, 'gira-foglio', 2, 0);
         },
     ],
 
