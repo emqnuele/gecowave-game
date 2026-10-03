@@ -54,9 +54,11 @@ export interface AcousticTarget {
     boss: boolean;
     /** 0..1: vita agli sgoccioli, il mondo si stringe */
     danger: number;
+    /** coda dell'eco del bioma: la tana rimbomba più del dovuto */
+    echoMul: number;
 }
 
-const DEFAULT: AcousticTarget = { space: 'open', size: 0.5, muffle: 0, night: 0, underwater: false, boss: false, danger: 0 };
+const DEFAULT: AcousticTarget = { space: 'open', size: 0.5, muffle: 0, night: 0, underwater: false, boss: false, danger: 0, echoMul: 1 };
 
 class Acoustics {
     private ctx: AudioContext | null = null;
@@ -273,12 +275,13 @@ class Acoustics {
         const musicWet = p.musicWet * size * (T.boss ? 0.45 : 1) * (this.paused ? 0.5 : 1);
         this.musicRevSend.gain.setTargetAtTime(musicWet, now, tau);
         this.sfxRevSend.gain.setTargetAtTime(Math.min(0.9, p.sfxWet * size + T.danger * 0.1), now, tau);
-        // eco: più lunga e più ripetuta negli spazi grandi
+        // eco: più lunga e più ripetuta negli spazi grandi (e nella tana, sempre)
+        const echoMul = T.echoMul ?? 1;
         this.echoDelay.delayTime.setTargetAtTime(p.echoTime * (0.8 + 0.4 * T.size), now, instant ? 0.01 : 1.2);
-        this.echoFb.gain.setTargetAtTime(Math.min(0.7, p.echoFb * (0.8 + 0.4 * T.size)), now, tau);
+        this.echoFb.gain.setTargetAtTime(Math.min(0.7, p.echoFb * (0.8 + 0.4 * T.size) * echoMul), now, tau);
         this.echoLP.frequency.setTargetAtTime(p.echoDamp, now, tau);
-        this.musicEchoSend.gain.setTargetAtTime(p.echoWet * 0.55 * size * (T.boss ? 0.3 : 1), now, tau);
-        this.sfxEchoSend.gain.setTargetAtTime(p.echoWet * size, now, tau);
+        this.musicEchoSend.gain.setTargetAtTime(p.echoWet * 0.55 * size * (T.boss ? 0.3 : 1) * echoMul, now, tau);
+        this.sfxEchoSend.gain.setTargetAtTime(Math.min(0.9, p.echoWet * size * echoMul), now, tau);
         this.musicDuck.gain.setTargetAtTime(this.duck, now, tau);
     }
 

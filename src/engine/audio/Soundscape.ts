@@ -26,6 +26,8 @@ interface BiomeSound {
     /** suoni sporadici: [suono, peso, solo di giorno/notte] */
     surface: [OneShot, number, ('day' | 'night')?][];
     below: [OneShot, number, ('day' | 'night')?][];
+    /** coda dell'eco per questo bioma (1 = normale): la tana rimbomba più del dovuto */
+    echo?: number;
 }
 
 const SOUNDS: Record<string, BiomeSound> = {
@@ -34,7 +36,7 @@ const SOUNDS: Record<string, BiomeSound> = {
     sanctum: { under: 'crystal', muffle: 0.8, surfaceBeds: { wind: 0.35, crystal: 0.3 }, underBeds: { crystal: 0.7, cave: 0.3 }, surface: [['chime', 3], ['bird', 1, 'day']], below: [['chime', 4], ['drip', 3], ['whisper', 1]] },
     wasteland: { under: 'metal', muffle: 1, surfaceBeds: { wind: 0.85, fire: 0.25 }, underBeds: { hum: 0.4, cave: 0.4, fire: 0.2 }, surface: [['clankFar', 3], ['buzz', 2], ['crow', 2, 'day'], ['pebble', 1]], below: [['clankFar', 3], ['buzz', 2], ['drip', 2]] },
     lab: { under: 'sewer', muffle: 1, surfaceBeds: { water: 0.3, hum: 0.25 }, underBeds: { water: 0.5, hum: 0.35 }, surface: [['bubble', 3], ['beep', 2], ['buzz', 1]], below: [['bubble', 4], ['drip', 3], ['beep', 2], ['buzz', 1]] },
-    burrow: { under: 'cave', muffle: 1, surfaceBeds: { cave: 0.4, wind: 0.2 }, underBeds: { cave: 0.9 }, surface: [['creak', 2], ['squeak', 1]], below: [['drip', 4], ['squeak', 2], ['creak', 2], ['pebble', 2], ['growlFar', 1]] },
+    burrow: { under: 'cave', muffle: 1, echo: 1.7, surfaceBeds: { cave: 0.4, wind: 0.2 }, underBeds: { cave: 0.9 }, surface: [['creak', 2], ['squeak', 1]], below: [['drip', 4], ['squeak', 2], ['creak', 2], ['pebble', 2], ['growlFar', 1]] },
     swamp: { under: 'sewer', muffle: 1, surfaceBeds: { water: 0.5, wind: 0.25 }, underBeds: { water: 0.7, cave: 0.4 }, surface: [['bubble', 3], ['bird', 2, 'day'], ['cricket', 4, 'night'], ['crow', 1]], below: [['bubble', 3], ['drip', 4], ['squeak', 1]] },
     factory: { under: 'metal', muffle: 1, surfaceBeds: { hum: 0.5, wind: 0.2 }, underBeds: { hum: 0.7, water: 0.2 }, surface: [['clankFar', 4], ['beep', 1], ['buzz', 1]], below: [['clankFar', 4], ['drip', 3], ['buzz', 2], ['beep', 1]] },
     library: { under: 'library', urban: true, muffle: 0.85, surfaceBeds: { city: 0.25, wind: 0.25 }, underBeds: { cave: 0.3 }, surface: [['creak', 2], ['bird', 1, 'day'], ['cricket', 2, 'night']], below: [['creak', 3], ['whisper', 1], ['pebble', 1]] },
@@ -177,6 +179,7 @@ export class Soundscape {
             underwater,
             boss: input.boss,
             danger: this.hp === 1 ? 1 : 0,
+            echoMul: this.sound.echo ?? 1,
         });
 
         // letti d'ambiente: superficie e sottosuolo si mescolano col grado di "sotto"

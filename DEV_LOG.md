@@ -204,6 +204,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: `AHEAD` 1→2, `PER_FRAME` 1→3 in `TerrainRenderer.ts`. Stessa grafica (stesso paint, stessa eviction `KEEP=3`, stessa memoria), solo più pezzi pronti prima dell'arrivo. Misurato con spazzata sintetica: i paint fuori vista assorbiti dal preload salgono (454→638), i paint visibili in camminata restano quasi zero.
 **Conseguenze**: meno raffiche sincrone cadendo nei pozzi e ai respawn; il teletrasporto resta un burst una tantum coperto dal fade.
 
+### ADR-033 — eco della tana e tick gravi udibili
+**Contesto**: nella tana l'eco spariva nelle stanze piccole (mandate `echoWet`/`echoFb` quasi a zero dal fattore `size`) e i tick delle battute gravi restavano inudibili anche dopo averli alzati (sine puro a 150–200 Hz, perso sulle casse piccole).
+**Decisione**: `BiomeSound.echo` (default 1) passato in `AcousticTarget.echoMul` e applicato alle tre mandate eco in `apply()`; `burrow: 1.7`. `graveTick` diventa colpo basso (sine 82→55 Hz, 0.12) più click (rumore a 1400 Hz, 0.06): il click passa su qualsiasi cassa, il colpo resta scuro.
+**Conseguenze**: solo la tana rimbomba di più; resto del gioco invariato.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -248,6 +253,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **eco e tick nella tana**: rimbombo del burrow e colpi gravi udibili (ADR-033).
 - **terreno senza scatti**: preload più fondo contro i cali entrando nelle stanze (ADR-032).
 - **la tana è horror**: capitolo horror per sottrazione, scelta tolta, nascondigli con buio e sussurri, ospite n.12, migrazione salvataggi (ADR-031).
 - **il void parla di piema**: due rimpianti di lametta e tre di piema, verità nuove, flashback nuovi, delegato passato a piema (ADR-030).
