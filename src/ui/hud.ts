@@ -1,7 +1,7 @@
 import { COMBAT, ZONE_CSS } from '../config';
 import { ABILITY_CARDS } from '../content/story';
 import { bus } from '../engine/events';
-import { formatKeys } from '../engine/input/keyText';
+import { formatKeys, keyLabel } from '../engine/input/keyText';
 import { state } from '../engine/state';
 import type { AbilityId, ZoneColor } from '../types';
 import { el } from './dom';
@@ -41,6 +41,9 @@ export class Hud {
     private fragments: HTMLElement;
     private zone: HTMLElement;
     private waves: HTMLElement;
+    private food: HTMLElement;
+    private foodKbd: HTMLElement;
+    private foodCount: HTMLElement;
     private tommaso: HTMLElement;
     private trenboBorder: HTMLElement;
     private doomsday: HTMLElement;
@@ -67,6 +70,10 @@ export class Hud {
         this.trenboBorder = el('div', 'trenbo-border');
         this.zone = el('div', 'hud-zone', '');
         this.waves = el('div', 'hud-waves');
+        this.food = el('div', 'hud-food');
+        this.foodKbd = el('kbd', '', '');
+        this.foodCount = el('span', 'food-count', '');
+        this.food.append(this.foodKbd, this.foodCount);
 
         this.doomsday = el('div', 'doomsday-meter');
         this.doomsdayFill = el('div', 'doomsday-fill');
@@ -77,7 +84,7 @@ export class Hud {
         this.trial = el('div', 'hud-trial', '');
         this.trial.style.display = 'none';
 
-        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.doomsday, this.trenboBorder, this.trial);
+        this.root.append(topleft, this.barre, this.fragments, this.tommaso, this.zone, this.waves, this.food, this.doomsday, this.trenboBorder, this.trial);
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
@@ -115,8 +122,9 @@ export class Hud {
         });
         bus.on('abilities-changed', ({ abilities }) => this.setAbilities(abilities));
         // i tasti veri cambiano col dispositivo e con la rimappatura
-        bus.on('input-device', () => this.setAbilities(this.seenAbilities));
-        bus.on('controls-changed', () => this.setAbilities(this.seenAbilities));
+        bus.on('input-device', () => { this.setAbilities(this.seenAbilities); this.refreshFood(); });
+        bus.on('controls-changed', () => { this.setAbilities(this.seenAbilities); this.refreshFood(); });
+        bus.on('inventory-changed', () => this.refreshFood());
         bus.on('wave-cooldowns', ({ cds, flow }) => this.setCooldowns(cds, flow));
         bus.on('boss-hp', (payload) => this.setBoss(payload));
         bus.on('doomsday-changed', ({ value, active }) => {
@@ -131,6 +139,7 @@ export class Hud {
         this.updateTommaso();
         this.updateTrenbo();
         this.updateDoomsdayVisibility();
+        this.refreshFood();
     }
     hide(): void {
         this.root.style.display = 'none';
@@ -221,8 +230,15 @@ export class Hud {
         this.refreshWaveFlow(flow);
     }
 
-    private refreshWaveFlow(flow: number): void {
-        const mult = state.mods.abilityCost;
+    /** il cibo in tasca col suo tasto: sempre visibile, spento se vuoto */
+    private refreshFood(): void {
+        const n = state.count('crocchetta') + state.count('panino-nonna');
+        this.foodKbd.textContent = keyLabel('eat');
+        this.foodCount.textContent = `🍘×${n}`;
+        this.food.classList.toggle('empty', n <= 0);
+    }
+
+    private refreshWaveFlow(flow: number): void {        const mult = state.mods.abilityCost;
         for (const chip of Array.from(this.waves.children) as HTMLElement[]) {
             const id = chip.dataset.ability as AbilityId | undefined;
             if (!id) continue;

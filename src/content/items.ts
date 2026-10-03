@@ -24,12 +24,12 @@ export interface ItemDef {
 export const ITEMS: Record<string, ItemDef> = {
     /* ---------- consumabili ---------- */
     crocchetta: {
-        id: 'crocchetta', name: 'crocchetta del bar', icon: '🍘', kind: 'consumabile', price: 15,
+        id: 'crocchetta', name: 'crocchetta del bar', icon: '🍘', kind: 'consumabile', price: 25,
         desc: 'ridà 1 vita. fritta nel 2019, ancora calda dentro.',
         punch: 'non chiedere che olio.',
     },
     'panino-nonna': {
-        id: 'panino-nonna', name: 'panino della nonna di markolino', icon: '🥪', kind: 'consumabile', price: 60,
+        id: 'panino-nonna', name: 'panino della nonna di markolino', icon: '🥪', kind: 'consumabile', price: 90,
         desc: 'ridà 2 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
         punch: 'c\'è dentro amore e mortadella.',
     },
