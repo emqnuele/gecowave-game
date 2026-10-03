@@ -189,6 +189,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: regole della voce (anche nel commento in testa a `story.ts`): R1 il geco non pensa ad alta voce; R2 parla due volte sole, al caso e al nucleo, con `mood: 'grave'`; R3 le righe narrate descrivono solo gesti visibili; R4 le gag `*verso di geco che...*` restano se sono una battuta, altrimenti diventano gesto o spariscono; R5 niente numeri di sistema nelle battute di trama (stanno in `MECHANIC_HINTS`, `LESSONS`, card abilità e tutorial di markolino); R6 niente spoiler di scelte o finali in obiettivi, chiamate e messaggi. `stabilimento-pensiero` e il suo innesco in `GameScene` rimossi (lo stabilimento non ferma più l'uscita), `tone.ts` perde `GecoVoice`/`geco`, `mente-ordine` e `ticummi-pieta` dicono cose nuove invece di ripetere il nucleo.
 **Conseguenze**: resta un solo `il geco (pensa)` nella tana (`lochef-sconfitto`), perimetro del piano 4; i meme (41.077 secondi, 0,09€, failrp, non convalidare) restano tutti.
 
+### ADR-030 — il void parla di piema
+**Contesto**: nel void i rimpianti 1–3 (delegato, notturno, modello) ripetevano i tre indizi del caso con gli stessi flashback (`fb-ordine`, `fb-notte`, `fb-ritratto`), e le due verità nuove su piema arrivavano in fondo.
+**Decisione**: ordine nuovo `notturno, modello, revisore, delegato, garante` (2 di lametta + 3 di piema); ogni verità aggiunge un pezzo nuovo (mattina dopo, promessa del giorno 37, riga sette alle 04:20, aula di analisi 1 di quarant'anni fa, ultimo accesso di stanotte). Il `delegato` passa a piema (nome, `glowColor` 0x60a5fa, palette blu, hp 46 con cooldown più corti per la difficoltà crescente); i `BossKind` e i flag `boss-down-*` non cambiano. Tre flashback nuovi (`fb-mattina`, `fb-promessa`, `fb-verbale` con `limite: 'boss-limite'` nel cast e gesto nuovo `gira-foglio` clonato da `passa-carta`); `fb-riscrive` prima di `revisore-intro` si salta se già visto col pensiero sepolto (`FLASHBACK_ONCE`, chiave `fb-${id}` invariata). `setupVoid`/`onVeritaRivelata` usano il primo rimpianto non battuto (`nextRegret`) invece del conteggio, così i salvataggi a metà void non saltano rimpianti.
+**Conseguenze**: `verita-1..5`, intro dei rimpianti, guide di romero 3–4, `lore-void-2/3` e battute riscritte; `fb-ordine/notte/ritratto` restano solo al caso e ai ricordi. `void-svolta` ("è in ESECUZIONE") ora segue la verità 5.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -233,6 +238,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **il void parla di piema**: due rimpianti di lametta e tre di piema, verità nuove, flashback nuovi, delegato passato a piema (ADR-030).
 - **mostrare, non spiegare**: il geco non pensa più ad alta voce e parla solo al caso e al nucleo, via spoiler e tutorial robotici (ADR-029).
 - **canone della trama**: linea del tempo giorno 1-43, colpe, glitch come conclusione, 14 barrato, 5 maschere, 9 frammenti, epiloghi nei titoli di coda (ADR-028).
 - **riepilogo di capitolo**: carta animata a fine livello con mappa, cuori, cose e score, catalogo centrale dei collezionabili (ADR-025).
