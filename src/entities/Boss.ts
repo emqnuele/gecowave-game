@@ -15,7 +15,7 @@ export type HitDir = 'side' | 'up' | 'down' | 'shot';
 
 export class Boss extends Phaser.Physics.Arcade.Sprite {
     readonly def: BossDef;
-    readonly maxHp: number;
+    maxHp: number;
     hp: number;
     engaged = false;
     invulnerable: boolean;
@@ -127,6 +127,14 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         sfx.bossRoar();
         bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
         this.scene.events.emit('boss-engaged', this);
+    }
+
+    /** più robusto prima che lo scontro entri nel vivo (l'ombra nutrita dalle telecamere) */
+    empower(mult: number): void {
+        if (mult <= 1 || this.hp < this.maxHp) return;
+        this.maxHp = Math.round(this.maxHp * mult);
+        this.hp = this.maxHp;
+        bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
     }
 
     /** para i colpi da una direzione per un po': chi ripete la stessa mossa trova il muro */

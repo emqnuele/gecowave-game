@@ -1268,24 +1268,35 @@ export const ABILITY_CARDS: Record<AbilityId, { name: string; desc: string; key:
     },
 };
 
-// mind door riddles
-export const TRABOCCHETTI: Record<string, { q: string; options: string[]; correct: number }> = {
-    'porta-teorema-1': {
-        q: 'la porta chiede: «0,999 periodico, con TUTTI quei 9 fino in fondo, è:»',
-        options: ['quasi 1, ma proprio quasi', 'esattamente 1', 'un numero che si crede furbo'],
-        correct: 1,
-    },
-    'porta-teorema-2': {
-        q: 'la porta chiede: «per attraversarmi devi prima fare metà strada, poi metà della metà, poi metà della... quante tappe ti servono?»',
-        options: ['infinite, quindi resti lì per sempre', 'boh, tipo venti', 'infinite, e infatti passo lo stesso'],
-        correct: 2,
-    },
-    'porta-teorema-3': {
-        q: 'la porta chiede: «il citelis delle 7:40 parte in orario e viaggia a velocità infinita. quando arriva alla fermata?»',
-        options: ['mai: il citelis non arriva, il citelis È', 'immediatamente', 'alle 7:40 spaccate'],
-        correct: 0,
-    },
-};
+/* le porte della mente di piema: un mazzo di domande a trabocchetto.
+   ogni porta parte da una sua carta e, se sbagli, ne pesca un'altra */
+export interface Riddle {
+    q: string;
+    options: string[];
+    correct: number;
+}
+
+export const RIDDLES: Riddle[] = [
+    { q: 'la porta chiede: «0,999 periodico, con TUTTI quei 9 fino in fondo, è:»', options: ['quasi 1, ma proprio quasi', 'esattamente 1', 'un numero che si crede furbo'], correct: 1 },
+    { q: 'la porta chiede: «per attraversarmi fai metà strada, poi metà della metà, poi metà della... quante tappe?»', options: ['infinite, quindi resti lì per sempre', 'boh, tipo venti', 'infinite, e infatti passo lo stesso'], correct: 2 },
+    { q: 'la porta chiede: «il citelis delle 7:40 parte in orario e viaggia a velocità infinita. quando arriva?»', options: ['mai: il citelis non arriva, il citelis È', 'immediatamente', 'alle 7:40 spaccate'], correct: 0 },
+    { q: 'la porta chiede: «se dimostri che il realm è dritto, ma il realm è storto, hai dimostrato:»', options: ['che il realm è dritto', 'di aver sbagliato le ipotesi', 'che sei storto tu'], correct: 1 },
+    { q: 'la porta chiede: «una lavagna dice: "questa frase è falsa". la lavagna è:»', options: ['vera', 'falsa', 'un paradosso: né l\'una né l\'altra'], correct: 2 },
+    { q: 'la porta chiede: «il limite di 1/x, per x che tende a infinito, è:»', options: ['infinito', 'zero', 'il commissario romero'], correct: 1 },
+    { q: 'la porta chiede: «l\'insieme di tutti gli insiemi che non contengono se stessi:»', options: ['contiene se stesso', 'non contiene se stesso', 'non può esistere: è un trabocchetto'], correct: 2 },
+    { q: 'la porta chiede: «la derivata di una costante è:»', options: ['la costante stessa', 'zero', 'una variabile che ci ha provato'], correct: 1 },
+    { q: 'la porta chiede: «ogni geco è un custode e qualche custode è provvisorio. allora:»', options: ['ogni geco è provvisorio', 'qualche geco potrebbe essere provvisorio', 'nessun geco è provvisorio'], correct: 1 },
+    { q: 'la porta chiede: «la somma degli angoli interni di un triangolo, sul piano, è:»', options: ['180 gradi', '360 gradi', '33 gradi'], correct: 0 },
+    { q: 'la porta chiede: «io mento sempre. ti dico: "sono aperta". allora sono:»', options: ['aperta', 'chiusa', 'una porta onesta'], correct: 1 },
+    { q: 'la porta chiede: «la radice quadrata di meno uno è:»', options: ['impossibile, punto', 'i, un numero immaginario', 'un refuso della riba'], correct: 1 },
+];
+
+/** la carta di una porta al tentativo n: stessa porta, stessa prima domanda */
+export function riddleFor(doorId: string, attempt: number): Riddle {
+    let h = 0;
+    for (const ch of doorId) h = (h * 31 + ch.charCodeAt(0)) | 0;
+    return RIDDLES[(Math.abs(h) + attempt * 5) % RIDDLES.length]!;
+}
 
 export const TOASTS = {
     checkpoint: 'il microfono ti riconosce. tutto salvato. canta una volta sola.',
@@ -1300,7 +1311,7 @@ export const TOASTS = {
     trenboloneDrain: 'il trenbolone ti mangia da dentro.',
     smela: 'effetto smela III attivo. ogni tanto ti fermerai. non chiedere.',
     dispositivo: 'dispositivo della riba ottenuto: ora puoi entrare nella mente di piema.',
-    quizErrore: 'risposta sbagliata. la mente di piema ti cancella.',
+    quizErrore: 'risposta sbagliata. i pensieri sbagliati mordono. la porta cambia domanda.',
     portaAperta: 'risposta esatta. il teorema cede, la porta si dissolve.',
     scudo: 'tommasoscudo attivo: i proiettili tornano al mittente.',
     cuore: 'un cuore del realm. la vita massima aumenta per sempre.',
@@ -1318,6 +1329,17 @@ export const TOASTS = {
     doomsdayWarn1: 'il cielo si incrina ai bordi. il realm sta perdendo i pezzi. sbrigati.',
     doomsdayWarn2: 'glitch ovunque. il doomsday è vicino. pedro lo sente, e si muove.',
     doomsdayPedro: 'TROPPO TARDI. pedro ti ha raggiunto. sopravvivi o è la fine.',
+};
+
+/** la meccanica del posto, spiegata una volta sola da chi c'è già passato */
+export const MECHANIC_HINTS: Record<string, { sender: string; text: string }> = {
+    bus: { sender: 'markolino', text: 'le porte tra le stanze seguono l\'orario del citelis. il numero sopra conta i secondi: giallo passi, rosso aspetti.' },
+    rio: { sender: 'markolino', text: 'il rio scorre e ogni tanto cambia verso. controcorrente i salti vengono corti: aspetta il cambio, poi vai.' },
+    stabilimento: { sender: 'markolino', text: 'i nastri di smela si fermano e ripartono al contrario. le frecce gialle dicono dove ti portano.' },
+    cantina: { sender: 'markolino', text: 'è buio pesto. le telecamere di ticummi spazzano col cono: se ti prende, arriva gente. scivolaci sotto.' },
+    sorveglianza: { sender: 'markolino', text: 'ogni telecamera che ti riprende addestra l\'ombra che ti aspetta in fondo. in scivolata sei sfocato.' },
+    tecnokill: { sender: 'markolino', text: 'all\'aperto c\'è un cecchino sulla torre radio: il laser rosso ti cerca, quando diventa bianco spara. cambia passo.' },
+    mente: { sender: 'markolino', text: 'le porte di piema fanno domande. sbagliare non ti cancella: ti morde e cambia domanda. pensa prima di rispondere.' },
 };
 
 export const WAVESUNG = {

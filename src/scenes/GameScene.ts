@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COMBAT, TILE, ZONE_HEX } from '../config';
-import { DIALOGUES, NOTINO_FUGHE, TOASTS, TRABOCCHETTI, WAVESUNG } from '../content/story';
+import { DIALOGUES, MECHANIC_HINTS, NOTINO_FUGHE, riddleFor, TOASTS, WAVESUNG } from '../content/story';
 import { HUB_STOP, LEVEL_ORDER, LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { QUESTS } from '../content/quests';
 import { propArt } from '../engine/art/props';
@@ -53,6 +53,7 @@ import { BossVoice } from '../engine/BossVoice';
 import { OmbraBrain } from '../engine/OmbraBrain';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
+import { createMechanic, type Mechanic } from '../engine/mechanics';
 import { barksFor, LAMETTA_BARKS } from '../content/barks';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
 
@@ -273,6 +274,11 @@ export class GameScene extends Phaser.Scene {
     private nextWildGlitchAt = 0;
     /** anti-spam del parry quando la hitbox resta sopra un nemico schermato */
     private parryUntil = 0;
+    /** la meccanica del bioma (porte a orario, correnti, telecamere...) */
+    private mechanic: Mechanic | null = null;
+    private playerLightRef: Phaser.GameObjects.Light | null = null;
+    /** quante volte hai sbagliato ogni porta della mente: la domanda cambia */
+    private quizAttempts = new Map<string, number>();
     /** chi parla durante lo scontro, e l'ombra che ti studia */
     private voice: BossVoice | null = null;
     private ombraBrain: OmbraBrain | null = null;
@@ -306,6 +312,7 @@ export class GameScene extends Phaser.Scene {
         this.exiting = false;
         this.boss = null;
         this.silenceBoss();
+        this.quizAttempts.clear();
         this.clone = null;
         this.cloneColliders = [];
         this.mirror = null;
@@ -408,7 +415,7 @@ export class GameScene extends Phaser.Scene {
         if (data.spawnAt) sp = { x: data.spawnAt.x, y: data.spawnAt.y };
         this.player = new Player(this, sp.x, sp.y);
         this.player.setDepth(4);
-        this.lighting.playerLight(this.player);
+        this.playerLightRef = this.lighting.playerLight(this.player);
         this.lastSafe = { ...sp };
 
         this.enemies = this.add.group({ runChildUpdate: false });
@@ -494,7 +501,26 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.hazards.group,
             (_p, slab) => this.hazards.landOn(slab as Phaser.GameObjects.GameObject),
             (_p, slab) => this.hazards.canLand(this.player, slab as Phaser.GameObjects.GameObject));
+        if (this.layout && this.playerLightRef) {
+            const enemyKinds = [...new Set(Object.values(this.def.entities).flatMap((e) => (e.type === 'enemy' ? [e.kind] : [])))]
+                .filter((k) => k !== 'notino-mini' && k !== 'pittura-mini');
+            this.mechanic = createMechanic({
+                scene: this, regionId: this.def.id, nav: this.nav, layout: this.layout, water: this.level.water,
+                lighting: this.lighting, playerLight: this.playerLightRef, player: this.player,
+                avoid: [sp, ...this.level.checkpoints.map((c) => ({ x: c.x, y: c.y })), ...this.busStops, ...this.interactables.map((it) => ({ x: it.x, y: it.y })),
+                    ...this.level.entities.filter((e) => e.spec.type !== 'enemy').map((e) => ({ x: e.x, y: e.y }))],
+                enemyKinds,
+                spawnHunter: (kind, x, y) => {
+                    const at = this.openSpotNear(x, y, 8);
+                    this.spawnEnemy(kind, at.x, at.y, { hunting: true });
+                },
+                awakeEnemies: () => this.awakeEnemies(),
+                quizDoor: (id, x, y) => this.spawnQuizDoor(id, x, y),
+            });
+        }
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.mechanic?.destroy();
+            this.mechanic = null;
             this.silenceBoss();
             this.pedroGhost?.destroy();
             this.pedroGhost = null;
@@ -857,13 +883,7 @@ export class GameScene extends Phaser.Scene {
 
         // teorema mind doors
         if (id.startsWith('porta-teorema')) {
-            if (state.hasFlag(`aperta-${id}`)) return;
-            const door = this.doorGroup.create(x, y - 48, 'porta-teorema') as Phaser.Physics.Arcade.Sprite;
-            door.setDepth(3).setPipeline('Light2D');
-            (door.body as Phaser.Physics.Arcade.StaticBody).setSize(28, 128);
-            this.lighting.follow(door, 0x60a5fa, 150, 0.7);
-            const entry: Interactable = { x, y, range: 70, onInteract: () => this.interactPorta(id, door, entry) };
-            this.interactables.push(entry);
+            this.spawnQuizDoor(id, x, y);
             return;
         }
 
@@ -1242,17 +1262,34 @@ export class GameScene extends Phaser.Scene {
     }
 
     // mind door interactive
+    /** una porta della mente: chiude il varco finché non rispondi giusto */
+    private spawnQuizDoor(id: string, x: number, y: number): void {
+        if (state.hasFlag(`aperta-${id}`)) return;
+        const door = this.doorGroup.create(x, y - 48, 'porta-teorema') as Phaser.Physics.Arcade.Sprite;
+        door.setDepth(3).setPipeline('Light2D');
+        (door.body as Phaser.Physics.Arcade.StaticBody).setSize(28, 128);
+        this.lighting.follow(door, 0x60a5fa, 150, 0.7);
+        const entry: Interactable = { x, y, range: 70, onInteract: () => this.interactPorta(id, door, entry) };
+        this.interactables.push(entry);
+    }
+
     private interactPorta(id: string, door: Phaser.Physics.Arcade.Sprite, entry: Interactable): void {
-        const t = TRABOCCHETTI[id];
-        if (!t) return;
+        const attempt = this.quizAttempts.get(id) ?? 0;
+        const t = riddleFor(id, attempt);
         bus.emit('choice-show', {
             title: t.q,
             options: t.options.map((label) => ({ label })),
             onPick: (i) => {
                 if (i !== t.correct) {
+                    // sbagliare costa, ma la testa di piema non ti cancella più: ti morde e cambia domanda
+                    this.quizAttempts.set(id, attempt + 1);
                     bus.emit('toast', { text: TOASTS.quizErrore });
                     this.cameras.main.flash(240, 248, 113, 113);
-                    this.player.kill();
+                    this.player.hurt(2, door.x);
+                    for (const side of [-1, 1]) {
+                        const at = this.openSpotNear(door.x + side * 180, door.y - 40, 8);
+                        this.spawnEnemy('numero', at.x, at.y, { hunting: true });
+                    }
                     return;
                 }
                 state.setFlag(`aperta-${id}`);
@@ -1866,6 +1903,8 @@ export class GameScene extends Phaser.Scene {
             waveOnce('pedro-eco-perduta', WAVESUNG.pedroEcoPerduta, 6000);
             waveOnce('tease-maschere-perduta', WAVESUNG.markolinoMaschereTease, 45000);
         }
+        const hint = MECHANIC_HINTS[this.def.id];
+        if (hint && this.mechanic) waveOnce(`meccanica-${this.def.id}`, hint, 12000);
         if (this.def.id === 'bus') waveOnce('romero-prima-bus', WAVESUNG.romeroBus, 25000);
         if (this.def.id === 'santuario') waveOnce('romero-prima-santuario', WAVESUNG.romeroSantuario, 30000);
         if (this.def.id === 'tecnokill') waveOnce('tutorial-risonante-visto', WAVESUNG.markolinoRisonante, 35000);
@@ -2221,6 +2260,7 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number): void {
         if (!this.player) return;
         this.player.update(time, delta);
+        this.mechanic?.update(time, delta);
 
         if (!this.player.dead && this.player.y > this.level.heightPx + FALL_DEATH_MARGIN) {
             this.player.kill();
@@ -3949,7 +3989,11 @@ export class GameScene extends Phaser.Scene {
         if (kind === 'ombra' && !state.hasFlag('tommasorveglianza')) this.voice.event('engage-beta');
         else if (kind === 'ticummi' && state.hasFlag('tommasorveglianza')) this.voice.event('engage-cliente');
         else this.voice.say('engage', true);
-        if (kind === 'ombra') this.ombraBrain = new OmbraBrain(this, boss, this.voice, this.player);
+        if (kind === 'ombra') {
+            // ogni ripresa delle telecamere del centro dati è un pezzo di modello in più
+            boss.empower(1 + state.run.ombraDati * 0.07);
+            this.ombraBrain = new OmbraBrain(this, boss, this.voice, this.player);
+        }
     }
 
     private silenceBoss(): void {

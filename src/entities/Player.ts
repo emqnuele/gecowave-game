@@ -53,6 +53,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     submerged = false;
     /** testa sott'acqua: il mondo si sente da dentro una vasca */
     headUnder = false;
+    /** spinta del posto (corrente del rio, nastri dello stabilimento), px/s; la scena la rimette ogni fotogramma */
+    drift = 0;
     private stunnedUntil = 0;
     private nextSmelaStun = 0;
     private nextTrenDrain = 0;
@@ -124,6 +126,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         def('p-jump', 'player', 16, 19, 10, 0);
         def('p-land', 'player', 20, 23, 14, 0);
         def('p-attack', 'player_atk', 12, 15, 18, 0);
+    }
+
+    /** in scivolata: un fotogramma sfocato per chi guarda (telecamere, allarmi) */
+    get isDashing(): boolean {
+        return this.dashing;
     }
 
     get invulnerable(): boolean {
@@ -228,7 +235,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             body.setVelocityX(body.velocity.x * (this.grounded ? 0.8 : 0.96));
         }
         // nell'acqua alta si arranca e si affonda piano; il salto resta pieno, se no le conche allagate diventano trappole
-        body.setMaxVelocityX(PHYSICS.runSpeed * state.mods.speed * (this.submerged ? 0.6 : 1));
+        const run = PHYSICS.runSpeed * state.mods.speed * (this.submerged ? 0.6 : 1);
+        body.setMaxVelocityX(run + Math.abs(this.drift));
+        if (this.drift !== 0 && now >= this.wallLockUntil) {
+            // dentro una corrente si insegue la velocità del posto più quella dei comandi, non la sola accelerazione
+            const dir = left && !right ? -1 : right && !left ? 1 : 0;
+            body.setAccelerationX(0);
+            body.setVelocityX(Phaser.Math.Linear(body.velocity.x, dir * run + this.drift, this.grounded ? 0.2 : 0.07));
+        }
         if (this.submerged && body.velocity.y > 300) body.setVelocityY(300);
 
         // salto: buffer + coyote + rimbalzo
