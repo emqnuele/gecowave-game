@@ -3,7 +3,7 @@ import type { ChapterSummary, FinalSummary } from './ChapterCompletion';
 
 /** eventi tra mondo phaser e ui dom */
 export interface GameEvents {
-    'hp-changed': { hp: number; maxHp: number; hurt: boolean };
+    'hp-changed': { hp: number; maxHp: number; hurt: boolean; regen?: boolean };
     'flow-changed': { flow: number; maxFlow: number };
     'barre-changed': { barre: number; gained: boolean };
     'fragments-changed': { count: number; total: number };
@@ -34,6 +34,8 @@ export interface GameEvents {
     /** battuta parlata a gioco in corso: sottotitolo che non ferma niente */
     'bark': { speaker: string; color: ZoneColor; text: string; glitch?: boolean; urgent?: boolean };
     'bark-clear': {};
+    /** ricariche delle wave attive, 0 pronta 1 in ricarica, al massimo 10 volte al secondo */
+    'wave-cooldowns': { cds: Partial<Record<AbilityId, number>>; flow: number };
     /** la tana ti ha sentito nell'armadio: lochef torna in caccia da vicino */
     'tana-sniffed': {};
 }

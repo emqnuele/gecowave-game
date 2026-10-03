@@ -188,6 +188,61 @@ class Sfx {
         );
     }
     shoot(): void { this.tone(900, 120, { type: 'square', to: 300, vol: 0.07 }); }
+    /** eco corta: un colpo secco, niente coda */
+    shootEco(): void {
+        this.noise(70, { freq: 3200, q: 1.5, vol: 0.14 });
+        this.tone(700, 70, { type: 'square', to: 500, vol: 0.06 });
+    }
+    /** onda piena: grave, con la coda */
+    shootFull(): void {
+        this.tone(320, 320, { type: 'sawtooth', to: 90, vol: 0.12 });
+        this.tone(160, 700, { type: 'sine', to: 60, vol: 0.08 });
+        this.noise(300, { freq: 500, q: 0.6, vol: 0.12, type: 'lowpass' });
+    }
+    /** gradino di carica del risonante: più alto a ogni livello */
+    chargeStep(level: number): void {
+        const f = level === 1 ? 520 : 780;
+        this.tone(f, 140, { type: 'triangle', to: f * 1.5, vol: 0.06 });
+    }
+    /** vetro che vibra: nasce il riflesso */
+    mirrorBirth(): void {
+        const base = 1560 + Math.random() * 200;
+        for (let k = 0; k < 5; k++) this.tone(base + Math.sin(k) * 60, 120, { type: 'sine', vol: 0.03, delayMs: k * 70 });
+        this.noise(300, { freq: 6000, q: 3, vol: 0.04 });
+    }
+    /** vetro che si rompe al contrario: lo scambio */
+    mirrorSwap(): void {
+        this.noise(320, { freq: 2500, q: 1.2, vol: 0.1, to: 6000, attackMs: 240 });
+        this.tone(400, 300, { type: 'sine', to: 1600, vol: 0.05, attackMs: 200 });
+    }
+    /** gesso sulla lavagna: l'ipotesi */
+    chalk(): void { this.noise(280, { freq: 4800, q: 4, vol: 0.05, to: 2800 }); }
+    /** tic dei passaggi */
+    analisiTick(): void { this.tone(1320, 40, { type: 'sine', vol: 0.025 }); }
+    /** accordo pieno della dimostrazione */
+    qed(): void {
+        [261.6, 329.6, 392, 523.3].forEach((f, i) => this.tone(f, 900, { type: 'triangle', vol: 0.05, attackMs: 20, delayMs: i * 40 }));
+        this.noise(200, { freq: 4500, q: 4, vol: 0.04 });
+    }
+    /** ronzio del crt che si accende */
+    crt(): void {
+        this.tone(60, 280, { type: 'sawtooth', vol: 0.04, attackMs: 60 });
+        this.tone(15600 * 0.5, 200, { type: 'sine', vol: 0.012 });
+    }
+    /** ding da notifica: il rimando perfetto */
+    perfectDing(): void {
+        this.tone(1318, 300, { type: 'sine', vol: 0.06, attackMs: 5 });
+        this.tone(1976, 500, { type: 'sine', vol: 0.03, attackMs: 5, delayMs: 60 });
+    }
+    /** fruscio di plastica: parte la bottiglia */
+    bottleThrow(): void { this.noise(180, { freq: 2800, q: 0.8, vol: 0.08, to: 1200 }); }
+    /** crack di plastica più splash */
+    bottleCrack(): void {
+        this.noise(120, { freq: 2800, q: 2.5, vol: 0.12 });
+        this.noise(300, { freq: 900, q: 0.7, vol: 0.1, delayMs: 60, to: 300 });
+    }
+    /** nota bassa e morbida della rigenerazione */
+    regen(): void { this.tone(196, 500, { type: 'sine', to: 262, vol: 0.05, attackMs: 80 }); }
     bossRoar(): void {
         this.tone(80, 900, { type: 'sawtooth', to: 45, vol: 0.2 });
         this.noise(800, { freq: 180, q: 0.6, vol: 0.25 });

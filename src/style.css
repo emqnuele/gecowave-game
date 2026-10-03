@@ -283,6 +283,15 @@ body {
   animation: tick-pop 0.35s ease;
 }
 
+.hp-tick.regen {
+  animation: tick-regen 0.9s ease;
+}
+
+@keyframes tick-regen {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.45); filter: drop-shadow(0 0 10px rgba(74, 222, 128, 1)); }
+}
+
 .flow-wrap {
   height: 8px;
   border-radius: 99px;
@@ -387,6 +396,25 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* velo di ricarica: si ritira mentre la wave torna pronta */
+.wave-chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(rgba(0, 0, 0, 0.68) calc(var(--cd, 0) * 1turn), transparent 0);
+  pointer-events: none;
+}
+
+.wave-chip.cooling .wave-name {
+  opacity: 0.55;
+}
+
+.wave-chip.noflow {
+  opacity: 0.45;
 }
 
 .wave-chip:nth-child(even) {

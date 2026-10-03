@@ -1,4 +1,4 @@
-import { ZONE_CSS } from '../config';
+import { COMBAT, ZONE_CSS } from '../config';
 import { ABILITY_CARDS } from '../content/story';
 import { bus } from '../engine/events';
 import { state } from '../engine/state';
@@ -13,6 +13,15 @@ const DOOMSDAY_THEMES: Record<ZoneColor, { primary: string; dark: string; shadow
     red: { primary: '#f87171', dark: '#991b1b', shadow: 'rgba(248, 113, 113, 0.7)', border: 'rgba(248, 113, 113, 0.35)' },
     yellow: { primary: '#facc15', dark: '#854d0e', shadow: 'rgba(250, 204, 21, 0.7)', border: 'rgba(250, 204, 21, 0.35)' },
     cyan: { primary: '#22d3ee', dark: '#075985', shadow: 'rgba(34, 211, 238, 0.7)', border: 'rgba(34, 211, 238, 0.35)' },
+};
+
+/** costo minimo per accendere ogni wave: sotto, la chip si spegne */
+const WAVE_MIN_COST: Partial<Record<AbilityId, number>> = {
+    riflesso: COMBAT.riflessoCost,
+    risonante: COMBAT.risonanteEcoCost,
+    analisi: COMBAT.analisiCost,
+    scudo: COMBAT.scudoCost,
+    acquatossica: COMBAT.acquaCost,
 };
 
 const ACTIVE_ORDER: { id: AbilityId; key: string }[] = [
@@ -70,13 +79,14 @@ export class Hud {
 
         for (let i = 0; i < state.maxHp; i++) this.hpRow.append(el('div', 'hp-tick'));
 
-        bus.on('hp-changed', ({ hp, maxHp, hurt }) => {
-            this.setHp(hp, maxHp, hurt);
+        bus.on('hp-changed', ({ hp, maxHp, hurt, regen }) => {
+            this.setHp(hp, maxHp, hurt, regen);
             this.updateTrenbo();
         });
         bus.on('flow-changed', ({ flow, maxFlow }) => {
             this.flowBar.style.width = `${(flow / maxFlow) * 100}%`;
             this.updateTrenbo();
+            this.refreshWaveFlow(flow);
         });
         bus.on('barre-changed', ({ barre, gained }) => {
             this.barre.textContent = `♪ ${barre} barre`;
@@ -102,6 +112,7 @@ export class Hud {
             this.trial.classList.toggle('critical', t.left < 5000);
         });
         bus.on('abilities-changed', ({ abilities }) => this.setAbilities(abilities));
+        bus.on('wave-cooldowns', ({ cds, flow }) => this.setCooldowns(cds, flow));
         bus.on('boss-hp', (payload) => this.setBoss(payload));
         bus.on('doomsday-changed', ({ value, active }) => {
             this.doomsday.style.display = active ? '' : 'none';
@@ -147,7 +158,7 @@ export class Hud {
         this.doomsday.style.setProperty('--doomsday-border', theme.border);
     }
 
-    private setHp(hp: number, maxHp: number, hurt: boolean): void {
+    private setHp(hp: number, maxHp: number, hurt: boolean, regen = false): void {
         if (this.hpRow.children.length !== maxHp) {
             this.hpRow.replaceChildren();
             for (let i = 0; i < maxHp; i++) {
@@ -163,6 +174,16 @@ export class Hud {
             }
             t.classList.toggle('lost', lost);
         });
+        // la cura del rio pulsa sul cuore nuovo
+        if (regen && hp > 0) {
+            const fresh = ticks[hp - 1];
+            if (fresh) {
+                fresh.classList.remove('regen');
+                void fresh.offsetWidth;
+                fresh.classList.add('regen');
+                setTimeout(() => fresh.classList.remove('regen'), 900);
+            }
+        }
     }
 
     private setAbilities(abilities: AbilityId[]): void {
@@ -171,12 +192,36 @@ export class Hud {
             if (!abilities.includes(id)) continue;
             const card = ABILITY_CARDS[id];
             const chip = el('div', 'wave-chip');
+            chip.dataset.ability = id;
+            chip.style.setProperty('--cd', '0');
             const kbd = el('kbd');
             kbd.textContent = key;
             const name = el('span', 'wave-name');
             name.textContent = card.name.replace('frammento del ', '').replace('frammento della ', '');
             chip.append(kbd, name);
             this.waves.append(chip);
+        }
+        this.refreshWaveFlow(state.run.flow);
+    }
+
+    /** velo di ricarica sulle chip, più chip spenta se il flow non basta */
+    private setCooldowns(cds: Partial<Record<AbilityId, number>>, flow: number): void {
+        for (const chip of Array.from(this.waves.children) as HTMLElement[]) {
+            const id = chip.dataset.ability as AbilityId | undefined;
+            if (!id) continue;
+            chip.style.setProperty('--cd', `${cds[id] ?? 0}`);
+            chip.classList.toggle('cooling', (cds[id] ?? 0) > 0);
+        }
+        this.refreshWaveFlow(flow);
+    }
+
+    private refreshWaveFlow(flow: number): void {
+        const mult = state.mods.abilityCost;
+        for (const chip of Array.from(this.waves.children) as HTMLElement[]) {
+            const id = chip.dataset.ability as AbilityId | undefined;
+            if (!id) continue;
+            const cost = (WAVE_MIN_COST[id] ?? 0) * mult;
+            chip.classList.toggle('noflow', flow < cost);
         }
     }
 

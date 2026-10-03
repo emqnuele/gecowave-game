@@ -36,6 +36,8 @@ interface Trap {
     /** la sega porta con sé un filo di luce rossa: nel buio si sente arrivare */
     glow?: Phaser.GameObjects.Light;
     state: number;
+    /** una pozza di smela sopra: il getto resta spento fino a qui */
+    suppressedUntil: number;
 }
 
 const INK = 0x0b0c10;
@@ -128,7 +130,7 @@ export class TrapManager {
             const sprite = this.scene.add.image(x0, y, 'trap-sega').setDepth(4).setPipeline('Light2D');
             const speed = 90 + rnd() * 70;
             const glow = this.scene.lights.addLight(x0, y, 90, 0xef4444, 0.45);
-            this.traps.push({ kind, x: x0, y, a: x0, b: x1, speed, phase: 0, period: 0, dir: 1, sprite, glow, state: 0 });
+            this.traps.push({ kind, x: x0, y, a: x0, b: x1, speed, phase: 0, period: 0, dir: 1, sprite, glow, state: 0, suppressedUntil: 0 });
             return true;
         }
         if (kind === 'pressa') {
@@ -150,7 +152,7 @@ export class TrapManager {
             const sprite = this.scene.add.image(x, upY, 'trap-pressa').setOrigin(0.5, 1).setDepth(4).setPipeline('Light2D');
             const rod = this.scene.add.image(x, top * TILE, 'trap-rod').setOrigin(0.5, 0).setDepth(3).setPipeline('Light2D');
             const period = 2600 + rnd() * 1200;
-            this.traps.push({ kind, x, y: upY, a: upY, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, rod, state: 0 });
+            this.traps.push({ kind, x, y: upY, a: upY, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, rod, state: 0, suppressedUntil: 0 });
             this.drawRod(this.traps[this.traps.length - 1], top * TILE);
             return true;
         }
@@ -163,8 +165,17 @@ export class TrapManager {
         const sprite = this.scene.add.image(x, floorY, 'trap-grata').setOrigin(0.5, 1).setDepth(4).setPipeline('Light2D');
         const jet = this.scene.add.graphics().setDepth(5);
         const period = 3000 + rnd() * 1400;
-        this.traps.push({ kind: 'vapore', x, y: floorY, a: floorY - JET_H, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, extra: jet, state: 0 });
+        this.traps.push({ kind: 'vapore', x, y: floorY, a: floorY - JET_H, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, extra: jet, state: 0, suppressedUntil: 0 });
         return true;
+    }
+
+    /** una pozza di smela sopra un getto lo spegne per un po' */
+    suppress(x: number, y: number, r: number, ms: number): void {
+        const until = this.scene.time.now + ms;
+        for (const t of this.traps) {
+            if (t.kind !== 'vapore') continue;
+            if (Math.abs(t.x - x) < r && Math.abs(t.y - y) < 60) t.suppressedUntil = Math.max(t.suppressedUntil, until);
+        }
     }
 
     update(time: number, delta: number, player: Hurtable): void {
@@ -225,6 +236,8 @@ export class TrapManager {
             // vapore: sbuffi d'avviso, poi il getto
             const g = t.extra!;
             g.clear();
+            // spento dalla pozza: la grata resta, il getto no
+            if (time < t.suppressedUntil) continue;
             const warn = t.period - 1800;
             if (p >= warn && p < warn + 600) {
                 g.fillStyle(0xcbd5e1, 0.15 + 0.1 * Math.sin(p * 0.05));

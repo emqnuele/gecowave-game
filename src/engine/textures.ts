@@ -158,14 +158,6 @@ function objects(scene: Phaser.Scene): void {
 
     // proiettili (tinta a runtime)
     make(scene, 'proj-ball', 14, 14, (p) => glow(p, 7, 7, 3.4, 0xffffff, 0.55));
-    make(scene, 'proj-risonante', 26, 18, (p) => {
-        glow(p, 13, 9, 5, 0x4ade80, 0.5);
-        p.lineStyle(2, 0x4ade80, 0.9);
-        p.beginPath();
-        p.moveTo(2, 9);
-        for (let x = 0; x <= 22; x++) p.lineTo(2 + x, 9 - Math.sin((x / 22) * Math.PI * 2) * 4);
-        p.strokePath();
-    });
     // lametta dal suolo
     make(scene, 'proj-lametta', 18, 40, (p) => {
         p.fillStyle(0x1a1622, 1);
@@ -196,35 +188,7 @@ function objects(scene: Phaser.Scene): void {
         m.strokeEllipse(22, 36, 28, 54);
     });
 
-    // glifi per la tempesta di analisi 1
-    const glyphs = [
-        (p: Phaser.GameObjects.Graphics) => {
-            // sommatoria
-            p.beginPath();
-            p.moveTo(14, 3); p.lineTo(4, 3); p.lineTo(10, 9); p.lineTo(4, 15); p.lineTo(14, 15);
-            p.strokePath();
-        },
-        (p: Phaser.GameObjects.Graphics) => {
-            // radice
-            p.beginPath();
-            p.moveTo(2, 10); p.lineTo(6, 15); p.lineTo(10, 3); p.lineTo(16, 3);
-            p.strokePath();
-        },
-        (p: Phaser.GameObjects.Graphics) => {
-            // pi greco
-            p.beginPath();
-            p.moveTo(3, 5); p.lineTo(16, 5);
-            p.moveTo(6, 5); p.lineTo(6, 15);
-            p.moveTo(13, 5); p.lineTo(13, 15);
-            p.strokePath();
-        },
-    ];
-    glyphs.forEach((draw, i) => {
-        make(scene, `glyph-${i}`, 18, 18, (p) => {
-            p.lineStyle(2, 0x60a5fa, 0.95);
-            draw(p);
-        });
-    });
+    // i glifi dell'analisi vivono in abilityFx: sei simboli a gesso
 }
 
 /* ---------- particelle e spine ---------- */
