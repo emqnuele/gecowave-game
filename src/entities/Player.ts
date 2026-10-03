@@ -393,7 +393,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     /** caffè della mensa e sim di pedro: effetti a tempo e rigenerazione del flow */
     private updateBuffs(delta: number): void {
-        if (state.run.caffeMs > 0) state.run.caffeMs = Math.max(0, state.run.caffeMs - delta);
         const regen = state.mods.flowRegen;
         if (regen > 0 && state.run.flow < state.maxFlow) {
             state.run.flow = Math.min(state.maxFlow, state.run.flow + (regen * delta) / 1000);
@@ -437,8 +436,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.dead || this.dashing || this.stunned || this.charging || now < this.attackCooldownUntil) return;
         // tutte le maschere: il ritmo perfetto, si mena più veloce
         const rhythm = state.hasFlag('maschera-completa') ? 0.7 : 1;
-        const caffe = state.run.caffeMs > 0 ? 0.6 : 1;
-        const cooldown = COMBAT.attackCooldownMs * rhythm * caffe;
+        const cooldown = COMBAT.attackCooldownMs * rhythm;
         this.attackCooldownUntil = now + cooldown;
         this.attackActiveUntil = now + COMBAT.attackActiveMs;
         // fallback: se animationcomplete non scatta (anim interrotta da dash/atterraggio)
@@ -569,15 +567,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     hurt(amount: number, fromX?: number): boolean {
         if (this.dead || this.invulnerable) return false;
         this.slamming = false;
-        if (state.run.santino) {
-            // il santo incassa al posto tuo, una volta
-            state.run.santino = false;
-            this.invulnUntil = this.scene.time.now + COMBAT.invulnMs;
-            this.burst(0xfacc15, 14);
-            sfx.checkpoint();
-            bus.emit('toast', { text: 'il santino di guggu si brucia al posto tuo. capolinea per lui.' });
-            return true;
-        }
         state.run.hp = Math.max(0, state.run.hp - amount * state.mods.damageTaken);
         this.invulnUntil = this.scene.time.now + COMBAT.invulnMs;
         this.lastDamageAt = this.scene.time.now;

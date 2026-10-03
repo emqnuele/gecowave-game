@@ -72,7 +72,7 @@ function wallpaperFor(levelId: string): string {
     return PAINTED.has(levelId) ? `assets/backgrounds/${levelId}.png` : 'assets/background.png';
 }
 
-const SHOP_STOCK = ['crocchetta', 'rubinetto', 'energetico', 'caffe-mensa', 'panino-nonna', 'santino', 'scarpe-markolino', 'rosario-riba', 'geco-portafortuna'];
+const SHOP_STOCK = ['crocchetta', 'panino-nonna', 'scarpe-markolino', 'rosario-riba', 'geco-portafortuna'];
 
 const CRACK_SVG = `<svg class="phone-crack" viewBox="0 0 356 736" preserveAspectRatio="none" aria-hidden="true">
 <path d="M356 70 L300 110 L318 160 L262 214 L276 250 M300 110 L248 98 L210 132 M318 160 L356 176 M262 214 L214 236" fill="none" stroke="#fff" stroke-width="1.2"/>
@@ -850,7 +850,8 @@ export class Phone {
             this.renderShop(root, { text: `${label}: consegnato nello zaino.`, ok: true });
         };
 
-        root.append(text('div', 'phone-section', 'consumabili'));
+        root.append(text('div', 'phone-note', 'le barre servono a due cose: curarti e costruirti. il resto è chiacchiera.'));
+        root.append(text('div', 'phone-section', 'cure'));
         for (const id of SHOP_STOCK) {
             const it = ITEMS[id];
             if (!it?.price) continue;

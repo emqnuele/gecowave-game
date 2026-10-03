@@ -1,5 +1,5 @@
 import { COMBAT } from '../config';
-import { BASE_NOTCHES, charmMods, ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
+import { BASE_NOTCHES, charmMods, ITEMS, LEGACY_ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
 
 const SAVE_KEY = 'gecowave-save-v2';
@@ -67,7 +67,7 @@ class GameState {
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
     /** vita, flow e malus della run corrente: non si salvano, si vivono */
-    run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false, ombraDati: 0 };
+    run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false, nearMic: false, ombraDati: 0 };
     private modsCache: CharmMods | null = null;
     private lastPersist = 0;
     private dirty = false;
@@ -84,6 +84,12 @@ class GameState {
                 this.save = { ...fresh, ...parsed, record: { ...fresh.record, ...(parsed.record ?? {}) }, explored: { ...(parsed.explored ?? {}) } };
                 if (typeof this.save.barre !== 'number' || isNaN(this.save.barre)) {
                     this.save.barre = 0;
+                }
+                // i consumabili tolti dall'economia tornano in barre
+                for (const [id, value] of Object.entries(LEGACY_ITEMS)) {
+                    const n = this.save.inventory?.[id] ?? 0;
+                    if (n > 0) this.save.barre += n * value;
+                    if (this.save.inventory) delete this.save.inventory[id];
                 }
                 // fallback for backward compatibility
                 if (parsed.collassoMode !== undefined && this.save.doomsdayMode === false) {
@@ -129,7 +135,7 @@ class GameState {
 
     resetRun(): void {
         this.modsCache = null;
-        this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false, ombraDati: 0 };
+        this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false, nearMic: false, ombraDati: 0 };
         this.run.hp = this.maxHp;
         this.run.trenbolone = this.hasFlag('trenbolone-attivo');
     }

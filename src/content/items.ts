@@ -1,6 +1,7 @@
-/* lo zaino del custode: consumabili, oggetti chiave (dedotti dai flag
-   di storia, così non esiste uno stato doppio) e amuleti da equipaggiare
-   ai microfoni, ognuno con il suo costo in tacche */
+/* lo zaino del custode: cure, oggetti chiave (dedotti dai flag di storia,
+   così non esiste uno stato doppio) e amuleti da equipaggiare ai microfoni.
+   le barre servono a due cose sole: curarti (crocchette, panini) e
+   costruirti (amuleti e tacche). tutto il resto paga in barre, amuleti o cuori */
 
 export type ItemKind = 'consumabile' | 'chiave' | 'amuleto' | 'potenziamento';
 
@@ -32,30 +33,10 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'ridà 3 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
         punch: 'c\'è dentro amore e mortadella.',
     },
-    energetico: {
-        id: 'energetico', name: 'energetico scaduto', icon: '🥫', kind: 'consumabile', price: 22,
-        desc: 'riempie metà del flow. scaduto da quattro anni, il che lo rende più forte.',
-        punch: 'il cuore fa un rumore nuovo.',
-    },
-    'caffe-mensa': {
-        id: 'caffe-mensa', name: 'caffè della mensa della ruhra', icon: '☕', kind: 'consumabile', price: 35,
-        desc: 'per 40 secondi attacchi molto più veloce. piema ne beve sei prima di analisi 1.',
-        punch: 'sa di bruciato e di teoremi.',
-    },
-    rubinetto: {
-        id: 'rubinetto', name: 'acqua del rubinetto (dichiarata)', icon: '🚰', kind: 'consumabile', price: 10,
-        desc: 'ridà 1 vita e lava via la sete di smela. dichiarata come tale, per legge.',
-        punch: 'finalmente un\'etichetta onesta.',
-    },
     'brodo-lochef': {
         id: 'brodo-lochef', name: 'brodo tiepido di lochef', icon: '🍲', kind: 'consumabile',
         desc: 'ridà tutta la vita. tiepido. sempre tiepido. non chiederti chi l\'ha assaggiato prima.',
         punch: '"come piace a te".',
-    },
-    santino: {
-        id: 'santino', name: 'santino di guggu', icon: '🃏', kind: 'consumabile', price: 50,
-        desc: 'il prossimo colpo che ricevi viene assorbito dal santo. guggu benedice chi paga il biglietto.',
-        punch: 'sul retro c\'è scritto "capolinea".',
     },
 
     /* ---------- amuleti ---------- */
@@ -175,6 +156,9 @@ export const ITEMS: Record<string, ItemDef> = {
         desc: 'giorni 1-42. hai visto chi era prima di diventare chi è.',
     },
 };
+
+/** vecchi consumabili tolti dall'economia: chi li aveva li ritrova in barre, al prezzo di wavezon */
+export const LEGACY_ITEMS: Record<string, number> = { energetico: 22, 'caffe-mensa': 35, rubinetto: 10, santino: 50 };
 
 /** prezzi crescenti delle tacche extra su wavezon */
 export const NOTCH_PRICES = [120, 280, 520];

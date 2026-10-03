@@ -38,11 +38,8 @@ const SIDE_REWARDS: { spec: EntitySpec; w: number }[] = [
     { spec: { type: 'barre', amount: 15 }, w: 30 },
     { spec: { type: 'barre', amount: 30 }, w: 14 },
     { spec: { type: 'item', item: 'crocchetta', amount: 2 }, w: 16 },
-    { spec: { type: 'item', item: 'energetico' }, w: 10 },
-    { spec: { type: 'item', item: 'rubinetto', amount: 2 }, w: 8 },
-    { spec: { type: 'item', item: 'panino-nonna' }, w: 6 },
-    { spec: { type: 'item', item: 'caffe-mensa' }, w: 5 },
-    { spec: { type: 'item', item: 'santino' }, w: 4 },
+    { spec: { type: 'barre', amount: 50 }, w: 14 },
+    { spec: { type: 'item', item: 'panino-nonna' }, w: 8 },
 ];
 
 /** capitoli dove si nasconde una tacca per amuleti */

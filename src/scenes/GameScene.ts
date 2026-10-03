@@ -11,7 +11,7 @@ import { DecorationManager } from '../engine/DecorationManager';
 import { TerrainRenderer } from '../engine/TerrainRenderer';
 import { WaterRenderer } from '../engine/WaterRenderer';
 import { ensurePickupTextures } from '../engine/art/pickups';
-import { BOSS_CHARMS, ITEMS } from '../content/items';
+import { BASE_NOTCHES, BOSS_CHARMS, ITEMS, LEGACY_ITEMS, NOTCH_PRICES } from '../content/items';
 import { LightingManager } from '../engine/LightingManager';
 import { loadLevel, type LoadedLevel } from '../engine/LevelLoader';
 import { ParallaxManager } from '../engine/ParallaxManager';
@@ -651,6 +651,12 @@ export class GameScene extends Phaser.Scene {
 
     /** sacchetto o amuleto a terra: si raccoglie una volta sola per salvataggio */
     private spawnItemPickup(x: number, y: number, item: string, amount: number, persistKey: string, loose = false): void {
+        // le regioni già generate nascondono ancora i vecchi consumabili: diventano barre
+        if (LEGACY_ITEMS[item] && !state.save.collectedLore.includes(persistKey)) {
+            state.save.collectedLore.push(persistKey);
+            this.spawnBarrePickup(x, y, LEGACY_ITEMS[item]! * amount);
+            return;
+        }
         if (!ITEMS[item] || state.save.collectedLore.includes(persistKey)) return;
         const isCharm = ITEMS[item].kind === 'amuleto';
         if (isCharm && state.hasCharm(item)) return;
@@ -1138,15 +1144,13 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         this.startDialogue('romero-piazza', () => {
-            if (!state.save.collectedLore.includes('nota-caso-1') || state.count('caffe-mensa') <= 0) return;
+            if (!state.save.collectedLore.includes('nota-caso-1')) return;
             bus.emit('choice-show', {
-                title: 'hai un caffè della mensa nello zaino. e ti ricordi un biglietto.',
-                options: [{ label: 'offrigli il caffè' }, { label: 'tienilo' }],
+                title: 'ti ricordi un biglietto sulla sua scrivania. il bar è a due passi.',
+                options: [{ label: 'offrigli un caffè, con lo zucchero' }, { label: 'lascialo stare' }],
                 onPick: (i) => {
                     if (i !== 0) return;
-                    state.removeItem('caffe-mensa');
                     state.setFlag('caffe-romero');
-                    bus.emit('inventory-changed', {});
                     this.startDialogue('romero-caffe');
                 },
             });
@@ -1210,13 +1214,14 @@ export class GameScene extends Phaser.Scene {
         return pick.map(say);
     }
 
-    /** la bottega della piazza: ricarica e pacco a sorpresa, roba che il telefono non vende */
+    /** la bottega della piazza: la cura completa e la tacca dopo, le due cose per cui servono le barre */
     private openPiazzaShop(): void {
-        const pacco = 40;
         const ricarica = 25;
+        const bought = state.save.notches - BASE_NOTCHES;
+        const tacca = bought < NOTCH_PRICES.length ? NOTCH_PRICES[bought]! : 0;
         bus.emit('choice-show', {
             title: `bottega wavezon · hai ${state.save.barre} barre`,
-            options: [{ label: `ricarica completa (${ricarica} barre)` }, { label: `pacco a sorpresa (${pacco} barre)` }, { label: 'solo guardare' }],
+            options: [{ label: `ricarica completa (${ricarica} barre)` }, { label: tacca ? `una tacca per amuleti (${tacca} barre)` : 'tacche finite: le hai tutte' }, { label: 'solo guardare' }],
             onPick: (i) => {
                 const pay = (n: number): boolean => {
                     if (state.save.barre < n) {
@@ -1234,12 +1239,10 @@ export class GameScene extends Phaser.Scene {
                     bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });
                     sfx.pickup();
                     bus.emit('toast', { text: 'ricaricato. vita e flow al massimo.' });
-                } else if (i === 1 && pay(pacco)) {
-                    const pool = Object.values(ITEMS).filter((it) => it.kind === 'consumabile' && it.price);
-                    const it = pool[Math.floor(Math.random() * pool.length)];
-                    state.addItem(it.id, 2);
+                } else if (i === 1 && tacca && pay(tacca)) {
+                    state.addItem('tacca');
                     sfx.pickup();
-                    bus.emit('toast', { text: `nel pacco: ${it.icon} ${it.name} ×2. il resto era polistirolo.` });
+                    bus.emit('toast', { text: 'una tacca in più. gli amuleti si cambiano ai microfoni.' });
                 }
                 state.persist();
             },

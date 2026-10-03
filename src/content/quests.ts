@@ -68,7 +68,7 @@ export const QUESTS: QuestDef[] = [
         intro: ['il server di notino è pieno di gente che fa failrp. io sono un moderatore. moderami il server.', 'banne una dozzina. a mano. con violenza. è l\'unico linguaggio che capiscono.'],
         waiting: ['ne mancano ancora. il roleplay è sacro, custode.'],
         done: ['server pulito. per tre secondi. è il mio record.', 'eccoti la paga da moderatore: zero. scherzo, tieni.'],
-        reward: { barre: 90, item: 'energetico', amount: 2 },
+        reward: { barre: 130 },
     },
     {
         id: 'q-trenbolone-provetta', region: 'trenbolone', title: 'la provetta giusta', kind: 'cerca',
@@ -77,7 +77,7 @@ export const QUESTS: QuestDef[] = [
         intro: ['da qualche parte nel laboratorio c\'è l\'unica provetta che ho riempito bene. vitamine. vere.', 'trovala prima che qualcuno se la inietti per sbaglio.'],
         waiting: ['la provetta, custode. ha l\'etichetta scritta a mano: "NON È TRENBOLONE".'],
         done: ['ce l\'hai fatta. la mia carriera scientifica, in un tubetto. la regalo a te: io ormai sono fatto di altro.'],
-        reward: { barre: 50, item: 'rubinetto', amount: 3 },
+        reward: { barre: 50, item: 'crocchetta', amount: 3 },
     },
     {
         id: 'q-tana-ricetta', region: 'tana', title: 'la ricetta segreta', kind: 'consegna',
@@ -134,7 +134,7 @@ export const QUESTS: QuestDef[] = [
         intro: ['mi hanno bannato per una recensione da due stelle. adesso sono un\'ombra nei server.', 'spegni dodici sentinelle e forse il sistema si dimentica di me. forse.'],
         waiting: ['ancora telecamere accese. sento i loro occhi nei miei metadati.'],
         done: ['il sistema ha un buco. ci sto passando dentro. addio, custode. tieni i miei risparmi, a me non servono più.'],
-        reward: { barre: 150, item: 'caffe-mensa', amount: 2 },
+        reward: { barre: 220 },
     },
     {
         id: 'q-cantina-bottiglia', region: 'cantina', title: 'l\'annata perfetta', kind: 'cerca',
@@ -143,7 +143,7 @@ export const QUESTS: QuestDef[] = [
         intro: ['nella cantina c\'è una bottiglia dell\'annata perfetta. ticummi non lo sa. lametta l\'ha nascosta, una volta.', 'trovala. io sono troppo ubriaco per scendere le scale, e troppo sobrio per ammetterlo.'],
         waiting: ['una bottiglia polverosa, in una stanza fuori strada. la riconosci: è l\'unica piena.'],
         done: ['l\'annata perfetta... la stappo stasera. con te? no. da solo. ma ti pago.'],
-        reward: { barre: 100, item: 'santino' },
+        reward: { barre: 150 },
     },
     {
         id: 'q-ricordi-matita', region: 'ricordi', title: 'la matita di pedro', kind: 'cerca',
@@ -162,7 +162,7 @@ export const QUESTS: QuestDef[] = [
         intro: ['sono un "ti voglio bene" mai detto. c\'è un\'altra eco che mi aspetta, in un\'altra stanza del void.', 'portami da lei. io non posso muovermi: i rimpianti stanno fermi, è la loro condanna.'],
         waiting: ['l\'altra eco sta in una stanza lontana. la riconosci: aspetta.'],
         done: ['grazie. il void è un po\' più leggero, adesso. di poco. ma è qualcosa.'],
-        reward: { barre: 120, item: 'santino' },
+        reward: { barre: 120, item: 'panino-nonna' },
     },
     {
         id: 'q-nucleo-cavi', region: 'nucleo', title: 'nastro adesivo', kind: 'caccia',
@@ -171,7 +171,7 @@ export const QUESTS: QuestDef[] = [
         intro: ['i glitch rosicchiano i cavi del nucleo. io ho solo il nastro adesivo, e il nastro adesivo non mena.', 'tu meni. menane quindici.'],
         waiting: ['ancora glitch. sento il nucleo che si sfilaccia.'],
         done: ['cavi salvi. il realm tiene ancora un po\'. con nastro adesivo e te.'],
-        reward: { barre: 180, item: 'energetico', amount: 2 },
+        reward: { barre: 230 },
     },
     {
         id: 'q-galliate-catenina', region: 'galliate', title: 'la catenina del fra', kind: 'cerca',
