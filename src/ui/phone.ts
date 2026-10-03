@@ -249,8 +249,9 @@ export class Phone {
     private renderHint(): void {
         const unread = state.unreadMessages;
         this.hint.replaceChildren();
-        this.hint.append(text('span', '', '📱'), text('kbd', '', keyLabel('phone').toLowerCase()));
-        if (unread > 0) this.hint.append(text('span', 'unread', String(unread)));
+        const icon = text('span', 'icon', '📱');
+        if (unread > 0) icon.append(text('span', 'unread', String(unread)));
+        this.hint.append(icon, text('kbd', '', keyLabel('phone').toLowerCase()));
     }
 
     private setTint(tint: ZoneColor | null): void {

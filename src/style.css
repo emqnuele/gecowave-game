@@ -346,7 +346,9 @@ body {
 }
 
 .hud-food {
-  margin: 2px 12px 8px;
+  position: absolute;
+  right: 18px;
+  bottom: 54px;
   font-family: var(--font-martian);
   font-size: 10px;
   color: var(--zinc-300);
