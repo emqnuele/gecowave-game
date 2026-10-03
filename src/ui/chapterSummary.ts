@@ -264,7 +264,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         headChip.classList.add('lit', 'head');
         head.append(headChip);
         dock.replaceChildren();
-        const exploreText = explore.percent === null ? 'mappa non disponibile' : `mappa ${explore.percent}% · ${explore.visited}/${explore.total}`;
+        const exploreText = explore.percent === null ? 'mappa non disponibile' : `mappa ${explore.percent}%`;
         const eChip = chip(exploreText, explore.percent !== null && explore.percent < 100);
         const hearts = summary.hearts;
         const hChip = chip(hearts.total === 0 ? 'nessun cuore qui' : `cuori ${hearts.found}/${hearts.total}`, hearts.total > 0 && hearts.found < hearts.total);
@@ -280,6 +280,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         run.append(el('div', 'chsum-label', 'score attuale'));
         const runNum = el('div', 'chsum-hero-num', summary.score.runTotal === null ? '—' : fmt(summary.score.runTotal));
         if (summary.score.runTotal !== null) runNum.style.color = 'var(--chsum-accent)';
+        else runNum.classList.add('dim');
         run.append(runNum);
         if (summary.score.runTotal === null) {
             run.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
@@ -386,7 +387,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         }, exploreVerdict);
     });
     later(after(2300), () => {
-        const text = explore.percent === null ? 'mappa non disponibile' : `mappa ${explore.percent}% · ${explore.visited}/${explore.total}`;
+        const text = explore.percent === null ? 'mappa non disponibile' : `mappa ${explore.percent}%`;
         const c = chip(text, explore.percent !== null && explore.percent < 100);
         flyTo(exploreBeat, dock, c, () => {});
         exploreBeat.classList.add('leaving');
@@ -543,6 +544,7 @@ function showSummary(summary: ChapterSummary, onContinue: () => void): void {
         runBeat.classList.add('lit');
         if (summary.score.runTotal === null) {
             runNum.textContent = '—';
+            runNum.classList.add('dim');
             runBeat.append(el('div', 'chsum-note', 'partita assistita · senza punteggio'));
             return;
         }

@@ -252,6 +252,14 @@
 
 .chsum-hero-num.accent {
   color: var(--chsum-accent);
+  text-shadow: 0 0 38px color-mix(in srgb, var(--chsum-accent) 35%, transparent);
+}
+
+/* il trattino del senza-punteggio: spento, non un neon verde */
+.chsum-hero-num.dim,
+.chsum-mid.dim {
+  color: #5d574b;
+  font-size: clamp(48px, 8vh, 84px);
 }
 
 .chsum-subline {
