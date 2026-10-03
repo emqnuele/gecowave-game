@@ -6,9 +6,8 @@ import { toneFor } from './tone';
    pedro parla glitchato, riba coi refusi, piema corretto da professore.
    la curva meme -> serio (vedi content/tone.ts): atto 1 si ride sempre,
    atto 2 la battuta si interrompe a metà (mood crepa), atti 3-4 quasi solo
-   verità (mood grave). il geco fa versi finché non ha niente da dire;
-   al rio e allo stabilimento pensa due cose vere, al caso parla per la prima
-   volta (per difendere pedro), al nucleo dice la frase che conta. */
+   verità (mood grave). il geco non commenta: fa versi e gesti
+   e parla due volte sole, al caso e al nucleo. */
 
 export const INTRO_CARDS: { text: string; punch?: string }[] = [
     {
@@ -65,7 +64,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'markolino-intro': [
         { speaker: 'markolino', color: 'green', text: 'oh. sei sveglio. la wave è esplosa, pedro è andato, gli dei sono spariti. qualcuno deve raccogliere i pezzi. indovina chi.' },
         { speaker: 'markolino', color: 'green', text: 'tieni, il cartellino. "CUSTODE" a penna, "provvisorio" a matita. finché non metti insieme i frammenti, sei questo.' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*provvisorio. a matita, che si cancella. non voglio solo menare. voglio che un giorno quella parola sparisca.*' },
+        { speaker: 'il geco', color: 'green', text: '*il geco passa il pollice sulla parola a matita. non viene via.*' },
         { speaker: 'markolino', color: 'green', text: 'A/D per muoverti, SPAZIO per saltare, J o mouse per menare. TAB apre il telefono. i microfoni salvano con E.' },
         { speaker: 'markolino', color: 'green', text: 'ultima cosa: se vedi un 33 dipinto su un muro, guarda dietro. nessuno sa chi li dipinge. ma non sbagliano mai.' },
     ],
@@ -230,7 +229,6 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'notino-sconfitto': [
         { speaker: 'notino', color: 'red', text: 'non... non era un gioco? io volevo solo sparare... per sempre...' },
         { speaker: 'notino', color: 'red', text: 'pedro mi aveva detto... che la tecnokill non finiva mai...', mood: 'crepa' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*è un bambino. con uno sparacchino più grosso di lui. pedro gli ha detto quello che dice a tutti.*', mood: 'crepa' },
     ],
     'bimbo-rp': [
         { speaker: 'bimbo del server', color: 'red', text: 'shhh! sto nascosto. notino ha detto che il roleplay è SACRO e chi sgarra prende il ban. il ban qui è... boom. tipo per davvero.' },
@@ -298,8 +296,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'rio-cura': [
         { speaker: 'il rio merdone', color: 'green', text: '*il fiume sacro ti accoglie. è esattamente come immaginavi dall\'odore. ma il trenbolone scivola via, e con lui tutti i malus.*' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*fa schifo. ed è la prima cosa che mi cura senza chiedermi niente in cambio.*', mood: 'grave' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*il cartellino si è bagnato: "provvisorio" si è sbavato, non cancellato. finora raccoglievo pezzi perché me l\'hanno detto. da adesso li raccolgo per sapere chi l\'ha scritto.*', mood: 'grave' },
+        { speaker: 'il cartellino', color: 'green', text: '*l\'acqua del fiume passa sul cartellino. "provvisorio" si sbava. non si cancella.*', mood: 'grave' },
         { speaker: 'il rio merdone', color: 'green', text: '*sul fondale brilla qualcosa: era il frammento a rendere sacre queste acque. il fiume te lo cede. il fiume non giudica.*', mood: 'crepa' },
     ],
     /* ---------- lo stabilimento di smela ---------- */
@@ -308,11 +305,6 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'smela', color: 'cyan', text: 'ti vedo ancora provato. acqua? offre la casa. la prima è gratis. la seconda pure. anzi: bevi e basta, dai. una sola sorsata. per me. che ti costa.' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco che annusa la bottiglia e fa un passo indietro*' },
         { speaker: 'smela', color: 'cyan', text: 'no?? va bene, va bene. nessuna pressione. cammina pure verso casa, intanto. troverai dei miei ragazzi lungo la strada. magari a loro la compri, l\'acqua. INSISTI tu, eh.' },
-    ],
-    // all'uscita, per tutti: anche chi ha attraversato senza fermarsi
-    'stabilimento-pensiero': [
-        { speaker: 'il geco (pensa)', color: 'green', text: '*smela vende acqua che non cura e la chiama premium. danjilo la difende perché le vuole bene. qui dentro tutti lavorano per qualcun altro.*', mood: 'grave' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*e io raccolgo frammenti per gli dei. o per pedro. o per chi mi ha scritto a matita. per chi lavoro, io?*', mood: 'grave' },
     ],
     'venditore-acqua': [
         { speaker: 'venditore di smela', color: 'cyan', text: 'acqua di smela! acqua premium! una sorsata e ti cambia la giornata, garantito al limone (non c\'è il limone). la bevi? dai che la bevi. smela sarebbe così felice.' },
@@ -333,7 +325,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'smela-sconfitta': [
         { speaker: 'smela', color: 'cyan', text: 'no... no... ho perso... e tu... non hai bevuto NEANCHE UNA GOCCIA. dopo tutto quello che ho fatto per offrirtela...' },
         { speaker: 'smela', color: 'cyan', text: 'va bene. hai vinto. ti meriti la verità: quell\'acqua... non doveva curarti. doveva fermarti per sempre. ma adesso la wave la mette in mano a TE. versala pure a terra, contro di loro. che sappiano cosa si prova.', mood: 'crepa' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che per la prima volta accetta un bicchiere da smela. e lo versa a terra, piano.*', mood: 'crepa' },
+        { speaker: 'il geco', color: 'green', text: '*il geco prende il bicchiere da smela. lo versa a terra, piano.*', mood: 'crepa' },
     ],
     'lore-stabilimento': [
         { speaker: 'targa aziendale', color: 'cyan', text: '«smela springs srl — "dona una nuova sete alla tua sete". fondata con 15 barre di capitale, tutte di un cliente che voleva il rimborso. certificazioni: nessuna. ambizioni: illimitate.»' },
@@ -634,7 +626,6 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'pedrino-fine': [
         { speaker: 'pedro (il ricordo)', color: 'cyan', text: '...hai vinto. ok. allora ascolta, prima che mi deframmenti: quello che troverai al nucleo non sono io. è quello che resta dopo 42 giorni di appunti sbagliati.', mood: 'grave' },
         { speaker: 'pedro (il ricordo)', color: 'cyan', text: 'quando lo affronti... ricordagli il giorno 30. la cartella IMPORTANTE. se c\'è ancora un pezzo di me, la sta ancora sincronizzando.', mood: 'grave' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*ha paura di essere sovrascritto. come un file. come tutti, in fondo.*', mood: 'grave' },
     ],
     'pedro-incontro-ricordi': [
         { speaker: 'pedro', color: 'cyan', text: 'c̷u̶s̵t̸o̵d̶e̷. sei stato nella mia memoria. hai visto il giorno 30. quella cartella non si apre più. la sincronizzazione dice 99%, dal giorno 42.', mood: 'grave' },
@@ -710,7 +701,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'bentornato, CLIENTE PREMIUM. ricorda quando ha pagato 0,09€ per "protezione totale da ogni pericolo esterno"? ecco. lei non ha mai letto la parte sui pericoli INTERNI. 👍' },
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'da quel giorno l\'abbiamo guardata SEMPRE: 41.077 secondi di lei che salta, mena, scivola e si cura nei momenti sbagliati. con quei dati abbiamo costruito... questo.' },
         { speaker: 'la tua ombra', color: 'cyan', text: '*si accende un proiettore. ne esce un geco fatto di registrazioni: salta come te, scivola come te, sbaglia il tempismo della cura come te. è TE, comprato per 0,09€.*' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che capisce di aver finanziato il proprio nemico*' },
+        { speaker: 'il geco', color: 'green', text: '*il geco guarda il proiettore. il proiettore guarda il geco. con la sua faccia.*' },
     ],
     'ombra-intro-scarsa': [
         { speaker: 'tommasorveglianza', color: 'cyan', text: 'UTENTE NON REGISTRATO RILEVATO. lei non ha mai comprato l\'abbonamento. complimenti per la prudenza. e condoglianze: il protocollo finale parte lo stesso. 👍' },
@@ -817,7 +808,6 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'pedro-redento': [
         { speaker: 'pedro', color: 'cyan', text: '...è andato. lo sento: il realm. è storto. ed è... bello così? strano. da quella notte ho pensato solo a raddrizzarlo.', mood: 'grave' },
         { speaker: 'pedro', color: 'cyan', text: 'cartella IMPORTANTE: sincronizzazione al 100%. grazie, custode. non so cosa sono adesso. un ex glitch. un figlio. un errore corretto da un geco.', mood: 'grave' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*non dice niente. per una volta, non serve dire niente.*', mood: 'grave' },
     ],
     'dei-processo': [
         { speaker: 'lametta', color: 'purple', text: 'pedro? PEDRO. sei... tu. pulito. come il giorno 30. io... io ti avevo disegnato con gli occhi storti. lo sai, vero? lo sai.', mood: 'grave' },
@@ -895,7 +885,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'doomsday-respinto': [
         { speaker: 'pedro', color: 'cyan', text: 'i̶m̷p̸o̵s̶s̷i̸b̵i̶l̷e̸... eri in a̵n̶t̷i̸c̵i̶p̷o̸ pure tu... mi r̶i̷t̸i̵r̶o̷. per ora. ma il realm continua a s̸g̵r̵e̷t̶o̵l̶a̷r̸s̵i̶. non rallentare.' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha guadagnato tempo, non pace. il doomsday rallenta ma non si ferma.*' },
+        { speaker: 'il geco', color: 'green', text: '*il glitch si ritira. il cielo resta incrinato.*' },
     ],
 
     /* ---------- la quest opzionale di walter baruffoni ---------- */
@@ -1055,7 +1045,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'markolino', color: 'green', text: 'li vedi anche tu, i 33? dipinti sui muri, azzurri, tratto ordinato. sempre dove c\'è qualcosa dietro. chi li dipinge sa dove nascondere le cose. e sa che passerai tu.' },
     ],
     'seme-importante': [
-        { speaker: 'il geco (pensa)', color: 'green', text: '*IMPORTANTE. la parola torna ovunque: cartella di pedro, appunto nel cratere, log nel nucleo. qualcuno vuole che tu la ricordi.*' },
+        { speaker: 'taccuino del custode', color: 'green', text: '«IMPORTANTE. la cartella di pedro. l\'appunto nel cratere. il log del nucleo. stessa parola, tre posti.»' },
     ],
     'seme-cartellino': [
         { speaker: 'il cartellino', color: 'green', text: '«CUSTODE» a penna. «provvisorio» a matita, sotto. la matita si cancella. la penna no.' },

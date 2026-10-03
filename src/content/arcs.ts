@@ -113,7 +113,7 @@ const pageDialogues = Object.fromEntries(
         pageId(i),
         [
             { speaker: `pagina strappata (${i + 1}/${PAGES.length}) — la grafia ordinata di pedro`, color: 'cyan', text },
-            ...(i === PAGES.length - 1 ? [] : [{ speaker: 'il geco', color: 'green' as const, text: '*verso di geco che piega la pagina e se la mette sul cuore. non sa perché. lo sa benissimo.*' }]),
+            ...(i === PAGES.length - 1 ? [] : [{ speaker: 'il geco', color: 'green' as const, text: '*il geco piega la pagina in quattro e la tiene.*' }]),
         ] as DialogueLine[],
     ]),
 );
@@ -125,7 +125,7 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
     /* ---------- il quaderno di pedro ---------- */
     'quaderno-completo': [
         { speaker: 'il geco', color: 'green', text: '*cinque pagine. le metti in fila col nastro adesivo dello zaino. la grafia è pulita, quella di prima del glitch.*', mood: 'grave' },
-        { speaker: 'il geco', color: 'green', text: '*il muro della piazza. le quattro del mattino. trentatré notti di "ciao". eri tu. sei sempre stato tu. e i 33 sui muri hanno la stessa grafia.*', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*il muro della piazza. le quattro del mattino. trentatré "ciao". la grafia delle pagine è la stessa dei 33 sui muri.*', mood: 'grave' },
         { speaker: 'il geco', color: 'green', text: '*tiri fuori il cartellino. "provvisorio", a matita. lo cancelli col pollice. resta solo "custode", a penna.*', mood: 'grave' },
     ],
     'pedro-quaderno': [
@@ -146,10 +146,9 @@ export const ARC_DIALOGUES: Record<string, DialogueLine[]> = {
     'pensiero-cancellato': [
         { speaker: 'il geco', color: 'green', text: '*lo cancelli. il pensiero si spegne senza un rumore. nella testa di piema, da qualche parte, qualcosa si rilassa.*', mood: 'grave' },
         { speaker: 'piema (ovunque)', color: 'blue', text: '...strano. per un attimo mi è sembrato di essere perdonato. da chi, non so. non lo metto a verbale.', mood: 'grave' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che ha appena fatto esattamente quello che fece piema. e lo sa.*', mood: 'grave' },
     ],
     'pensiero-portato': [
-        { speaker: 'il geco', color: 'green', text: '*lo prendi. pesa più di un frammento. fuori dalla testa di piema diventerà carta, inchiostro, una riga sola: quella vera.*', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '*lo prendi. pesa più di un frammento.*', mood: 'grave' },
         { speaker: 'piema (ovunque)', color: 'blue', text: 'c\'è uno spiffero. come se qualcuno avesse aperto un cassetto che tenevo chiuso. ...bene. forse doveva aprirlo qualcun altro.', mood: 'grave' },
     ],
     'garante-cancellato': [
