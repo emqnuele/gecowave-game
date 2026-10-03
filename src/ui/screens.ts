@@ -51,6 +51,8 @@ export class Screens {
     private blobs: HTMLElement[] = [];
     private navHandler: ((e: KeyboardEvent) => void) | null = null;
     private escHandler: ((e: KeyboardEvent) => void) | null = null;
+    /** cattura tasti in corso nella schermata comandi: chiudendo si cancella */
+    private cancelCapture: (() => void) | null = null;
     /** la scena del falò dietro al menu: la accende e la spegne main */
     private backdrop: (on: boolean) => void = () => {};
     /** il primo menu dopo l'avvio chiede un tasto: sblocca l'audio ed è un ingresso */
@@ -121,6 +123,8 @@ export class Screens {
     }
 
     closeOverlay(): void {
+        this.cancelCapture?.();
+        this.cancelCapture = null;
         this.overlay?.remove();
         this.overlay = null;
         for (const h of [this.escHandler, this.navHandler]) if (h) window.removeEventListener('keydown', h);
@@ -544,6 +548,9 @@ export class Screens {
         let capturing: Action | null = null;
 
         const render = (flash?: Action | null): void => {
+            // se stavi scegliendo un tasto, la scelta muore qui: niente ascolti fantasma
+            this.cancelCapture?.();
+            this.cancelCapture = null;
             capturing = null;
             body.replaceChildren();
             const controls = state.settings.controls;
@@ -656,6 +663,7 @@ export class Screens {
                 window.removeEventListener('keydown', onKey, true);
                 window.removeEventListener('mousedown', onMouse, true);
                 document.removeEventListener('contextmenu', onCtx);
+                if (this.cancelCapture === done) this.cancelCapture = null;
             };
             const onCtx = (e: Event): void => e.preventDefault();
             document.addEventListener('contextmenu', onCtx);
@@ -673,6 +681,8 @@ export class Screens {
                 render(code ? this.assignKey(action, code) : null);
             };
             const onMouse = (e: MouseEvent): void => {
+                // i clic sui bottoni navigano, non legano tasti
+                if ((e.target as HTMLElement | null)?.closest?.('button')) return;
                 e.preventDefault();
                 e.stopPropagation();
                 if (e.button !== 0 && e.button !== 2) return;
@@ -682,6 +692,7 @@ export class Screens {
             };
             window.addEventListener('keydown', onKey, true);
             window.addEventListener('mousedown', onMouse, true);
+            this.cancelCapture = done;
         };
 
         render();
