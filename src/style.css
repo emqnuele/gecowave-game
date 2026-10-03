@@ -475,6 +475,115 @@ body {
   transform: rotate(-1deg);
 }
 
+/* ---------- flashback stile film: sottotitoli, mai muri ---------- */
+#flashback-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 13vh;
+  transform: translateX(-50%);
+  max-width: min(680px, calc(100vw - 64px));
+  padding: 12px 26px 14px;
+  background: rgba(3, 3, 6, 0.62);
+  border-radius: 10px;
+  color: #fafaf9;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(19px, 2.8vw, 26px);
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 1);
+  z-index: 300;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: opacity 0.26s ease;
+  animation: flashback-in 0.45s ease both;
+}
+
+#flashback-caption::after {
+  content: 'E ↵';
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-martian);
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+@keyframes flashback-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ---------- anteprima flashback (?flashback) ---------- */
+#flashback-preview-nav {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 400;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 96vw;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+#flashback-preview-nav button {
+  cursor: pointer;
+  padding: 5px 10px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #e4e4e7;
+  background: rgba(10, 10, 14, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+#flashback-preview-nav button.on {
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.7);
+}
+
+#flashback-preview-nav button:hover {
+  border-color: #fff;
+}
+
+/* ---------- gate anteprima flashback: sblocca l'audio con un tap ---------- */
+#flashback-preview-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 390;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 3, 5, 0.72);
+}
+
+#flashback-preview-gate button {
+  cursor: pointer;
+  padding: 16px 34px;
+  font-family: var(--font-marker);
+  font-size: 20px;
+  color: #facc15;
+  background: rgba(10, 10, 14, 0.9);
+  border: 2px solid rgba(250, 204, 21, 0.7);
+  border-radius: 12px;
+  transform: rotate(-1.5deg);
+}
+
+#flashback-preview-gate button:hover {
+  transform: rotate(-1.5deg) scale(1.05);
+}
+
 /* ---------- title card di zona ---------- */
 
 #zonecard {

@@ -110,7 +110,8 @@ export class StoryManager {
     private read(id: string): boolean {
         if (state.save.collectedLore.includes(id)) return false;
         state.save.collectedLore.push(id);
-        if (!state.hasFlag('storie-del-realm') && state.save.collectedLore.filter((k) => k.startsWith('nota-')).length >= 40) state.setFlag('storie-del-realm');
+        // una nota per regione ora: il trofeo scatta a 12, non a 40
+        if (!state.hasFlag('storie-del-realm') && state.save.collectedLore.filter((k) => k.startsWith('nota-')).length >= 12) state.setFlag('storie-del-realm');
         state.persist();
         checkAchievements();
         return true;

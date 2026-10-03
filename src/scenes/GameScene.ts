@@ -26,6 +26,9 @@ import { TrapManager } from '../engine/TrapManager';
 import { HazardManager } from '../engine/HazardManager';
 import { TimeTrial } from '../engine/TimeTrial';
 import { StoryManager } from '../engine/StoryManager';
+import { StagingManager } from '../engine/StagingManager';
+import { flashback } from '../engine/FlashbackManager';
+import { FLASHBACK_BEFORE } from '../content/flashbacks';
 import { QuestManager } from '../engine/QuestManager';
 import { Atmosphere } from '../engine/Atmosphere';
 import { Soundscape } from '../engine/audio/Soundscape';
@@ -182,6 +185,7 @@ export class GameScene extends Phaser.Scene {
     private hazards!: HazardManager;
     private trial: TimeTrial | null = null;
     private story: StoryManager | null = null;
+    private staging: StagingManager | null = null;
     private quests!: QuestManager;
     private atmosphere!: Atmosphere;
     private soundscape!: Soundscape;
@@ -444,6 +448,9 @@ export class GameScene extends Phaser.Scene {
             ...this.level.entities.filter((e) => e.spec.type !== 'enemy').map((e) => ({ x: e.x, y: e.y })),
         ]);
         this.interactables.push(...this.story.talkables);
+        // staging muto: una scena ambientale per regione, zero dialoghi
+        this.staging = new StagingManager(this, this.lighting);
+        this.staging.setup(this.def.id, this.layout, this.player);
         this.traps = new TrapManager(this, this.nav);
         this.traps.populate({
             seed: this.def.id,
@@ -1090,7 +1097,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         this.startDialogue('romero-piazza', () => {
-            if (!state.save.collectedLore.includes('nota-caso-4') || state.count('caffe-mensa') <= 0) return;
+            if (!state.save.collectedLore.includes('nota-caso-1') || state.count('caffe-mensa') <= 0) return;
             bus.emit('choice-show', {
                 title: 'hai un caffè della mensa nello zaino. e ti ricordi un biglietto.',
                 options: [{ label: 'offrigli il caffè' }, { label: 'tienilo' }],
@@ -3798,12 +3805,36 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    private onEnemyShoot({ x, y, tx, ty, color }: { x: number; y: number; tx: number; ty: number; color?: number }): void {
+    private onEnemyShoot({ x, y, tx, ty, color, speed, size }: { x: number; y: number; tx: number; ty: number; color?: number; speed?: number; size?: number }): void {
         const proj = this.enemyProjectiles.create(x, y, 'proj-ball') as Phaser.Physics.Arcade.Sprite;
         proj.setDepth(5);
         proj.setTint(color ?? 0xf87171);
+        // ogni attacco ha la sua voce: il cecchino è un ago, la croce un mattone, la spirale ronza
+        const v = speed ?? 330;
+        const s = size ?? 1;
+        proj.setScale(s);
         const angle = Math.atan2(ty - y, tx - x);
-        proj.setVelocity(Math.cos(angle) * 330, Math.sin(angle) * 330);
+        proj.setVelocity(Math.cos(angle) * v, Math.sin(angle) * v);
+        if (v >= 550) {
+            // ago caldo: allungato nella direzione di volo + scia
+            proj.setRotation(angle);
+            proj.setScale(s * 1.6, s * 0.7);
+            const trail = this.add.particles(0, 0, 'p-dot', {
+                follow: proj, speed: 10, scale: { start: 0.45, end: 0 },
+                tint: color ?? 0xffffff, lifespan: 220, frequency: 30,
+            });
+            trail.setDepth(4);
+            proj.setData('trail', trail);
+        } else if (s >= 1.1) {
+            proj.setRotation(angle);
+        }
+        // pop di nascita: il colpo "esce" dal boss, non appare
+        const pop = this.add.particles(x, y, 'p-dot', {
+            speed: { min: 20, max: 80 }, scale: { start: 0.5, end: 0 },
+            tint: color ?? 0xf87171, lifespan: 180, quantity: 3, stopAfter: 3,
+        });
+        pop.setDepth(4);
+        this.time.delayedCall(400, () => pop.destroy());
         this.time.delayedCall(3200, () => proj.active && this.popProjectile(proj));
     }
 
@@ -3944,7 +3975,7 @@ export class GameScene extends Phaser.Scene {
                 this.startDialogue('notino-sconfitto', () => {
                     this.spawnFragment(x, y + 40, 'risonante', true);
                     if (state.hasFlag('notino-a-casa') || state.hasFlag('notino-disarmato')) return;
-                    const letto = state.save.collectedLore.includes('nota-tecnokill-4');
+                    const letto = state.save.collectedLore.includes('nota-tecnokill-1');
                     bus.emit('choice-show', {
                         title: letto
                             ? 'notino è a terra, lo sparacchino accanto. in tasca hai il post-it di sua madre.'
@@ -4306,6 +4337,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     private startDialogue(id: string, onEnd?: () => void): void {
+        // mostra invece di raccontare: prima il flashback filmico, poi 1-2 righe al max
+        const fbId = FLASHBACK_BEFORE[id];
+        if (fbId && !flashback.isPlaying) {
+            flashback.play(this, this.player, fbId, () => this.startLines(DIALOGUES[id], onEnd));
+            return;
+        }
         this.startLines(DIALOGUES[id], onEnd);
     }
 

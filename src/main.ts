@@ -206,7 +206,7 @@ async function boot(): Promise<void> {
         music.init();
         // scorciatoia di sviluppo: ?level=id salta menu e intro
         const devLevel = import.meta.env.DEV ? new URLSearchParams(location.search).get('level') : null;
-        if (import.meta.env.DEV && new URLSearchParams(location.search).has('gallery')) {
+        if (import.meta.env.DEV && (new URLSearchParams(location.search).has('gallery') || new URLSearchParams(location.search).has('flashback'))) {
             game.scene.start('GalleryScene');
         } else if (devLevel && LEVELS[devLevel]) {
             startLevel(devLevel, null, false);

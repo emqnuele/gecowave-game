@@ -18,127 +18,69 @@ const NOTE_COLOR: Record<string, ZoneColor> = {
     void: 'purple', nucleo: 'cyan', custode: 'green', galliate: 'red', marcetti: 'orange',
 };
 
-/** quattro note per regione, in ordine: si incontrano andando avanti */
+/** una nota per regione, mai sul percorso: chi esplora, legge.
+    il resto della storia vive in staging muto (vedi content/staging.ts)
+    e nei flashback (vedi content/flashbacks.ts): mostrare, non spiegare. */
 export const REGION_NOTES: Record<string, Note[]> = {
     perduta: [
-        { speaker: 'taccuino di herbert (TN), pag. 1', text: '«arrivato nel realm per misurare il cratere. diametro: 33. rimisurato: 33. il metro è nuovo. il cratere no.»' },
-        { speaker: 'taccuino di herbert (TN), pag. 9', text: '«ho chiesto la strada a un geco. mi ha fissato senza rispondere. a trento ci fissano uguale: mi sento a casa.»' },
-        { speaker: 'taccuino di herbert (TN), pag. 20', text: '«ogni misura fa 33. i gradini, le crepe, i giorni che sono qui. ho smesso di misurare il cratere. adesso misuro me. 33 anche io, a quanto pare.»' },
-        { speaker: 'taccuino di herbert (TN), ultima pagina', text: '«trovata l\'uscita. non la prendo. qualcuno deve restare a dire quanto è grande il buco, quando arriveranno a ripararlo. — h.» una freccia, disegnata a matita, punta verso la targa sul bordo.' },
+        { speaker: 'taccuino di herbert (TN), ultima pagina', text: '«trovata l\'uscita. non la prendo. qualcuno deve restare a dire quanto è grande il buco. — h.» una freccia a matita punta verso la targa.' },
     ],
     bus: [
-        { speaker: 'abbonamento plastificato', text: '«linea 14. titolare: il pendolare delle 7:39. arriva sempre un minuto prima del bus. al bus non è mai importato.»' },
-        { speaker: 'biglietto nel portaoggetti', text: '«giro 212. ho imparato i nomi di tutti. samatt conta, guastalla dorme, io saluto. qualcuno deve salutare, se no un loop è solo un cerchio.»' },
-        { speaker: 'scritta sul finestrino appannato', text: '«oggi è salito ivan. ha guardato il loop come si guarda un nemico personale. gli ho offerto una caramella. l\'ha tagliata in due con la mano. una metà a me.»' },
-        { speaker: 'ultimo biglietto', text: '«sono sceso. non alla prossima: alla mia. non sapevo nemmeno di averne una. firmato: il pendolare delle 7:39. da oggi delle 7:41. con calma.»' },
+        { speaker: 'ultimo biglietto', text: '«sono sceso. non alla prossima: alla mia. firmato: il pendolare delle 7:39. da oggi delle 7:41. con calma.»' },
     ],
     barrato: [
-        { speaker: 'lettera mai spedita', text: '«cara margherita, il bus è fermo da tre giorni sotto la sabbia. l\'autista dice che ci tira fuori lui. ha una faccia che ci credi.»' },
-        { speaker: 'lettera mai spedita', text: '«cara margherita, l\'autista si chiama ivan. stanotte ha provato a spingere il bus a mani nude. il bus non si è mosso. la sabbia sì, un pochino. abbiamo applaudito lo stesso.»' },
-        { speaker: 'lettera mai spedita', text: '«cara margherita, ivan è uscito a cercare aiuto. ha detto: tornate tutti a casa, anche se non torno io. poi mi ha convalidato il biglietto. non so perché mi ha fatto piangere.»' },
-        { speaker: 'ultima lettera', text: '«cara margherita, se qualcuno legge vuol dire che è sceso fin qui. digli che ivan non ci ha abbandonati. è che la linea era più grande di lui. e salutami i colori.»' },
+        { speaker: 'ultima lettera', text: '«cara margherita, se qualcuno legge vuol dire che è sceso fin qui. digli che ivan non ci ha abbandonati. è che la linea era più grande di lui.»' },
     ],
     santuario: [
-        { speaker: 'quaderno dell\'apprendista', text: '«primo giorno al santuario. breccio mi ha fatto rifare una linea retta 400 volte. alla 401 ha pianto. di gioia, credo. forse.»' },
-        { speaker: 'quaderno dell\'apprendista', text: '«breccio dice che la simmetria è l\'unica cosa che lametta non può rompere. poi passa lametta e rompe qualcosa. breccio ridipinge. così, da secoli.»' },
-        { speaker: 'quaderno dell\'apprendista', text: '«stanotte ho visto lametta ritrarre un ragazzino con gli occhi storti. breccio ha detto: "non è storto, è finito male". non ho capito la differenza. lui sì, e non ha dormito.»' },
         { speaker: 'quaderno dell\'apprendista, ultima pagina', text: '«me ne vado. ho fatto un disegno storto apposta e mi è piaciuto. breccio non me lo perdonerà. ma breccio non perdona nemmeno le nuvole.»' },
     ],
     tecnokill: [
-        { speaker: 'post-it attaccato a un bidone', text: '«notino, la pasta è in tavola. se non torni la do al gatto. il gatto è dalla tua parte, sappilo. — mamma»' },
-        { speaker: 'post-it sotto un sasso', text: '«notino, mi hanno detto che hai un server. bravo. che cos\'è un server? torna a spiegarmelo, ti faccio le polpette. — mamma»' },
-        { speaker: 'post-it bruciacchiato', text: '«ho sentito i boom. ho sentito che li chiami tecnokill. anche papà faceva boom, prima di andarsene. non diventare papà. — mamma»' },
-        { speaker: 'post-it nuovo, scritto di fretta', text: '«a chiunque trovi mio figlio: ditegli che la porta è aperta. sempre. anche coi boom. anche con la sabbia nelle scarpe. — la mamma di notino»' },
+        { speaker: 'post-it nuovo, scritto di fretta', text: '«a chiunque trovi mio figlio: ditegli che la porta è aperta. sempre. anche coi boom. — la mamma di notino»' },
     ],
     trenbolone: [
-        { speaker: 'registro dello stagista, giorno 1', text: '«compito: lavare le provette. le provette sono di trenbolone. le mani adesso sono molto muscolose. il resto di me no.»' },
-        { speaker: 'registro dello stagista, giorno 30', text: '«il capo dice che il lotto speciale è "per lametta, che esagera". lametta viene di notte, col cappuccio. paga col pennello. il pennello vale più delle barre, dice il capo.»' },
-        { speaker: 'registro dello stagista, giorno 41', text: '«stanotte lametta ha comprato una boccetta in più. ha detto: "domani mi libero di un pensiero". rideva. sullo scontrino c\'è scritto 03:58. ero io alla cassa.»' },
-        { speaker: 'lettera di dimissioni', text: '«mi licenzio. ho capito cosa vendiamo: non è forza. è il permesso di non sentirsi in colpa. quindici barre a dose. troppo poco, per una cosa così grossa.»' },
+        { speaker: 'scontrino, ore 03:58', text: '«stanotte lametta ha preso una boccetta in più. "domani mi libero di un pensiero". rideva. ero io alla cassa. — lo stagista»' },
     ],
     tana: [
-        { speaker: 'graffio sul muro', text: '«ospite n.11. lochef dice che resto a cena. sono qui da quattro cene.»' },
-        { speaker: 'graffio sul muro', text: '«ospite n.11. il brodo è tiepido. sempre. ho chiesto se lo fa apposta. ha detto "come piace a te". non mi piace.»' },
-        { speaker: 'graffio dietro un vaso', text: '«ospite n.11. ho trovato un passaggio dietro il frigo. lo dirò al n.12 quando arriva. lochef dice che sarà un geco. ha già il poster.»' },
-        { speaker: 'graffio fresco', text: '«ospite n.11. sono uscito. se stai leggendo sei il n.12: il passaggio dietro il frigo porta fuori. e non mangiare il dolce. CORRI.»' },
+        { speaker: 'graffio fresco', text: '«ospite n.11. sono uscito. se stai leggendo sei il n.12: il passaggio dietro il frigo porta fuori. non mangiare il dolce. CORRI.»' },
     ],
     rio: [
-        { speaker: 'cartello del pescatore', text: '«pesca vietata. non per legge: per dignità.»' },
-        { speaker: 'quaderno del pescatore', text: '«oggi: una scarpa, un abbonamento della tommasorveglianza, un pesce con tre occhi. il pesce l\'ho liberato. l\'abbonamento no: mi guarda.»' },
-        { speaker: 'quaderno del pescatore', text: '«il fondale brillava. ci ho messo la mano e mi è passata l\'artrite. ho smesso di pescare e ho cominciato a pregare. con la canna, per abitudine.»' },
-        { speaker: 'ultima pagina del pescatore', text: '«un geco ha preso la luce dal fondo. il fiume adesso è solo merdone. va bene così: le cose sacre non devono restare in fondo a un fiume. devono camminare.»' },
+        { speaker: 'ultima pagina del pescatore', text: '«un geco ha preso la luce dal fondo. il fiume adesso è solo merdone. va bene: le cose sacre non devono restare in fondo. devono camminare.»' },
     ],
     stabilimento: [
-        { speaker: 'biglietto di danjilo', text: '«smela, amore, ho riempito 400 damigiane. le ho chiamate tutte come te. adesso non so più quale sei tu.»' },
-        { speaker: 'biglietto di danjilo', text: '«smela, amore, quello del rio voleva il rimborso. gli ho dato l\'acqua del rimborso. è la stessa. lui non se n\'è accorto. tu sì, e mi hai baciato.»' },
-        { speaker: 'biglietto di danjilo', text: '«smela, ho letto la scritta sulla cisterna. "rio merdone tale e quale". lo sapevo. ti amo lo stesso. forse proprio per quello.»' },
-        { speaker: 'biglietto di danjilo, piegato bene', text: '«se un giorno lo stabilimento chiude, apriamo un chiosco. acqua del rubinetto, scritto grande. la beviamo noi per primi, tutti e due. promesso? — d.»' },
+        { speaker: 'biglietto di danjilo, piegato bene', text: '«se un giorno lo stabilimento chiude, apriamo un chiosco. acqua del rubinetto, scritto grande. promesso? — d.»' },
     ],
     ruhra: [
-        { speaker: 'permesso per il bagno', text: '«franceschini. uscita: ore 10:12, secondo parziale. rientro: —»' },
-        { speaker: 'scritta in un bagno', text: '«sono franceschini. il bagno è infinito: ogni porta porta a un altro bagno. ho visto un integrale lavarsi le mani. non si è asciugato.»' },
-        { speaker: 'scritta in un altro bagno', text: '«franceschini, giorno 40. ho dimostrato il teorema di piema sulla carta igienica. torna tutto. ma non ho nessuno a cui consegnarlo.»' },
-        { speaker: 'rotolo di carta igienica, scritto fitto', text: '«q.e.d. — franceschini.» sotto, il timbro della ruhra: "consegnato fuori tempo massimo". e sotto ancora, con un\'altra penna: «corretto. 30 e lode. scusa il ritardo. — p.»' },
+        { speaker: 'rotolo di carta igienica, scritto fitto', text: '«q.e.d. — franceschini.» timbro: "fuori tempo massimo". sotto, altra penna: «corretto. 30 e lode. scusa il ritardo. — p.»' },
     ],
     mente: [
-        { speaker: 'pensiero sciolto', text: '«regola uno: lametta non sbaglia, lametta esagera. regola due: quando lametta sbaglia, vedi regola uno.»' },
-        { speaker: 'pensiero piegato in quattro', text: '«giorno 42. ho aperto il log. ho visto chi ha dato l\'ordine. ho chiuso il log. ho chiuso gli occhi. ho riaperto il teorema, che almeno è un problema mio.»' },
-        { speaker: 'pensiero ripetuto così tante volte da essere diventato un muro', text: '«è il mio socio. è il mio socio. è il mio socio. è il mio socio. è il mio socio.»' },
-        { speaker: 'pensiero minuscolo, sotto un integrale', text: '«se qualcuno entra qui dentro troverà il pensiero sepolto. spero che lo cancelli. spero che non lo cancelli. sono undici giorni che spero due cose.»' },
+        { speaker: 'pensiero minuscolo, sotto un integrale', text: '«se qualcuno entra qui troverà il pensiero sepolto. spero che lo cancelli. spero che non lo cancelli. sono undici giorni che spero due cose.»' },
     ],
     caso: [
-        { speaker: 'foto ingiallita', text: '«agente romero, primo giorno di servizio. 20 anni, 0 casi, 1 baffo.» il baffo è disegnato a penna.' },
-        { speaker: 'verbale del 1984', text: '«il limite notevole è stato avvistato vicino alla ruhra. inseguito. tende a infinito. inseguimento sospeso per stanchezza dell\'agente. riprenderà domani. (firmato: romero, tutti i giorni dal 1984)»' },
-        { speaker: 'richiesta di trasferimento, respinta dal richiedente', text: '«mi chiedete di lasciare il caso. no. qualcuno nel realm deve continuare a dire che le cose hanno un colpevole. anche quando il colpevole è un dio. soprattutto allora.»' },
         { speaker: 'biglietto sulla scrivania', text: '«a chi trova questo: se un giorno chiudo il caso, offritemi un caffè. se non lo chiudo, offritemelo lo stesso. con lo zucchero. — r.»' },
     ],
     sorveglianza: [
-        { speaker: 'scheda cliente n.1', text: '«notino. motivo dell\'abbonamento: "vedere chi mi vede". stato: insolvente. note: ci vede lui per primo, sempre. non sappiamo come.»' },
-        { speaker: 'scheda cliente n.2', text: '«lametta. motivo: "voglio sapere se pedro dorme". telecamere assegnate: una sola, puntata su pedro, giorni 1-42. il cliente guardava ogni notte.»' },
-        { speaker: 'scheda cliente n.2, note', text: '«giorno 41, ore 03:58: il cliente ha spento di persona la telecamera di pedro. motivo dichiarato: "non voglio vedere". rimborso: negato.»' },
-        { speaker: 'scheda cliente n.3, quasi tutta oscurata', text: '«abbonamento regalato da: p. — destinatario: "il geco del muro, in piazza". motivo: "così qualcuno lo guarda, se un giorno io non potrò". attivo dal giorno 30. mai disdetto.»' },
+        { speaker: 'scheda cliente n.3, quasi tutta oscurata', text: '«regalato da: p. — destinatario: "il geco del muro, in piazza". motivo: "così qualcuno lo guarda, se un giorno io non potrò". mai disdetto.»' },
     ],
     cantina: [
-        { speaker: 'lista della spesa di ticummi', text: '«fascette da elettricista (tante). un dio non si lega da solo. conserve. 0,09€ di resto, da incorniciare.»' },
-        { speaker: 'appunto di ticummi', text: '«lametta piange nel sonno. dice "pedro, scusa". registrare? sì. vendere? no. certe cose non si vendono. si registrano e basta.»' },
-        { speaker: 'appunto di ticummi', text: '«lametta mi ha chiesto se il trenbolone cancella un ricordo. ho detto che non funziona così. ha detto: "allora diluiscilo di meno".»' },
-        { speaker: 'appunto di ticummi, scritto storto', text: '«stanotte l\'ho slegato per un\'ora. ha guardato il muro in silenzio. poi: "la cosa migliore che ho disegnato l\'ho rovinata io". l\'ho rilegato. avevo paura che andasse a fare qualcosa di giusto.»' },
+        { speaker: 'appunto di ticummi, scritto storto', text: '«stanotte l\'ho slegato per un\'ora. "la cosa migliore che ho disegnato l\'ho rovinata io". l\'ho rilegato. avevo paura facesse qualcosa di giusto.»' },
     ],
     ricordi: [
-        { speaker: 'backup, giorno 7', text: '«pedro impara a fare i nodi. lametta dice che non servono a niente. pedro li fa lo stesso. ne fa 33. li chiama "cose che tengono".»' },
-        { speaker: 'backup, giorno 19', text: '«piema spiega a pedro i limiti. pedro chiede: "anche le persone hanno un limite?" piema non risponde. mette a verbale la domanda. il verbale non ha mai avuto risposta.»' },
-        { speaker: 'backup, giorno 27', text: '«pedro sale sulla torre più alta del realm e guarda la piazza. annota: "un geco su un muro. sveglio. anche stanotte". poi scende di corsa.»' },
-        { speaker: 'backup, giorno 40', text: '«pedro chiede a lametta: "cosa succede se divento storto?" lametta, distratto, col pennello in bocca: "ti raddrizzo io". non è mai successo.»' },
+        { speaker: 'backup, giorno 40', text: '«pedro: "cosa succede se divento storto?" lametta, col pennello in bocca: "ti raddrizzo io". non è mai successo.»' },
     ],
     void: [
-        { speaker: 'rimpianto vagante', text: '«non ho mai detto a samatt che anche io contavo i giri. in silenzio. solo per fargli compagnia.» — guastalla' },
-        { speaker: 'rimpianto vagante', text: '«potevo fermare il bus. avevo le chiavi in tasca. ho preferito il posto a sedere.» — un passeggero del 7:40' },
-        { speaker: 'rimpianto vagante', text: '«ho lasciato la porta aperta, ma non sono mai uscita a cercarlo.» — la mamma di notino' },
         { speaker: 'rimpianto vagante', text: '«ho venduto a lametta la boccetta delle 03:58. era l\'ultima della notte. volevo solo chiudere la cassa.» — lo stagista' },
     ],
     nucleo: [
-        { speaker: 'log di esecuzione', text: '«ordine "raddrizzare": 3% completato. elementi storti rimossi: un lampione, una nuvola, un geco anziano che leccava un muro (annullato: il geco anziano è scappato).»' },
-        { speaker: 'log di esecuzione', text: '«eccezione: la cartella IMPORTANTE impedisce la cancellazione di 1 elemento. elemento: "il muro della piazza". riprovare.»' },
-        { speaker: 'log di esecuzione', text: '«riprovato 33 volte. il muro della piazza resta. motivo: ignoto. priorità: alta. sentimento: ???»' },
-        { speaker: 'log di esecuzione', text: '«custode in arrivo. confronto con l\'archivio: corrispondenza 99%. con cosa? la cartella non risponde. la cartella non risponde mai quando serve.»' },
+        { speaker: 'log di esecuzione', text: '«custode in arrivo. confronto con l\'archivio: corrispondenza 99%. con cosa? la cartella non risponde. mai quando serve.»' },
     ],
     custode: [
-        { speaker: 'testo a matita', text: '«prima strofa: ho preso le wave. seconda strofa: le ho ridate. ritornello: nessuno se lo ricorda.»' },
-        { speaker: 'nota di produzione', text: '«basso troppo alto. voce troppo bassa. vita bilanciata male. rifare il mix. rifare anche la vita, se avanza tempo.»' },
-        { speaker: 'copertina scartata', text: '«ho chiesto a lametta la copertina. ha disegnato un geco storto. era bellissima. l\'ho buttata perché era storta. errore.»' },
-        { speaker: 'ultima traccia, lasciata sul mixer', text: '«per il prossimo: suona a tempo. e quando ti chiederanno le wave, prima di rispondere chiediti a chi servono davvero.»' },
+        { speaker: 'ultima traccia, lasciata sul mixer', text: '«per il prossimo: suona a tempo. e quando ti chiederanno le wave, prima chiediti a chi servono davvero.»' },
     ],
     galliate: [
-        { speaker: 'scritta su un motorino', text: '«il primo che tocca il mio motorino lo... lo... vabbè, toccalo. ma con rispetto.»' },
-        { speaker: 'diario di un maranza', text: '«oggi ho guardato male uno. lui ha guardato male me. ci siamo guardati male per un\'ora. adesso siamo amici.»' },
-        { speaker: 'diario di un maranza', text: '«guggu ci pagava il biglietto per andare a scuola, in bus. diceva: "la scuola è una linea che porta lontano". non ho capito ma ci vado.»' },
-        { speaker: 'diario di un maranza, ultima pagina', text: '«guggu non torna più. qualcuno l\'ha battuto. spero almeno che chi è stato abbia preso la patente. e che qualcuno gli abbia detto chi era guggu.»' },
+        { speaker: 'diario di un maranza, ultima pagina', text: '«guggu non torna più. qualcuno l\'ha battuto. spero abbia preso la patente. e che qualcuno gli abbia detto chi era guggu.»' },
     ],
     marcetti: [
-        { speaker: 'scheda quiz della patente', text: '«domanda 1: in caso di nebbia, cosa fa walter? risposta esatta: dorme.»' },
-        { speaker: 'scheda quiz della patente', text: '«domanda 7: chi paga le guide? risposta esatta: guggu. risposta sbagliata: walter. risposta che ti boccia: "lo stato".»' },
-        { speaker: 'busta paga di anna', text: '«pagato da: g. guggu. causale: "perché qualcuno deve".»' },
-        { speaker: 'scheda quiz, domanda bonus', text: '«domanda 33: chi ti ha mandato qui? se rispondi "walter", bocciato. se rispondi "me stesso", promosso. se non rispondi, sei già in macchina con lui.»' },
+        { speaker: 'targa sulla scrivania', text: '«WALTER BARUFFONI — TITOLARE». sotto, graffiato di fresco: "di nuovo". non eri il primo a fare il lavoro sporco. l\'ultimo.»' },
     ],
 };
 
