@@ -174,6 +174,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: scala ridotta due volte, fino a un centinaio a capitolo: esplorazione fino a 100, segreti 5 l'uno, nemici 1 l'uno, boss intoccabile 20, tempo fino a 100, morti −10. Bonus finali 50–300, trofei 10 l'uno, classifica locale separata (`gecowave-classifica-v3`).
 **Conseguenze**: i salvataggi con punteggi in vecchia scala azzerano score e conti (sopra 500 a capitolo è impossibile nella nuova) invece di mescolare le scale. I record restano comparabili solo dentro la stessa scala.
 
+### ADR-027 — riepilogo di fine gioco
+**Contesto**: il finale mostrava solo un badge col punteggio nei credits, mentre i dati per un vero riepilogo erano già tutti nel save.
+**Decisione**: stesso palco del riepilogo di capitolo (motore condiviso `src/ui/cine.ts`, evento `final-summary-show`): titolo del finale, mondo esplorato, cuori e segreti aggregati di tutta la run, conto (capitoli, trofei, bonus) e numero finale con posizione in classifica. `endGame` aggrega solo record già salvati (`scores` con stanze, cuori e segreti scritti alla chiusura di ogni capitolo): niente ricalcoli, niente lag. I titoli di coda partono in `onContinue`.
+**Conseguenze**: `ChapterScore` guadagna tre campi opzionali (stanze, cuori, segreti): i save vecchi senza di essi mostrano il finale in forma ridotta invece di numeri inventati.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -220,6 +225,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ## 5. Cronologia
 - **riepilogo di capitolo**: carta animata a fine livello con mappa, cuori, cose e score, catalogo centrale dei collezionabili (ADR-025).
 - **punteggi piccoli**: la scala dei punti divisa per dieci, classifica separata (ADR-026).
+- **riepilogo di fine gioco**: stesso palco del riepilogo di capitolo, un piano sopra (ADR-027).
 - **gioco vero**: boss che parlano in battaglia e ombra che impara, volere del geco e pedro in scena, 33 con un significato, flashback al posto degli spiegoni, una meccanica per bioma, economia a due uscite, nemici simbolo che insegnano una mossa.
 - **trama esponenziale**: pedro echi precoci, romero anticipato, scelte leggibili, codex nel telefono, stabilimento attraversabile, semi 33/Margherita/IMPORTANTE, teaser opzionali, economia ribilanciata.
 - **fix totale**: simulatore, bot, ricompense, boss per stanza, arene, lochef, guide.

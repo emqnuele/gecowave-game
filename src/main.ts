@@ -24,6 +24,7 @@ import { DialogueBox } from './ui/dialogue';
 import { Subtitles } from './ui/subtitles';
 import { Phone } from './ui/phone';
 import { initChapterSummary, isChapterSummaryOpen } from './ui/chapterSummary';
+import { initFinalSummary, isFinalSummaryOpen } from './ui/finalSummary';
 import { Hud } from './ui/hud';
 import { Screens, type GameController } from './ui/screens';
 import { ui } from './ui/dom';
@@ -140,7 +141,7 @@ async function boot(): Promise<void> {
     const phone = new Phone({
         pause: () => controller.pause(),
         resume: () => controller.resume(),
-        canOpen: () => inGame && !screens.overlayOpen && !dialogue.open && !isChapterSummaryOpen() && game.scene.isActive('GameScene'),
+        canOpen: () => inGame && !screens.overlayOpen && !dialogue.open && !isChapterSummaryOpen() && !isFinalSummaryOpen() && game.scene.isActive('GameScene'),
         snapshot: () => new Promise<string | null>((resolve) => {
             const done = (v: string | null) => resolve(v);
             try {
@@ -161,6 +162,7 @@ async function boot(): Promise<void> {
     });
     hud.root.append(phone.hintElement);
     initChapterSummary();
+    initFinalSummary();
 
     bus.on('ending', ({ id, score, rank }) => {
         inGame = false;

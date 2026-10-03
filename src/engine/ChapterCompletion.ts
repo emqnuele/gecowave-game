@@ -189,3 +189,68 @@ export function buildChapterSummary(input: SummaryInput): ChapterSummary {
         },
     });
 }
+
+/** riepilogo di fine gioco: gli stessi numeri dei capitoli, un piano sopra */
+export interface FinalSummary {
+    title: string;
+    subtitle: string;
+    color: ZoneColor;
+    exploration: {
+        visited: number;
+        total: number;
+        percent: number | null;
+    };
+    hearts: {
+        found: number;
+        total: number;
+    };
+    things: {
+        found: number;
+        total: number;
+    };
+    score: {
+        total: number | null;
+        lines: [string, string][];
+        best: boolean;
+        rank: number;
+        assisted: boolean;
+    };
+}
+
+export interface FinalSummaryInput {
+    title: string;
+    subtitle: string;
+    color: ZoneColor;
+    visited: number;
+    rooms: number;
+    hearts: ChapterCounts;
+    things: ChapterCounts;
+    total: number | null;
+    lines: [string, string][];
+    best: boolean;
+    rank: number;
+    assisted: boolean;
+}
+
+/** snapshot immutabile del finale: tutto già calcolato e salvato, niente da ricalcolare */
+export function buildFinalSummary(input: FinalSummaryInput): FinalSummary {
+    return Object.freeze({
+        title: input.title,
+        subtitle: input.subtitle,
+        color: input.color,
+        exploration: {
+            visited: input.visited,
+            total: input.rooms,
+            percent: input.rooms > 0 ? Math.round((input.visited / input.rooms) * 100) : null,
+        },
+        hearts: { ...input.hearts },
+        things: { ...input.things },
+        score: {
+            total: input.total,
+            lines: input.lines.map(([k, v]) => [k, v] as [string, string]),
+            best: input.best,
+            rank: input.rank,
+            assisted: input.assisted,
+        },
+    });
+}

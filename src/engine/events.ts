@@ -1,5 +1,5 @@
 import type { AbilityId, DialogueLine, ZoneColor } from '../types';
-import type { ChapterSummary } from './ChapterCompletion';
+import type { ChapterSummary, FinalSummary } from './ChapterCompletion';
 
 /** eventi tra mondo phaser e ui dom */
 export interface GameEvents {
@@ -29,6 +29,8 @@ export interface GameEvents {
     'chapter-score': { id: string; score: number; best: boolean; assisted: boolean; timeMs: number };
     /** riepilogo animato di fine capitolo: la ui anima lo snapshot e poi chiama onContinue */
     'chapter-summary-show': { summary: ChapterSummary; onContinue: () => void };
+    /** riepilogo animato di fine gioco: stesso palco, un piano sopra */
+    'final-summary-show': { summary: FinalSummary; onContinue: () => void };
     /** battuta parlata a gioco in corso: sottotitolo che non ferma niente */
     'bark': { speaker: string; color: ZoneColor; text: string; glitch?: boolean; urgent?: boolean };
     'bark-clear': {};

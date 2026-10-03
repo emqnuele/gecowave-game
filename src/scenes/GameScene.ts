@@ -36,7 +36,7 @@ import { acoustics } from '../engine/audio/acoustics';
 import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
 import { REGION_COUNT } from '../content/achievements';
 import { chapterParts, ENDING_BONUS, pushBoard, runScore, sumParts } from '../engine/score';
-import { buildChapterSummary, countsFor, expectBossRewards, expectCollectible, expectLoreKey, sealLevel } from '../engine/ChapterCompletion';
+import { buildChapterSummary, buildFinalSummary, countsFor, expectBossRewards, expectCollectible, expectLoreKey, sealLevel } from '../engine/ChapterCompletion';
 import { regionView } from '../engine/regionView';
 import { hashString } from '../engine/art/ink';
 import { sfx } from '../engine/sfx';
@@ -2898,7 +2898,7 @@ export class GameScene extends Phaser.Scene {
         const assisted = achievementsBlocked();
         const prev = state.save.scores[id];
         const best = !assisted && (!prev || score > prev.score);
-        if (best) state.save.scores[id] = { score, timeMs, deaths, kills, explored, secrets, assisted };
+        if (best) state.save.scores[id] = { score, timeMs, deaths, kills, explored, secrets, assisted, rooms: this.layout?.rooms.length ?? 0, hearts: countsFor(id, 'heart'), things: countsFor(id, 'thing') };
         if (!assisted) state.save.runScores[id] = Math.max(state.save.runScores[id] ?? 0, score);
         if (id === 'perduta' && minutes < 6) unlockAchievement('speedrun');
         const lines = parts.filter(([, v]) => v !== 0).map(([k, v]) => [k, (v > 0 ? '+' : '') + v] as [string, string]);
@@ -2922,13 +2922,84 @@ export class GameScene extends Phaser.Scene {
         }));
     }
 
-    /** la partita finisce: il finale porta il suo bonus e il punteggio va in classifica */
+    /** la partita finisce: prima il riepilogo cinematico, poi i titoli di coda */
     private endGame(id: 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto'): void {
         this.scene.pause();
         const base = runScore(this.liveChapterScore());
-        const score = base === null ? null : base + (ENDING_BONUS[id] ?? 0);
+        const bonus = ENDING_BONUS[id] ?? 0;
+        const score = base === null ? null : base + bonus;
         const rank = score === null ? 0 : pushBoard({ name: state.save.playerName, score, ending: id, at: Date.now() });
-        bus.emit('ending', { id, score, rank });
+        const assisted = base === null;
+        // aggregati dai record dei capitoli: già salvati, niente da ricalcolare
+        let visited = 0;
+        let rooms = 0;
+        let heartsFound = 0;
+        let heartsTotal = 0;
+        let thingsFound = 0;
+        let thingsTotal = 0;
+        for (const sc of Object.values(state.save.scores)) {
+            if (!sc.rooms) continue;
+            rooms += sc.rooms;
+            visited += Math.round(sc.explored * sc.rooms);
+            heartsFound += sc.hearts?.found ?? 0;
+            heartsTotal += sc.hearts?.total ?? 0;
+            thingsFound += sc.things?.found ?? 0;
+            thingsTotal += sc.things?.total ?? 0;
+        }
+        const runSum = Object.values(state.save.runScores).reduce((s, v) => s + v, 0);
+        const trophyPts = state.save.achievements.length * 10;
+        const lines: [string, string][] = [];
+        if (runSum > 0) lines.push(['capitoli', `+${runSum.toLocaleString('it-IT')}`]);
+        if (trophyPts > 0) lines.push(['trofei', `+${trophyPts.toLocaleString('it-IT')}`]);
+        if (bonus > 0) lines.push(['bonus finale', `+${bonus.toLocaleString('it-IT')}`]);
+        const titles: Record<string, { title: string; win: boolean; color: 'green' | 'yellow' | 'cyan' | 'red' }> = {
+            riscatto: { title: 'storto non vuol dire rotto', win: true, color: 'green' },
+            consegna: { title: 'hai salvato il gecorealm', win: true, color: 'yellow' },
+            dei: { title: 'ora il gecorealm è tuo', win: true, color: 'cyan' },
+            pedro: { title: 'gli dei ti hanno raggiunto', win: false, color: 'red' },
+            sconfitta: { title: 'il realm continua. tu no.', win: false, color: 'red' },
+        };
+        const end = titles[id] ?? titles.sconfitta;
+        let summary = null;
+        try {
+            summary = buildFinalSummary({
+                title: end.title,
+                subtitle: end.win ? 'il realm tiene. questa volta davvero.' : 'ogni caduta insegna la strada.',
+                color: end.color,
+                visited,
+                rooms,
+                hearts: { found: heartsFound, total: heartsTotal },
+                things: { found: thingsFound, total: thingsTotal },
+                total: score,
+                lines,
+                best: rank === 1 && score !== null,
+                rank,
+                assisted,
+            });
+        } catch (e) {
+            if (import.meta.env.DEV) console.warn('riepilogo finale saltato:', e);
+        }
+        if (!summary) {
+            bus.emit('ending', { id, score, rank });
+            return;
+        }
+        music.setGraveDuck(true);
+        let continued = false;
+        const onContinue = (): void => {
+            if (continued) return;
+            continued = true;
+            music.setGraveDuck(false);
+            bus.emit('ending', { id, score, rank });
+        };
+        try {
+            bus.emit('final-summary-show', { summary, onContinue });
+        } catch (e) {
+            if (import.meta.env.DEV) console.warn('riepilogo finale saltato:', e);
+            onContinue();
+            return;
+        }
+        // senza ui pronta i titoli partono lo stesso
+        if (!document.querySelector('.chsum-overlay')) onContinue();
     }
 
     /** cosa serve adesso per andare avanti, in ordine di urgenza */

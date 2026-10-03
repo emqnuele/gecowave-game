@@ -175,6 +175,11 @@ export interface ChapterScore {
     explored: number;
     secrets: number;
     assisted: boolean;
+    /** stanze della regione: serve al riepilogo finale per pesare l'esplorazione */
+    rooms?: number;
+    /** cuori e segreti del capitolo alla chiusura: il finale li somma senza rileggere il mondo */
+    hearts?: { found: number; total: number };
+    things?: { found: number; total: number };
 }
 
 export interface PhoneMessage {
