@@ -64,10 +64,10 @@ export class FlashbackManager {
         const gesture = fb.gesture as Gesture;
         const seen = state.save.seenDialogues.includes(`fb-${id}`);
         this.playing = true;
-        // 3 inquadrature da ~4s: un già-visto corre al 70%, mai di fretta.
-        // più la voragine in ingresso e in uscita: il film dura ~14s.
+        // 3 inquadrature lente: si legge tutto senza fretta, mai di fretta.
+        // più la voragine in ingresso e in uscita: il film dura ~22s.
         const speed = seen ? 0.7 : 1;
-        const shotDur = [4000 * speed, 3800 * speed, 4200 * speed];
+        const shotDur = [7000 * speed, 6500 * speed, 7500 * speed];
         const filmDur = shotDur[0]! + shotDur[1]! + shotDur[2]!;
         const ENTER = 1400 * (seen ? 0.8 : 1);
         const EXIT = 900;
