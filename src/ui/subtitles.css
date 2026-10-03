@@ -1,0 +1,54 @@
+/* sottotitoli di battaglia: sopra la barra del boss, mai sopra il geco */
+.subs {
+  position: absolute;
+  left: 50%;
+  bottom: 138px;
+  transform: translateX(-50%) translateY(8px) rotate(-0.4deg);
+  max-width: min(720px, calc(100vw - 48px));
+  padding: 8px 18px 9px;
+  border-radius: 8px;
+  background: rgba(3, 3, 6, 0.7);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  text-align: center;
+  line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 40;
+}
+
+.subs.subs-on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) rotate(-0.4deg);
+}
+
+.subs-speaker {
+  font-family: var(--font-marker);
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.subs-text {
+  font-family: var(--font-martian);
+  font-size: 13px;
+  color: #f4f4f5;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* pedro e l'ordine: la riga trema come il loro sprite */
+.subs.subs-glitch {
+  transform: translateX(-50%) rotate(0deg);
+  background: rgba(2, 10, 14, 0.78);
+  animation: subs-jitter 2.4s steps(1) infinite;
+}
+
+@keyframes subs-jitter {
+  0%, 91%, 100% { text-shadow: none; translate: 0 0; }
+  92% { translate: -2px 0; text-shadow: 2px 0 rgba(34, 211, 238, 0.8), -2px 0 rgba(248, 113, 113, 0.8); }
+  94% { translate: 2px 1px; }
+  96% { translate: 0 -1px; text-shadow: -1px 0 rgba(34, 211, 238, 0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subs.subs-glitch { animation: none; }
+}

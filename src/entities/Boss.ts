@@ -10,6 +10,9 @@ import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes 
 
 type Phase = 1 | 2 | 3;
 
+/** da dove arriva un colpo: serve a chi para una direzione sola (l'ombra che impara) */
+export type HitDir = 'side' | 'up' | 'down' | 'shot';
+
 export class Boss extends Phaser.Physics.Arcade.Sprite {
     readonly def: BossDef;
     readonly maxHp: number;
@@ -23,6 +26,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     /** insegue il player muovendo lentamente l'ancoraggio (es. il 33) */
     chase = false;
     private shieldGraphics?: Phaser.GameObjects.Graphics;
+    private guardDir: HitDir | null = null;
+    private guardUntil = 0;
     /** le sagome dei boss nascono piccole: nelle arene delle regioni devono incombere */
     baseScale: number;
 
@@ -121,6 +126,25 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         }
         sfx.bossRoar();
         bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
+        this.scene.events.emit('boss-engaged', this);
+    }
+
+    /** para i colpi da una direzione per un po': chi ripete la stessa mossa trova il muro */
+    guard(dir: HitDir, ms: number): void {
+        this.guardDir = dir;
+        this.guardUntil = this.scene.time.now + ms;
+    }
+
+    get guarding(): HitDir | null {
+        return this.guardDir && this.scene.time.now < this.guardUntil ? this.guardDir : null;
+    }
+
+    /** attacco ordinato dalla scena (l'ombra che punisce una cura prevedibile) */
+    strike(attack: BossAttack, player: Phaser.GameObjects.Sprite): boolean {
+        if (!this.active || !this.engaged || this.busy) return false;
+        this.execute(attack, player, this.phase);
+        this.nextAttackAt = this.scene.time.now + this.def.cooldownMs[this.phase];
+        return true;
     }
 
     /** la cutscene può ammazzare i tween a metà attacco: si riparte liberi */
@@ -614,8 +638,14 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         } catch { /* test */ }
     }
 
-    takeDamage(amount: number, fromX: number): boolean {
+    takeDamage(amount: number, fromX: number, dir?: HitDir): boolean {
         if (!this.active) return false;
+        if (dir && dir === this.guarding) {
+            this.scene.events.emit('boss-parried', { dir });
+            this.ringShock(this.x + Math.sign(fromX - this.x) * 30, this.y, 0xffffff);
+            sfx.clang();
+            return false;
+        }
         if (this.invulnerable) {
             this.scene.add.particles(this.x + Math.sign(fromX - this.x) * 30, this.y, 'p-dot', {
                 speed: { min: 40, max: 100 },
@@ -638,6 +668,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         else if (this.phase !== this.heardPhase) {
             // cambio di fase: la stanza trattiene il fiato e il boss cambia pelle
             this.heardPhase = this.phase;
+            this.scene.events.emit('boss-phase', { phase: this.phase });
             sfx.bossRoar();
             acoustics.swell(1300, 0.7);
             this.scene.cameras.main.shake(350, 0.008);
@@ -666,6 +697,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         const { x, y } = this;
         const scene = this.scene;
         const kind = this.def.kind;
+        scene.events.emit('boss-dying', { kind });
         this.destroy();
         sfx.bossRoar();
         for (let i = 0; i < 5; i++) {

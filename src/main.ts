@@ -21,6 +21,7 @@ import { GameScene } from './scenes/GameScene';
 import { GalleryScene } from './scenes/GalleryScene';
 import { MenuScene } from './scenes/MenuScene';
 import { DialogueBox } from './ui/dialogue';
+import { Subtitles } from './ui/subtitles';
 import { Phone } from './ui/phone';
 import { Hud } from './ui/hud';
 import { Screens, type GameController } from './ui/screens';
@@ -34,6 +35,7 @@ async function boot(): Promise<void> {
     const hud = new Hud();
     const dialogue = new DialogueBox();
     ui().append(hud.root);
+    new Subtitles();
     // vero solo mentre un capitolo è in corso: il telefono non esce dai menu
     let inGame = false;
 

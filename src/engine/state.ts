@@ -67,7 +67,7 @@ class GameState {
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;
     /** vita, flow e malus della run corrente: non si salvano, si vivono */
-    run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false };
+    run = { hp: 5, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false, ombraDati: 0 };
     private modsCache: CharmMods | null = null;
     private lastPersist = 0;
     private dirty = false;
@@ -129,7 +129,7 @@ class GameState {
 
     resetRun(): void {
         this.modsCache = null;
-        this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false };
+        this.run = { hp: 0, flow: 0, trenbolone: false, smela: false, patto: false, caffeMs: 0, santino: false, nearMic: false, ombraDati: 0 };
         this.run.hp = this.maxHp;
         this.run.trenbolone = this.hasFlag('trenbolone-attivo');
     }

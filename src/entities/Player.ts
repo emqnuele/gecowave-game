@@ -404,6 +404,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         body.setVelocity(PHYSICS.dashSpeed * this.facing, 0);
         body.setAccelerationX(0);
         sfx.dash();
+        this.scene.events.emit('player-act', { act: 'dash' });
         this.play('p-jump', true);
         // scia di afterimage
         for (let i = 0; i < 4; i++) {
@@ -443,6 +444,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
         this.comboResetAt = now + COMBAT.comboWindowMs;
+        this.scene.events.emit('player-act', { act: 'attack', dir: this.attackDir });
         sfx.slash();
         this.attacking = true;
         // il frame d'attacco è largo il doppio: l'origine va sul corpo
@@ -493,6 +495,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 sfx.shoot();
                 this.scene.cameras.main.flash(80, 168, 85, 247);
                 this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing });
+                this.scene.events.emit('player-act', { act: 'attack', dir: 'shot' });
             } else {
                 sfx.ui();
             }
@@ -513,6 +516,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const canHeal = this.grounded && !this.attackActive && !this.charging && state.run.flow >= COMBAT.healCost
             && state.run.hp < state.maxHp && this.keys.heal.isDown && !downHeld;
         if (canHeal) {
+            if (this.healHeldMs === 0) this.scene.events.emit('player-act', { act: 'heal-start' });
             this.healHeldMs += delta;
             this.setTint(0x4ade80);
             if (this.healHeldMs >= COMBAT.healHoldMs * state.mods.healTime) {
@@ -520,6 +524,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 state.run.flow -= COMBAT.healCost;
                 state.run.hp += 1;
                 sfx.heal();
+                this.scene.events.emit('player-act', { act: 'heal' });
                 this.burst(0x4ade80, 12);
                 this.emitVitals(false);
             }

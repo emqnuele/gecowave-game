@@ -49,6 +49,9 @@ import { Companion } from '../entities/Companion';
 import { Enemy, type EnemyTrait } from '../entities/Enemy';
 import { ENEMIES } from '../content/enemies';
 import { Player } from '../entities/Player';
+import { BossVoice } from '../engine/BossVoice';
+import { OmbraBrain } from '../engine/OmbraBrain';
+import { barksFor, LAMETTA_BARKS } from '../content/barks';
 import type { AbilityId, BossKind, DialogueLine, EnemyKind, LevelDef } from '../types';
 
 interface SceneData {
@@ -266,6 +269,9 @@ export class GameScene extends Phaser.Scene {
     private nextWildGlitchAt = 0;
     /** anti-spam del parry quando la hitbox resta sopra un nemico schermato */
     private parryUntil = 0;
+    /** chi parla durante lo scontro, e l'ombra che ti studia */
+    private voice: BossVoice | null = null;
+    private ombraBrain: OmbraBrain | null = null;
     // il primo custode attacca sul beat: metronomo interno a 120 bpm
     private beatMs = 500;
     private nextBeatAt = 0;
@@ -295,6 +301,7 @@ export class GameScene extends Phaser.Scene {
     create(data: SceneData): void {
         this.exiting = false;
         this.boss = null;
+        this.silenceBoss();
         this.clone = null;
         this.cloneColliders = [];
         this.mirror = null;
@@ -479,6 +486,7 @@ export class GameScene extends Phaser.Scene {
             (_p, slab) => this.hazards.landOn(slab as Phaser.GameObjects.GameObject),
             (_p, slab) => this.hazards.canLand(this.player, slab as Phaser.GameObjects.GameObject));
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.silenceBoss();
             this.folk.destroy();
             this.traps.destroy();
             this.hazards.destroy();
@@ -1693,7 +1701,7 @@ export class GameScene extends Phaser.Scene {
             this.physics.add.overlap(this.player.attackHitbox, this.boss, () => {
                 if (!this.player.attackActive || !this.boss) return;
                 this.player.attackActive = false;
-                if (this.boss.takeDamage(this.player.attackDamage, this.player.x)) {
+                if (this.boss.takeDamage(this.player.attackDamage, this.player.x, this.player.attackDir)) {
                     this.player.onAttackHit();
                     this.hitstop();
                 } else if (this.boss.def.kind === 'guggu') {
@@ -1709,7 +1717,7 @@ export class GameScene extends Phaser.Scene {
                 const bullet = (obj === this.boss ? proj : obj) as Phaser.Physics.Arcade.Sprite;
                 if (!this.boss || !bullet.active) return;
                 const dmg = (bullet.getData('dmg') as number | undefined) ?? state.risonanteDamage * state.damageMult;
-                if (this.boss.takeDamage(dmg, bullet.x)) {
+                if (this.boss.takeDamage(dmg, bullet.x, 'shot')) {
                     this.player.onAttackHit();
                 }
             });
@@ -1736,6 +1744,9 @@ export class GameScene extends Phaser.Scene {
         on('boss-summon', this.onBossSummon as never);
         on('boss-lamette', this.onBossLamette as never);
         on('boss-defeated', this.onBossDefeated as never);
+        on('boss-engaged', this.onBossEngaged as never);
+        on('boss-dying', (() => this.silenceBoss()) as never);
+        on('boss-phase', (({ phase }: { phase: number }) => this.voice?.say(phase === 2 ? 'phase2' : 'phase3', true)) as never);
 
         this.input.keyboard!.on('keydown-ESC', () => bus.emit('request-pause', {}));
         this.input.keyboard!.on('keydown-E', () => this.tryInteract());
@@ -2220,6 +2231,7 @@ export class GameScene extends Phaser.Scene {
         const target = this.clone && this.clone.active ? (this.clone as Phaser.GameObjects.Sprite) : this.player;
         this.updateEnemies(time, delta, target);
         this.boss?.update(time, delta, target);
+        this.voice?.update();
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
         this.parallax.update(time);
@@ -3482,6 +3494,9 @@ export class GameScene extends Phaser.Scene {
                 this.lamettaFloorY = this.player.y;
                 music.playBoss('lametta-arena');
                 this.startDialogue('lametta-incontro', () => {
+                    this.silenceBoss();
+                    this.voice = new BossVoice(this, LAMETTA_BARKS);
+                    this.voice.say('engage', true);
                     this.nextLametteAt = this.time.now + 1500;
                     this.nextPitturaAt = this.time.now + 4000;
                     this.spawnColorDrop();
@@ -3534,7 +3549,9 @@ export class GameScene extends Phaser.Scene {
             drop.destroy();
             this.colorDropsTaken++;
             sfx.pickup();
+            this.voice?.event(`goccia-${this.colorDropsTaken}`);
             if (this.colorDropsTaken >= 5) {
+                this.silenceBoss();
                 bus.emit('toast', { text: TOASTS.mirrorOpen });
                 this.spawnMirror();
             } else {
@@ -3921,8 +3938,31 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(e, this.level.layer);
     }
 
+    /** il boss entra in scena: da qui parla, e se è l'ombra comincia a studiarti */
+    private onBossEngaged(boss: Boss): void {
+        this.silenceBoss();
+        const set = barksFor(boss.def.kind);
+        if (!set) return;
+        const kind = boss.def.kind;
+        const variant = kind === 'pedro' && state.hasFlag('quaderno-completo') ? '-quaderno' : '';
+        this.voice = new BossVoice(this, set, { variant, texture: boss.def.texture });
+        if (kind === 'ombra' && !state.hasFlag('tommasorveglianza')) this.voice.event('engage-beta');
+        else if (kind === 'ticummi' && state.hasFlag('tommasorveglianza')) this.voice.event('engage-cliente');
+        else this.voice.say('engage', true);
+        if (kind === 'ombra') this.ombraBrain = new OmbraBrain(this, boss, this.voice, this.player);
+    }
+
+    private silenceBoss(): void {
+        this.voice?.stop();
+        this.voice = null;
+        this.ombraBrain?.stop();
+        this.ombraBrain = null;
+    }
+
     private onBossDefeated({ kind, x, y }: { kind: BossKind; x: number; y: number }): void {
         this.boss = null;
+        this.silenceBoss();
+        bus.emit('bark-clear', {});
         // pedro del doomsday: respinto, non è il pedro della trama. niente finale.
         if (kind === 'pedro' && this.collapsePedro) {
             this.collapsePedro = false;
