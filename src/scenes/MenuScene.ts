@@ -4,7 +4,7 @@ import { biomeFor } from '../content/biomes';
 import { ParallaxManager } from '../engine/ParallaxManager';
 import { canvas, hex, mix, mulberry32, shade, smoothNoise1D } from '../engine/art/ink';
 import { animateCreature, creatureRes } from '../engine/art/creatureKit';
-import { ensureCreature } from '../engine/art/creatures';
+import { CREATURE_KEYS, ensureCreature } from '../engine/art/creatures';
 import { generateFogTexture } from '../engine/textures';
 
 /* il titolo come un falò dei souls: il dipinto dell'ultimo capitolo
@@ -25,6 +25,8 @@ export class MenuScene extends Phaser.Scene {
     private levelId = 'bus';
     private noise = smoothNoise1D(7);
     private t = 0;
+    /** fogli da costruire in idle: entrando nel livello sono già pronti */
+    private warmQueue: string[] = [];
     private onResize = () => this.layout();
 
     constructor() {
@@ -72,6 +74,9 @@ export class MenuScene extends Phaser.Scene {
         }
         cam.fadeIn(1400, 0, 0, 0);
         this.layout();
+        // mentre il menu è aperto si costruiscono i fogli del cast, pochi
+        // millisecondi a frame: l'ingresso nel livello non li paga più
+        this.warmQueue = CREATURE_KEYS.filter((k) => k !== 'mic');
         this.scale.on('resize', this.onResize);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off('resize', this.onResize));
     }
@@ -174,6 +179,12 @@ export class MenuScene extends Phaser.Scene {
 
     update(_time: number, delta: number): void {
         this.t += delta;
+        if (this.warmQueue.length) {
+            const t0 = performance.now();
+            while (this.warmQueue.length && performance.now() - t0 < 8) {
+                ensureCreature(this, this.warmQueue.shift()!);
+            }
+        }
         // il mondo scorre piano dietro al fuoco
         this.cameras.main.scrollX += delta * 0.014;
         this.parallax.update(this.t);
