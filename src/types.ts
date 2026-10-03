@@ -13,6 +13,9 @@ export type AbilityId =
     | 'scudo'
     | 'acquatossica';
 
+/* tutte le wave in un posto solo: il totale dei frammenti segue da qui */
+export const ALL_ABILITIES = ['scivolata', 'rimbalzo', 'aggrappo', 'riflesso', 'risonante', 'rigenerazione', 'analisi', 'scudo', 'acquatossica'] as const satisfies readonly AbilityId[];
+
 export type EnemyKind =
     | 'glitchetto'
     | 'citelis'

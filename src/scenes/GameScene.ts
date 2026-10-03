@@ -1139,7 +1139,8 @@ export class GameScene extends Phaser.Scene {
                 break;
             case 'markolino-piazza': {
                 const n = state.abilities.length;
-                this.startDialogue(n >= TOTAL_FRAGMENTS - 1 ? 'markolino-piazza-fine' : n >= 4 ? 'markolino-piazza-dopo' : id);
+                // l'acqua tossica è opzionale: sette frammenti bastano per il finale
+                this.startDialogue(n >= 7 ? 'markolino-piazza-fine' : n >= 4 ? 'markolino-piazza-dopo' : id);
                 break;
             }
             case 'markolino-dono':

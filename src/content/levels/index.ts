@@ -1,4 +1,5 @@
 import type { LevelDef } from '../../types';
+import { ALL_ABILITIES } from '../../types';
 import { perduta } from './level01-perduta';
 import { bus } from './level02-bus';
 import { santuario } from './level03-santuario';
@@ -51,4 +52,4 @@ export const LEVEL_ORDER: string[] = all.map((l) => l.id);
 
 export const FIRST_LEVEL = perduta.id;
 
-export const TOTAL_FRAGMENTS = 8;
+export const TOTAL_FRAGMENTS = ALL_ABILITIES.length;
