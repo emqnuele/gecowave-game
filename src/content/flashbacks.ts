@@ -59,7 +59,7 @@ export const FLASHBACKS: Record<string, FlashbackDef> = {
         captions: [
             'il deserto sopra la 14 barrato. sotto la sabbia, il bus coi passeggeri ancora a bordo.',
             'ivan ci mise le spalle sotto e spinse. la sabbia si mosse. il bus no.',
-            'quella linea era più grande di lui. così, giro dopo giro, nacque il loop.',
+            'ivan mollò la presa. guggu no: da quella notte fece girare tutti i citelis in tondo, a cercarla.',
         ],
         cast: ['ivan', 'bus'],
         gesture: 'spinge',

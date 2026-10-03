@@ -848,7 +848,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'ivan-ricordo': [
         { speaker: 'cartello del deposito', color: 'yellow', text: '«autista della 14 barrato: i. maggini. encomio per "furia in servizio": ha tagliato in due un citelis impazzito a mani nude. sospeso per "eccesso di taglio".»' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che ora capisce da dove viene la furia di ivan. guggu gli ha sepolto la linea. con dentro la gente.*' },
+        { speaker: 'targa del deposito', color: 'yellow', text: '«deposito della 14 barrato. proprietà: w. baruffoni. manutenzione freni: "la paghiamo il mese prossimo". timbro sopra, più recente: ceduto a g. guggu, con tutti i debiti.»' },
     ],
     'settequaranta-intro': [
         { speaker: 'il 7:40', color: 'yellow', text: 'BIP. *il citelis sepolto accende i fari da solo*. nessuno scende dalla 14 barrato. nessuno SALE. io resto qui. e MORDO. anche da fermo. soprattutto da fermo.' },
@@ -959,6 +959,7 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'walter-morte': [
         { speaker: 'walter baruffoni', color: 'green', text: '*si sgonfia lentamente, tornando piccolo* ...e va beh. tre annetti buttati. *tossisce* ...senti, un ultimo consiglio da chi se ne intende di fregature...' },
         { speaker: 'walter baruffoni', color: 'green', text: 'proteggi quello che è tuo. casa, macchina, autoscuola. comprate VERISURE. il primo mese è scontato e l\'antifurto te lo installano gratis. *si addormenta per sempre, sereno*' },
+        { speaker: 'la signora anna', color: 'orange', text: 'tieni. le chiavi del deposito della 14 barrato: erano nella sua scrivania da vent\'anni. sotto le dune della tecnokill c\'è ancora qualcuno che aspetta l\'ultima fermata.' },
     ],
 
     /* boss intro della quest */
