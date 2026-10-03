@@ -2,7 +2,9 @@
    atto 1 (meme): perduta, bus, santuario, tecnokill, trenbolone + segreti bus
    atto 2 (crepe): tana, rio, stabilimento, ruhra — la battuta si interrompe a metà
    atto 3 (serio): mente, caso, sorveglianza, cantina — quasi niente battute
-   atto 4 (straziante): ricordi, void, nucleo, custode — solo verità, il geco pensa e poi parla */
+   atto 4 (straziante): ricordi, void, nucleo, custode — solo verità
+   il geco: versi fino alla tana, un pensiero vero al rio e allo stabilimento,
+   la prima frase ad alta voce al caso, poi parla quando serve */
 
 export type ToneAct = 1 | 2 | 3 | 4;
 
@@ -34,11 +36,11 @@ const TONE: Record<string, ToneDef> = {
     stabilimento: { level: 52, act: 2, geco: 'pensa', folk: 'misto', deaths: 'miste' },
     ruhra: { level: 60, act: 2, geco: 'pensa', folk: 'misto', deaths: 'miste' },
     mente: { level: 72, act: 3, geco: 'pensa', folk: 'misto', deaths: 'miste' },
-    caso: { level: 78, act: 3, geco: 'pensa', folk: 'misto', deaths: 'miste' },
-    sorveglianza: { level: 84, act: 3, geco: 'pensa', folk: 'misto', deaths: 'serie' },
-    cantina: { level: 88, act: 3, geco: 'pensa', folk: 'misto', deaths: 'serie' },
-    ricordi: { level: 95, act: 4, geco: 'pensa', folk: 'quieto', deaths: 'serie' },
-    void: { level: 97, act: 4, geco: 'pensa', folk: 'quieto', deaths: 'serie' },
+    caso: { level: 78, act: 3, geco: 'parla', folk: 'misto', deaths: 'miste' },
+    sorveglianza: { level: 84, act: 3, geco: 'parla', folk: 'misto', deaths: 'serie' },
+    cantina: { level: 88, act: 3, geco: 'parla', folk: 'misto', deaths: 'serie' },
+    ricordi: { level: 95, act: 4, geco: 'parla', folk: 'quieto', deaths: 'serie' },
+    void: { level: 97, act: 4, geco: 'parla', folk: 'quieto', deaths: 'serie' },
     nucleo: { level: 100, act: 4, geco: 'parla', folk: 'quieto', deaths: 'serie' },
     custode: { level: 96, act: 4, geco: 'parla', folk: 'quieto', deaths: 'serie' },
     piazza: { level: 30, act: 2, geco: 'pensa', folk: 'misto', deaths: 'miste' },

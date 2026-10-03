@@ -2692,6 +2692,17 @@ export class GameScene extends Phaser.Scene {
             }
             return;
         }
+        // il secondo pensiero vero del geco: lo stabilimento si può saltare, l'uscita no
+        if (this.def.id === 'stabilimento' && !state.hasFlag('pensiero-stabilimento')) {
+            state.setFlag('pensiero-stabilimento');
+            this.exiting = true;
+            const next = this.def.next;
+            this.startDialogue('stabilimento-pensiero', () => {
+                this.exiting = false;
+                this.gotoLevel(next);
+            });
+            return;
+        }
         this.gotoLevel(this.def.next);
     }
 

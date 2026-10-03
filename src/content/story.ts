@@ -6,8 +6,9 @@ import { toneFor } from './tone';
    pedro parla glitchato, riba coi refusi, piema corretto da professore.
    la curva meme -> serio (vedi content/tone.ts): atto 1 si ride sempre,
    atto 2 la battuta si interrompe a metà (mood crepa), atti 3-4 quasi solo
-   verità (mood grave). il geco resta muto a versi finché non ha niente da
-   dire; da rio in poi pensa in corsivo; al nucleo dice una frase vera. */
+   verità (mood grave). il geco fa versi finché non ha niente da dire;
+   al rio e allo stabilimento pensa due cose vere, al caso parla per la prima
+   volta (per difendere pedro), al nucleo dice la frase che conta. */
 
 export const INTRO_CARDS: { text: string; punch?: string }[] = [
     {
@@ -297,7 +298,8 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'rio-cura': [
         { speaker: 'il rio merdone', color: 'green', text: '*il fiume sacro ti accoglie. è esattamente come immaginavi dall\'odore. ma il trenbolone scivola via, e con lui tutti i malus.*' },
-        { speaker: 'il geco (pensa)', color: 'green', text: '*fa schifo. ed è la prima cosa che mi cura senza chiedere niente. il cartellino si è bagnato: "provvisorio" si è sbavato. non si è cancellato.*', mood: 'crepa' },
+        { speaker: 'il geco (pensa)', color: 'green', text: '*fa schifo. ed è la prima cosa che mi cura senza chiedermi niente in cambio.*', mood: 'grave' },
+        { speaker: 'il geco (pensa)', color: 'green', text: '*il cartellino si è bagnato: "provvisorio" si è sbavato, non cancellato. finora raccoglievo pezzi perché me l\'hanno detto. da adesso li raccolgo per sapere chi l\'ha scritto.*', mood: 'grave' },
         { speaker: 'il rio merdone', color: 'green', text: '*sul fondale brilla qualcosa: era il frammento a rendere sacre queste acque. il fiume te lo cede. il fiume non giudica.*', mood: 'crepa' },
     ],
     /* ---------- lo stabilimento di smela ---------- */
@@ -306,6 +308,11 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
         { speaker: 'smela', color: 'cyan', text: 'ti vedo ancora provato. acqua? offre la casa. la prima è gratis. la seconda pure. anzi: bevi e basta, dai. una sola sorsata. per me. che ti costa.' },
         { speaker: 'il geco', color: 'green', text: '*verso di geco che annusa la bottiglia e fa un passo indietro*' },
         { speaker: 'smela', color: 'cyan', text: 'no?? va bene, va bene. nessuna pressione. cammina pure verso casa, intanto. troverai dei miei ragazzi lungo la strada. magari a loro la compri, l\'acqua. INSISTI tu, eh.' },
+    ],
+    // all'uscita, per tutti: anche chi ha attraversato senza fermarsi
+    'stabilimento-pensiero': [
+        { speaker: 'il geco (pensa)', color: 'green', text: '*smela vende acqua che non cura e la chiama premium. danjilo la difende perché le vuole bene. qui dentro tutti lavorano per qualcun altro.*', mood: 'grave' },
+        { speaker: 'il geco (pensa)', color: 'green', text: '*e io raccolgo frammenti per gli dei. o per pedro. o per chi mi ha scritto a matita. per chi lavoro, io?*', mood: 'grave' },
     ],
     'venditore-acqua': [
         { speaker: 'venditore di smela', color: 'cyan', text: 'acqua di smela! acqua premium! una sorsata e ti cambia la giornata, garantito al limone (non c\'è il limone). la bevi? dai che la bevi. smela sarebbe così felice.' },
@@ -488,6 +495,8 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'romero-verdetto': [
         { speaker: 'il limite notevole', color: 'blue', text: 'no... NO... le prove... convergono... io che tendo... a ZERO...' },
         { speaker: 'commissario romero', color: 'blue', text: 'in nome del realm: notevole, ma in arresto. quarant\'anni, custode. tieni il fascicolo, e questo cuore: era nella sala prove, nessuno l\'ha mai reclamato.', mood: 'grave' },
+        { speaker: 'il geco', color: 'green', text: '«non è colpa di pedro.»', mood: 'grave' },
+        { speaker: 'commissario romero', color: 'blue', text: '...parli. quarant\'anni di interrogatori, e la prima frase che sento da te è per l\'imputato. hai ragione, custode. ma avere ragione non basta: serve il perché.', mood: 'grave' },
     ],
     'notino-caso': [
         { speaker: 'notino', color: 'red', text: 'AGGUATO TECNOK— un attimo. quello è un COMMISSARIO?' },

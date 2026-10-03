@@ -141,6 +141,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 - **volere**: dal cratere il geco ha un cartellino "CUSTODE" a penna, "provvisorio" a matita, e vuole che la parola sparisca. Il rio la sbava, il quaderno ricomposto la cancella (profilo e codex cambiano), ogni finale dice cosa ne è stato.
 - **pedro in scena** (`PedroApparition`, `content/pedro.ts`): dal bus al void, una volta per regione a metà percorso, due righe chiare in sottotitolo e si sfalda. Sostituisce gli echi per messaggio.
 - **33**: sono le notti in cui pedro ha detto "ciao" al geco del muro (giorno 6 → giorno 38, la trentatreesima è la promessa "raddrizzami tu"). L'1% di pedro che non ha eseguito l'ordine dipinge 33 azzurri accanto ai muri finti e rompibili (`TrentatreMarks`, 60% dei grumi, deterministico): dove c'è un 33 dietro c'è qualcosa. Margherita resta solo nella lettera della 14 barrato.
+- **la voce del geco**: niente più muto fino al nucleo. tre momenti veri, tutti su passaggi obbligati: al rio (`rio-cura`) il volere diventa suo, "li raccolgo per sapere chi l'ha scritto"; all'uscita dello stabilimento (`stabilimento-pensiero`, anche per chi salta smela) si chiede per chi lavora; al caso (`romero-verdetto`) dice la prima frase ad alta voce, «non è colpa di pedro». al nucleo resta la frase che conta.
 - **meno spiegoni**: due flashback nuovi (`riscrive`: piema corregge la riga sette; `salva`: il giorno 30 e la cartella IMPORTANTE), romero e il void ridotti a una riga dopo ogni film.
 
 ### ADR-022 — una meccanica per bioma (`src/engine/mechanics/`)
