@@ -1917,11 +1917,12 @@ export class GameScene extends Phaser.Scene {
             if (reflected) {
                 const dmg = (bullet.getData('dmg') as number | undefined) ?? COMBAT.scudoReflectNormal;
                 this.dmgTo(enemy, dmg * mult, bullet.x);
-                if (bullet.getData('perfect')) enemy.stun(COMBAT.scudoStunMs);
+                if (bullet.getData('perfect') && enemy.active) enemy.stun(COMBAT.scudoStunMs);
             } else {
                 const step = level === 2 ? 2 : level === 1 ? 1 : 0.5;
                 this.dmgTo(enemy, state.risonanteDamage * state.damageMult * step * mult, bullet.x);
-                if (level === 2) enemy.stun(COMBAT.risonanteFullStunMs);
+                // il colpo può uccidere: lo stordimento solo se è ancora in piedi
+                if (level === 2 && enemy.active) enemy.stun(COMBAT.risonanteFullStunMs);
                 // l'eco corta non perfora: si ferma al primo
                 if (level === 0) this.popProjectile(bullet);
             }
