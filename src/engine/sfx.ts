@@ -155,10 +155,17 @@ class Sfx {
         src.stop(t1 + 0.05);
     }
 
-    jump(): void { this.tone(280, 140, { type: 'square', to: 540, vol: 0.07 }); }
-    doubleJump(): void { this.tone(380, 160, { type: 'square', to: 760, vol: 0.07 }); }
-    dash(): void { this.noise(160, { freq: 900, q: 0.7, vol: 0.2 }); }
-    slash(): void { this.noise(90, { freq: 2600, q: 2, vol: 0.15 }); }
+    jump(): void {
+        this.tone(280, 140, { type: 'square', to: 540, vol: 0.07 });
+        // coda che prende la stanza: senza, il salto resta secco ovunque
+        this.tone(560, 220, { type: 'sine', to: 880, vol: 0.035 });
+    }
+    doubleJump(): void {
+        this.tone(380, 160, { type: 'square', to: 760, vol: 0.07 });
+        this.tone(760, 240, { type: 'sine', to: 1180, vol: 0.035 });
+    }
+    dash(): void { this.noise(240, { freq: 900, q: 0.7, vol: 0.2, to: 300 }); }
+    slash(): void { this.noise(140, { freq: 2600, q: 2, vol: 0.15, to: 1200 }); }
     hit(): void {
         this.noise(110, { freq: 600, q: 1, vol: 0.25 });
         this.tone(140, 110, { type: 'sawtooth', to: 70, vol: 0.1 });
