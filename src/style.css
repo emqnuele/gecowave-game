@@ -554,6 +554,30 @@ body.film #toast,
 body.film .subs {
   display: none !important;
 }
+/* letterbox nel dom: la camera può zoomare quanto vuole, le barre restano */
+#film-bar-top,
+#film-bar-bot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 7vh;
+  background: #000;
+  z-index: 250;
+}
+#film-bar-top {
+  top: 0;
+  animation: film-bar-top 0.7s ease both;
+}
+#film-bar-bot {
+  bottom: 0;
+  animation: film-bar-bot 0.7s ease both;
+}
+@keyframes film-bar-top {
+  from { transform: translateY(-100%); }
+}
+@keyframes film-bar-bot {
+  from { transform: translateY(100%); }
+}
 #flashback-caption {
   position: absolute;
   left: 50%;

@@ -6,6 +6,7 @@ import { sfx } from './sfx';
 import { state } from './state';
 import { music } from './music';
 import { acoustics } from './audio/acoustics';
+import { ui } from '../ui/dom';
 import { ensureCreature } from './art/creatures';
 import { VortexPipeline, hexToTint } from './fx/VortexPipeline';
 import { MemoryPipeline } from './fx/MemoryPipeline';
@@ -78,10 +79,6 @@ export class FlashbackManager {
         const canAudio = !!acoustics.context();
         // il film è l'unica cosa accesa: hud e scritte di gioco spariscono
         document.body.classList.add('film');
-        scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-            document.body.classList.remove('film');
-            this.playing = false;
-        });
 
         // --- il mondo trattiene il fiato ---
         const godPrev = state.godMode;
@@ -107,11 +104,33 @@ export class FlashbackManager {
         const ctx: Ctx = { cx: sx, floorY, tint: fb.tint };
         this.ensureTextures(scene);
 
-        // sala buia a tutto schermo: la camera zooma, i fondali no
+        // sala buia a tutto schermo: segue la camera ogni frame, niente buchi
         const dark = scene.add.rectangle(sx, sy, W * 2.2, H * 2.2, 0x030304, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(150);
-        const barH = H * 0.07;
-        const top = scene.add.rectangle(0, -barH, W, barH, 0x000000, 1).setOrigin(0, 0).setScrollFactor(0).setDepth(200);
-        const bottom = scene.add.rectangle(0, H, W, barH, 0x000000, 1).setOrigin(0, 0).setScrollFactor(0).setDepth(200);
+        const dip = scene.add.rectangle(sx, sy, W * 2.2, H * 2.2, 0x000000, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(190);
+        const syncFrame = (): void => {
+            try {
+                const v = cam.worldView;
+                const m = 1.35;
+                dark.setPosition(v.centerX, v.centerY);
+                dark.setDisplaySize(v.width * m, v.height * m);
+                dip.setPosition(v.centerX, v.centerY);
+                dip.setDisplaySize(v.width * m, v.height * m);
+            } catch { /* test */ }
+        };
+        scene.events.on(Phaser.Scenes.Events.UPDATE, syncFrame);
+        // letterbox nel dom: immune alla camera per costruzione
+        const barTop = document.createElement('div');
+        barTop.id = 'film-bar-top';
+        const barBot = document.createElement('div');
+        barBot.id = 'film-bar-bot';
+        ui().append(barTop, barBot);
+        scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            document.body.classList.remove('film');
+            scene.events.off(Phaser.Scenes.Events.UPDATE, syncFrame);
+            barTop.remove();
+            barBot.remove();
+            this.playing = false;
+        });
         // shader: vignetta vera sulla camera
         try {
             cam.postFX.clear();
@@ -127,8 +146,6 @@ export class FlashbackManager {
 
         // --- il tornado in ingresso: lo shader avvita il frame live, poi il nero ---
         scene.tweens.add({ targets: dark, alpha: 0.97, duration: ENTER * 0.6, ease: 'Quad.easeOut' });
-        scene.tweens.add({ targets: top, y: 0, duration: ENTER * 0.7, ease: 'Cubic.easeOut' });
-        scene.tweens.add({ targets: bottom, y: H - barH, duration: ENTER * 0.7, ease: 'Cubic.easeOut' });
         try {
             // due scosse in crescendo mentre tutto stringe verso il centro
             cam.shake(ENTER * 0.55, 0.004);
@@ -165,7 +182,6 @@ export class FlashbackManager {
         // --- regia: 3 inquadrature con stacco ---
         const builders = SHOTS[gesture];
         let scope: Scope = this.fresh();
-        const dip = scene.add.rectangle(sx, sy, W * 1.6, H * 1.6, 0x000000, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(190);
 
         const cutTo = (i: number): void => {
             this.clearScope(scene, scope);
@@ -254,6 +270,7 @@ export class FlashbackManager {
             done = true;
             this.playing = false;
             document.body.classList.remove('film');
+            scene.events.off(Phaser.Scenes.Events.UPDATE, syncFrame);
             window.removeEventListener('keydown', skip);
             for (const tm of timers) {
                 try { tm.remove(false); } catch { /* test */ }
@@ -278,8 +295,6 @@ export class FlashbackManager {
             if (!vortexPipe) {
                 this.warp(scene, fb.tint, 'out', EXIT * 0.5);
             }
-            scene.tweens.add({ targets: [top], y: -barH, duration: 300, ease: 'Cubic.easeIn' });
-            scene.tweens.add({ targets: [bottom], y: H, duration: 300, ease: 'Cubic.easeIn' });
             scene.time.delayedCall(EXIT * 0.55, () => {
                 try { cam.fadeOut(220, 0, 0, 0); } catch { /* test */ }
             });
@@ -287,9 +302,11 @@ export class FlashbackManager {
                 for (const tm of timers) {
                     try { tm.remove(false); } catch { /* test */ }
                 }
-                for (const o of [dark, top, bottom, dip]) {
+                for (const o of [dark, dip]) {
                     try { o.destroy(); } catch { /* test */ }
                 }
+                barTop.remove();
+                barBot.remove();
                 try {
                     cam.postFX.clear();
                     cam.setZoom(zoomFrom);
