@@ -276,6 +276,17 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: `src/ui/endingFx.ts`, tela canvas sopra tutto dall'inizio delle carte alla fine dei titoli: nei `win` razzi che salgono con scia di brace e scoppiano in tre tipi (peonia, anello, salice) con gravità, tremolio, crepitio e lampi; nei `lose` rivoli che colano con riflesso bagnato, gocce che si staccano e schizzi fermi. Niente phaser, dpr limitato, particelle cappate, `prefers-reduced-motion` rispettato.
 **Conseguenze**: i vecchi div e keyframes spariti; l'intro (`storySequence` da sola) resta pulita.
 
+### ADR-047 — mangiare richiede tempo
+**Contesto**: dall'ADR-036 il cibo curava d'un colpo col tasto rapido: in lotta si mangiava mentre si correva, senza canale da interrompere, e i rami cura dell'ombra restavano morti per non punire l'unica cura senza controgioco.
+**Decisione**: il boccone è un canale di 700 ms (`COMBAT.eatChannelMs`) da fermi: due morsi di suono, briciole, niente comandi finché non arriva; qualunque danno vero (colpi, stordimento smela, drenaggio trenbolone) lo rovina senza consumare nulla, gli i-frame lo proteggono. Il telefono ordina (`eat-requested`) e si chiude: il boccone vive nel mondo, mai in pausa. Alla fine `player-healed` + `heal` senza `instant` (campo rimosso): `BossVoice` commenta il pasto riuscito, l'ombra conta inizio e fine e può cecchinare sotto le 3 vite come da piano 8. Ribilancio: il panino torna a +3 (era +2 dall'ADR-036, il canale giustifica il rischio), drop laterali quasi dimezzati (crocchetta 16→10, panino 8→5), crocchetta e prezzi invariati.
+**Conseguenze**: niente più cure correndo; mangiare davanti a un nemico si paga; l'ombra torna a leggere la cura dopo 12 azioni; salvataggi e prezzi invariati, nessun oggetto nuovo.
+
+### ADR-048 — i sigilli tornano fisici
+**Contesto**: l'ADR-038 aveva lasciato i due sigilli fisici su stanze normali con avviso (mancava la rigenerazione da decine di minuti) e il miasma condivideva l'acquatossica con la resina senza dirlo.
+**Decisione**: rigenerato tutto (`npm run regions`), `seals.ts` fallisce forte senza cancello fisico e riserva le nicchie vere ai loro sigilli; le stanze normali non le toccano. Il bus non genera nicchie apribili (debug: `open:false` ovunque, `locked:false` altrove), così il camino sta in perduta con porta diretta sul percorso; santuario tiene solo la risonanza. Premi allineati al mondo (il primo cancello di ogni passaggio paga un cuore, verificato dal validatore: premio scritto contro lettera nella griglia). La prima wave spiega i 33 una volta sola (`sigilli-spiegati` già al frammento, non più solo alla vista).
+**Deviazioni dal piano**: 8 abilità non 9 (acquatossica apre miasma e resina, una wave due sigilli); perduta ha tre sigilli, il bus uno solo; rimbalzo e camino pagano un cuore invece di tacca e cuore.
+**Conseguenze**: `simcheck` verde su tutte le sette regioni (uscita vera, zero blocchi, mancanti solo le ricompense chiuse per disegno); chi non torna vede comunque il finale. Effetto collaterale onesto: i pesi del cibo nuovi mescolano i loot laterali rigenerati (stesse quantità, posti diversi); le chiavi `item-<regione>-<x>-<y>` già raccolte restano orfane senza rompere nulla.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -320,6 +331,8 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **i sigilli tornano fisici**: mondo rigenerato, nicchie vere riservate, camino in perduta, premi verificati, nota di markolino già alla prima wave (ADR-048).
+- **mangiare richiede tempo**: boccone da 700 ms da fermi che il danno rovina, telefono che ordina e chiude, ombra che torna a leggere la cura, panino a +3 e drop ridotti (ADR-047).
 - **il menu ritrova il fondale**: il canvas non si nasconde più con `display:none` (collassava a 0×0 e rompeva il WebGL), più `refresh()` all'uscita dai titoli.
 - **fuochi e sangue nei finali**: tela canvas sopra carte e titoli, razzi con scie vere nei buoni, gocce sull'obiettivo nei cattivi (ADR-046).
 - **i dialoghi restano centrati**: il centramento vive nella proprietà `translate`, le animazioni non possono più farlo slittare fuori schermo (ADR-045).

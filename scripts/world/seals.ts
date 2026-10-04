@@ -19,12 +19,13 @@ interface PlanEntry {
 
 // la distribuzione è intenzionale: il primo insegna, il centro manda indietro,
 // gli ultimi rendono le wave avanzate più che attacchi. il miasma chiede
-// l'acquatossica: la rigenerazione non esiste più, si cura solo col cibo.
+// l'acquatossica (come la resina: una wave, due sigilli) e il camino sta in
+// perduta, l'unico con nicchia vera e porta diretta verso il percorso.
 const PLAN: readonly PlanEntry[] = [
     { id: 'perduta-cortina', region: 'perduta', kind: 'cortina', ability: 'scivolata', prize: { kind: 'barre', amount: 60 } },
-    { id: 'perduta-rimbalzo', region: 'perduta', kind: 'rimbalzo', ability: 'rimbalzo', prize: { kind: 'tacca' } },
+    { id: 'perduta-rimbalzo', region: 'perduta', kind: 'rimbalzo', ability: 'rimbalzo', prize: { kind: 'cuore' } },
     { id: 'bus-specchio', region: 'bus', kind: 'specchio', ability: 'riflesso', prize: { kind: 'barre', amount: 90 } },
-    { id: 'bus-camino', region: 'bus', kind: 'camino', ability: 'aggrappo', prize: { kind: 'cuore' } },
+    { id: 'perduta-camino', region: 'perduta', kind: 'camino', ability: 'aggrappo', prize: { kind: 'cuore' } },
     { id: 'santuario-risonanza', region: 'santuario', kind: 'risonanza', ability: 'risonante', prize: { kind: 'cuore' } },
     { id: 'trenbolone-miasma', region: 'trenbolone', kind: 'miasma', ability: 'acquatossica', prize: { kind: 'barre', amount: 90 } },
     { id: 'rio-resina', region: 'rio', kind: 'resina', ability: 'acquatossica', prize: { kind: 'tacca' } },
@@ -106,6 +107,9 @@ function buildSeals(regionId: string): AbilitySeal[] {
     const ordered = [...lateral].sort((a, b) => anchorPath(a) - anchorPath(b) || a.id - b.id);
 
     const usedRooms = new Set<number>();
+    // le nicchie vere sono dei loro sigilli: le stanze normali non le toccano
+    for (const g of layout.abilityGates ?? []) usedRooms.add(g.room);
+    const takenGates = new Set<number>();
     const out: AbilitySeal[] = [];
     for (const entry of PLAN.filter((p) => p.region === regionId)) {
         let room: Room | null = null;
@@ -113,16 +117,17 @@ function buildSeals(regionId: string): AbilitySeal[] {
         // rimbalzo e camino vivono nelle nicchie vere, se il generatore le ha salvate
         if (entry.kind === 'rimbalzo' || entry.kind === 'camino') {
             const want = entry.kind === 'rimbalzo' ? 'rimbalzo' : 'aggrappo';
-            const gate = layout.abilityGates?.find((g) => g.ability === want && !usedRooms.has(g.room));
+            const gate = layout.abilityGates?.find((g) => g.ability === want && !takenGates.has(g.room));
             if (gate) {
                 const gr = roomById(layout, gate.room);
                 if (gr.pathIndex < 0 && gr.kind !== 'arena' && gr.kind !== 'rest' && gr.kind !== 'secret') {
                     room = gr;
                     gateReward = gate.reward;
+                    takenGates.add(gate.room);
                 }
             }
             if (!room) {
-                console.warn(`seals: ${entry.id}: nessun cancello fisico, si usa una stanza normale (SENZA CANCELLO FISICO)`);
+                fail(`${entry.id}: nessun cancello fisico, rigenera le regioni`);
             }
         }
         if (!room) {
@@ -174,6 +179,18 @@ function buildSeals(regionId: string): AbilitySeal[] {
             mark33: true,
         };
         validateSeal(file, seal, out);
+        if (gateReward) {
+            // la nicchia vera paga da sola: il premio scritto deve essere quello del mondo
+            const ch = grid[seal.reward.r]?.[seal.reward.c];
+            const spec = ch ? file.entities[ch] : undefined;
+            const wantCuore = seal.prize.kind === 'cuore';
+            const hasCuore = !!spec && spec.type === 'cuore';
+            const wantTacca = seal.prize.kind === 'tacca';
+            const hasTacca = !!spec && spec.type === 'item' && (spec as { item?: string }).item === 'tacca';
+            if ((wantCuore && !hasCuore) || (wantTacca && !hasTacca)) {
+                fail(`${seal.id}: premio ${seal.prize.kind} ma il mondo dà ${JSON.stringify(spec)}`);
+            }
+        }
         out.push(seal);
     }
     return out;
