@@ -276,6 +276,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: `src/ui/endingFx.ts`, tela canvas sopra tutto dall'inizio delle carte alla fine dei titoli: nei `win` razzi che salgono con scia di brace e scoppiano in tre tipi (peonia, anello, salice) con gravità, tremolio, crepitio e lampi; nei `lose` rivoli che colano con riflesso bagnato, gocce che si staccano e schizzi fermi. Niente phaser, dpr limitato, particelle cappate, `prefers-reduced-motion` rispettato.
 **Conseguenze**: i vecchi div e keyframes spariti; l'intro (`storySequence` da sola) resta pulita.
 
+### ADR-049 — taccuino e mappa leggibili
+**Contesto**: l'app si chiamava codex (fuori voce), la rilettura impilava una riga a ogni tocco, i titoli ??? perdevano lo spazio prima del trattino e l'hint descriveva un viaggio nel mondo che non esiste. La mappa di regione mostrava tutta la regione in miniatura (stanze da 2 px) e il realm occupava 19 capitoli per 64 px quasi vuoti.
+**Decisione**: codex diventa taccuino (id, titolo, icona 📓; file e funzioni restano); la rilettura fa da interruttore (seconda toccata richiude); `— ???` con spazio; hint vero e usato. La regione ritaglia il viewBox sul visitato + contorno tratteggiato (tutto se niente è noto); il realm passa a passo 46, nodi più piccoli e contatore visti/totale nel titolo di sezione.
+**Conseguenze**: nessuna migrazione (l'app non è nel save); verifica solo build + tsc, la prova su telefono richiede permesso browser.
+
 ### ADR-047 — mangiare richiede tempo
 **Contesto**: dall'ADR-036 il cibo curava d'un colpo col tasto rapido: in lotta si mangiava mentre si correva, senza canale da interrompere, e i rami cura dell'ombra restavano morti per non punire l'unica cura senza controgioco.
 **Decisione**: il boccone è un canale di 700 ms (`COMBAT.eatChannelMs`) da fermi: due morsi di suono, briciole, niente comandi finché non arriva; qualunque danno vero (colpi, stordimento smela, drenaggio trenbolone) lo rovina senza consumare nulla, gli i-frame lo proteggono. Il telefono ordina (`eat-requested`) e si chiude: il boccone vive nel mondo, mai in pausa. Alla fine `player-healed` + `heal` senza `instant` (campo rimosso): `BossVoice` commenta il pasto riuscito, l'ombra conta inizio e fine e può cecchinare sotto le 3 vite come da piano 8. Ribilancio: il panino torna a +3 (era +2 dall'ADR-036, il canale giustifica il rischio), drop laterali quasi dimezzati (crocchetta 16→10, panino 8→5), crocchetta e prezzi invariati.
@@ -331,6 +336,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **taccuino e mappa leggibili**: codex diventa taccuino, rilettura a interruttore, mappa ritagliata sul visitato e realm compatto (ADR-049).
 - **i sigilli tornano fisici**: mondo rigenerato, nicchie vere riservate, camino in perduta, premi verificati, nota di markolino già alla prima wave (ADR-048).
 - **mangiare richiede tempo**: boccone da 700 ms da fermi che il danno rovina, telefono che ordina e chiude, ombra che torna a leggere la cura, panino a +3 e drop ridotti (ADR-047).
 - **il menu ritrova il fondale**: il canvas non si nasconde più con `display:none` (collassava a 0×0 e rompeva il WebGL), più `refresh()` all'uscita dai titoli.

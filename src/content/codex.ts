@@ -1,7 +1,7 @@
 import { REGION_NOTES, PAGE_REGIONS, noteId, pageId, TOTAL_PAGES } from './arcs';
 import { LEVELS } from './levels';
 
-/* il codex del custode: tutte le storie sparse rileggibili in ordine.
+/* il taccuino del custode: tutte le storie sparse rileggibili in ordine.
    legge collectedLore + flags, niente stato nuovo: chi ha già letto
    trova tutto, chi non ha letto vede ??? e sa cosa gli manca */
 
@@ -74,4 +74,4 @@ export function codexSections(collected: string[], hasFlag: (f: string) => boole
     return sections;
 }
 
-export const CODEX_HINT = 'tocca una riga per rileggerla nel mondo: ti porta al dialogo originale.';
+export const CODEX_HINT = 'tocca una riga raccolta per rileggerla qui sotto. le ??? sono cose che non hai ancora trovato.';

@@ -1,6 +1,6 @@
 import { ZONE_CSS } from '../config';
 import { TOTAL_NOTES, TOTAL_PAGES } from '../content/arcs';
-import { codexSections } from '../content/codex';
+import { codexSections, CODEX_HINT } from '../content/codex';
 import { DIALOGUES } from '../content/story';
 import { ITEMS, NOTCH_PRICES, BASE_NOTCHES, type ItemDef } from '../content/items';
 import { LEVELS, LEVEL_ORDER, TOTAL_FRAGMENTS } from '../content/levels';
@@ -37,7 +37,7 @@ export interface PhoneHost {
     snapshot(): Promise<string | null>;
 }
 
-type AppId = 'messaggi' | 'wavegram' | 'fotocamera' | 'galleria' | 'mappa' | 'zaino' | 'amuleti' | 'wavezon' | 'diario' | 'codex' | 'radio' | 'trofei' | 'profilo' | 'impostazioni';
+type AppId = 'messaggi' | 'wavegram' | 'fotocamera' | 'galleria' | 'mappa' | 'zaino' | 'amuleti' | 'wavezon' | 'diario' | 'taccuino' | 'radio' | 'trofei' | 'profilo' | 'impostazioni';
 
 interface AppDef {
     id: AppId;
@@ -58,7 +58,7 @@ const APPS: AppDef[] = [
     { id: 'amuleti', name: 'amuleti', icon: '🔮', tint: 'purple', title: 'AMULETI', sub: 'si cambiano solo vicino a un microfono' },
     { id: 'wavezon', name: 'wavezon', icon: '📦', tint: 'yellow', title: 'WAVEZON', sub: 'consegna in giornata, anche nel void' },
     { id: 'diario', name: 'diario', icon: '📓', tint: 'red', title: 'DIARIO', sub: 'cose da fare prima che il realm finisca' },
-    { id: 'codex', name: 'codex', icon: '📖', tint: 'cyan', title: 'CODEX', sub: 'note, pagine, misteri: rileggili in ordine' },
+    { id: 'taccuino', name: 'taccuino', icon: '📓', tint: 'cyan', title: 'TACCUINO', sub: 'note, pagine, misteri: rileggili in ordine' },
     { id: 'radio', name: 'radio', icon: '📻', tint: 'yellow', title: 'RADIO', sub: 'radio gecowave, l\'unica che non chiude' },
     { id: 'trofei', name: 'trofei', icon: '🏆', tint: 'yellow', title: 'TROFEI', sub: 'la gloria, ma in pixel' },
     { id: 'profilo', name: 'io', icon: '🦎', tint: 'green', title: 'IO', sub: 'il custode, in numeri' },
@@ -369,7 +369,7 @@ export class Phone {
             case 'wavezon': this.renderShop(content); break;
             case 'mappa': this.renderMap(content); break;
             case 'diario': this.renderJournal(content); break;
-            case 'codex': this.renderCodex(content); break;
+            case 'taccuino': this.renderCodex(content); break;
             case 'radio': this.renderRadio(content); break;
             case 'trofei': buildTrophyCabinet(content); break;
             case 'profilo': this.renderProfile(content); break;
@@ -903,7 +903,6 @@ export class Phone {
         const explored = new Set(state.save.explored[regionView.id] ?? []);
         const ns = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(ns, 'svg');
-        svg.setAttribute('viewBox', `-4 -4 ${L.cols + 8} ${L.rows + 8}`);
         svg.setAttribute('role', 'img');
         svg.setAttribute('aria-label', `mappa di ${lv?.accentWord ?? 'questa regione'}`);
         const add = (tag: string, attrs: Record<string, string | number>) => {
@@ -919,6 +918,17 @@ export class Phone {
             if (explored.has(d.b)) near.add(d.a);
         }
         const fillOf: Record<string, string> = { arena: '#3b0d12', rest: '#0d2a1a', secret: '#2a1240', start: '#10202a', exit: '#2a2508' };
+        // si inquadra solo dove sei passato: tutta la regione in miniatura non si legge
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const room of L.rooms) {
+            if (!explored.has(room.id) && !near.has(room.id)) continue;
+            const R = room.rect;
+            x0 = Math.min(x0, R.x); y0 = Math.min(y0, R.y);
+            x1 = Math.max(x1, R.x + R.w); y1 = Math.max(y1, R.y + R.h);
+        }
+        if (x0 > x1) { x0 = 0; y0 = 0; x1 = L.cols; y1 = L.rows; }
+        const pad = 10;
+        svg.setAttribute('viewBox', `${x0 - pad} ${y0 - pad} ${x1 - x0 + pad * 2} ${y1 - y0 + pad * 2}`);
         for (const room of L.rooms) {
             const R = room.rect;
             if (explored.has(room.id)) {
@@ -990,13 +1000,13 @@ export class Phone {
             line.append(text('span', '', '33 letti'), text('b', '', `${aperti}/${visti}`));
             root.append(line);
         }
-        root.append(text('div', 'phone-section', 'il gecorealm'));
+        root.append(text('div', 'phone-section', `il gecorealm · ${LEVEL_ORDER.filter((id) => state.hasFlag(`visto-${id}`)).length}/${LEVEL_ORDER.length}`));
     }
 
     private renderMap(root: HTMLElement): void {
         this.renderRegionMap(root);
         const ids = LEVEL_ORDER;
-        const step = 64;
+        const step = 46;
         const w = 300;
         const h = ids.length * step + 30;
         const pts = ids.map((_, i) => ({ x: i % 2 === 0 ? 70 : 230, y: 30 + i * step }));
@@ -1033,7 +1043,7 @@ export class Phone {
             const c = document.createElementNS(ns, 'circle');
             c.setAttribute('cx', String(pts[i].x));
             c.setAttribute('cy', String(pts[i].y));
-            c.setAttribute('r', here ? '11' : '8');
+            c.setAttribute('r', here ? '10' : '7');
             c.setAttribute('fill', seen ? ZONE_CSS[lv.color] : '#1a1a1e');
             c.setAttribute('stroke', 'rgba(0,0,0,0.9)');
             c.setAttribute('stroke-width', '3');
@@ -1042,7 +1052,7 @@ export class Phone {
                 const ring = document.createElementNS(ns, 'circle');
                 ring.setAttribute('cx', String(pts[i].x));
                 ring.setAttribute('cy', String(pts[i].y));
-                ring.setAttribute('r', '17');
+                ring.setAttribute('r', '15');
                 ring.setAttribute('fill', 'none');
                 ring.setAttribute('stroke', ZONE_CSS[lv.color]);
                 ring.setAttribute('stroke-width', '2');
@@ -1054,6 +1064,7 @@ export class Phone {
             t.setAttribute('x', String(pts[i].x + (left ? -20 : 20)));
             t.setAttribute('y', String(pts[i].y + 5));
             t.setAttribute('text-anchor', left ? 'end' : 'start');
+            t.setAttribute('font-size', '13');
             t.setAttribute('transform', `rotate(${left ? 2 : -2} ${pts[i].x} ${pts[i].y})`);
             t.textContent = seen ? lv.accentWord : '???';
             g.append(t);
@@ -1143,19 +1154,25 @@ export class Phone {
             root.append(text('div', 'phone-empty', 'ancora niente da rileggere. esplora le stanze laterali: chi cerca, legge.'));
             return;
         }
-        root.append(text('div', 'phone-note', 'tocca una riga raccolta per rileggerla. le ??? sono cose che non hai ancora trovato.'));
+        root.append(text('div', 'phone-note', CODEX_HINT));
         for (const s of sections) {
             root.append(text('div', 'phone-section', `${s.title} — ${s.sub}`));
             for (const e of s.entries) {
                 const row = el('button', `phone-row glass-chip ${e.collected ? 'glass-acid-cyan' : ''}`);
                 const main = el('div', 'main');
-                main.append(text('div', 'name', e.collected ? e.title : `${e.title.split('—')[0]}— ???`), text('div', 'preview', e.collected ? (DIALOGUES[e.id]?.[0]?.text ?? '') : 'non ancora trovato: esplora le stanze laterali.'));
+                main.append(text('div', 'name', e.collected ? e.title : `${e.title.split('—')[0].trim()} — ???`), text('div', 'preview', e.collected ? (DIALOGUES[e.id]?.[0]?.text ?? '') : 'non ancora trovato: esplora le stanze laterali.'));
                 row.append(text('span', 'lead', e.collected ? '📖' : '❔'), main, text('span', 'meta', e.collected ? '✓' : '…'));
                 if (e.collected && DIALOGUES[e.id]) {
                     row.addEventListener('click', () => {
+                        // seconda toccata richiude: niente pile di righe uguali
+                        const next = row.nextElementSibling;
+                        if (next?.classList.contains('codex-open')) {
+                            next.remove();
+                            return;
+                        }
                         const lines = DIALOGUES[e.id];
                         const full = lines.map((l) => `${l.speaker}: ${l.text}`).join('\n\n');
-                        const overlay = el('div', 'phone-row glass-chip glass-acid-cyan');
+                        const overlay = el('div', 'phone-row glass-chip glass-acid-cyan codex-open');
                         overlay.append(text('div', 'preview', full));
                         row.after(overlay);
                     });
