@@ -295,6 +295,9 @@ export class GameScene extends Phaser.Scene {
     private chaseZoneIdx = -1;
     private chaseStartedAt = 0;
     private chaseDone: boolean[] = [];
+    /** fatica di lochef: dopo 8s a contatto rallenta del 30% per 3s */
+    private chaseNearSince = 0;
+    private chaseTiredUntil = 0;
     /** l'ospite n.12 dopo l'arresto: si parla e poi torna a casa */
     private ospite12Sprite: Phaser.GameObjects.Sprite | null = null;
     private ospite12Interact: Interactable | null = null;
@@ -424,6 +427,8 @@ export class GameScene extends Phaser.Scene {
         this.chaseWhisperAt = 0;
         this.chaseWhisperIdx = 0;
         this.chaseDone = [];
+        this.chaseNearSince = 0;
+        this.chaseTiredUntil = 0;
         this.ospite12Sprite = null;
         this.ospite12Interact = null;
         this.ivanSprite = null;
@@ -4552,6 +4557,8 @@ export class GameScene extends Phaser.Scene {
                 const chef = this.add.sprite(sx, this.player.y - 70, ensureCreature(this, 'boss-lochef'), 0).setDepth(7).setScale(1.25 / creatureRes(this, 'boss-lochef'));
                 this.chaseSprite = chef;
                 this.chaseStartedAt = this.time.now;
+                this.chaseNearSince = 0;
+                this.chaseTiredUntil = 0;
                 this.lighting.follow(chef, 0xf87171, 300, 1.2);
                 this.chaseTrail?.destroy();
                 this.chaseTrail = this.add.particles(0, 0, 'p-dot', {
@@ -4635,23 +4642,43 @@ export class GameScene extends Phaser.Scene {
         }
         this.chaseLastSeen = { x: this.player.x, y: this.player.y };
 
-        // fluttua verso di te, attraversa i muri: è casa sua. a elastico: lontano corre, vicino ti lascia un respiro
-        // sale e scende più piano di quanto si sposti in orizzontale: si sente che nuota nell'aria
+        // fluttua verso di te, ma fa i gradini: in verticale è lento,
+        // sui dislivelli si pianta in orizzontale. a elastico: lontano corre,
+        // vicino ti lascia un respiro. vola, ma con la fatica di chi cucina.
         const dx = this.player.x - chef.x;
         const dy = this.player.y - 30 - chef.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const speed = dist > 620 ? 500 : dist > 320 ? 300 : 225;
-        chef.x += (dx / dist) * speed * (delta / 1000);
-        chef.y += (dy / dist) * speed * 0.75 * (delta / 1000);
+        let speed = dist > 620 ? 380 : dist > 320 ? 250 : 175;
+        // partenza morbida: 1.5s per entrare in caccia, il salto iniziale non uccide
+        const ramp = Math.min(1, (this.time.now - this.chaseStartedAt) / 1500);
+        speed *= 0.4 + 0.6 * ramp;
+        // fatica: dopo 8s a contatto (dist < 200) rallenta del 30% per 3s
+        if (dist < 200) {
+            if (!this.chaseNearSince) this.chaseNearSince = this.time.now;
+            else if (this.time.now - this.chaseNearSince > 8000 && this.time.now >= this.chaseTiredUntil) {
+                this.chaseTiredUntil = this.time.now + 3000;
+                this.chaseNearSince = 0;
+            }
+        } else {
+            this.chaseNearSince = 0;
+        }
+        if (this.time.now < this.chaseTiredUntil) speed *= 0.7;
+        // gradini: in verticale scende a metà, in salita ancora più piano;
+        // sul dislivello grosso (>120px) dimezza anche l'avanzata orizzontale
+        let yFactor = 0.5;
+        if (dy < 0) yFactor *= 0.6;
+        const xFactor = Math.abs(dy) > 120 ? 0.5 : 1;
+        chef.x += (dx / dist) * speed * xFactor * (delta / 1000);
+        chef.y += (dy / dist) * speed * yFactor * (delta / 1000);
         chef.setFlipX(dx > 0);
         chef.setFrame(Math.floor(this.time.now / 110) % creatureFrames(this, 'boss-lochef'));
         // ondeggia: inquietante ma con stile
         chef.y += Math.sin(this.time.now / 200) * 0.6;
 
-        if (dist < 55) {
+        if (dist < 45) {
             if (this.player.hurt(1, chef.x)) {
                 // il colpo lo rallenta: ti vuole vivo
-                chef.x -= Math.sign(dx) * 160;
+                chef.x -= Math.sign(dx) * 260;
             }
         }
     }
