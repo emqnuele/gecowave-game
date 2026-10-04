@@ -239,6 +239,12 @@ export const BOSS_BARKS: Partial<Record<BossKind, BarkSet>> = {
             low: [pedroVoice(`non mollare adesso. ${gl('adesso')} no.`)],
             idle: [pedroVoice('ancora un po\'. lo sento che si spezza.'), 'sistemare = togliere. sistemare = togliere.'],
         },
+        extra: {
+            'straight-1': ['linee irregolari rilevate. correzione.'],
+            'straight-2': ['muri finti rilevati. resi veri.'],
+            'straight-3': ['segreti rilevati. rimossi.'],
+            'straight-break': ['...errore. il realm non resta in riga.'],
+        },
     },
     dei: {
         by: 'lametta', color: 'purple',

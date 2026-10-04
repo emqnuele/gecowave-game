@@ -6,6 +6,7 @@ import type { Player } from '../entities/Player';
 import { bus } from './events';
 import { music } from './music';
 import { sfx } from './sfx';
+import { state } from './state';
 import type { TerrainRenderer } from './TerrainRenderer';
 import type { TrentatreMarks } from './TrentatreMarks';
 
@@ -228,8 +229,13 @@ export class NucleusStraightening {
             this.fireOrderRow(boss.canStrike() ? 0 : 700);
         }
         this.ctx.music.setOrder(next);
-        this.ctx.scene.cameras.main.shake(130, 0.004);
+        this.orderShake(130, 0.004);
         sfx.orderLock();
+    }
+
+    /** la scossa rispetta l'impostazione, come ogni altra scossa della scena */
+    private orderShake(duration: number, intensity: number): void {
+        if (state.settings.screenShake) this.ctx.scene.cameras.main.shake(duration, intensity);
     }
 
     /** solo muri finti dentro l'arena, lontani da porte e attori */
