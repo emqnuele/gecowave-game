@@ -14,6 +14,7 @@ import { state } from '../engine/state';
 import { music } from '../engine/music';
 import type { ZoneColor } from '../types';
 import { el, ui } from './dom';
+import { EndingFx } from './endingFx';
 import { phoneBanner } from './banner';
 import './souls.css';
 
@@ -988,10 +989,13 @@ export class Screens {
     /* ---------- finale: storia + titoli di coda ---------- */
 
     endingSequence(cards: { text: string; punch?: string }[], opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number; epilogues?: string[] }, onDone: () => void): void {
-        this.storySequence(cards, () => this.showCredits(opts, onDone));
+        // fuochi o sangue sopra carte e rotolo, fino al menu
+        const fx = new EndingFx(opts.outcome);
+        fx.mount();
+        this.storySequence(cards, () => this.showCredits(opts, onDone, fx));
     }
 
-    private showCredits(opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number; epilogues?: string[] }, onDone: () => void): void {
+    private showCredits(opts: { outcome: 'win' | 'lose'; title: string; score?: number | null; rank?: number; epilogues?: string[] }, onDone: () => void, fx: EndingFx): void {
         const win = opts.outcome === 'win';
         const s = this.openOverlay(`screen sx opaque credits-screen sx-credits ${win ? 'credits-win' : 'credits-lose'}`);
         const epilogues = opts.epilogues ?? [];
@@ -1044,11 +1048,10 @@ export class Screens {
         closing.textContent = win ? 'grazie per aver viaggiato fino in fondo.' : 'ogni caduta insegna la strada.';
         final.append(closing);
 
-        let fw: ReturnType<typeof setInterval> | null = null;
-        const timers: number[] = [];
+        let timers: number[] = [];
         const finish = () => {
             for (const t of timers) clearTimeout(t);
-            if (fw) { clearInterval(fw); fw = null; }
+            fx.destroy();
             this.closeOverlay();
             onDone();
         };
@@ -1057,23 +1060,11 @@ export class Screens {
         final.append(back);
         s.append(head, roll, final);
 
-        // atto secondo: il rotolo parte e i fuochi si accendono
+        // atto secondo: il rotolo parte (fuochi e sangue girano già dalle carte)
         const startRoll = () => {
             if (phase !== 1 || this.overlay !== s) return;
             phase = 2;
             s.classList.add('phase-2');
-            if (win && !fw) {
-                const colors = ['#facc15', '#e8dfc8', '#ff9a4a', '#cfa75c'];
-                fw = setInterval(() => {
-                    if (this.overlay !== s) { if (fw) clearInterval(fw); fw = null; return; }
-                    const f = el('div', 'firework');
-                    f.style.left = `${8 + Math.random() * 84}%`;
-                    f.style.top = `${12 + Math.random() * 56}%`;
-                    f.style.setProperty('--fw', colors[Math.floor(Math.random() * colors.length)]);
-                    s.append(f);
-                    setTimeout(() => f.remove(), 1100);
-                }, 420);
-            }
             timers[1] = window.setTimeout(showEnd, ROLL_MS);
         };
         // atto terzo: resta solo la chiusura

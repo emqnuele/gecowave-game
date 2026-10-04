@@ -271,6 +271,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: centramento spostato sulla proprietà `translate`, keyframes ridotti a `rotate`/`translateY`, `max-width` e `box-sizing` garantiti, `overflow-wrap: anywhere` sul testo per le righe glitchate.
 **Conseguenze**: nessuna animazione o variante (grave compresa) può più spostare il pannello fuori schermo.
 
+### ADR-046 — fuochi e sangue nei finali
+**Contesto**: i fuochi erano div che si gonfiavano (i "pallini" dello screenshot), solo nei titoli e solo nei buoni.
+**Decisione**: `src/ui/endingFx.ts`, tela canvas sopra tutto dall'inizio delle carte alla fine dei titoli: nei `win` razzi che salgono con scia di brace e scoppiano in tre tipi (peonia, anello, salice) con gravità, tremolio, crepitio e lampi; nei `lose` rivoli che colano con riflesso bagnato, gocce che si staccano e schizzi fermi. Niente phaser, dpr limitato, particelle cappate, `prefers-reduced-motion` rispettato.
+**Conseguenze**: i vecchi div e keyframes spariti; l'intro (`storySequence` da sola) resta pulita.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -315,6 +320,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **fuochi e sangue nei finali**: tela canvas sopra carte e titoli, razzi con scie vere nei buoni, gocce sull'obiettivo nei cattivi (ADR-046).
 - **i dialoghi restano centrati**: il centramento vive nella proprietà `translate`, le animazioni non possono più farlo slittare fuori schermo (ADR-045).
 - **l'ordine ha una faccia sua**: foglio nuovo per il glitch, niente più gemello di pedro (ADR-044).
 - **i flashback congelano il combattimento**: buio fisso a schermo, palco piano fuori dall'arena, boss e ingaggi fermi durante il film (ADR-043).

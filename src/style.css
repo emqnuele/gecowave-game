@@ -1108,15 +1108,14 @@ input[type='range']::-webkit-slider-thumb {
   background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 45%, rgba(120, 0, 0, 0.35));
 }
 
-.firework {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--fw, #facc15);
-  box-shadow: 0 0 12px 3px var(--fw, #facc15);
+/* la tela di fuochi e sangue: sopra tutto, mai cliccabile */
+.ending-fx {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
-  animation: firework-burst 1.1s ease-out forwards;
+  z-index: 60;
 }
 
 @keyframes credits-scroll {
@@ -1132,22 +1131,6 @@ input[type='range']::-webkit-slider-thumb {
 @keyframes fade-in-btn {
   to {
     opacity: 1;
-  }
-}
-
-@keyframes firework-burst {
-  0% {
-    transform: scale(0.3);
-    opacity: 0;
-  }
-
-  18% {
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(7);
-    opacity: 0;
   }
 }
 
