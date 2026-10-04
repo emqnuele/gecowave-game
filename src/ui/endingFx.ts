@@ -38,11 +38,6 @@ interface Droplet {
     life: number; r: number;
 }
 
-interface Splat {
-    x: number; y: number;
-    blobs: { dx: number; dy: number; r: number }[];
-}
-
 export class EndingFx {
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;
@@ -55,10 +50,9 @@ export class EndingFx {
     private sparks: Spark[] = [];
     private flashes: Flash[] = [];
     private droplets: Droplet[] = [];
-    private specks: { x: number; y: number; r: number }[] = [];
-    private splats: Splat[] = [];
+    private specks: { x: number; y: number; r: number; soft: boolean }[] = [];
     private nextLaunch = 0;
-    private nextBurst = 0;
+    private lastActive = 0;
     private onResize = (): void => this.resize();
     private mode: EndingFxMode;
 
@@ -79,8 +73,11 @@ export class EndingFx {
         window.addEventListener('resize', this.onResize);
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         if (this.mode === 'lose') {
-            for (let i = 0; i < 2; i++) this.burst();
-            this.splats.push(this.newSplat());
+            // tre impatti nei primi secondi, poi l'obiettivo resta sporco e fermo
+            this.lastActive = performance.now();
+            this.lensHit(300, true);
+            this.lensHit(2500, false);
+            this.lensHit(5200, Math.random() < 0.5);
         }
         this.running = true;
         this.last = performance.now();
@@ -251,67 +248,65 @@ export class EndingFx {
 
     /* ---------- sangue ---------- */
 
-    /** uno schizzo: nucleo grosso, satellite scagliati, puntini che restano */
-    private burst(): void {
-        const x = this.w * (0.08 + Math.random() * 0.84);
-        const y = this.h * (0.08 + Math.random() * 0.7);
-        const big = 6 + Math.random() * 7;
-        this.dropToSpecks(x, y, big);
-        const n = 7 + Math.floor(Math.random() * 7);
-        for (let i = 0; i < n; i++) {
-            const a = Math.random() * Math.PI * 2;
-            const sp = 90 + Math.random() * 260;
-            this.droplets.push({
-                x, y, px: x, py: y,
-                vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
-                life: 0.45 + Math.random() * 0.4,
-                r: 1.2 + Math.random() * 2.4,
-            });
-        }
+    /** un impatto sull'obiettivo: alone sfocato, nucleo nitido, satelliti */
+    private lensHit(delayMs: number, big: boolean): void {
+        const at = performance.now() + delayMs;
+        const x = this.w * (0.15 + Math.random() * 0.7);
+        const y = this.h * (0.15 + Math.random() * 0.6);
+        const timer = window.setInterval(() => {
+            if (performance.now() < at) return;
+            window.clearInterval(timer);
+            if (!this.running) return;
+            // alone fuori fuoco: grande, morbido, resta
+            const r = big ? 60 + Math.random() * 70 : 30 + Math.random() * 40;
+            this.specks.push({ x, y, r, soft: true });
+            // strisciata: 5 aloni lungo un tratto breve
+            const a = Math.random() * Math.PI;
+            for (let i = 0; i < 5; i++) {
+                this.specks.push({
+                    x: x + Math.cos(a) * (i - 2) * r * 0.35,
+                    y: y + Math.sin(a) * (i - 2) * r * 0.35,
+                    r: r * (0.5 - Math.abs(i - 2) * 0.08),
+                    soft: true,
+                });
+            }
+            // nucleo nitido + satelliti che atterrano lì intorno
+            this.dropToSpecks(x, y, big ? 9 + Math.random() * 5 : 5 + Math.random() * 4);
+            const n = big ? 10 : 6;
+            for (let i = 0; i < n; i++) {
+                const ang = Math.random() * Math.PI * 2;
+                const sp = 120 + Math.random() * 300;
+                this.droplets.push({
+                    x, y, px: x, py: y,
+                    vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 60,
+                    life: 0.4 + Math.random() * 0.35,
+                    r: 1.2 + Math.random() * 2.6,
+                });
+            }
+            this.lastActive = performance.now();
+        }, 120);
     }
 
     private dropToSpecks(x: number, y: number, r: number): void {
-        this.specks.push({ x, y, r });
+        this.specks.push({ x, y, r, soft: false });
         for (let i = 0; i < 5; i++) {
             this.specks.push({
                 x: x + (Math.random() - 0.5) * r * 7,
                 y: y + (Math.random() - 0.5) * r * 6,
                 r: 0.8 + Math.random() * 2,
+                soft: false,
             });
         }
-        if (this.specks.length > 170) this.specks.splice(0, this.specks.length - 170);
-    }
-
-    private newSplat(): Splat {
-        const blobs: Splat['blobs'] = [];
-        const n = 5 + Math.floor(Math.random() * 5);
-        for (let i = 0; i < n; i++) {
-            blobs.push({
-                dx: (Math.random() - 0.5) * 46,
-                dy: (Math.random() - 0.5) * 36,
-                r: 1 + Math.random() * 3,
-            });
-        }
-        blobs.push({ dx: (Math.random() - 0.5) * 10, dy: (Math.random() - 0.5) * 8, r: 5 + Math.random() * 4 });
-        return { x: Math.random() * this.w, y: Math.random() * this.h, blobs };
+        if (this.specks.length > 220) this.specks.splice(0, this.specks.length - 220);
     }
 
     private stepBlood(dt: number, t: number): void {
         const ctx = this.ctx;
         if (!ctx) return;
+        void t;
         ctx.clearRect(0, 0, this.w, this.h);
-        if (t * 1000 >= this.nextBurst) {
-            this.nextBurst = t * 1000 + 1900 + Math.random() * 2200;
-            this.burst();
-            if (Math.random() < 0.4) this.splats.push(this.newSplat());
-            if (this.splats.length > 8) this.splats.shift();
-        }
-        // resti fermi: schizzi vecchi e puntini atterrati
-        for (const s of this.splats) {
-            this.dropBlob(ctx, s.x, s.y, 7);
-            for (const b of s.blobs) this.dropBlob(ctx, s.x + b.dx, s.y + b.dy, b.r);
-        }
-        for (const p of this.specks) this.dropBlob(ctx, p.x, p.y, p.r);
+        // tutto quello che è atterrato resta lì, fermo
+        for (const p of this.specks) this.dropBlob(ctx, p.x, p.y, p.r, p.soft);
         // satelliti in volo: scia corta, poi restano dove cadono
         for (let i = this.droplets.length - 1; i >= 0; i--) {
             const d = this.droplets[i];
@@ -333,12 +328,27 @@ export class EndingFx {
             ctx.moveTo(d.px, d.py);
             ctx.lineTo(d.x, d.y);
             ctx.stroke();
-            this.dropBlob(ctx, d.x, d.y, d.r);
+            this.dropBlob(ctx, d.x, d.y, d.r, false);
+        }
+        // a impatti finiti il loop si spegne: la tela tiene l'ultimo frame
+        if (!this.droplets.length && performance.now() - this.lastActive > 2500) {
+            this.running = false;
         }
     }
 
-    private dropBlob(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
-        const g = ctx.createRadialGradient(x - r * 0.25, y - r * 0.3, r * 0.1, x, y, r);
+    private dropBlob(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, soft: boolean): void {
+        if (soft) {
+            // fuori fuoco: alone largo che sfuma, niente bordo
+            const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+            g.addColorStop(0, 'rgba(125,18,18,0.5)');
+            g.addColorStop(0.6, 'rgba(110,14,14,0.28)');
+            g.addColorStop(1, 'rgba(110,14,14,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+            return;
+        }
         g.addColorStop(0, '#b02323');
         g.addColorStop(0.55, '#7d1212');
         g.addColorStop(1, '#4a0a0a');
