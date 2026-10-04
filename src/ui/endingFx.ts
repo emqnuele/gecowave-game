@@ -349,6 +349,7 @@ export class EndingFx {
             ctx.fill();
             return;
         }
+        const g = ctx.createRadialGradient(x - r * 0.25, y - r * 0.3, r * 0.1, x, y, r);
         g.addColorStop(0, '#b02323');
         g.addColorStop(0.55, '#7d1212');
         g.addColorStop(1, '#4a0a0a');
