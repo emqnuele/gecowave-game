@@ -5526,7 +5526,9 @@ export class GameScene extends Phaser.Scene {
         const boss = this.boss;
         if (!boss || this.def.id !== 'nucleo' || !this.layout || !this.marks33) return;
         const room = this.roomAt(boss.x, boss.y);
-        if (!room || room.kind !== 'arena' || !this.arenaRoom) {
+        // nel ramo giorno 30 pedro non si è mai ingaggiato: l'arena si chiude
+        // da sola dopo l'intro, qui basta che il glitch stia in una stanza arena
+        if (!room || room.kind !== 'arena') {
             if (import.meta.env.DEV) console.warn('[ordine] niente arena valida, combattimento invariato');
             return;
         }
