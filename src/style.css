@@ -512,8 +512,12 @@ body {
   position: absolute;
   left: 50%;
   bottom: 42px;
-  transform: translateX(-50%) rotate(-0.6deg);
+  /* il centramento vive qui, non nel transform: nessuna animazione può farlo slittare */
+  translate: -50% 0;
+  transform: rotate(-0.6deg);
   width: min(640px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+  box-sizing: border-box;
   padding: 26px 28px 20px;
   animation: screen-in 0.25s ease both;
 }
@@ -533,6 +537,7 @@ body {
   line-height: 1.75;
   color: var(--zinc-300);
   min-height: 3.5em;
+  overflow-wrap: anywhere;
 }
 
 #dialogue .hint {
@@ -547,7 +552,7 @@ body {
 
 /* battute gravi: niente sticker storto, pannello quasi nero, si legge piano */
 #dialogue.dlg-grave {
-  transform: translateX(-50%);
+  transform: none;
   background: rgba(4, 4, 6, 0.88);
 }
 
@@ -917,12 +922,12 @@ input[type='range']::-webkit-slider-thumb {
 @keyframes dialogue-in {
   from {
     opacity: 0;
-    transform: translateX(-50%) rotate(-0.6deg) translateY(16px);
+    transform: rotate(-0.6deg) translateY(16px);
   }
 
   to {
     opacity: 1;
-    transform: translateX(-50%) rotate(-0.6deg) translateY(0);
+    transform: rotate(-0.6deg) translateY(0);
   }
 }
 

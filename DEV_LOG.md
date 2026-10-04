@@ -266,6 +266,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: foglio nuovo `boss-glitch`, frontale e simmetrico: fili a piombo dritti, regolo graduato, traversa col filo rosso, squadra scura, sigillo con un occhio solo e timbro `TU` che lampeggia, pennino correttore. Voce glitchata tenuta (`bossVoice: glitch` nel ramo di pedro), apparizione di pedro invariata.
 **Conseguenze**: pedro spento, ricordo di pedro e ordine sono tre sagome diverse; galleria e anteprime lo pescano da sole.
 
+### ADR-045 — i dialoghi restano centrati
+**Contesto**: il pannello dei dialoghi ogni tanto sbordava a destra: il centramento viveva in `transform: translateX(-50%)`, la stessa proprietà riscritta dalle animazioni di entrata.
+**Decisione**: centramento spostato sulla proprietà `translate`, keyframes ridotti a `rotate`/`translateY`, `max-width` e `box-sizing` garantiti, `overflow-wrap: anywhere` sul testo per le righe glitchate.
+**Conseguenze**: nessuna animazione o variante (grave compresa) può più spostare il pannello fuori schermo.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -310,6 +315,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **i dialoghi restano centrati**: il centramento vive nella proprietà `translate`, le animazioni non possono più farlo slittare fuori schermo (ADR-045).
 - **l'ordine ha una faccia sua**: foglio nuovo per il glitch, niente più gemello di pedro (ADR-044).
 - **i flashback congelano il combattimento**: buio fisso a schermo, palco piano fuori dall'arena, boss e ingaggi fermi durante il film (ADR-043).
 - **il rimando tocca il boss una volta sola**: niente più mitraglia da homing contro i boss (ADR-042).
