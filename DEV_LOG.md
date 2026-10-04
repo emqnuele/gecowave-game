@@ -320,6 +320,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **il menu ritrova il fondale**: il canvas non si nasconde più con `display:none` (collassava a 0×0 e rompeva il WebGL), più `refresh()` all'uscita dai titoli.
 - **fuochi e sangue nei finali**: tela canvas sopra carte e titoli, razzi con scie vere nei buoni, gocce sull'obiettivo nei cattivi (ADR-046).
 - **i dialoghi restano centrati**: il centramento vive nella proprietà `translate`, le animazioni non possono più farlo slittare fuori schermo (ADR-045).
 - **l'ordine ha una faccia sua**: foglio nuovo per il glitch, niente più gemello di pedro (ADR-044).

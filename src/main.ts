@@ -186,9 +186,10 @@ async function boot(): Promise<void> {
         hud.hide();
         game.scene.stop('GameScene');
         // il render loop di phaser continua a girare: nascondo il canvas trasparente
-        // sotto i titoli di coda, altrimenti la compositing race lo fa flickerare
+        // sotto i titoli di coda, altrimenti la compositing race lo fa flickerare.
+        // visibility e non display: il contenitore tiene la misura e il canvas non collassa a zero
         const gameEl = document.getElementById('game')!;
-        gameEl.style.display = 'none';
+        gameEl.style.visibility = 'hidden';
         const cards = endingCards(id, state.save.flags);
         const epilogues = endingEpilogues(id, state.save.flags);
         // pedro (patto) e sconfitta (sfida agli dei persa) sono game over definitivi
@@ -213,7 +214,8 @@ async function boot(): Promise<void> {
                 state.save.flags = state.save.flags.filter((f) => !f.startsWith('boss-down-') && !f.startsWith('agguato-'));
                 state.persist();
             }
-            gameEl.style.display = '';
+            gameEl.style.visibility = 'visible';
+            game.scale.refresh();
             music.playMenu();
             screens.showMenu();
         });
