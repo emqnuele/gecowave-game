@@ -6,6 +6,8 @@ import { canvas, hex, mix, mulberry32, shade, smoothNoise1D } from '../engine/ar
 import { animateCreature, creatureRes } from '../engine/art/creatureKit';
 import { CREATURE_KEYS, ensureCreature } from '../engine/art/creatures';
 import { generateFogTexture } from '../engine/textures';
+import { ensurePlayerSkin } from '../engine/playerSkin';
+import { state } from '../engine/state';
 
 /* il titolo come un falò dei souls: il dipinto dell'ultimo capitolo
    raggiunto, le sagome del parallasse che scorrono piano, una cresta
@@ -47,6 +49,8 @@ export class MenuScene extends Phaser.Scene {
         this.mic = this.add.sprite(0, 0, ensureCreature(this, 'mic'), 0).setPipeline('Light2D').setScrollFactor(0).setDepth(10);
         this.mic.setScale(2.1 / creatureRes(this, 'mic'));
         animateCreature(this.mic, 420);
+        // la forgia può aver cambiato pelle: le texture vanno allineate prima dello sprite
+        ensurePlayerSkin(this, state.save.skin);
         this.geco = this.add.sprite(0, 0, 'player', 0).setPipeline('Light2D').setScrollFactor(0).setDepth(11).setScale(0.34);
         if (!this.anims.exists('p-idle')) this.anims.create({ key: 'p-idle', frames: this.anims.generateFrameNumbers('player', { start: 0, end: 7 }), frameRate: 5, repeat: -1 });
         this.geco.play('p-idle');

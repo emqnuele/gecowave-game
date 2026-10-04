@@ -43,6 +43,7 @@ import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import { music } from '../engine/music';
 import { generateFogTexture } from '../engine/textures';
+import { ensurePlayerSkin } from '../engine/playerSkin';
 import { Boss } from '../entities/Boss';
 import { animateCreature, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 import { ensureAbilityFx, FX } from '../engine/art/abilityFx';
@@ -465,6 +466,8 @@ export class GameScene extends Phaser.Scene {
         }
 
         generateFogTexture(this);
+        // la pelle scelta alla forgia va in texture prima del player (costo una tantum)
+        ensurePlayerSkin(this, state.save.skin);
 
         this.biome = biomeFor(this.def);
         this.lighting = new LightingManager(this);

@@ -2,6 +2,7 @@ import { COMBAT } from '../config';
 import { BASE_NOTCHES, charmMods, ITEMS, LEGACY_ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
 import { bus } from './events';
+import { DEFAULT_SKIN_ID, isValidSkinId } from './playerSkin';
 import { defaultOmbraProfile, observe as observeOmbraAct, sanitizeOmbraProfile, type PlayerAct } from './OmbraProfile';
 import type { Action, PresetId } from './input/actions';
 
@@ -43,6 +44,7 @@ const defaultSave = (): SaveData => ({
     flags: [],
     endingSeen: null,
     playerName: 'Geco',
+    skin: DEFAULT_SKIN_ID,
     doomsdayMode: false,
     doomsday: 0,
     stats: {
@@ -129,6 +131,10 @@ class GameState {
                 }
                 // l'ombra ha un profilo per partita: i salvataggi vecchi partono puliti
                 this.save.ombra = sanitizeOmbraProfile((parsed as { ombra?: unknown }).ombra);
+                // le pelli vecchie o manomesse tornano al bosco
+                if (!isValidSkinId((parsed as { skin?: unknown }).skin)) {
+                    this.save.skin = DEFAULT_SKIN_ID;
+                }
                 if (this.hasFlag('tommasorveglianza') && !this.save.ombra.premium) {
                     this.save.ombra.premium = true;
                     this.persist();

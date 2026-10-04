@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { generateBaseTextures } from '../engine/textures';
+import { ensurePlayerSkin } from '../engine/playerSkin';
+import { state } from '../engine/state';
 import { LEVEL_ORDER, REGION_IDS } from '../content/levels';
 import { regionKey, regionUrl } from '../world/registry';
 
@@ -34,6 +36,8 @@ export class BootScene extends Phaser.Scene {
 
     create(): void {
         generateBaseTextures(this);
+        // la pelle scelta vive nelle texture: chi crea sprite dopo trova già tutto pronto
+        ensurePlayerSkin(this, state.save.skin);
         this.game.events.emit('boot-complete');
     }
 }

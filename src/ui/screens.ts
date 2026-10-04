@@ -11,6 +11,7 @@ import { ACTIONS, ACTION_LABEL, bindingLabel, bindingsFor, keyNameForCode, PRESE
 import { formatKeys } from '../engine/input/keyText';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
+import { isValidSkinId, SKIN_PRESETS, skinPreset } from '../engine/playerSkin';
 import { music } from '../engine/music';
 import type { ZoneColor } from '../types';
 import { el, ui } from './dom';
@@ -1113,6 +1114,8 @@ export class Screens {
         let doomsdayMode = false;
         let availablePoints = 10;
         const stats = { forza: 0, costituzione: 0, flusso: 0 };
+        // la pelle parte da quella salvata (nuova run = bosco dopo il reset)
+        let skinId = isValidSkinId(state.save.skin) ? state.save.skin : 'bosco';
 
         const backs = new Map<HTMLElement, (() => void) | undefined>();
         const show = (from: HTMLElement, to: HTMLElement) => {
@@ -1224,6 +1227,7 @@ export class Screens {
         const updFlus = attr('flusso', 'flusso', 'flusso massimo +10 e risonante +10% a punto');
 
         right.append(el('div', 'sx-geco'));
+        const gecoEl = right.querySelector<HTMLElement>('.sx-geco')!;
         const derived = el('div', 'sx-derived');
         right.append(derived);
         const dRow = (label: string) => {
@@ -1237,6 +1241,38 @@ export class Screens {
         const dDmg = dRow('danno');
         const dFlow = dRow('flusso massimo');
         const dRes = dRow('colpo risonante');
+
+        // --- la pelle: solo tinta, il mantello e gli occhi restano i suoi ---
+        const skinLabel = el('div', 'sx-group', 'pelle del geco');
+        right.append(skinLabel);
+        const skins = el('div', 'sx-skins');
+        right.append(skins);
+        const paintSkin = (): void => {
+            const preset = skinPreset(skinId);
+            gecoEl.style.filter = preset.previewFilter;
+            skins.querySelectorAll<HTMLElement>('.sx-skin').forEach((b) => {
+                b.classList.toggle('on', b.dataset.skin === skinId);
+            });
+        };
+        for (const preset of SKIN_PRESETS) {
+            const b = el('button', 'sx-skin');
+            b.dataset.nav = '1';
+            b.dataset.skin = preset.id;
+            b.title = preset.name;
+            b.setAttribute('aria-label', `pelle ${preset.name}`);
+            const dot = el('i');
+            dot.style.background = preset.swatch;
+            const nm = el('span', '', preset.name);
+            b.append(dot, nm);
+            b.addEventListener('click', () => {
+                if (skinId === preset.id) return;
+                skinId = preset.id;
+                sfx.menuMove();
+                paintSkin();
+            });
+            skins.append(b);
+        }
+        paintSkin();
 
         const updateAll = () => {
             updForza();
@@ -1292,6 +1328,7 @@ export class Screens {
         };
         const start = () => {
             state.save.playerName = finalName;
+            state.save.skin = skinId;
             state.save.stats.forza = stats.forza;
             state.save.stats.costituzione = stats.costituzione;
             state.save.stats.flusso = stats.flusso;

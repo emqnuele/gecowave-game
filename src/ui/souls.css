@@ -1264,6 +1264,52 @@ input.sx-range::-moz-range-thumb {
   animation: sx-geco 4.5s ease-in-out infinite;
 }
 
+/* pelli del geco: sei pallini, come le tacche degli amuleti */
+.sx-skins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 10px;
+  max-width: 240px;
+}
+
+.sx-skin {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: 1px solid var(--sx-line);
+  border-radius: 3px;
+  padding: 5px 10px 5px 7px;
+  cursor: pointer;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--sx-ash);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.sx-skin i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  outline: 1px solid rgba(232, 223, 200, 0.25);
+  flex-shrink: 0;
+}
+
+.sx-skin:hover,
+.sx-skin.on {
+  color: var(--sx-bone);
+  border-color: rgba(207, 167, 92, 0.6);
+}
+
+.sx-skin.on {
+  background: rgba(207, 167, 92, 0.08);
+  box-shadow: 0 0 12px rgba(255, 154, 74, 0.25);
+}
+
 .sx-derived {
   width: 100%;
   margin-top: 6px;

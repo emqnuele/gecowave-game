@@ -136,6 +136,8 @@ export interface SaveData {
     flags: string[];
     endingSeen: string | null;
     playerName: string;
+    /** pelle del geco scelta alla forgia: id di SKIN_PRESETS (engine/playerSkin) */
+    skin: string;
     /** modalità doomsday: il realm si sgretola se perdi tempo, scelta alla forgia */
     doomsdayMode: boolean;
     /** avanzamento del doomsday 0..1, persistito così non si azzera riavviando */
