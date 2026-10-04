@@ -153,6 +153,28 @@ export function simulateGameLight(data: Uint8ClampedArray): void {
     }
 }
 
+/**
+ * Caduta della luce propria: la point light sta sul petto del geco,
+ * al centro vale 1.35, ai bordi ~1.0 (attenuazione + diffuse di Light.frag).
+ * Solo per l'anteprima: in game lo fa lo shader, non duplicarlo nelle texture.
+ */
+export function applyOwnLightFalloff(data: Uint8ClampedArray, w: number, h: number): void {
+    const cx = w / 2;
+    const cy = h * 0.42;
+    const r = w * 0.55;
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            if (data[i + 3]! < 10) continue;
+            const d = Math.hypot(x - cx, y - cy) / r;
+            const f = 1 + 0.3 * Math.max(0, 1 - d * d);
+            data[i] = Math.min(255, data[i]! * f);
+            data[i + 1] = Math.min(255, data[i + 1]! * f);
+            data[i + 2] = Math.min(255, data[i + 2]! * f);
+        }
+    }
+}
+
 /** pixel canonico di pelle (testa, frame 0): da qui nasce il pallino della forgia */
 const SKIN_BASE_PIXEL: [number, number, number] = [36, 49, 33];
 
@@ -193,6 +215,8 @@ export function renderSkinPreview(source: CanvasImageSource, preset: SkinPreset,
         const img = ctx.getImageData(0, 0, PLAYER_FRAME, PLAYER_FRAME);
         recolorSkinPixels(img.data, preset);
         simulateGameLight(img.data);
+        // la luce propria sta sul geco, non dietro: cuore luminoso che cade ai bordi
+        applyOwnLightFalloff(img.data, PLAYER_FRAME, PLAYER_FRAME);
         ctx.putImageData(img, 0, 0);
     } catch {
         return null;
