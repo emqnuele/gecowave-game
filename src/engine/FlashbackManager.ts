@@ -82,6 +82,7 @@ export class FlashbackManager {
             folk?: { setSuspended(v: boolean): void };
             enemies?: Phaser.GameObjects.Group;
             setPropsVisible?: (v: boolean) => void;
+            findFlatStage?: (x: number, y: number) => { x: number; y: number } | null;
         };
         host.folk?.setSuspended(true);
         host.setPropsVisible?.(false);
@@ -114,25 +115,23 @@ export class FlashbackManager {
         const cam = scene.cameras.main;
         const W = cam.width;
         const H = cam.height;
-        // palco nel mondo, accanto al geco: il livello fa da scenografia
+        // palco in un tratto piano dello stesso livello: il bioma resta,
+        // gli attori non finiscono dentro un muro o addosso al boss
+        const flat = host.findFlatStage?.(player.x, player.y) ?? null;
         const facing = (player as unknown as { facing?: number }).facing ?? 1;
-        const sx = player.x + facing * 260;
-        const sy = H * 0.52;
-        const floorY = player.y + 24;
+        const sx = flat ? flat.x : player.x + facing * 260;
+        const floorY = flat ? flat.y : player.y + 24;
         const ctx: Ctx = { cx: sx, floorY, tint: fb.tint };
         this.ensureTextures(scene);
 
-        // sala buia a tutto schermo: segue la camera ogni frame, niente buchi
-        const dark = scene.add.rectangle(sx, sy, W * 2.2, H * 2.2, 0x030304, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(150);
-        const dip = scene.add.rectangle(sx, sy, W * 2.2, H * 2.2, 0x000000, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(190);
+        // sala buia a tutto schermo: sta ferma al centro dello schermo, niente buchi
+        const dark = scene.add.rectangle(W / 2, H / 2, W * 2.2, H * 2.2, 0x030304, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(150);
+        const dip = scene.add.rectangle(W / 2, H / 2, W * 2.2, H * 2.2, 0x000000, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(190);
         const syncFrame = (): void => {
             try {
-                const v = cam.worldView;
-                const m = 1.35;
-                dark.setPosition(v.centerX, v.centerY);
-                dark.setDisplaySize(v.width * m, v.height * m);
-                dip.setPosition(v.centerX, v.centerY);
-                dip.setDisplaySize(v.width * m, v.height * m);
+                // coordinate schermo, non mondo: con scrollfactor 0 il mondo sposta fuori vista
+                dark.setPosition(W / 2, H / 2);
+                dip.setPosition(W / 2, H / 2);
             } catch { /* test */ }
         };
         scene.events.on(Phaser.Scenes.Events.UPDATE, syncFrame);
@@ -191,7 +190,7 @@ export class FlashbackManager {
         try {
             // due scosse in crescendo mentre tutto stringe verso il centro
             cam.shake(ENTER * 0.55, 0.004);
-            scene.time.delayedCall(ENTER * 0.55, () => {
+            later(ENTER * 0.55, () => {
                 try { cam.shake(ENTER * 0.4, 0.008); } catch { /* test */ }
             });
             cam.zoomTo(zoomFrom * 1.7, ENTER - 100, 'Quad.easeIn');
@@ -206,12 +205,11 @@ export class FlashbackManager {
             // senza WebGL niente shader: almeno le scie (mai più le righe)
             this.warp(scene, fb.tint, 'in', ENTER - 100);
         }
-        scene.time.delayedCall(80, () => {
+        later(80, () => {
             try { sfx.death('eco'); } catch { /* mai bloccare */ }
             try { sfx.rumble(); } catch { /* mai bloccare */ }
         });
-        timers.push(scene.time.delayedCall(80, () => undefined));
-        scene.time.delayedCall(ENTER - 180, () => {
+        later(ENTER - 180, () => {
             try { cam.fadeOut(180, 0, 0, 0); } catch { /* test */ }
         });
 
@@ -532,16 +530,16 @@ export class FlashbackManager {
         } catch { /* test */ }
     }
 
-    /** foschia che scorre: 'fog' se c'è, puntini se siamo in anteprima senza */
-    private mist(scope: Scope, scene: Phaser.Scene, y: number, alpha: number): void {
+    /** foschia che scorre sul palco: 'fog' se c'è, puntini se siamo in anteprima senza */
+    private mist(scope: Scope, scene: Phaser.Scene, x: number, y: number, alpha: number): void {
         try {
             const cam = scene.cameras.main;
             if (scene.textures.exists('fog')) {
-                const f = scene.add.tileSprite(cam.width / 2, y, cam.width + 80, 120, 'fog').setAlpha(alpha);
+                const f = scene.add.tileSprite(x, y, cam.width + 80, 120, 'fog').setAlpha(alpha);
                 this.put(scope, f, 178);
                 this.loop(scope, scene, 60, () => { f.tilePositionX += 0.9; });
             } else {
-                const p = scene.add.particles(cam.width / 2, y, 'p-dot', {
+                const p = scene.add.particles(x, y, 'p-dot', {
                     x: { min: -cam.width / 2, max: cam.width / 2 },
                     speed: { min: 6, max: 18 }, scale: { min: 0.4, max: 1.1 },
                     alpha: { min: 0.04, max: 0.12 }, tint: 0xaab4c8,
@@ -637,7 +635,7 @@ export class FlashbackManager {
         this.put(scope, moon, 161);
         try { moon.setBlendMode(Phaser.BlendModes.ADD); } catch { /* test */ }
         scene.tweens.add({ targets: moon, alpha: 0.85, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        this.mist(scope, scene, ctx.floorY + 10, 0.5);
+        this.mist(scope, scene, ctx.cx, ctx.floorY + 10, 0.5);
         this.motes(scope, scene, ctx, ctx.cx, ctx.floorY - 60, 420, 200, 0xcdd6ea);
         return { moon };
     }

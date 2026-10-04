@@ -256,6 +256,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: i proiettili con `reflected` segnano `bossHit` al primo contatto col boss e poi passano oltre. Valori invariati (0.6 perfetto, 0.25 normale), difesa invariata (1,6 s di immunità ai colpi, parry fisico senza danno), lezione delle telecamere intatta.
 **Conseguenze**: lo scudo resta forte per sopravvivere, non per sciogliere i boss; il contatto diretto dei boss passa comunque lo scudo.
 
+### ADR-043 — i flashback congelano il combattimento
+**Contesto**: la sala buia era posizionata in coordinate mondo con `scrollFactor(0)`, quindi fuori vista appena la camera scorreva: il film girava sul livello visibile col boss in scena. In più nemici, boss, voci e ingaggi continuavano a girare nei 19 s di film (il boss ingaggiato menava un geco stordito, i trigger accodavano dialoghi), e gli attori nascevano accanto al geco anche dentro muri o nell'arena.
+**Decisione**: buio e dip restano fissi al centro dello schermo; foschia e luna sul palco in coordinate mondo; `GameScene.findFlatStage` sceglie il tratto piano più largo entro 2400 px mai nell'arena del boss (ripiego: accanto al geco come prima); durante il film scena salta nemici, nidi, boss, voci, ombra e ingaggi (il telegraph dell'ordine si allunga, mai si accorcia); i timer d'ingresso passano da `later()` così lo skip li cancella. La sagoma spenta di pedro accanto al glitch resta: è voluta (il glitch esce da lui).
+**Conseguenze**: niente più boss visibili o attivi nei ricordi; i dialoghi di ingaggio aspettano la fine del film invece di accodarsi sopra.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -300,6 +305,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **i flashback congelano il combattimento**: buio fisso a schermo, palco piano fuori dall'arena, boss e ingaggi fermi durante il film (ADR-043).
 - **il rimando tocca il boss una volta sola**: niente più mitraglia da homing contro i boss (ADR-042).
 - **l'ordine raddrizza il nucleo**: tre fasi visibili e giocabili contro il glitch, solo muri finti sicuri, rottura inversa col 33 che torna (ADR-041).
 - **mangiare fa rumore**: il cibo emette la cura istantanea, i boss tornano a parlare, l'ombra non punisce (ADR-040).

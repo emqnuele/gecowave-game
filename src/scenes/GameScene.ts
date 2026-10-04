@@ -2327,6 +2327,31 @@ export class GameScene extends Phaser.Scene {
         return id >= 0 ? L.rooms[id] : null;
     }
 
+    /** palco dei flashback: il tratto piano più largo vicino al geco, mai nell'arena del boss.
+        pubblica perché la chiama il FlashbackManager via host. */
+    findFlatStage(x: number, y: number): { x: number; y: number } | null {
+        const bossRoom = this.boss?.active ? this.roomAt(this.boss.x, this.boss.y) : null;
+        let best: { x: number; y: number; score: number } | null = null;
+        for (const seg of this.nav.segments) {
+            const w = seg.c1 - seg.c0 + 1;
+            if (w < 14) continue;
+            const cx = Math.round((seg.c0 + seg.c1) / 2);
+            // aria sopra la testa per tre celle: gli attori alti ci stanno
+            if (!this.nav.free(cx, seg.r - 1) || !this.nav.free(cx, seg.r - 2)) continue;
+            const px = cx * TILE + TILE / 2;
+            const py = (seg.r + 1) * TILE;
+            if (bossRoom) {
+                const room = this.roomAt(px, py);
+                if (room && room === bossRoom) continue;
+            }
+            const d = Math.hypot(px - x, py - y);
+            if (d > 2400) continue;
+            const score = w * 40 - d;
+            if (!best || score > best.score) best = { x: px, y: py, score };
+        }
+        return best;
+    }
+
     /** quanto si è avanti nel capitolo: celle nel capitolo vecchio, stanze del percorso nella regione */
     private progressAt(x: number, y: number): number {
         if (!this.layout) return x / TILE;
@@ -2795,12 +2820,16 @@ export class GameScene extends Phaser.Scene {
         }
 
         const target = this.clone && this.clone.active ? (this.clone as Phaser.GameObjects.Sprite) : this.player;
-        this.updateEnemies(time, delta, target);
-        this.updateSpawners(time);
-        this.boss?.update(time, delta, target);
-        this.nucleusStraightening?.update(time, this.boss);
-        this.voice?.update();
-        this.ombraBrain?.update(time);
+        // durante un flashback il ricordo è solo suo: il combattimento si congela
+        const film = flashback.isPlaying;
+        if (!film) {
+            this.updateEnemies(time, delta, target);
+            this.updateSpawners(time);
+            this.boss?.update(time, delta, target);
+            this.nucleusStraightening?.update(time, this.boss);
+            this.voice?.update();
+            this.ombraBrain?.update(time);
+        }
         this.pedroGhost?.update(this.player);
         this.marks33?.update(this.player);
         this.seals?.update(time);
@@ -2817,7 +2846,8 @@ export class GameScene extends Phaser.Scene {
         state.run.nearMic = this.level.checkpoints.some((cp) => Math.abs(cp.x - this.player.x) < 110 && Math.abs(cp.y - this.player.y) < 110);
         this.checkExits();
         this.updatePrompt();
-        this.updateBossTrigger();
+        // l'ingaggio aspetta la fine del film: niente dialoghi sopra il ricordo
+        if (!flashback.isPlaying) this.updateBossTrigger();
         this.magnetBarre();
         this.updateClone(time, delta);
         this.updateHoming(delta);
