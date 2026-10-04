@@ -4665,8 +4665,8 @@ export class GameScene extends Phaser.Scene {
         if (this.time.now < this.chaseTiredUntil) speed *= 0.7;
         // gradini: in verticale scende a metà, in salita ancora più piano;
         // sul dislivello grosso (>120px) dimezza anche l'avanzata orizzontale
-        let yFactor = 0.5;
-        if (dy < 0) yFactor *= 0.6;
+        let yFactor = 0.55;
+        if (dy < 0) yFactor *= 0.65;
         const xFactor = Math.abs(dy) > 120 ? 0.5 : 1;
         chef.x += (dx / dist) * speed * xFactor * (delta / 1000);
         chef.y += (dy / dist) * speed * yFactor * (delta / 1000);
