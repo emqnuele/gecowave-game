@@ -1228,7 +1228,8 @@ export class Screens {
 
         right.append(el('div', 'sx-geco'));
         const gecoEl = right.querySelector<HTMLElement>('.sx-geco')!;
-        // anteprima onesta: non il png grezzo, ma il frame ricolorato sotto la luce di gioco
+        // anteprima onesta e viva: gli 8 frame di idle renderizzati come in
+        // game, in loop a 5fps. il timer si spegne da solo a forgia chiusa.
         gecoEl.classList.add('sx-geco-live');
         const previewCv = document.createElement('canvas');
         previewCv.width = PLAYER_FRAME;
@@ -1236,19 +1237,51 @@ export class Screens {
         previewCv.className = 'sx-geco-frame';
         gecoEl.append(previewCv);
         let sheetImg: HTMLImageElement | null = null;
-        const drawPreview = (): void => {
-            if (!sheetImg) return;
-            const cv = renderSkinPreview(sheetImg, skinPreset(skinId), 0);
-            if (!cv) return;
+        let previewFrames: HTMLCanvasElement[] = [];
+        let previewTick = 0;
+        let previewTimer: number | null = null;
+        const stopPreview = (): void => {
+            if (previewTimer !== null) {
+                window.clearInterval(previewTimer);
+                previewTimer = null;
+            }
+        };
+        const blitPreview = (): void => {
+            const f = previewFrames[previewTick % Math.max(1, previewFrames.length)];
+            previewTick++;
+            if (!f) return;
             const ctx = previewCv.getContext('2d');
             if (!ctx) return;
             ctx.clearRect(0, 0, PLAYER_FRAME, PLAYER_FRAME);
-            ctx.drawImage(cv, 0, 0);
+            ctx.drawImage(f, 0, 0);
+        };
+        const buildPreview = (): void => {
+            stopPreview();
+            previewTick = 0;
+            previewFrames = [];
+            if (sheetImg) {
+                const preset = skinPreset(skinId);
+                for (let i = 0; i < 8; i++) {
+                    const cv = renderSkinPreview(sheetImg, preset, i);
+                    if (cv) previewFrames.push(cv);
+                }
+            }
+            blitPreview();
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!reduce && previewFrames.length > 1) {
+                previewTimer = window.setInterval(() => {
+                    if (!previewCv.isConnected) {
+                        stopPreview();
+                        return;
+                    }
+                    blitPreview();
+                }, 200);
+            }
         };
         const sheetLoader = new Image();
         sheetLoader.onload = () => {
             sheetImg = sheetLoader;
-            drawPreview();
+            buildPreview();
         };
         // se lo sheet non si carica, torna il ritratto statico: meglio del buco
         sheetLoader.onerror = () => gecoEl.classList.remove('sx-geco-live');
@@ -1273,7 +1306,7 @@ export class Screens {
         const skins = el('div', 'sx-skins');
         right.append(skins);
         const paintSkin = (): void => {
-            drawPreview();
+            buildPreview();
             skins.querySelectorAll<HTMLElement>('.sx-skin').forEach((b) => {
                 b.classList.toggle('on', b.dataset.skin === skinId);
             });

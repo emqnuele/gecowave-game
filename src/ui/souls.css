@@ -1266,14 +1266,45 @@ input.sx-range::-moz-range-thumb {
 
 /* anteprima onesta: canvas renderizzato (pelle + luce di gioco), non il png grezzo */
 .sx-geco-live {
+  position: relative;
   background-image: none;
-  filter: drop-shadow(0 0 30px rgba(255, 140, 60, 0.18));
+  overflow: visible;
+  filter: none;
+}
+
+/* alone caldo da falò dietro al geco: lo àncora al menu */
+.sx-geco-live::before {
+  content: '';
+  position: absolute;
+  inset: -34px -30px;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 170, 90, 0.30), rgba(255, 140, 60, 0.09) 45%, transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+  animation: sx-breathe 2.8s ease-in-out infinite;
+}
+
+/* ombra per terra: il geco sta da qualche parte, non vola nel vuoto */
+.sx-geco-live::after {
+  content: '';
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 0;
+  height: 24px;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55), transparent 70%);
+  filter: blur(4px);
+  pointer-events: none;
 }
 
 .sx-geco-frame {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   display: block;
+  filter: drop-shadow(0 0 18px rgba(255, 140, 60, 0.15));
 }
 
 /* pelli del geco: sei pallini, come le tacche degli amuleti */
@@ -1531,6 +1562,7 @@ input.sx-range::-moz-range-thumb {
   .sx-press,
   .sx-hint,
   .sx-geco,
+  .sx-geco-live::before,
   .sx-forge.doom::before { animation: none !important; }
   .glass-ambient { animation: none !important; }
 }
