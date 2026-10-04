@@ -138,12 +138,22 @@ export function recolorSkinPixels(data: Uint8ClampedArray, preset: SkinPreset): 
    Luce propria: 0xaaffdd @1.35. Torce e biomi spostano un po' il
    risultato, ma questa è la base su cui sono tarate le pelli. */
 export const GAME_LIGHT = {
+    r: 75 / 255 + 0xaa / 255,
+    g: 80 / 255 + 0xff / 255,
+    b: 70 / 255 + 0xdd / 255,
+};
+
+/** esposizione del cuore (centro della point light, intensità 1.35): il colore che l'occhio legge */
+export const GAME_LIGHT_CORE = {
     r: 75 / 255 + (0xaa / 255) * 1.35,
     g: 80 / 255 + (0xff / 255) * 1.35,
     b: 70 / 255 + (0xdd / 255) * 1.35,
 };
 
-/** applica la luce nominale a un buffer RGBA: ciò che vedi in game al centro della luce */
+/** il cuore vale ~1.32x il bordo: 1.35/1.02 come in Light.frag */
+const FALLOFF_TOP = 1.32;
+
+/** applica la luce nominale (esposizione dei bordi) a un buffer RGBA */
 export function simulateGameLight(data: Uint8ClampedArray): void {
     for (let i = 0; i < data.length; i += 4) {
         if (data[i + 3]! < 10) continue;
@@ -154,8 +164,9 @@ export function simulateGameLight(data: Uint8ClampedArray): void {
 }
 
 /**
- * Caduta della luce propria: la point light sta sul petto del geco,
- * al centro vale 1.35, ai bordi ~1.0 (attenuazione + diffuse di Light.frag).
+ * Caduta della luce propria: la point light sta sul petto del geco.
+ * In Light.frag il centro vale 1.35 e i bordi ~1.0: questa funzione parte
+ * dalla base (bordi) e solleva solo il cuore, mai oltre il vero.
  * Solo per l'anteprima: in game lo fa lo shader, non duplicarlo nelle texture.
  */
 export function applyOwnLightFalloff(data: Uint8ClampedArray, w: number, h: number): void {
@@ -167,7 +178,7 @@ export function applyOwnLightFalloff(data: Uint8ClampedArray, w: number, h: numb
             const i = (y * w + x) * 4;
             if (data[i + 3]! < 10) continue;
             const d = Math.hypot(x - cx, y - cy) / r;
-            const f = 1 + 0.3 * Math.max(0, 1 - d * d);
+            const f = 1 + (FALLOFF_TOP - 1) * Math.max(0, 1 - d * d);
             data[i] = Math.min(255, data[i]! * f);
             data[i + 1] = Math.min(255, data[i + 1]! * f);
             data[i + 2] = Math.min(255, data[i + 2]! * f);
@@ -180,9 +191,11 @@ const SKIN_BASE_PIXEL: [number, number, number] = [36, 49, 33];
 
 /** colore finale simulato in game per un preset, in css: il pallino dice la verità */
 export function skinFinalCss(preset: SkinPreset): string {
+    // l'occhio legge il cuore della luce, non i bordi
+    const L = GAME_LIGHT_CORE;
     if (preset.hue === null && preset.satMul === undefined && preset.lightAdd === undefined) {
         const [r, g, b] = SKIN_BASE_PIXEL;
-        return `rgb(${Math.min(255, Math.round(r * GAME_LIGHT.r))},${Math.min(255, Math.round(g * GAME_LIGHT.g))},${Math.min(255, Math.round(b * GAME_LIGHT.b))})`;
+        return `rgb(${Math.min(255, Math.round(r * L.r))},${Math.min(255, Math.round(g * L.g))},${Math.min(255, Math.round(b * L.b))})`;
     }
     const [h, s, l] = rgbToHsl(...SKIN_BASE_PIXEL);
     const target = preset.hue ?? SOURCE_SKIN_HUE;
@@ -191,7 +204,7 @@ export function skinFinalCss(preset: SkinPreset): string {
         Math.min(1, Math.max(0, s * (preset.satMul ?? 1))),
         Math.min(0.92, Math.max(0.02, l + (preset.lightAdd ?? 0))),
     );
-    return `rgb(${Math.min(255, Math.round(r * GAME_LIGHT.r))},${Math.min(255, Math.round(g * GAME_LIGHT.g))},${Math.min(255, Math.round(b * GAME_LIGHT.b))})`;
+    return `rgb(${Math.min(255, Math.round(r * L.r))},${Math.min(255, Math.round(g * L.g))},${Math.min(255, Math.round(b * L.b))})`;
 }
 
 export const PLAYER_FRAME = 350;
