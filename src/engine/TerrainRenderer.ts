@@ -144,7 +144,7 @@ export class TerrainRenderer {
     private scene: Phaser.Scene;
     private biome: BiomeDef;
     private textureKeys: string[] = [];
-    private fakeRegions: { image: Phaser.GameObjects.Image; cells: Set<number>; revealed: boolean }[] = [];
+    private fakeRegions: { image: Phaser.GameObjects.Image; cells: Set<number>; revealed: boolean; straight: boolean }[] = [];
     private cols = 0;
     private seedKey = '';
     private seed = 0;
@@ -273,6 +273,8 @@ export class TerrainRenderer {
         const r = Math.floor(py / TILE);
         const k = r * this.cols + c;
         for (const reg of this.fakeRegions) {
+            // ciò che l'ordine ha raddrizzato resta dritto finché non si spezza
+            if (reg.straight) continue;
             const inside = reg.cells.has(k) || reg.cells.has(k - this.cols);
             if (inside && !reg.revealed) {
                 reg.revealed = true;
@@ -575,8 +577,41 @@ export class TerrainRenderer {
             const key = `terrain-fake-${seed}-${idx++}`;
             this.addTexture(key, el);
             const image = this.scene.add.image(bounds.x, bounds.y, key).setOrigin(0, 0).setDepth(5).setPipeline('Light2D');
-            this.fakeRegions.push({ image, cells: comp, revealed: false });
+            this.fakeRegions.push({ image, cells: comp, revealed: false, straight: false });
         }
+    }
+
+    /** solo i grumi che toccano le pareti scelte diventano opachi: l'ordine non tocca il resto */
+    straightenFakeWalls(walls: readonly Phaser.Physics.Arcade.Sprite[]): void {
+        for (const reg of this.regionsFor(walls)) {
+            if (reg.straight) continue;
+            reg.straight = true;
+            reg.revealed = true;
+            this.scene.tweens.add({ targets: reg.image, alpha: 1, duration: 380, ease: 'Sine.easeOut' });
+        }
+    }
+
+    /** la rottura restituisce i grumi al loro falso: niente muri veri nel save */
+    releaseStraightenedWalls(walls: readonly Phaser.Physics.Arcade.Sprite[]): void {
+        for (const reg of this.regionsFor(walls)) {
+            if (!reg.straight) continue;
+            reg.straight = false;
+            reg.revealed = false;
+            this.scene.tweens.add({ targets: reg.image, alpha: 1, duration: 380, ease: 'Sine.easeOut' });
+        }
+    }
+
+    private regionsFor(walls: readonly Phaser.Physics.Arcade.Sprite[]): { image: Phaser.GameObjects.Image; cells: Set<number>; revealed: boolean; straight: boolean }[] {
+        if (!this.cols) return [];
+        const out = new Map<Phaser.GameObjects.Image, { image: Phaser.GameObjects.Image; cells: Set<number>; revealed: boolean; straight: boolean }>();
+        for (const w of walls) {
+            if (!w.active) continue;
+            const k = Math.floor(w.y / TILE) * this.cols + Math.floor(w.x / TILE);
+            for (const reg of this.fakeRegions) {
+                if (reg.cells.has(k)) out.set(reg.image, reg);
+            }
+        }
+        return [...out.values()];
     }
 
     private addTexture(key: string, el: HTMLCanvasElement): void {

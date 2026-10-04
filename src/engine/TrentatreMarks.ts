@@ -24,6 +24,7 @@ const SEEN_R = 280;
 export class TrentatreMarks {
     private scene: Phaser.Scene;
     private marks: Mark[] = [];
+    private extinguished: { img: Phaser.GameObjects.Image; alpha: number }[] = [];
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -107,5 +108,34 @@ export class TrentatreMarks {
             m.img.destroy();
         }
         this.marks = [];
+        this.extinguished = [];
+    }
+
+    /** l'ordine spegne i segni delle pareti scelte, senza romperli: restano nel save */
+    extinguishWalls(walls: readonly Phaser.Physics.Arcade.Sprite[]): void {
+        for (const m of this.marks) {
+            if (m.gone) continue;
+            if (this.extinguished.some((e) => e.img === m.img)) continue;
+            if (!m.walls.some((w) => walls.includes(w))) continue;
+            this.extinguished.push({ img: m.img, alpha: m.img.alpha });
+            this.scene.tweens.add({ targets: m.img, alpha: 0, duration: 500, ease: 'Sine.easeIn' });
+        }
+    }
+
+    /** la rottura riaccende i segni spenti, con un filo di luce */
+    restoreExtinguished(): void {
+        for (const e of this.extinguished) {
+            if (!e.img.scene) continue;
+            try {
+                const glow = this.scene.add.particles(e.img.x, e.img.y, 'p-spark', {
+                    speed: { min: 20, max: 80 }, scale: { start: 0.6, end: 0 },
+                    tint: 0x7dd3fc, lifespan: 400, quantity: 6, stopAfter: 6,
+                });
+                glow.setDepth(6);
+                this.scene.time.delayedCall(600, () => glow.destroy());
+            } catch { /* test */ }
+            this.scene.tweens.add({ targets: e.img, alpha: e.alpha, duration: 600, ease: 'Sine.easeOut' });
+        }
+        this.extinguished = [];
     }
 }
