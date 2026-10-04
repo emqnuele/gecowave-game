@@ -99,6 +99,17 @@ export function isSkinPixel(r: number, g: number, b: number, a: number): boolean
     return s >= SAT_MIN && l >= LIGHT_MIN && l <= LIGHT_MAX && hueDist(h, SOURCE_SKIN_HUE) <= HUE_WINDOW;
 }
 
+/* Il boost di saturazione cresce con la saturazione d'origine: i pixel
+   quasi-grigi hanno hue rumoroso e non devono diventare confetti. */
+const SAT_RAMP_TOP = 0.16;
+
+function boostFactor(s: number, satMul: number): number {
+    if (satMul <= 1) return satMul;
+    const t = Math.min(1, Math.max(0, (s - SAT_MIN) / (SAT_RAMP_TOP - SAT_MIN)));
+    const eased = t * t * (3 - 2 * t);
+    return 1 + (satMul - 1) * eased;
+}
+
 /**
  * Ricolora in place i pixel di pelle di un buffer RGBA.
  * Conserva shading (lightness) e variazione di tinta: solo lo hue ruota.
@@ -118,8 +129,10 @@ export function recolorSkinPixels(data: Uint8ClampedArray, preset: SkinPreset): 
         const [h, s, l] = rgbToHsl(r, g, b);
         if (s < SAT_MIN || l < LIGHT_MIN || l > LIGHT_MAX) continue;
         if (hueDist(h, SOURCE_SKIN_HUE) > HUE_WINDOW) continue;
-        const nh = target + (h - SOURCE_SKIN_HUE) * 0.75;
-        const ns = Math.min(1, Math.max(0, s * (preset.satMul ?? 1)));
+        // la variazione di tinta si comprime: il dipinto resta nel luma,
+        // il jitter cromatico non diventa confetti
+        const nh = target + (h - SOURCE_SKIN_HUE) * 0.4;
+        const ns = Math.min(1, Math.max(0, s * boostFactor(s, preset.satMul ?? 1)));
         const nl = Math.min(0.92, Math.max(0.02, l + (preset.lightAdd ?? 0)));
         const [nr, ng, nb] = hslToRgb(nh, ns, nl);
         data[i] = nr;
@@ -200,8 +213,8 @@ export function skinFinalCss(preset: SkinPreset): string {
     const [h, s, l] = rgbToHsl(...SKIN_BASE_PIXEL);
     const target = preset.hue ?? SOURCE_SKIN_HUE;
     const [r, g, b] = hslToRgb(
-        target + (h - SOURCE_SKIN_HUE) * 0.75,
-        Math.min(1, Math.max(0, s * (preset.satMul ?? 1))),
+        target + (h - SOURCE_SKIN_HUE) * 0.4,
+        Math.min(1, Math.max(0, s * boostFactor(s, preset.satMul ?? 1))),
         Math.min(0.92, Math.max(0.02, l + (preset.lightAdd ?? 0))),
     );
     return `rgb(${Math.min(255, Math.round(r * L.r))},${Math.min(255, Math.round(g * L.g))},${Math.min(255, Math.round(b * L.b))})`;
