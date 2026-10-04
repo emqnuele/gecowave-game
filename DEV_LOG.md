@@ -251,6 +251,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: `NucleusStraightening` (solo nucleo, solo `glitchpedro` ingaggiato) con tre soglie in rapporto hp (`transitionFor`: 2/3, 1/3, 0.15 di maxHp, oggi 80/40/18 su 120): 1) sovralinee bianco-ciano sui bordi delle piattaforme dell'arena; 2) solo i muri `F` dentro l'arena diventano opachi e solidi, con 33 spenti; 3) griglia sottile, bordi rossi, velo quasi nero, musica filtrata e una sola riga schivabile (4 colpi, 3 buchi) dalla parte opposta al geco via `onEnemyShoot`. Ogni soglia ha 650 ms di preavviso con bark dell'ordine; le soglie saltate in un colpo si accodano e mantengono tutte il preavviso. Predicati anti-softlock per ogni `F`: dentro l'arena, lontano dai varchi (`doorRects` della scena) e dagli attori; senza candidati la fase 2 resta visiva. Alla sconfitta `shatter()` toglie prima le collisioni e poi la grafica, ripristina musica e 33, e riaccende un singolo 33 vicino a pedro. `TerrainRenderer.straightenFakeWalls/releaseStraightenedWalls` e `TrentatreMarks.extinguishWalls/restoreExtinguished` lavorano solo sui grumi scelti; `music.setOrder` passa dallo stesso grafo acustico di notte/roccia (8 kHz, 4,5 kHz, 2,8 kHz); `sfx.straighten/orderLock/orderBreak` sintetizzati, muti senza WebAudio. `pedro-redento` era già solo pedro: niente da togliere.
 **Conseguenze**: niente JSON mutato, niente flag di fase nel save (il reload ricostruisce tutto dalla vita del boss), patto e dei invariati. Dato reale: l'arena del nucleo generato contiene zero `F` (gli 8 stanno nelle stanze 14/29), quindi la fase 2 oggi è visiva; la meccanica resta pronta se la regione verrà rigenerata. `simcheck nucleo` invariato (uscita raggiungibile, zero trappole). Prova in gioco non fatta (serve permesso browser).
 
+### ADR-042 — il rimando tocca il boss una volta sola
+**Contesto**: il tommasoscudo rimandava i proiettili con homing che restava addosso al boss e colpiva a ogni frame (0.6 a colpo, decine di colpi): pedro veniva praticamente oneshottato. Contro i nemici normali il problema non c'era (`hitSet` già presente).
+**Decisione**: i proiettili con `reflected` segnano `bossHit` al primo contatto col boss e poi passano oltre. Valori invariati (0.6 perfetto, 0.25 normale), difesa invariata (1,6 s di immunità ai colpi, parry fisico senza danno), lezione delle telecamere intatta.
+**Conseguenze**: lo scudo resta forte per sopravvivere, non per sciogliere i boss; il contatto diretto dei boss passa comunque lo scudo.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -295,6 +300,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **il rimando tocca il boss una volta sola**: niente più mitraglia da homing contro i boss (ADR-042).
 - **l'ordine raddrizza il nucleo**: tre fasi visibili e giocabili contro il glitch, solo muri finti sicuri, rottura inversa col 33 che torna (ADR-041).
 - **mangiare fa rumore**: il cibo emette la cura istantanea, i boss tornano a parlare, l'ombra non punisce (ADR-040).
 - **l'ombra impara localmente**: profilo per partita nel save, cervello con finestra live e cooldown, segnali prima di ogni contromossa, HP quasi piatti (ADR-039).

@@ -2262,6 +2262,10 @@ export class GameScene extends Phaser.Scene {
                 if (!this.boss || !bullet.active) return;
                 const level = (bullet.getData('level') as number | undefined) ?? -1;
                 if (bullet.getData('reflected')) {
+                    // il rimando tocca il boss una volta sola: l'homing restava
+                    // addosso e mitragliava a ogni frame
+                    if (bullet.getData('bossHit')) return;
+                    bullet.setData('bossHit', true);
                     const dmg = (bullet.getData('dmg') as number | undefined) ?? COMBAT.scudoReflectNormal;
                     if (this.dmgTo(this.boss, dmg, bullet.x, 'shot')) this.player.onAttackHit();
                 } else {
