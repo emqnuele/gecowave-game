@@ -531,7 +531,49 @@ const pedro: CreatureSpec = {
     },
 };
 
+const glitch: CreatureSpec = {
+    key: 'boss-glitch', w: 84, h: 96,
+    draw(p, t, f) {
+        const y = sin(t) * 1.2;
+        const j = (k: number) => (f === k ? 2 : 0);
+        aura(p, 42, 48, 48, 0xf87171, 0.2);
+        aura(p, 42, 48, 30, 0xf8fafc, 0.1);
+        // fili a piombo: dritti sempre, l'ordine non oscilla
+        for (const x of [16, 68]) {
+            p.line([{ x, y: 6 + y }, { x, y: 64 + y }], 1.2, 0x3f4f58);
+            p.shape(p.rect(x - 3, 64 + y, 6, 9), 0x52525b, { smooth: 0, hatch: 0.3, rim: 0xfca5a5 });
+            p.glow(x, 68 + y, 1, 0xf87171, 0.8);
+        }
+        // regolo verticale graduato
+        p.shape(p.rect(38, 8 + y, 8, 80), 0x6b7280, { smooth: 0, hatch: 0.4, rim: 0xfee2e2 });
+        for (let i = 0; i < 9; i++) {
+            const ty = 14 + y + i * 8;
+            p.line([{ x: 38, y: ty }, { x: 38 + (i % 2 ? 4 : 6), y: ty }], 0.8, 0x1f2937);
+        }
+        // traversa rigida con il filo rosso sopra
+        p.shape(p.rect(8, 40 + y, 68, 7), 0x374151, { smooth: 0, hatch: 0.4 });
+        p.line([{ x: 8, y: 40 + y }, { x: 76, y: 40 + y }], 1, 0xf87171);
+        // squadra scura in basso a sinistra
+        p.shape([{ x: 10 + j(3), y: 62 + y }, { x: 30 + j(3), y: 62 + y }, { x: 10 + j(3), y: 88 + y }], 0x1f2937, { smooth: 0, hatch: 0.3, rim: 0xf87171 });
+        // blocchi censurati che tremano a scatti
+        p.shape(p.rect(56 - j(1), 52 + y, 14, 5), 0x111827, { smooth: 0, hatch: 0 });
+        p.shape(p.rect(60 + j(2), 70 + y, 10, 5), 0x111827, { smooth: 0, hatch: 0 });
+        // sigillo centrale: disco scuro, un solo occhio arrabbiato
+        p.shape(p.ellipse(42, 30 + y, 13, 13), 0x0b0d12, { hatch: 0.2, rim: 0xf87171 });
+        p.lit(p.ellipse(42, 30 + y, 13, 13), 0xf87171, 0.5);
+        p.eye(42, 29 + y, 4, 0xf8fafc, { angry: 0.6, socket: false });
+        // il timbro lampeggia a fotogrammi alterni
+        if (f % 2) label(p, 'TU', 36, 52 + y, 8, '#f87171', true);
+        // pennino correttore verso il basso
+        p.limb([{ x: 50, y: 58 + y }, { x: 60, y: 74 + y }, { x: 63, y: 84 + y }], 3, 1.2, 0x1f2937, { hatch: 0 });
+        p.glow(63, 84 + y, 1.4, 0xf87171, 0.9);
+        // fette di glitch come nel corpo di prima, ma qui sono la regola
+        if (f === 1) p.lit(p.rect(20, 22 + y, 44, 1.6), 0xf87171, 0.6);
+        if (f === 3) p.lit(p.rect(24, 60 + y, 40, 1.2), 0xf8fafc, 0.6);
+    },
+};
+
 export const BOSS_ART: CreatureSpec[] = [
-    guggu, breccio, notino, riba, lochef, ombra, ticummi, furgone, danjilo, smela, limite, teorema, pedrino, formicona, pedro,
+    guggu, breccio, notino, riba, lochef, ombra, ticummi, furgone, danjilo, smela, limite, teorema, pedrino, formicona, pedro, glitch,
     ...BOSS_ART_VOID,
 ];

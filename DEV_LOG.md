@@ -261,6 +261,11 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: buio e dip restano fissi al centro dello schermo; foschia e luna sul palco in coordinate mondo; `GameScene.findFlatStage` sceglie il tratto piano più largo entro 2400 px mai nell'arena del boss (ripiego: accanto al geco come prima); durante il film scena salta nemici, nidi, boss, voci, ombra e ingaggi (il telegraph dell'ordine si allunga, mai si accorcia); i timer d'ingresso passano da `later()` così lo skip li cancella. La sagoma spenta di pedro accanto al glitch resta: è voluta (il glitch esce da lui).
 **Conseguenze**: niente più boss visibili o attivi nei ricordi; i dialoghi di ingaggio aspettano la fine del film invece di accodarsi sopra.
 
+### ADR-044 — l'ordine ha una faccia sua
+**Contesto**: il glitch usava il corpo di pedro (`boss-pedro`): accanto alla sagoma spenta la scena non si leggeva, sembrava un duplicato buggato.
+**Decisione**: foglio nuovo `boss-glitch`, frontale e simmetrico: fili a piombo dritti, regolo graduato, traversa col filo rosso, squadra scura, sigillo con un occhio solo e timbro `TU` che lampeggia, pennino correttore. Voce glitchata tenuta (`bossVoice: glitch` nel ramo di pedro), apparizione di pedro invariata.
+**Conseguenze**: pedro spento, ricordo di pedro e ordine sono tre sagome diverse; galleria e anteprime lo pescano da sole.
+
 ---
 
 ## 3. Vincoli e note tecniche
@@ -305,6 +310,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ---
 
 ## 5. Cronologia
+- **l'ordine ha una faccia sua**: foglio nuovo per il glitch, niente più gemello di pedro (ADR-044).
 - **i flashback congelano il combattimento**: buio fisso a schermo, palco piano fuori dall'arena, boss e ingaggi fermi durante il film (ADR-043).
 - **il rimando tocca il boss una volta sola**: niente più mitraglia da homing contro i boss (ADR-042).
 - **l'ordine raddrizza il nucleo**: tre fasi visibili e giocabili contro il glitch, solo muri finti sicuri, rottura inversa col 33 che torna (ADR-041).

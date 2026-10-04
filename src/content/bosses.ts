@@ -313,7 +313,7 @@ export const BOSSES: Record<BossKind, BossDef> = {
     glitchpedro: {
         kind: 'glitchpedro',
         name: 'il glitch (l\'ordine di lametta)',
-        texture: 'boss-pedro',
+        texture: 'boss-glitch',
         hp: 120,
         glowColor: 0xf87171,
         attacks: {

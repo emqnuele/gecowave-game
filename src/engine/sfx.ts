@@ -376,7 +376,7 @@ class Sfx {
                 this.tone(233, 700, { type: 'sawtooth', vol: 0.05, attackMs: 20 });
                 this.tone(294, 700, { type: 'sawtooth', vol: 0.04, attackMs: 20 });
                 break;
-            case 'pedro': case 'ombra': case 'modello':
+            case 'pedro': case 'glitch': case 'ombra': case 'modello':
                 for (let i = 0; i < 6; i++) this.tone(120 + Math.random() * 1800, 45, { type: 'square', vol: 0.03, delayMs: i * 38 });
                 this.noise(200, { freq: 3000, q: 0.6, vol: 0.05 });
                 break;
