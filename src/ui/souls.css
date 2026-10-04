@@ -1486,6 +1486,13 @@ input.sx-range::-moz-range-thumb {
   width: min(640px, 100%);
 }
 
+/* le azioni stanno da sole: stacco netto dal contenuto sopra */
+.sx-step > .sx-menu.row {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sx-line);
+}
+
 /* ---------- animazioni ---------- */
 
 @keyframes sx-in {
