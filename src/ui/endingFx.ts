@@ -2,7 +2,8 @@ import { ui } from './dom';
 
 /* fuochi e sangue dei titoli di coda: una tela sopra tutto, niente phaser.
    win = razzi che salgono e scoppiano in scie con gravità e crepitio;
-   lose = gocce di sangue sull'obiettivo che colano, cadono e schizzano. */
+   lose = schizzi arteriosi sull'obiettivo: stella con filamenti, satelliti,
+   nebbiolina e coli, cotti in una tela statica. */
 
 export type EndingFxMode = 'win' | 'lose';
 
@@ -38,6 +39,15 @@ interface Droplet {
     life: number; r: number;
 }
 
+/** uno schizzo cotto: tela prerenderizzata, posizione, scala, nascita */
+interface Baked {
+    sprite: HTMLCanvasElement;
+    x: number; y: number;
+    scale: number; rot: number;
+    born: number;
+    stored: boolean;
+}
+
 export class EndingFx {
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;
@@ -50,7 +60,10 @@ export class EndingFx {
     private sparks: Spark[] = [];
     private flashes: Flash[] = [];
     private droplets: Droplet[] = [];
-    private specks: { x: number; y: number; r: number; soft: boolean }[] = [];
+    private baked: Baked[] = [];
+    private still: HTMLCanvasElement | null = null;
+    private stillCtx: CanvasRenderingContext2D | null = null;
+    private pending: { at: number; x: number; y: number; radius: number }[] = [];
     private nextLaunch = 0;
     private lastActive = 0;
     private onResize = (): void => this.resize();
@@ -75,9 +88,7 @@ export class EndingFx {
         if (this.mode === 'lose') {
             // tre impatti nei primi secondi, poi l'obiettivo resta sporco e fermo
             this.lastActive = performance.now();
-            this.lensHit(300, true);
-            this.lensHit(2500, false);
-            this.lensHit(5200, Math.random() < 0.5);
+            this.scheduleHits();
         }
         this.running = true;
         this.last = performance.now();
@@ -91,7 +102,7 @@ export class EndingFx {
             const dt = Math.min(0.05, (now - this.last) / 1000);
             this.last = now;
             if (this.mode === 'win') this.stepFireworks(dt, now / 1000);
-            else this.stepBlood(dt, now / 1000);
+            else this.stepBlood(dt, now);
             this.raf = requestAnimationFrame(tick);
         };
         this.raf = requestAnimationFrame(tick);
@@ -114,6 +125,13 @@ export class EndingFx {
         this.canvas.width = Math.round(this.w * dpr);
         this.canvas.height = Math.round(this.h * dpr);
         this.ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // tela statica alla stessa scala: ci si cuoce dentro il sangue fermo
+        const still = document.createElement('canvas');
+        still.width = this.canvas.width;
+        still.height = this.canvas.height;
+        this.still = still;
+        this.stillCtx = still.getContext('2d');
+        this.stillCtx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     /* ---------- fuochi ---------- */
@@ -248,119 +266,215 @@ export class EndingFx {
 
     /* ---------- sangue ---------- */
 
-    /** un impatto sull'obiettivo: alone sfocato, nucleo nitido, satelliti */
-    private lensHit(delayMs: number, big: boolean): void {
-        const at = performance.now() + delayMs;
-        const x = this.w * (0.15 + Math.random() * 0.7);
-        const y = this.h * (0.15 + Math.random() * 0.6);
-        const timer = window.setInterval(() => {
-            if (performance.now() < at) return;
-            window.clearInterval(timer);
-            if (!this.running) return;
-            // alone fuori fuoco: grande, morbido, resta
-            const r = big ? 60 + Math.random() * 70 : 30 + Math.random() * 40;
-            this.specks.push({ x, y, r, soft: true });
-            // strisciata: 5 aloni lungo un tratto breve
-            const a = Math.random() * Math.PI;
-            for (let i = 0; i < 5; i++) {
-                this.specks.push({
-                    x: x + Math.cos(a) * (i - 2) * r * 0.35,
-                    y: y + Math.sin(a) * (i - 2) * r * 0.35,
-                    r: r * (0.5 - Math.abs(i - 2) * 0.08),
-                    soft: true,
-                });
+    /** uno schizzo arterioso cotto in una tela: stella con filamenti, satelliti, coli */
+    private makeSplat(radius: number): HTMLCanvasElement {
+        const side = Math.ceil(radius * 3.4);
+        const c = document.createElement('canvas');
+        c.width = side;
+        c.height = side;
+        const g = c.getContext('2d');
+        if (!g) return c;
+        const cx = side / 2;
+        const cy = side / 2;
+        // filamenti: dita lunghe e sottili in tutte le direzioni
+        const spikes = 14 + Math.floor(Math.random() * 8);
+        g.fillStyle = '#c1121f';
+        for (let i = 0; i < spikes; i++) {
+            const a = (Math.PI * 2 * i) / spikes + (Math.random() - 0.5) * 0.5;
+            const len = radius * (0.7 + Math.random() * 0.9);
+            const wdt = 1.5 + Math.random() * (radius * 0.09);
+            const tipX = cx + Math.cos(a) * len;
+            const tipY = cy + Math.sin(a) * len;
+            g.strokeStyle = '#c1121f';
+            g.lineWidth = wdt;
+            g.lineCap = 'round';
+            g.beginPath();
+            g.moveTo(cx + Math.cos(a) * radius * 0.3, cy + Math.sin(a) * radius * 0.3);
+            g.lineTo(tipX, tipY);
+            g.stroke();
+            // perlina in punta a metà dei filamenti
+            if (Math.random() < 0.5) {
+                g.fillStyle = '#e5383b';
+                g.beginPath();
+                g.arc(tipX, tipY, wdt * 0.8, 0, Math.PI * 2);
+                g.fill();
+                g.fillStyle = '#c1121f';
             }
-            // nucleo nitido + satelliti che atterrano lì intorno
-            this.dropToSpecks(x, y, big ? 9 + Math.random() * 5 : 5 + Math.random() * 4);
-            const n = big ? 10 : 6;
-            for (let i = 0; i < n; i++) {
-                const ang = Math.random() * Math.PI * 2;
-                const sp = 120 + Math.random() * 300;
-                this.droplets.push({
-                    x, y, px: x, py: y,
-                    vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 60,
-                    life: 0.4 + Math.random() * 0.35,
-                    r: 1.2 + Math.random() * 2.6,
-                });
-            }
-            this.lastActive = performance.now();
-        }, 120);
+        }
+        // corpo: stella irregolare rosso vivo
+        const lobes = 9 + Math.floor(Math.random() * 5);
+        g.fillStyle = '#c1121f';
+        g.beginPath();
+        for (let i = 0; i <= lobes; i++) {
+            const a = (Math.PI * 2 * i) / lobes;
+            const rr = radius * (0.55 + Math.random() * 0.5);
+            const x = cx + Math.cos(a) * rr;
+            const y = cy + Math.sin(a) * rr;
+            if (i === 0) g.moveTo(x, y);
+            else g.lineTo(x, y);
+        }
+        g.closePath();
+        g.fill();
+        // cuore scuro al centro
+        const core = radius * 0.5;
+        const grad = g.createRadialGradient(cx, cy, 0, cx, cy, core);
+        grad.addColorStop(0, '#7f1d1d');
+        grad.addColorStop(1, 'rgba(127,29,29,0)');
+        g.fillStyle = grad;
+        g.beginPath();
+        g.arc(cx, cy, core, 0, Math.PI * 2);
+        g.fill();
+        // coli: 2-4 rigagnoli che scendono con la perlina in fondo
+        const drips = 2 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < drips; i++) {
+            const dx = cx + (Math.random() - 0.5) * radius;
+            const len = radius * (0.5 + Math.random() * 0.8);
+            g.strokeStyle = '#b30f0f';
+            g.lineWidth = 2 + Math.random() * 2;
+            g.lineCap = 'round';
+            g.beginPath();
+            g.moveTo(dx, cy + radius * 0.4);
+            g.lineTo(dx + (Math.random() - 0.5) * 8, cy + radius * 0.4 + len);
+            g.stroke();
+            g.fillStyle = '#e5383b';
+            g.beginPath();
+            g.arc(dx, cy + radius * 0.4 + len, 2.5 + Math.random() * 2, 0, Math.PI * 2);
+            g.fill();
+        }
+        // nebbiolina: puntini fitti attorno
+        for (let i = 0; i < 46; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const d = radius * (0.9 + Math.random() * 0.7);
+            g.fillStyle = Math.random() < 0.7 ? '#c1121f' : '#e5383b';
+            g.beginPath();
+            g.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0.6 + Math.random() * 1.4, 0, Math.PI * 2);
+            g.fill();
+        }
+        // riflessi bagnati sui lobi in alto a sinistra
+        g.fillStyle = 'rgba(255,150,150,0.5)';
+        for (let i = 0; i < 4; i++) {
+            const a = Math.PI * (0.9 + Math.random() * 0.5);
+            const d = radius * (0.2 + Math.random() * 0.35);
+            g.beginPath();
+            g.ellipse(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 3 + Math.random() * 4, 1.5 + Math.random() * 2, -0.5, 0, Math.PI * 2);
+            g.fill();
+        }
+        return c;
     }
 
-    private dropToSpecks(x: number, y: number, r: number): void {
-        this.specks.push({ x, y, r, soft: false });
-        for (let i = 0; i < 5; i++) {
-            this.specks.push({
-                x: x + (Math.random() - 0.5) * r * 7,
-                y: y + (Math.random() - 0.5) * r * 6,
-                r: 0.8 + Math.random() * 2,
-                soft: false,
+    private bakeSprite(b: Baked): void {
+        const s = this.stillCtx;
+        if (!s) return;
+        const side = b.sprite.width;
+        s.save();
+        s.translate(b.x, b.y);
+        s.rotate(b.rot);
+        s.scale(b.scale, b.scale);
+        s.drawImage(b.sprite, -side / 2, -side / 2);
+        s.restore();
+    }
+
+    private bakeDot(x: number, y: number, r: number, bright: boolean): void {
+        const s = this.stillCtx;
+        if (!s) return;
+        s.fillStyle = bright ? '#e5383b' : '#c1121f';
+        s.beginPath();
+        s.arc(x, y, r, 0, Math.PI * 2);
+        s.fill();
+    }
+
+    private scheduleHits(): void {
+        const now = performance.now();
+        // uno per fascia orizzontale: copre l'obiettivo senza impastare il centro
+        const zones = [0.2, 0.5, 0.8].sort(() => Math.random() - 0.5);
+        const delays = [350, 2100, 3900];
+        for (let i = 0; i < 3; i++) {
+            this.pending.push({
+                at: now + delays[i],
+                x: this.w * (zones[i] + (Math.random() - 0.5) * 0.12),
+                y: this.h * (0.2 + Math.random() * 0.45),
+                radius: Math.min(this.w, this.h) * (0.09 + Math.random() * 0.08),
             });
         }
-        if (this.specks.length > 220) this.specks.splice(0, this.specks.length - 220);
     }
 
-    private stepBlood(dt: number, t: number): void {
+    private strike(p: { x: number; y: number; radius: number }): void {
+        const sprite = this.makeSplat(p.radius);
+        this.baked.push({ sprite, x: p.x, y: p.y, scale: 0.01, rot: Math.random() * Math.PI * 2, born: performance.now(), stored: false });
+        for (let i = 0; i < 12; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const sp = 200 + Math.random() * 320;
+            this.droplets.push({
+                x: p.x, y: p.y, px: p.x, py: p.y,
+                vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80,
+                life: 0.3 + Math.random() * 0.25,
+                r: 1.5 + Math.random() * 2.5,
+            });
+        }
+        this.lastActive = performance.now();
+    }
+
+    private stepBlood(_dt: number, nowMs: number): void {
         const ctx = this.ctx;
         if (!ctx) return;
-        void t;
+        // impatti in arrivo
+        for (let i = this.pending.length - 1; i >= 0; i--) {
+            if (nowMs >= this.pending[i].at) {
+                const p = this.pending.splice(i, 1)[0];
+                this.strike(p);
+            }
+        }
         ctx.clearRect(0, 0, this.w, this.h);
-        // tutto quello che è atterrato resta lì, fermo
-        for (const p of this.specks) this.dropBlob(ctx, p.x, p.y, p.r, p.soft);
-        // satelliti in volo: scia corta, poi restano dove cadono
+        if (this.still) ctx.drawImage(this.still, 0, 0, this.w, this.h);
+        // schizzi che sbocciano con un colpo secco
+        for (const b of this.baked) {
+            const k = Math.min(1, (nowMs - b.born) / 450);
+            const e = 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2);
+            const side = b.sprite.width;
+            const draw = (c: CanvasRenderingContext2D): void => {
+                c.save();
+                c.translate(b.x, b.y);
+                c.rotate(b.rot);
+                c.scale(b.scale * e, b.scale * e);
+                c.drawImage(b.sprite, -side / 2, -side / 2);
+                c.restore();
+            };
+            draw(ctx);
+            if (k >= 1 && !b.stored) {
+                b.stored = true;
+                this.bakeSprite(b);
+                this.lastActive = nowMs;
+            }
+        }
+        // satelliti in volo: scia corta, poi restano cotti dentro
         for (let i = this.droplets.length - 1; i >= 0; i--) {
             const d = this.droplets[i];
-            d.life -= dt;
-            d.vy += 780 * dt;
+            d.life -= _dt;
+            d.vy += 900 * _dt;
             d.px = d.x;
             d.py = d.y;
-            d.x += d.vx * dt;
-            d.y += d.vy * dt;
+            d.x += d.vx * _dt;
+            d.y += d.vy * _dt;
             if (d.life <= 0) {
-                this.dropToSpecks(d.x, d.y, d.r);
+                this.bakeDot(d.x, d.y, d.r, Math.random() < 0.4);
                 this.droplets.splice(i, 1);
                 continue;
             }
-            ctx.strokeStyle = '#7d1212';
-            ctx.lineWidth = d.r * 1.4;
+            ctx.strokeStyle = '#e5383b';
+            ctx.lineWidth = d.r * 1.5;
             ctx.lineCap = 'round';
             ctx.beginPath();
             ctx.moveTo(d.px, d.py);
             ctx.lineTo(d.x, d.y);
             ctx.stroke();
-            this.dropBlob(ctx, d.x, d.y, d.r, false);
+            ctx.fillStyle = '#e5383b';
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+            ctx.fill();
         }
-        // a impatti finiti il loop si spegne: la tela tiene l'ultimo frame
-        if (!this.droplets.length && performance.now() - this.lastActive > 2500) {
+        // a impatti finiti il loop si spegne: resta tutto cotto dentro
+        if (!this.pending.length && !this.droplets.length && nowMs - this.lastActive > 1500) {
             this.running = false;
         }
-    }
-
-    private dropBlob(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, soft: boolean): void {
-        if (soft) {
-            // fuori fuoco: alone largo che sfuma, niente bordo
-            const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-            g.addColorStop(0, 'rgba(125,18,18,0.5)');
-            g.addColorStop(0.6, 'rgba(110,14,14,0.28)');
-            g.addColorStop(1, 'rgba(110,14,14,0)');
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
-            return;
-        }
-        const g = ctx.createRadialGradient(x - r * 0.25, y - r * 0.3, r * 0.1, x, y, r);
-        g.addColorStop(0, '#b02323');
-        g.addColorStop(0.55, '#7d1212');
-        g.addColorStop(1, '#4a0a0a');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-        // riflesso: vetro bagnato, non plastica
-        ctx.fillStyle = 'rgba(255,150,150,0.32)';
-        ctx.beginPath();
-        ctx.ellipse(x - r * 0.28, y - r * 0.32, r * 0.3, r * 0.18, -0.5, 0, Math.PI * 2);
-        ctx.fill();
     }
 }
