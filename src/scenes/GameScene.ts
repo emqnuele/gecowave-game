@@ -1779,6 +1779,11 @@ export class GameScene extends Phaser.Scene {
             bus.emit('abilities-changed', { abilities: state.abilities });
             bus.emit('fragments-changed', { count: state.abilities.length, total: TOTAL_FRAGMENTS });
             bus.emit('ability-unlocked', { ability });
+            // la prima wave insegna i 33: una nota sola, poi parlano i muri
+            if (!state.hasFlag('sigilli-spiegati')) {
+                state.setFlag('sigilli-spiegati');
+                this.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.markolinoSigilli));
+            }
         });
     }
 
@@ -2307,11 +2312,17 @@ export class GameScene extends Phaser.Scene {
             state.observeOmbra(act);
             this.ombraBrain?.observeLive(act);
         }) as never);
-        // mangiare cura d'un colpo: le voci reagiscono, il profilo no (instant)
+        // mangiare è un canale da interrompere: l'ombra legge inizio e fine
         const offHealed = bus.on('player-healed', () => {
-            this.events.emit('player-act', { act: 'heal', instant: true });
+            this.events.emit('player-act', { act: 'heal' });
         });
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offHealed());
+        // dal telefono si ordina, nel mondo si mangia: il boccone parte qui
+        const offEat = bus.on('eat-requested', ({ id }) => {
+            const msg = this.player.startEat(id);
+            if (msg) bus.emit('toast', { text: msg });
+        });
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offEat());
         on('boss-phase', (({ phase }: { phase: number }) => this.voice?.say(phase === 2 ? 'phase2' : 'phase3', true)) as never);
     }
 

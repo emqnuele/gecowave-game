@@ -111,6 +111,8 @@ export const COMBAT = {
     poisonBossMult: 1.15,
     /** trenbolone: più forte ma ti mangia da dentro */
     trenboloneDrainMs: 22000,
+    /** mangiare ti inchioda: il boccone si interrompe se prendi danno */
+    eatChannelMs: 700,
 } as const;
 
 export const PLAYER_SPRITE = {

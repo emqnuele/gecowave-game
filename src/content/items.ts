@@ -30,7 +30,7 @@ export const ITEMS: Record<string, ItemDef> = {
     },
     'panino-nonna': {
         id: 'panino-nonna', name: 'panino della nonna di markolino', icon: '🥪', kind: 'consumabile', price: 90,
-        desc: 'ridà 2 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
+        desc: 'ridà 3 vite. la nonna lo prepara per chiunque passi, anche per i nemici.',
         punch: 'c\'è dentro amore e mortadella.',
     },
 

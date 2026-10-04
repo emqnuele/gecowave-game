@@ -189,6 +189,11 @@ class Sfx {
         );
     }
     heal(): void { this.tone(440, 500, { type: 'sine', to: 880, vol: 0.08 }); }
+    /** due morsi: il boccone si sente prima di curare */
+    eat(): void {
+        this.noise(90, { freq: 1800, q: 1.5, vol: 0.12, to: 900 });
+        this.noise(90, { freq: 1600, q: 1.5, vol: 0.12, to: 800, delayMs: 220 });
+    }
     unlock(): void {
         [392, 523, 659, 784, 1046].forEach((f, i) =>
             this.tone(f, 320, { type: 'triangle', vol: 0.08, delayMs: i * 80 })

@@ -3,7 +3,7 @@ import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
 import { FX } from '../engine/art/abilityFx';
 import { bus } from '../engine/events';
 import type { Input } from '../engine/input/Input';
-import { quickHeal } from '../engine/inventory';
+import { completeEat, eatProblem, pickSnack } from '../engine/inventory';
 import type { PlayerAct } from '../engine/OmbraProfile';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -74,6 +74,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private stunnedUntil = 0;
     private nextSmelaStun = 0;
     private nextTrenDrain = 0;
+    /** boccone in corso: ci si inchioda finché non arriva o un danno lo rovina */
+    private eating: { id: string; until: number } | null = null;
+    private eatCrumbsAt = 0;
 
     constructor(scene: Phaser.Scene, x: number, y: number, input: Input) {
         super(scene, x, y, 'player', 0);
@@ -149,6 +152,27 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.invulnUntil = Math.max(this.invulnUntil, this.scene.time.now + ms);
     }
 
+    /** il boccone parte solo se c'è davvero: null = si mangia, testo = perché no */
+    startEat(id: string | null): string | null {
+        if (this.dead || this.hidden) return 'non adesso.';
+        if (this.eating) return 'stai già mangiando.';
+        const snack = id ?? pickSnack();
+        if (!snack) return 'niente da mangiare nello zaino. wavezon consegna ovunque.';
+        const problem = eatProblem(snack);
+        if (problem) return problem;
+        this.cancelCharge();
+        this.eating = { id: snack, until: this.scene.time.now + COMBAT.eatChannelMs };
+        this.eatCrumbsAt = 0;
+        sfx.eat();
+        this.act({ act: 'heal-start' });
+        return null;
+    }
+
+    /** il danno vero rovina il boccone: chi mangia deve stare al sicuro */
+    cancelEat(): void {
+        this.eating = null;
+    }
+
     get invulnerable(): boolean {
         return state.godMode || this.dashing || this.hidden || this.scene.time.now < this.invulnUntil;
     }
@@ -191,9 +215,34 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.updateMalus(now);
         this.updateBuffs(delta);
         if (this.hidden) {
+            this.cancelEat();
             body.setAccelerationX(0);
             body.setVelocity(0, 0);
             return;
+        }
+        if (this.eating) {
+            if (now >= this.eating.until) {
+                const done = this.eating;
+                this.eating = null;
+                bus.emit('toast', { text: completeEat(done.id) });
+                this.act({ act: 'heal' });
+            } else {
+                // inchiodato al boccone: niente comandi finché non arriva
+                body.setAccelerationX(0);
+                body.setVelocityX(body.velocity.x * 0.8);
+                if (now >= this.eatCrumbsAt) {
+                    this.eatCrumbsAt = now + 200;
+                    const crumbs = this.scene.add.particles(this.x, this.y - 10, 'p-dot', {
+                        speed: { min: 30, max: 90 }, angle: { min: 200, max: 340 },
+                        scale: { start: 0.4, end: 0 }, alpha: { start: 0.6, end: 0 },
+                        tint: 0xd97706, lifespan: 350, quantity: 3, stopAfter: 3,
+                    });
+                    this.scene.time.delayedCall(700, () => crumbs.destroy());
+                }
+                this.updateAnimation(body);
+                this.updateHitbox();
+                return;
+            }
         }
         if (this.stunned) {
             body.setAccelerationX(0);
@@ -382,7 +431,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.controls.released('wave')) this.waveConsumed = false;
         this.updateRisonante(now);
 
-        if (this.controls.pressed('eat')) bus.emit('toast', { text: quickHeal() });
+        if (this.controls.pressed('eat')) {
+            const msg = this.startEat(null);
+            if (msg) bus.emit('toast', { text: msg });
+        }
 
         if (this.controls.pressed('riflesso') && state.hasAbility('riflesso')) {
             // seconda pressione col clone vivo: scambio di posto, non un clone nuovo
@@ -434,6 +486,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.nextTrenDrain = now + COMBAT.trenboloneDrainMs;
                 if (state.run.hp > 1) {
                     state.run.hp -= 1;
+                    this.cancelEat();
                     bus.emit('toast', { text: 'il trenbolone ti mangia da dentro.' });
                     this.burst(0x84cc16, 6);
                     this.emitVitals(true);
@@ -715,6 +768,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     hurt(amount: number, fromX?: number): boolean {
         if (this.dead || this.invulnerable) return false;
         this.slamming = false;
+        this.cancelEat();
         state.run.hp = Math.max(0, state.run.hp - amount * state.mods.damageTaken);
         this.invulnUntil = this.scene.time.now + COMBAT.invulnMs;
         sfx.hurt();
@@ -751,6 +805,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     stun(duration: number): void {
         this.stunnedUntil = this.scene.time.now + duration;
+        this.cancelEat();
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.setAccelerationX(0);
         body.setVelocity(0, 0);

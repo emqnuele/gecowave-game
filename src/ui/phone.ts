@@ -10,7 +10,7 @@ import { deletePhoto, listPhotos, PHOTO_FILTERS, processPhoto, savePhoto, type P
 import { bus } from '../engine/events';
 import { matchesAction } from '../engine/input/actions';
 import { formatKeys, keyLabel } from '../engine/input/keyText';
-import { useItem } from '../engine/inventory';
+import { eatProblem } from '../engine/inventory';
 import { music } from '../engine/music';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
@@ -744,10 +744,13 @@ export class Phone {
                 use.textContent = 'usa';
                 const note = el('span', 'phone-note');
                 use.addEventListener('click', () => {
-                    const res = useItem(it.id);
-                    note.textContent = res.text;
-                    note.className = `phone-note ${res.ok ? 'good' : 'bad'}`;
-                    if (res.ok) window.setTimeout(() => this.renderInventory(root, state.count(it.id) > 0 ? it.id : undefined), 700);
+                    const problem = eatProblem(it.id);
+                    note.textContent = problem ?? 'chiudi e mangia: il boccone vuole tempo.';
+                    note.className = `phone-note ${problem ? 'bad' : 'good'}`;
+                    if (problem) return;
+                    // il telefono si chiude e il mondo riparte: il boccone vive lì
+                    bus.emit('eat-requested', { id: it.id });
+                    this.close();
                 });
                 actions.append(use, note);
                 detail.append(actions);

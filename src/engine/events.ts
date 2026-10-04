@@ -42,6 +42,8 @@ export interface GameEvents {
     'ombra-read': { label: string };
     /** il geco ha mangiato davvero: la scena lo gira alle voci in battaglia */
     'player-healed': {};
+    /** dal telefono si mangia sul serio: la scena avvia il boccone */
+    'eat-requested': { id: string };
     /** ultimo dispositivo usato: i testi mostrano i tasti veri */
     'input-device': { device: 'tastiera' | 'gamepad' };
     /** comandi cambiati: chi legge input si ricostruisce */

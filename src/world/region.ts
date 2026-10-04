@@ -37,9 +37,9 @@ const LETTER_POOL = '0123456789!?&$@*+=<>:;|/{}()[]_-abcdefghijklmnopqrstuvwxyzA
 const SIDE_REWARDS: { spec: EntitySpec; w: number }[] = [
     { spec: { type: 'barre', amount: 15 }, w: 30 },
     { spec: { type: 'barre', amount: 30 }, w: 14 },
-    { spec: { type: 'item', item: 'crocchetta', amount: 2 }, w: 16 },
+    { spec: { type: 'item', item: 'crocchetta', amount: 2 }, w: 10 },
     { spec: { type: 'barre', amount: 50 }, w: 14 },
-    { spec: { type: 'item', item: 'panino-nonna' }, w: 8 },
+    { spec: { type: 'item', item: 'panino-nonna' }, w: 5 },
 ];
 
 /** capitoli dove si nasconde una tacca per amuleti */
