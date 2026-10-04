@@ -32,17 +32,10 @@ interface Flash {
     x: number; y: number; r: number; a: number;
 }
 
-interface Runner {
-    x: number; y: number;
-    tail: { x: number; y: number }[];
-    speed: number; wob: number; seed: number;
-    w: number; left: number;
-}
-
-interface Faller {
-    x: number; y: number; vx: number; vy: number;
-    tail: { x: number; y: number }[];
-    w: number;
+interface Droplet {
+    x: number; y: number; px: number; py: number;
+    vx: number; vy: number;
+    life: number; r: number;
 }
 
 interface Splat {
@@ -61,12 +54,11 @@ export class EndingFx {
     private rockets: Rocket[] = [];
     private sparks: Spark[] = [];
     private flashes: Flash[] = [];
-    private runners: Runner[] = [];
-    private fallers: Faller[] = [];
+    private droplets: Droplet[] = [];
+    private specks: { x: number; y: number; r: number }[] = [];
     private splats: Splat[] = [];
     private nextLaunch = 0;
-    private nextRunner = 0;
-    private nextSplat = 0;
+    private nextBurst = 0;
     private onResize = (): void => this.resize();
     private mode: EndingFxMode;
 
@@ -87,7 +79,7 @@ export class EndingFx {
         window.addEventListener('resize', this.onResize);
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         if (this.mode === 'lose') {
-            for (let i = 0; i < 2; i++) this.runners.push(this.newRunner(true));
+            for (let i = 0; i < 2; i++) this.burst();
             this.splats.push(this.newSplat());
         }
         this.running = true;
@@ -259,17 +251,35 @@ export class EndingFx {
 
     /* ---------- sangue ---------- */
 
-    private newRunner(mid = false): Runner {
-        return {
-            x: Math.random() * this.w,
-            y: mid ? this.h * (0.2 + Math.random() * 0.3) : -12,
-            tail: [],
-            speed: 14 + Math.random() * 18,
-            wob: 5 + Math.random() * 9,
-            seed: Math.random() * 10,
-            w: 3 + Math.random() * 4,
-            left: 130 + Math.random() * 220,
-        };
+    /** uno schizzo: nucleo grosso, satellite scagliati, puntini che restano */
+    private burst(): void {
+        const x = this.w * (0.08 + Math.random() * 0.84);
+        const y = this.h * (0.08 + Math.random() * 0.7);
+        const big = 6 + Math.random() * 7;
+        this.dropToSpecks(x, y, big);
+        const n = 7 + Math.floor(Math.random() * 7);
+        for (let i = 0; i < n; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const sp = 90 + Math.random() * 260;
+            this.droplets.push({
+                x, y, px: x, py: y,
+                vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
+                life: 0.45 + Math.random() * 0.4,
+                r: 1.2 + Math.random() * 2.4,
+            });
+        }
+    }
+
+    private dropToSpecks(x: number, y: number, r: number): void {
+        this.specks.push({ x, y, r });
+        for (let i = 0; i < 5; i++) {
+            this.specks.push({
+                x: x + (Math.random() - 0.5) * r * 7,
+                y: y + (Math.random() - 0.5) * r * 6,
+                r: 0.8 + Math.random() * 2,
+            });
+        }
+        if (this.specks.length > 170) this.specks.splice(0, this.specks.length - 170);
     }
 
     private newSplat(): Splat {
@@ -290,58 +300,41 @@ export class EndingFx {
         const ctx = this.ctx;
         if (!ctx) return;
         ctx.clearRect(0, 0, this.w, this.h);
-        if (t * 1000 >= this.nextRunner) {
-            this.nextRunner = t * 1000 + 1400 + Math.random() * 1800;
-            this.runners.push(this.newRunner());
-        }
-        if (t * 1000 >= this.nextSplat) {
-            this.nextSplat = t * 1000 + 7000 + Math.random() * 5000;
-            this.splats.push(this.newSplat());
+        if (t * 1000 >= this.nextBurst) {
+            this.nextBurst = t * 1000 + 1900 + Math.random() * 2200;
+            this.burst();
+            if (Math.random() < 0.4) this.splats.push(this.newSplat());
             if (this.splats.length > 8) this.splats.shift();
         }
-        // schizzi fermi
-        for (const s of this.splats) this.dropBlob(ctx, s.x, s.y, 7);
+        // resti fermi: schizzi vecchi e puntini atterrati
         for (const s of this.splats) {
+            this.dropBlob(ctx, s.x, s.y, 7);
             for (const b of s.blobs) this.dropBlob(ctx, s.x + b.dx, s.y + b.dy, b.r);
         }
-        // rivoli che colano
-        for (let i = this.runners.length - 1; i >= 0; i--) {
-            const r = this.runners[i];
-            r.y += r.speed * dt;
-            r.left -= r.speed * dt;
-            r.tail.push({ x: r.x + Math.sin(t * 2.1 + r.seed) * r.wob, y: r.y });
-            if (r.tail.length > 60) r.tail.shift();
-            this.strokeTail(ctx, r.tail, r.w);
-            if (r.left <= 0) {
-                this.runners.splice(i, 1);
-                this.fallers.push({ x: r.x, y: r.y, vx: (Math.random() - 0.5) * 30, vy: r.speed * 4, tail: r.tail.slice(-20), w: r.w });
+        for (const p of this.specks) this.dropBlob(ctx, p.x, p.y, p.r);
+        // satelliti in volo: scia corta, poi restano dove cadono
+        for (let i = this.droplets.length - 1; i >= 0; i--) {
+            const d = this.droplets[i];
+            d.life -= dt;
+            d.vy += 780 * dt;
+            d.px = d.x;
+            d.py = d.y;
+            d.x += d.vx * dt;
+            d.y += d.vy * dt;
+            if (d.life <= 0) {
+                this.dropToSpecks(d.x, d.y, d.r);
+                this.droplets.splice(i, 1);
+                continue;
             }
-        }
-        // gocce staccate: cadono e si assottigliano
-        for (let i = this.fallers.length - 1; i >= 0; i--) {
-            const f = this.fallers[i];
-            f.vy += 900 * dt;
-            f.x += f.vx * dt;
-            f.y += f.vy * dt;
-            f.tail.push({ x: f.x, y: f.y });
-            if (f.tail.length > 26) f.tail.shift();
-            this.strokeTail(ctx, f.tail, f.w * 0.8);
-            if (f.y > this.h + 30) this.fallers.splice(i, 1);
-        }
-    }
-
-    private strokeTail(ctx: CanvasRenderingContext2D, tail: { x: number; y: number }[], w: number): void {
-        for (let k = 1; k < tail.length; k++) {
-            const a = tail[k - 1];
-            const b = tail[k];
-            const r = Math.max(0.6, (w * k) / tail.length);
-            ctx.fillStyle = '#7d1212';
+            ctx.strokeStyle = '#7d1212';
+            ctx.lineWidth = d.r * 1.4;
+            ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.arc((a.x + b.x) / 2, (a.y + b.y) / 2, r, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.moveTo(d.px, d.py);
+            ctx.lineTo(d.x, d.y);
+            ctx.stroke();
+            this.dropBlob(ctx, d.x, d.y, d.r);
         }
-        const head = tail[tail.length - 1];
-        if (head) this.dropBlob(ctx, head.x, head.y, w * 0.85);
     }
 
     private dropBlob(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
