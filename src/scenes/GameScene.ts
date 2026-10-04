@@ -1156,14 +1156,16 @@ export class GameScene extends Phaser.Scene {
 
 
     private spawnNpc(id: string, x: number, y: number): void {
-        // marker invisibili degli inseguimenti nella tana
+        // marker invisibili degli inseguimenti nella tana (solo finché il boss è vivo)
         if (id === 'caccia-inizio') {
+            if (state.hasFlag('boss-down-lochef')) return;
             this.chaseStarts.push(this.progressAt(x, y));
             this.chaseStarts.sort((a, b) => a - b);
             this.chaseDone = this.chaseStarts.map(() => false);
             return;
         }
         if (id === 'caccia-fine') {
+            if (state.hasFlag('boss-down-lochef')) return;
             this.chaseEnds.push(this.progressAt(x, y));
             this.chaseEnds.sort((a, b) => a - b);
             return;
@@ -4525,6 +4527,8 @@ export class GameScene extends Phaser.Scene {
     ];
 
     private updateChase(delta: number): void {
+        // a boss sconfitto la tana è murata: niente più cacce al ritorno
+        if (state.hasFlag('boss-down-lochef')) return;
         if (this.def.script !== 'tana' || this.chaseStarts.length === 0 || this.player.dead || this.exiting) return;
 
         if (!this.chaseSprite) {
