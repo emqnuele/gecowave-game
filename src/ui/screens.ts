@@ -11,7 +11,7 @@ import { ACTIONS, ACTION_LABEL, bindingLabel, bindingsFor, keyNameForCode, PRESE
 import { formatKeys } from '../engine/input/keyText';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
-import { isValidSkinId, SKIN_PRESETS, skinPreset } from '../engine/playerSkin';
+import { isValidSkinId, PLAYER_FRAME, renderSkinPreview, skinFinalCss, SKIN_PRESETS, skinPreset } from '../engine/playerSkin';
 import { music } from '../engine/music';
 import type { ZoneColor } from '../types';
 import { el, ui } from './dom';
@@ -1228,6 +1228,31 @@ export class Screens {
 
         right.append(el('div', 'sx-geco'));
         const gecoEl = right.querySelector<HTMLElement>('.sx-geco')!;
+        // anteprima onesta: non il png grezzo, ma il frame ricolorato sotto la luce di gioco
+        gecoEl.classList.add('sx-geco-live');
+        const previewCv = document.createElement('canvas');
+        previewCv.width = PLAYER_FRAME;
+        previewCv.height = PLAYER_FRAME;
+        previewCv.className = 'sx-geco-frame';
+        gecoEl.append(previewCv);
+        let sheetImg: HTMLImageElement | null = null;
+        const drawPreview = (): void => {
+            if (!sheetImg) return;
+            const cv = renderSkinPreview(sheetImg, skinPreset(skinId), 0);
+            if (!cv) return;
+            const ctx = previewCv.getContext('2d');
+            if (!ctx) return;
+            ctx.clearRect(0, 0, PLAYER_FRAME, PLAYER_FRAME);
+            ctx.drawImage(cv, 0, 0);
+        };
+        const sheetLoader = new Image();
+        sheetLoader.onload = () => {
+            sheetImg = sheetLoader;
+            drawPreview();
+        };
+        // se lo sheet non si carica, torna il ritratto statico: meglio del buco
+        sheetLoader.onerror = () => gecoEl.classList.remove('sx-geco-live');
+        sheetLoader.src = '/assets/sprites/player_sheet.png';
         const derived = el('div', 'sx-derived');
         right.append(derived);
         const dRow = (label: string) => {
@@ -1248,8 +1273,7 @@ export class Screens {
         const skins = el('div', 'sx-skins');
         right.append(skins);
         const paintSkin = (): void => {
-            const preset = skinPreset(skinId);
-            gecoEl.style.filter = preset.previewFilter;
+            drawPreview();
             skins.querySelectorAll<HTMLElement>('.sx-skin').forEach((b) => {
                 b.classList.toggle('on', b.dataset.skin === skinId);
             });
@@ -1261,7 +1285,8 @@ export class Screens {
             b.title = preset.name;
             b.setAttribute('aria-label', `pelle ${preset.name}`);
             const dot = el('i');
-            dot.style.background = preset.swatch;
+            // il pallino è il colore finale in game, non quello in texture
+            dot.style.background = skinFinalCss(preset);
             const nm = el('span', '', preset.name);
             b.append(dot, nm);
             b.addEventListener('click', () => {

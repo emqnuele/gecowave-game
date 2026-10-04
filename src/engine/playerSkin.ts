@@ -13,21 +13,21 @@ export interface SkinPreset {
     hue: number | null;
     satMul?: number;
     lightAdd?: number;
-    /** pallino mostrato nella forgia */
+    /** pallino di riserva prima che l'anteprima vera sia pronta */
     swatch: string;
-    /** filtro CSS completo per l'anteprima DOM (approssimata) */
-    previewFilter: string;
 }
 
-const BASE_PREVIEW = 'drop-shadow(0 0 30px rgba(255, 140, 60, 0.18)) sepia(0.25)';
+/* I finali sono tarati sulla luce vera del gioco (vedi GAME_LIGHT):
+   saturazione e luminosità alte in texture, perché in scena il buio
+   e il verde della luce del geco comprimono tutto. */
 
 export const SKIN_PRESETS: SkinPreset[] = [
-    { id: 'bosco', name: 'bosco', hue: null, swatch: '#33402c', previewFilter: BASE_PREVIEW },
-    { id: 'laguna', name: 'laguna', hue: 186, swatch: '#35c4b5', previewFilter: `${BASE_PREVIEW} hue-rotate(86deg)` },
-    { id: 'abisso', name: 'abisso', hue: 218, swatch: '#4a7dd6', previewFilter: `${BASE_PREVIEW} hue-rotate(118deg)` },
-    { id: 'ametista', name: 'ametista', hue: 282, swatch: '#a06ee0', previewFilter: `${BASE_PREVIEW} hue-rotate(-178deg)` },
-    { id: 'ciliegia', name: 'ciliegia', hue: 338, swatch: '#e0528a', previewFilter: `${BASE_PREVIEW} hue-rotate(-122deg)` },
-    { id: 'spettro', name: 'spettro', hue: 100, satMul: 0.15, lightAdd: 0.22, swatch: '#cfd4c8', previewFilter: `${BASE_PREVIEW} grayscale(0.85) brightness(1.25)` },
+    { id: 'bosco', name: 'bosco', hue: null, swatch: '#2c5230' },
+    { id: 'laguna', name: 'laguna', hue: 180, satMul: 3.0, lightAdd: 0.16, swatch: '#29b7bc' },
+    { id: 'abisso', name: 'abisso', hue: 224, satMul: 3.0, lightAdd: 0.16, swatch: '#2962bc' },
+    { id: 'ametista', name: 'ametista', hue: 282, satMul: 3.2, lightAdd: 0.18, swatch: '#8f37cc' },
+    { id: 'ciliegia', name: 'ciliegia', hue: 338, satMul: 3.4, lightAdd: 0.16, swatch: '#a22f4f' },
+    { id: 'spettro', name: 'spettro', hue: 100, satMul: 0.15, lightAdd: 0.22, swatch: '#73a688' },
 ];
 
 export const DEFAULT_SKIN_ID = 'bosco';
@@ -130,7 +130,75 @@ export function recolorSkinPixels(data: Uint8ClampedArray, preset: SkinPreset): 
     return { changed, total: data.length / 4 };
 }
 
-/* ---------- applicazione alle texture di gioco ---------- */
+/* ---------- luce di gioco nominale (Light2D, vedi Light.frag) ----------
+   Al centro del player la sua stessa luce vale ~1 (attenuazione 1,
+   diffuse 1 con la normal map piatta), quindi:
+   finale = albedo * (ambient + luce_propria), clamp a 1.
+   Ambient del crater (perduta/bus): 6+rim*k, k = 0.11*3.4.
+   Luce propria: 0xaaffdd @1.35. Torce e biomi spostano un po' il
+   risultato, ma questa è la base su cui sono tarate le pelli. */
+export const GAME_LIGHT = {
+    r: 75 / 255 + (0xaa / 255) * 1.35,
+    g: 80 / 255 + (0xff / 255) * 1.35,
+    b: 70 / 255 + (0xdd / 255) * 1.35,
+};
+
+/** applica la luce nominale a un buffer RGBA: ciò che vedi in game al centro della luce */
+export function simulateGameLight(data: Uint8ClampedArray): void {
+    for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3]! < 10) continue;
+        data[i] = Math.min(255, data[i]! * GAME_LIGHT.r);
+        data[i + 1] = Math.min(255, data[i + 1]! * GAME_LIGHT.g);
+        data[i + 2] = Math.min(255, data[i + 2]! * GAME_LIGHT.b);
+    }
+}
+
+/** pixel canonico di pelle (testa, frame 0): da qui nasce il pallino della forgia */
+const SKIN_BASE_PIXEL: [number, number, number] = [36, 49, 33];
+
+/** colore finale simulato in game per un preset, in css: il pallino dice la verità */
+export function skinFinalCss(preset: SkinPreset): string {
+    if (preset.hue === null && preset.satMul === undefined && preset.lightAdd === undefined) {
+        const [r, g, b] = SKIN_BASE_PIXEL;
+        return `rgb(${Math.min(255, Math.round(r * GAME_LIGHT.r))},${Math.min(255, Math.round(g * GAME_LIGHT.g))},${Math.min(255, Math.round(b * GAME_LIGHT.b))})`;
+    }
+    const [h, s, l] = rgbToHsl(...SKIN_BASE_PIXEL);
+    const target = preset.hue ?? SOURCE_SKIN_HUE;
+    const [r, g, b] = hslToRgb(
+        target + (h - SOURCE_SKIN_HUE) * 0.75,
+        Math.min(1, Math.max(0, s * (preset.satMul ?? 1))),
+        Math.min(0.92, Math.max(0.02, l + (preset.lightAdd ?? 0))),
+    );
+    return `rgb(${Math.min(255, Math.round(r * GAME_LIGHT.r))},${Math.min(255, Math.round(g * GAME_LIGHT.g))},${Math.min(255, Math.round(b * GAME_LIGHT.b))})`;
+}
+
+export const PLAYER_FRAME = 350;
+
+/**
+ * Anteprima onesta: ritaglia un frame dallo sheet, applica la pelle
+ * con lo STESSO codice del gioco e poi la luce nominale. Ciò che vedi
+ * è ciò che vedrai in game (a meno di torce e biomi lontani).
+ */
+export function renderSkinPreview(source: CanvasImageSource, preset: SkinPreset, frameIndex = 0): HTMLCanvasElement | null {
+    const cols = Math.max(1, Math.floor((source as { width?: number }).width! / PLAYER_FRAME));
+    const sx = (frameIndex % cols) * PLAYER_FRAME;
+    const sy = Math.floor(frameIndex / cols) * PLAYER_FRAME;
+    const cv = document.createElement('canvas');
+    cv.width = PLAYER_FRAME;
+    cv.height = PLAYER_FRAME;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
+    try {
+        ctx.drawImage(source, sx, sy, PLAYER_FRAME, PLAYER_FRAME, 0, 0, PLAYER_FRAME, PLAYER_FRAME);
+        const img = ctx.getImageData(0, 0, PLAYER_FRAME, PLAYER_FRAME);
+        recolorSkinPixels(img.data, preset);
+        simulateGameLight(img.data);
+        ctx.putImageData(img, 0, 0);
+    } catch {
+        return null;
+    }
+    return cv;
+}
 
 /** copia incontaminata dello sheet, catturata prima del primo swap */
 let pristine: HTMLCanvasElement | null = null;
