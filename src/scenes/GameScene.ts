@@ -4648,7 +4648,7 @@ export class GameScene extends Phaser.Scene {
         const dx = this.player.x - chef.x;
         const dy = this.player.y - 30 - chef.y;
         const dist = Math.hypot(dx, dy) || 1;
-        let speed = dist > 620 ? 380 : dist > 320 ? 250 : 175;
+        let speed = dist > 620 ? 380 : dist > 320 ? 250 : 200;
         // partenza morbida: 1.5s per entrare in caccia, il salto iniziale non uccide
         const ramp = Math.min(1, (this.time.now - this.chaseStartedAt) / 1500);
         speed *= 0.4 + 0.6 * ramp;
