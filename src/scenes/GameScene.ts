@@ -57,6 +57,7 @@ import { OmbraBrain } from '../engine/OmbraBrain';
 import type { OmbraInsight, PlayerAct } from '../engine/OmbraProfile';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
+import { NucleusStraightening } from '../engine/NucleusStraightening';
 import { AbilitySeals } from '../engine/AbilitySeals';
 import { createMechanic, type Mechanic } from '../engine/mechanics';
 import { Input } from '../engine/input/Input';
@@ -266,6 +267,8 @@ export class GameScene extends Phaser.Scene {
     private pedroChoiceShown = false;
     /** pedro spento mentre combatti il suo glitch */
     private pedroShell: Boss | null = null;
+    /** l'ordine raddrizza il nucleo solo contro il glitch, mai per patto o dei */
+    private nucleusStraightening: NucleusStraightening | null = null;
     // il patto con pedro: potere vero, poi arrivano gli dei
     private pattoActive = false;
     // scontro finale con gli dei dopo aver rifiutato di consegnare le wave:
@@ -410,6 +413,7 @@ export class GameScene extends Phaser.Scene {
         this.bossIntroShown = false;
         this.pedroChoiceShown = false;
         this.pedroShell = null;
+        this.nucleusStraightening = null;
         this.pattoActive = false;
         this.finalGodsFight = false;
         this.pattoWarned = 0;
@@ -651,6 +655,8 @@ export class GameScene extends Phaser.Scene {
             this.pedroGhost = null;
             this.seals?.destroy();
             this.seals = null;
+            this.nucleusStraightening?.destroy();
+            this.nucleusStraightening = null;
             this.marks33?.destroy();
             this.marks33 = null;
             this.folk.destroy();
@@ -2788,6 +2794,7 @@ export class GameScene extends Phaser.Scene {
         this.updateEnemies(time, delta, target);
         this.updateSpawners(time);
         this.boss?.update(time, delta, target);
+        this.nucleusStraightening?.update(time, this.boss);
         this.voice?.update();
         this.ombraBrain?.update(time);
         this.pedroGhost?.update(this.player);
@@ -5466,6 +5473,7 @@ export class GameScene extends Phaser.Scene {
             case 'glitchpedro': {
                 // il glitch si strappa via: pedro torna in sé
                 const shell = this.pedroShell;
+                this.nucleusStraightening?.shatter();
                 if (shell?.scene) this.tweens.add({ targets: shell, alpha: 1, duration: 900 });
                 state.setFlag('pedro-redento');
                 this.startDialogue('pedro-redento', () => this.sceltaFinale(x, y, true));
@@ -5507,8 +5515,34 @@ export class GameScene extends Phaser.Scene {
                 this.bossIntroShown = false;
                 this.lightBoss(this.boss, this.boss.def.glowColor, 300, 1.1);
                 this.setupBossColliders();
+                this.startOrder();
                 this.shake(500, 0.012);
             });
+        });
+    }
+
+    /** l'ordine raddrizza il nucleo solo contro il glitch, mai per patto o dei */
+    private startOrder(): void {
+        const boss = this.boss;
+        if (!boss || this.def.id !== 'nucleo' || !this.layout || !this.marks33) return;
+        const room = this.roomAt(boss.x, boss.y);
+        if (!room || room.kind !== 'arena' || !this.arenaRoom) {
+            if (import.meta.env.DEV) console.warn('[ordine] niente arena valida, combattimento invariato');
+            return;
+        }
+        const R = room.rect;
+        this.nucleusStraightening?.destroy();
+        this.nucleusStraightening = new NucleusStraightening({
+            scene: this,
+            player: this.player,
+            terrain: this.terrain,
+            marks: this.marks33,
+            fakeWalls: this.level.fakeWalls,
+            arenaBounds: new Phaser.Geom.Rectangle(R.x * TILE, R.y * TILE, R.w * TILE, R.h * TILE),
+            arenaDoorRects: this.doorRects(room),
+            solid: (c, r) => this.nav.solid(c, r),
+            music,
+            emitOrderShot: (x, y, tx, ty) => this.onEnemyShoot({ x, y, tx, ty, color: 0xf87171, speed: 360, size: 1 }),
         });
     }
 

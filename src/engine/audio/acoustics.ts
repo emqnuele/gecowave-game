@@ -54,11 +54,13 @@ export interface AcousticTarget {
     boss: boolean;
     /** 0..1: vita agli sgoccioli, il mondo si stringe */
     danger: number;
+    /** 0..3: l'ordine raddrizza il nucleo, il suono perde aria */
+    order: number;
     /** coda dell'eco del bioma: la tana rimbomba più del dovuto */
     echoMul: number;
 }
 
-const DEFAULT: AcousticTarget = { space: 'open', size: 0.5, muffle: 0, night: 0, underwater: false, boss: false, danger: 0, echoMul: 1 };
+const DEFAULT: AcousticTarget = { space: 'open', size: 0.5, muffle: 0, night: 0, underwater: false, boss: false, danger: 0, order: 0, echoMul: 1 };
 
 class Acoustics {
     private ctx: AudioContext | null = null;
@@ -254,7 +256,9 @@ class Acoustics {
         const water = T.underwater ? 420 : 20000;
         const pause = this.paused ? 800 : 20000;
         const danger = 20000 * Math.pow(2400 / 20000, T.danger * 0.8);
-        const music = Math.min(night, rock, water, pause, danger);
+        const order = Math.max(0, Math.min(3, T.order));
+        const orderCut = order >= 3 ? 2800 : order === 2 ? 4500 : order === 1 ? 8000 : 20000;
+        const music = Math.min(night, rock, water, pause, danger, orderCut);
         this.musicLP.frequency.setTargetAtTime(music, now, tau);
         const sfxCut = T.underwater ? 900 : T.muffle > 0.5 ? 11000 : 20000;
         this.sfxLP.frequency.setTargetAtTime(sfxCut, now, tau);
@@ -272,7 +276,8 @@ class Acoustics {
             this.active = 1 - this.active;
         }
         const size = 0.55 + 0.9 * T.size;
-        const musicWet = p.musicWet * size * (T.boss ? 0.45 : 1) * (this.paused ? 0.5 : 1);
+        // l'ordine asciuga un filo anche l'ambiente, oltre a chiudere il passa-basso
+        const musicWet = p.musicWet * size * (T.boss ? 0.45 : 1) * (this.paused ? 0.5 : 1) * (1 - 0.07 * Math.max(0, Math.min(3, T.order)));
         this.musicRevSend.gain.setTargetAtTime(musicWet, now, tau);
         this.sfxRevSend.gain.setTargetAtTime(Math.min(0.9, p.sfxWet * size + T.danger * 0.1), now, tau);
         // eco: più lunga e più ripetuta negli spazi grandi (e nella tana, sempre)

@@ -84,6 +84,11 @@ class MusicManager {
         }
     }
 
+    /** l'ordine raddrizza anche il suono: passa-basso graduale sullo stesso grafo */
+    setOrder(amount: 0 | 1 | 2 | 3): void {
+        acoustics.set({ order: amount });
+    }
+
     /** 0.3 sotto le gravi, 0.55 nel capitolo cupo: si moltiplicano */
     private duckFactor(): number {
         return (this.graveDuck ? 0.3 : 1) * (this.levelDuck ? 0.55 : 1);

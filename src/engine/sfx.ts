@@ -591,6 +591,22 @@ class Sfx {
         this.tone(60, 600, { type: 'sawtooth', to: 40, vol: 0.06 });
         this.noise(90, { freq: 2600, q: 3, vol: 0.08, delayMs: 380 });
     }
+    /** l'ordine tira dritto: beep rettangolare che scende più click metallico */
+    straighten(): void {
+        this.tone(1200, 220, { type: 'square', to: 600, vol: 0.06 });
+        this.noise(80, { freq: 4200, q: 4, vol: 0.08 });
+    }
+    /** la fase si chiude: colpo grave digitale */
+    orderLock(): void {
+        this.tone(90, 400, { type: 'sawtooth', to: 40, vol: 0.16 });
+        this.noise(200, { freq: 300, vol: 0.15, type: 'lowpass' });
+    }
+    /** la rottura: stesso materiale, spezzato al contrario */
+    orderBreak(): void {
+        this.tone(60, 500, { type: 'sawtooth', to: 300, vol: 0.12 });
+        this.noise(400, { freq: 2000, q: 1, vol: 0.1, to: 400 });
+        this.tone(900, 120, { type: 'square', to: 300, vol: 0.05, delayMs: 120 });
+    }
 
     /* ---------- letti continui ---------- */
 
