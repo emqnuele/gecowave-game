@@ -46,6 +46,10 @@ export type BossKind =
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }
+    /** nido di mostri stile minecraft: spawna `kind` finché non lo rompi.
+        maxAlive = vivi contemporanei attorno al nido, intervalMs = attesa
+        tra uno spawn e l'altro, radius = distanza di attivazione in px */
+    | { type: 'spawner'; kind: EnemyKind; maxAlive?: number; intervalMs?: number; radius?: number }
     | { type: 'npc'; id: string }
     | { type: 'ability'; ability: AbilityId }
     | { type: 'lore'; id: string }

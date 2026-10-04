@@ -269,7 +269,7 @@ export class Screens {
         items.push({ label: 'comandi', onPick: () => this.showControls(() => this.showMenu()) });
         items.push({ label: 'impostazioni', onPick: () => this.showSettings(() => this.showMenu()) });
         col.append(this.menu(items, 'left'));
-        col.append(el('div', 'sx-foot', 'sviluppato da <b>emqnuele</b> · musica dei <b>gecowave</b>'));
+        col.append(el('div', 'sx-foot', 'sviluppato da <a href="https://emanuelefaraci.com" target="_blank" rel="noopener">emqnuele</a> · musica dei <a href="https://gecowave.top" target="_blank" rel="noopener">gecowave</a>'));
         s.append(col);
 
         if (!this.awake) {

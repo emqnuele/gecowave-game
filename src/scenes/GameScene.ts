@@ -49,6 +49,7 @@ import { ensureAbilityFx, FX } from '../engine/art/abilityFx';
 import { ensureCreature, prewarmCreatures } from '../engine/art/creatures';
 import { Companion } from '../entities/Companion';
 import { Enemy, type EnemyTrait } from '../entities/Enemy';
+import { Spawner } from '../entities/Spawner';
 import { ENEMIES } from '../content/enemies';
 import { Player } from '../entities/Player';
 import { BossVoice } from '../engine/BossVoice';
@@ -166,6 +167,9 @@ export class GameScene extends Phaser.Scene {
     private controls!: Input;
     private boss: Boss | null = null;
     private enemies!: Phaser.GameObjects.Group;
+    /** nidi nelle grotte chiuse: spenti da lontano, armati da vicino */
+    private spawners!: Phaser.GameObjects.Group;
+    private spawnerToastShown = false;
     /** riusato ogni frame per le minacce: niente array nuovi per il GC */
     private threatCache: { x: number; y: number }[] = [];
     private playerProjectiles!: Phaser.Physics.Arcade.Group;
@@ -510,6 +514,7 @@ export class GameScene extends Phaser.Scene {
         this.lastSafe = { ...sp };
 
         this.enemies = this.add.group({ runChildUpdate: false });
+        this.spawners = this.add.group({ runChildUpdate: false });
         this.playerProjectiles = this.physics.add.group({ allowGravity: false });
         this.enemyProjectiles = this.physics.add.group({ allowGravity: false });
         this.lametteGroup = this.physics.add.group({ allowGravity: false });
@@ -522,6 +527,7 @@ export class GameScene extends Phaser.Scene {
         this.challengeSpot = null;
 
         this.spawnEntities();
+        this.spawnCaveSpawners();
         if (this.def.hub) this.spawnPiazzaGuests();
         this.spawnCheckpoints();
         this.spawnBusStops();
@@ -531,7 +537,7 @@ export class GameScene extends Phaser.Scene {
             biomeId: this.biome.id,
             eye: this.biome.accent,
             layout: this.layout,
-            avoid: this.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'boss').map((e) => ({ x: e.x, y: e.y })),
+            avoid: this.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'spawner' || e.spec.type === 'boss').map((e) => ({ x: e.x, y: e.y })),
             widthPx: this.level.widthPx,
             crowd: this.def.hub ? 18 : undefined,
         });
@@ -738,6 +744,14 @@ export class GameScene extends Phaser.Scene {
                     this.spawnEnemy(spec.kind, x, y, { sleeping: h % 100 < 35, elite, trait: elite ? null : this.traitFor(spec.kind, x, y, h) });
                     break;
                 }
+                case 'spawner': {
+                    this.spawnSpawner(spec.kind, x, y, {
+                        maxAlive: spec.maxAlive ?? 3,
+                        intervalMs: spec.intervalMs ?? 3500,
+                        radius: spec.radius ?? 600,
+                    });
+                    break;
+                }
                 case 'npc':
                     this.spawnNpc(spec.id, x, y);
                     break;
@@ -932,6 +946,178 @@ export class GameScene extends Phaser.Scene {
             this.lighting.follow(e, e.trait === 'kamikaze' ? 0xef4444 : e.arch.glowColor, 120 + h, 0.6, -h * 0.9 - 8, -h * 0.35);
         }
         return e;
+    }
+
+    /* ---------- nidi di mostri nelle grotte ---------- */
+
+    private spawnSpawner(kind: EnemyKind, x: number, y: number, opts: { maxAlive?: number; intervalMs?: number; radius?: number } = {}): Spawner {
+        const s = new Spawner(this, x, y, { kind, ...opts });
+        this.spawners.add(s);
+        this.physics.add.collider(this.player, s);
+        this.lighting.follow(s, s.glowColor, 190, 0.85, 0, -20);
+        return s;
+    }
+
+    /** nidi ovunque ci stia una tana: cave, secret e anse piccole con tetto,
+        al massimo tre porte, mai nelle stanze sicure (start/rest/exit/arena)
+        né a inizio gioco né dove c'è trama. deterministico per regione. */
+    private spawnCaveSpawners(): void {
+        if (!this.layout) return;
+        const rooms = this.layout.rooms;
+        const doorCount = new Map<number, number>();
+        for (const d of this.layout.doors) {
+            doorCount.set(d.a, (doorCount.get(d.a) ?? 0) + 1);
+            doorCount.set(d.b, (doorCount.get(d.b) ?? 0) + 1);
+        }
+        const poolKinds = [...new Set(
+            this.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'spawner')
+                .map((e) => (e.spec as { kind: EnemyKind }).kind),
+        )].filter((k) => {
+            const b = ENEMIES[k]?.behavior;
+            return b === 'walker' || b === 'hopper' || b === 'chaser' || b === 'charger';
+        });
+        const fallback: EnemyKind[] = ['tossico', 'formica', 'glitchetto', 'pendolare'];
+        const kinds = poolKinds.length ? poolKinds : fallback.filter((k) => k in ENEMIES);
+        for (const room of rooms) {
+            if (room.kind === 'start' || room.kind === 'exit' || room.kind === 'rest' || room.kind === 'arena') continue;
+            if (room.kind !== 'cave' && room.kind !== 'secret' && room.kind !== 'hall' && room.kind !== 'gauntlet' && room.kind !== 'pool') continue;
+            if (room.surface) continue;
+            if (room.rect.w > 80 || room.rect.h > 44 || room.rect.w * room.rect.h > 2400) continue;
+            if ((doorCount.get(room.id) ?? 0) > 3) continue;
+            // niente nidi a inizio gioco: sono tane opzionali, non il tutorial
+            const anchorPath = room.pathIndex >= 0 ? room.pathIndex : rooms[room.anchor]?.pathIndex ?? 0;
+            if (anchorPath < this.layout.pathLength * 0.1) continue;
+            // niente nidi dove c'è trama (boss, npc, frammenti, lore, portali)
+            const hasStory = this.level.entities.some((e) =>
+                (e.spec.type === 'boss' || e.spec.type === 'npc' || e.spec.type === 'ability' || e.spec.type === 'lore' || e.spec.type === 'portal')
+                && e.x >= room.rect.x * TILE && e.x < (room.rect.x + room.rect.w) * TILE
+                && e.y >= room.rect.y * TILE && e.y < (room.rect.y + room.rect.h) * TILE,
+            );
+            if (hasStory) continue;
+            const h = hashString(`${this.def.id}:spawner:${room.id}`);
+            const chance = room.kind === 'secret' ? 80 : room.kind === 'cave' ? 70 : 60;
+            if (h % 100 >= chance) continue;
+            // la stanza ha già un nido piazzato a mano: niente doppioni
+            const hasManual = this.level.entities.some((e) =>
+                e.spec.type === 'spawner'
+                && e.x >= room.rect.x * TILE && e.x < (room.rect.x + room.rect.w) * TILE
+                && e.y >= room.rect.y * TILE && e.y < (room.rect.y + room.rect.h) * TILE,
+            );
+            if (hasManual) continue;
+            const kind = kinds[h % kinds.length];
+            const spot = this.caveSpawnerSpot(room);
+            if (!spot) continue;
+            this.spawnSpawner(kind, spot.x, spot.y, {
+                maxAlive: 3,
+                intervalMs: 3000 + (h % 2000),
+                radius: 600,
+            });
+        }
+    }
+
+    /** il punto a terra più vicino al centro della grotta, lontano dai bordi */
+    private caveSpawnerSpot(room: { rect: { x: number; y: number; w: number; h: number } }): { x: number; y: number } | null {
+        const cx = room.rect.x + room.rect.w / 2;
+        const cy = room.rect.y + room.rect.h - 2;
+        let best: { c: number; r: number } | null = null;
+        let bd = Infinity;
+        for (let r = room.rect.y + 2; r < room.rect.y + room.rect.h - 1; r++) {
+            for (let c = room.rect.x + 3; c < room.rect.x + room.rect.w - 3; c++) {
+                if (!this.nav.standable(c, r)) continue;
+                if (this.nav.solid(c, r - 1) && this.nav.solid(c, r - 2)) continue;
+                const d = Math.abs(c - cx) + Math.abs(r - cy) * 2;
+                if (d < bd) {
+                    bd = d;
+                    best = { c, r };
+                }
+            }
+        }
+        if (!best) return null;
+        return { x: best.c * TILE + TILE / 2, y: best.r * TILE + TILE / 2 };
+    }
+
+    /** stile minecraft: spento da lontano, da vicino (600px) spawna
+        finché attorno al nido ci sono meno di maxAlive vivi */
+    private updateSpawners(time: number): void {
+        if (this.spawners.getChildren().length === 0) return;
+        if (this.awakeEnemies() >= 40) return;
+        const px = this.player.x;
+        const py = this.player.y;
+        for (const child of this.spawners.getChildren()) {
+            const s = child as Spawner;
+            if (!s.active || s.broken) continue;
+            const dx = Math.abs(s.x - px);
+            const dy = Math.abs(s.y - py);
+            if (s.dormant) {
+                if (dx < 1500 && dy < 1000) s.setDormant(false);
+                else continue;
+            } else if (dx > 1800 || dy > 1250) {
+                s.setDormant(true);
+                continue;
+            }
+            s.syncAura();
+            const dist = Math.hypot(s.x - px, s.y - py);
+            const armed = dist < s.radius && !this.player.dead;
+            s.setArmed(armed);
+            if (!armed || time < s.nextAt) continue;
+            let alive = 0;
+            for (const obj of this.enemies.getChildren()) {
+                const e = obj as Enemy;
+                if (!e.active || e.dormant) continue;
+                if (Math.hypot(e.x - s.x, e.y - s.y) < 760) {
+                    alive++;
+                    if (alive >= s.maxAlive) break;
+                }
+            }
+            if (alive >= s.maxAlive) {
+                s.nextAt = time + 600;
+                continue;
+            }
+            const at = this.openSpotNear(s.x, s.y - 30, 6);
+            this.spawnEnemy(s.kind, at.x, at.y, { hunting: true });
+            s.nextAt = time + s.intervalMs * (0.85 + Math.random() * 0.3);
+            sfx.crack();
+            const puff = this.add.particles(s.x, s.y - 14, 'p-spark', {
+                speed: { min: 40, max: 160 },
+                scale: { start: 0.8, end: 0 },
+                tint: s.glowColor,
+                lifespan: 380,
+                quantity: 8,
+                stopAfter: 8,
+            }).setDepth(6);
+            this.time.delayedCall(600, () => puff.destroy());
+        }
+    }
+
+    private damageSpawner(s: Spawner, amount: number): void {
+        if (!s.active || s.broken) return;
+        if (s.takeDamage(amount)) this.breakSpawner(s);
+        else {
+            sfx.hit();
+            this.player.onAttackHit();
+            this.hitstop();
+        }
+    }
+
+    private breakSpawner(s: Spawner): void {
+        const { x, y, glowColor, kind } = s;
+        sfx.crumble();
+        this.shake(200, 0.008);
+        const burst = this.add.particles(x, y - 10, 'p-spark', {
+            speed: { min: 80, max: 280 },
+            scale: { start: 1, end: 0 },
+            tint: [glowColor, 0xf5f5f4],
+            lifespan: 500,
+            quantity: 18,
+            stopAfter: 18,
+        }).setDepth(6);
+        this.time.delayedCall(800, () => burst.destroy());
+        this.spawnBarrePickup(x, y - 20, 12);
+        s.destroy();
+        if (!this.spawnerToastShown) {
+            this.spawnerToastShown = true;
+            bus.emit('toast', { text: `nido di ${kind} distrutto. niente più spawn da qui.` });
+        }
     }
 
     /** lo scudo para: clang, rinculo, nessun flow */
@@ -1929,6 +2115,35 @@ export class GameScene extends Phaser.Scene {
             }
         });
 
+        // i nidi si rompono a colpi: mezza dozzina di sciabolate, o un paio di onde
+        this.physics.add.overlap(this.player.attackHitbox, this.spawners, (_hb, obj) => {
+            if (!this.player.attackActive && !this.player.slamming) return;
+            const s = obj as Spawner;
+            if (this.player.slamming) {
+                this.damageSpawner(s, 2);
+                return;
+            }
+            this.player.attackActive = false;
+            this.damageSpawner(s, this.player.attackDamage);
+        });
+
+        this.physics.add.overlap(this.playerProjectiles, this.spawners, (a, b) => {
+            const s = (a instanceof Spawner ? a : b) as Spawner;
+            const bullet = (a instanceof Spawner ? b : a) as Phaser.Physics.Arcade.Sprite;
+            if (!s.active || s.broken || !bullet.active) return;
+            const level = (bullet.getData('level') as number | undefined) ?? -1;
+            const reflected = !!bullet.getData('reflected');
+            if (reflected) {
+                const dmg = (bullet.getData('dmg') as number | undefined) ?? COMBAT.scudoReflectNormal;
+                this.damageSpawner(s, dmg);
+            } else {
+                const step = level === 2 ? 2 : level === 1 ? 1 : 0.5;
+                this.damageSpawner(s, state.risonanteDamage * state.damageMult * step);
+                if (level === 0) this.popProjectile(bullet);
+            }
+            this.player.onAttackHit();
+        });
+
         this.physics.add.overlap(this.player, this.enemies, (_p, obj) => {
             const enemy = obj as Enemy;
             // la lezione del citelis: attraverso la carica in scivolata, e lui sbanda
@@ -2564,6 +2779,7 @@ export class GameScene extends Phaser.Scene {
 
         const target = this.clone && this.clone.active ? (this.clone as Phaser.GameObjects.Sprite) : this.player;
         this.updateEnemies(time, delta, target);
+        this.updateSpawners(time);
         this.boss?.update(time, delta, target);
         this.voice?.update();
         this.ombraBrain?.update(time);
@@ -2764,6 +2980,10 @@ export class GameScene extends Phaser.Scene {
         for (const child of this.enemies.getChildren()) {
             const e = child as Enemy;
             if (e.active && Math.hypot(e.x - x, e.y - y) < r + 40) this.dmgTo(e, COMBAT.slamDamage, x);
+        }
+        for (const child of this.spawners.getChildren()) {
+            const s = child as Spawner;
+            if (s.active && !s.broken && Math.hypot(s.x - x, s.y - y) < r + 40) this.damageSpawner(s, COMBAT.slamDamage);
         }
         if (!state.hasFlag('spiegato-schianto')) {
             state.setFlag('spiegato-schianto');
@@ -3721,6 +3941,13 @@ export class GameScene extends Phaser.Scene {
                 clone.consumeSwing();
                 this.cloneHitFx(enemy);
                 this.dmgTo(enemy, clone.attackDamage, clone.x);
+            }),
+            this.physics.add.overlap(clone.attackHitbox, this.spawners, (_hb, obj) => {
+                if (!clone.attackActive) return;
+                const s = obj as Spawner;
+                clone.consumeSwing();
+                this.cloneHitFx(s);
+                this.damageSpawner(s, clone.attackDamage);
             }),
         );
         if (this.boss) {

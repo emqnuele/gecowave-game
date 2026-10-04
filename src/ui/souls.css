@@ -292,9 +292,19 @@
   color: var(--sx-dim);
 }
 
-.sx-foot b {
+.sx-foot b,
+.sx-foot a {
   color: var(--sx-ash);
   font-weight: 400;
+}
+
+.sx-foot a {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sx-foot a:hover {
+  text-decoration: underline;
 }
 
 /* premi un tasto */

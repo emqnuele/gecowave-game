@@ -340,7 +340,8 @@ function attemptRegion(def: LevelDef, attempt: number): Region & { report: Regio
             const cand = spots(room, reach, 7);
             for (let k = 0; k < count && cand.length; k++) {
                 const ch = pickWeighted(rnd, pool.map((p) => ({ spec: p.ch, w: p.weight })));
-                const kind = def.entities[ch].type === 'enemy' ? (def.entities[ch] as { kind: keyof typeof ENEMIES }).kind : null;
+                const spec = def.entities[ch];
+                const kind = spec.type === 'enemy' || spec.type === 'spawner' ? (spec as { kind: keyof typeof ENEMIES }).kind : null;
                 const flyer = kind ? ENEMIES[kind].behavior === 'flyer' : false;
                 const cell = cand[Math.floor(rnd() * cand.length)];
                 if (!far(cell, 5)) continue;

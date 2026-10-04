@@ -22,6 +22,10 @@ export function roleOf(spec: EntitySpec): BeatRole {
     switch (spec.type) {
         case 'enemy':
             return 'enemy';
+        case 'spawner':
+            // nido piazzato a mano: resta un singolo nido in posizione di trama,
+            // non entra nel pool dei nemici che si sparge per le stanze
+            return 'story';
         case 'barre':
             return 'loot';
         case 'cuore':
