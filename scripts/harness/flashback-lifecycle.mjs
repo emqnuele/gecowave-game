@@ -1,11 +1,12 @@
 // regressione dei bug dei flashback sistemati prima del merge (vedi ANALISI_REMASTER.md):
 // fine col salto (vignetta e zoom tornano uguali) e uscita al menu a metà film (niente stato globale appeso).
 // uso: node scripts/harness/flashback-lifecycle.mjs
-import { launch, openGame, startLevel } from './game.mjs';
+import { launch, openGame, startLevel, waitPlayer } from './game.mjs';
 
 const browser = await launch();
 const game = await openGame(browser);
 await startLevel(game, 'caso');
+await waitPlayer(game);
 const { page, step } = game;
 const fails = [];
 const check = (cond, msg) => { if (!cond) fails.push(msg); };

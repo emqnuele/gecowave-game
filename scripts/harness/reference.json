@@ -1,0 +1,30 @@
+{
+ "commit": "a16f39c5d309d5d4e1a175d75bfb813eab686da9",
+ "note": null,
+ "scenarios": {
+  "livello-bus": {
+   "strict": "9337c2ac2374117b",
+   "diag": "71053be254c8c8ea",
+   "frames": 466,
+   "failure": null
+  },
+  "livello-nucleo": {
+   "strict": "bf92c5ae92578394",
+   "diag": "3e499c9bf8f16b27",
+   "frames": 952,
+   "failure": null
+  },
+  "livello-perduta": {
+   "strict": "c95975772dd42cdb",
+   "diag": "71b037d42a8dcfc6",
+   "frames": 462,
+   "failure": null
+  },
+  "livello-tana": {
+   "strict": "a77246049947498d",
+   "diag": "572e25f21ec4aee4",
+   "frames": 717,
+   "failure": null
+  }
+ }
+}
