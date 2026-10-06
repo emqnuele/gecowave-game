@@ -58,6 +58,14 @@ Li ho verificati con un harness headless (Playwright, frame fatti avanzare a man
 | velo di galliate e marcetti | listener di resize mai rimosso a ogni ingresso | | rimosso allo shutdown |
 | editor | `tsc` dell'editor falliva | mancava il caso `spawner` | aggiunto |
 
+## Giro di fumo col bot vecchio
+
+Ho rigenerato le tappe (`scripts/world/run.sh waypoints all`) e fatto girare `scripts/playtest/bot.mjs` sulla build di sviluppo. Il bot è rimasto indietro rispetto alla UI: non sapeva chiudere il riepilogo di capitolo, la card del frammento e il tabellone del citelis (ora scritto in minuscolo). Dopo averlo adattato in locale passa perduta e arriva a guggu nel bus. Lì si ferma, ma per un limite suo: fa avanzare i frame in modo sincrono, mentre i tween di Phaser seguono il tempo reale, quindi la scena del sacrificio di ivan per lui non finisce mai. Rifatto a tempo reale, lo scontro si chiude normalmente (ivan si sacrifica a 15, guggu muore).
+
+Conclusione: niente blocchi trovati, ma il bot vecchio non basta per una campagna completa. È il motivo per cui il bot nuovo deve controllare l'orologio (vedi sotto).
+
+Rumore in console: `assets/backgrounds/void.png` non esiste (404). È gestito, perché si ricade sul fondale generico, ma il void non ha un dipinto suo.
+
 ## I flashback
 
 Oltre ai bug sopra, ci sono problemi di impostazione:
