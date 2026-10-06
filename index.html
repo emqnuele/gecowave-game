@@ -7,7 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GECOWAVE: The Flux of Coscience</title>
   <style>
-    /* loader inline: dipinto subito, prima del bundle js/css, copre il boot */
+    /* loader inline: dipinto subito, prima del bundle js/css, copre il boot.
+       già a tema col codice a inchiostro (serif di sistema: i Fell arrivano col bundle) */
     #boot-loader {
       position: fixed;
       inset: 0;
@@ -17,7 +18,7 @@
       align-items: center;
       justify-content: center;
       gap: 22px;
-      background: #000;
+      background: #050505;
       transition: opacity 0.45s ease;
     }
     #boot-loader.hide {
@@ -25,18 +26,25 @@
       pointer-events: none;
     }
     #boot-loader .bl-geco {
-      font-size: 52px;
-      line-height: 1;
-      animation: bl-bounce 1s ease-in-out infinite;
+      width: 88px;
+      height: 88px;
+      /* riga 1 del foglio (frame 8-15): la corsa, 8 scatti */
+      background: url('./assets/sprites/player_sheet.png') no-repeat 0 -88px / 711px 353px;
+      animation: bl-run 0.72s steps(8) infinite, bl-bounce 1s ease-in-out infinite;
       filter: drop-shadow(0 0 22px rgba(223, 177, 91, 0.5));
     }
     #boot-loader .bl-text {
-      font-family: 'Martian Mono', ui-monospace, monospace;
-      font-size: 11px;
-      letter-spacing: 0.34em;
-      text-transform: uppercase;
-      color: #dfb15b;
+      font-family: Georgia, 'Iowan Old Style', serif;
+      font-style: italic;
+      font-size: 13px;
+      letter-spacing: 0.28em;
+      text-transform: lowercase;
+      color: #9a917e;
       animation: bl-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes bl-run {
+      from { background-position-x: 0; }
+      to { background-position-x: -704px; }
     }
     @keyframes bl-bounce {
       0%, 100% { transform: translateY(0) rotate(-4deg); }
@@ -50,7 +58,7 @@
 
 <body>
   <div id="boot-loader">
-    <div class="bl-geco">🦎</div>
+    <div class="bl-geco"></div>
     <div class="bl-text">sintonizzando la gecowave…</div>
   </div>
   <div id="game"></div>

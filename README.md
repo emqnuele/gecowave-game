@@ -93,7 +93,7 @@ La **formicona, sindaco di formica (FR)** — la formica che morse un dio — ri
 
 ## Le maschere del realm
 
-10 **maschere della tua stessa faccia** (le maschere del primo custode, quello che faceva i dischi) sono nascoste nei capitoli — quasi sempre dietro illusioni, in cima a scalate opzionali o in casseforti altrui. Ognuna vale 25 barre; a 5 markolino si fa vivo e la forza sale; con tutte e dieci arriva **il ritmo perfetto**: attacchi più veloci, per sempre.
+5 **maschere della tua stessa faccia** (le maschere del primo custode, quello che faceva i dischi) sono nascoste nei capitoli — quasi sempre dietro illusioni, in cima a scalate opzionali o in casseforti altrui. Ognuna vale 25 barre; a 3 senti il beat (markolino si fa vivo e la forza sale di 1); con tutte e cinque arriva **il ritmo perfetto**: attacchi più veloci, per sempre, e un varco verde in perduta.
 
 ## Note di design
 

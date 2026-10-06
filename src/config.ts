@@ -23,17 +23,27 @@ export const PHYSICS = {
     dashCooldownMs: 450,
     knockback: 330,
     pogoVelocity: 700,
+    /** aggrappo: si scivola piano lungo il muro e ci si stacca con un salto */
+    wallSlideSpeed: 150,
+    wallJumpVelocity: 760,
+    wallJumpPush: 300,
+    wallJumpLockMs: 110,
+    wallCoyoteMs: 110,
 } as const;
 
 export const COMBAT = {
     maxHp: 5,
     maxFlow: 99,
     flowPerHit: 16,
-    healCost: 33,
-    healHoldMs: 850,
     attackCooldownMs: 300,
     attackActiveMs: 140,
     attackRange: 78,
+    /** schianto: giù+attacco in aria, picchiata che sfonda i muri dall'alto.
+        parte solo in caduta franca: i tocchi all'apice restano attacchi normali */
+    slamMinFall: 300,
+    slamFall: 950,
+    slamRadius: 110,
+    slamDamage: 3,
     /** finestra per concatenare la combo a 3 colpi */
     comboWindowMs: 650,
     invulnMs: 900,
@@ -43,10 +53,22 @@ export const COMBAT = {
     risonanteChargeMs: 650,
     risonanteSpeed: 720,
     risonanteDamage: 0.5,
+    /** eco corta: il rilascio prima della carica non va più a vuoto */
+    risonanteEcoCost: 12,
+    risonanteEcoSpeed: 900,
+    risonanteEcoLifeMs: 380,
+    risonanteLifeMs: 1600,
+    /** onda piena: carica lunga, spacca anche gli scudi */
+    risonanteFullCost: 45,
+    risonanteFullChargeMs: 1400,
+    risonanteFullSpeed: 640,
+    risonanteFullLifeMs: 1800,
+    risonanteFullStunMs: 400,
     /** riflesso distorto: clone esca/aiutante */
     riflessoCost: 25,
-    riflessoDurationMs: 6000,
+    riflessoDurationMs: 7000,
     riflessoCooldownMs: 9000,
+    riflessoSwapCost: 10,
     riflessoSpeedMult: 0.85,
     riflessoHitDamageBase: 0.1,
     riflessoHitDamageFlowMult: 0.5,
@@ -59,26 +81,38 @@ export const COMBAT = {
     riflessoFirstAttackDelayMs: 1000,
     /** analisi 1: tempesta matematica */
     analisiCost: 40,
-    analisiDurationMs: 3000,
-    analisiTickMs: 320,
-    analisiRadius: 120,
+    analisiDurationMs: 2400,
+    analisiTickMs: 300,
+    analisiRadius: 140,
     analisiCooldownMs: 8000,
+    analisiQedDamage: 3,
+    analisiQedBossDamage: 4,
     /** tommasoscudo: bolla che riflette i proiettili */
     scudoCost: 20,
-    scudoDurationMs: 2200,
+    scudoDurationMs: 1600,
     scudoCooldownMs: 6500,
+    scudoPerfectMs: 220,
+    scudoReflectPerfect: 0.6,
+    scudoReflectNormal: 0.25,
+    scudoStunMs: 600,
     /** acqua tossica: pozza che rallenta e avvelena i nemici */
     acquaCost: 30,
-    acquaCooldownMs: 7000,
-    acquaDurationMs: 4500,
+    acquaCooldownMs: 6000,
+    acquaDurationMs: 5000,
     acquaTickMs: 600,
-    acquaRadius: 90,
+    acquaRadius: 100,
     acquaDamage: 1,
-    /** rigenerazione del rio merdone */
-    regenIdleMs: 5000,
-    regenTickMs: 6000,
+    acquaBottleSpeed: 520,
+    acquaBottleDropSpeed: 200,
+    acquaMaxPuddles: 2,
+    acquaDirectStunMs: 1100,
+    poisonMs: 4000,
+    poisonMult: 1.3,
+    poisonBossMult: 1.15,
     /** trenbolone: più forte ma ti mangia da dentro */
     trenboloneDrainMs: 22000,
+    /** mangiare ti inchioda: il boccone si interrompe se prendi danno */
+    eatChannelMs: 700,
 } as const;
 
 export const PLAYER_SPRITE = {

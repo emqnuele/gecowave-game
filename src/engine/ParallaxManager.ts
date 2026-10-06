@@ -1,106 +1,179 @@
 import Phaser from 'phaser';
 import { ZONE_HEX } from '../config';
+import type { BiomeDef } from '../content/biomes';
+import { hex } from './art/ink';
+import { FG_H, foregroundCanvas, skylineCanvas } from './art/silhouettes';
 import type { ZoneColor } from '../types';
 
-interface LayerConfig {
-    key: string;
-    /** usato se `key` non esiste (sfondo custom non ancora aggiunto) */
-    fallbackKey?: string;
-    speed: number;
-    speedY?: number;
-    depth: number;
-    opacity?: number;
-    tint?: boolean;
-    tintStrength?: number;
-    fitHeight?: boolean;
-    scale?: number;
-    /** deriva orizzontale autonoma (nebbia) */
+/* dal fondo verso il giocatore: cielo, dipinto, velo di foschia,
+   tre piani di sagome, poi la nebbia e il primo piano nero davanti */
+
+interface Strip {
+    sprite: Phaser.GameObjects.TileSprite;
+    speedX: number;
+    speedY: number;
+    /** di quanto la base sporge sotto il bordo dello schermo */
+    sink: number;
+    anchor: 'bottom' | 'top';
     driftX?: number;
 }
 
-/* la regola della legacy: sfondo dipinto lontano, strati che scorrono
-   a velocità diverse, e la nebbia che passa DAVANTI al giocatore */
-function themeFor(zone: ZoneColor, levelId: string): LayerConfig[] {
-    const legacy = zone === 'red' || zone === 'orange' || zone === 'cyan' ? 'background2' : 'background';
-    // perduta resta sul fondale fatto a mano; gli altri usano il dipinto custom
-    const custom = levelId !== 'perduta';
-    const painted = custom ? `bg-painted-${levelId}` : legacy;
-    const layers: LayerConfig[] = [
-        { key: painted, fallbackKey: legacy, speed: 0.03, depth: -20, fitHeight: true, tint: true, tintStrength: custom ? 0.18 : 0.4 },
-    ];
-    if (zone === 'purple' || zone === 'blue' || zone === 'green') {
-        layers.push({ key: 'ruins_columns', speed: 0.55, speedY: 0.9, depth: -12, scale: 0.8, opacity: 0.92, tint: true, tintStrength: 0.18 });
-    }
-    layers.push({ key: 'fog', speed: 1.15, depth: 30, opacity: 0.16, driftX: 6 });
-    return layers;
+interface Painted {
+    sprite: Phaser.GameObjects.TileSprite;
+    /** la tilesprite ha una texture interna sua: la scala va presa dalla sorgente */
+    sourceKey: string;
+    speed: number;
 }
 
 export class ParallaxManager {
     private scene: Phaser.Scene;
-    private layers: { sprite: Phaser.GameObjects.TileSprite; cfg: LayerConfig }[] = [];
+    private strips: Strip[] = [];
+    private painted: Painted | null = null;
+    private sky: Phaser.GameObjects.Image | null = null;
+    private veil: Phaser.GameObjects.Image | null = null;
+    private fog: Phaser.GameObjects.TileSprite | null = null;
+    /** quota del terreno su cui poggiano le sagome, in pixel del mondo */
+    private groundY = 0;
     private onResize = () => this.resize();
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
     }
 
-    build(zone: ZoneColor, levelId: string): void {
-        const tint = Phaser.Display.Color.IntegerToColor(ZONE_HEX[zone]);
-        for (const cfg of themeFor(zone, levelId)) {
-            if (!this.scene.textures.exists(cfg.key)) {
-                if (cfg.fallbackKey && this.scene.textures.exists(cfg.fallbackKey)) {
-                    cfg.key = cfg.fallbackKey;
-                } else {
-                    continue;
-                }
-            }
-            const sprite = this.scene.add.tileSprite(0, 0, 16, 16, cfg.key);
-            sprite.setOrigin(0.5, 0.5);
-            sprite.setScrollFactor(0);
-            sprite.setDepth(cfg.depth);
-            if (cfg.opacity !== undefined) sprite.setAlpha(cfg.opacity);
-            if (cfg.tint) {
-                const s = cfg.tintStrength ?? 0.4;
-                sprite.setTint(Phaser.Display.Color.GetColor(
-                    Math.round(255 * (1 - s) + tint.red * s),
-                    Math.round(255 * (1 - s) + tint.green * s),
-                    Math.round(255 * (1 - s) + tint.blue * s)
-                ));
-            }
-            this.layers.push({ sprite, cfg });
+    build(zone: ZoneColor, levelId: string, biome: BiomeDef, groundY: number): void {
+        this.groundY = groundY;
+        const key = (k: string) => `${k}-${biome.id}`;
+
+        this.sky = this.scene.add.image(0, 0, this.gradientTexture(key('sky'), [[0, hex(biome.skyTop)], [1, hex(biome.skyBottom)]]))
+            .setOrigin(0.5).setScrollFactor(0).setDepth(-30);
+
+        // il dipinto del capitolo resta il fondale: è lo stile del gioco
+        const legacy = zone === 'red' || zone === 'orange' || zone === 'cyan' ? 'background2' : 'background';
+        const paintedKey = levelId !== 'perduta' && this.scene.textures.exists(`bg-painted-${levelId}`) ? `bg-painted-${levelId}` : legacy;
+        if (this.scene.textures.exists(paintedKey)) {
+            const sprite = this.scene.add.tileSprite(0, 0, 16, 16, paintedKey).setOrigin(0.5).setScrollFactor(0).setDepth(-20);
+            const tint = Phaser.Display.Color.IntegerToColor(ZONE_HEX[zone]);
+            const s = paintedKey === legacy ? 0.4 : 0.14;
+            sprite.setTint(Phaser.Display.Color.GetColor(
+                Math.round(255 * (1 - s) + tint.red * s),
+                Math.round(255 * (1 - s) + tint.green * s),
+                Math.round(255 * (1 - s) + tint.blue * s),
+            ));
+            this.painted = { sprite, sourceKey: paintedKey, speed: 0.03 };
         }
+
+        // velo di foschia sul dipinto: lo spinge indietro e lo intona al bioma
+        this.veil = this.scene.add.image(0, 0, this.gradientTexture(key('veil'), [
+            [0, hex(biome.skyTop, 0.3)],
+            [0.55, hex(biome.haze, 0.08)],
+            [1, hex(biome.haze, 0.38)],
+        ])).setOrigin(0.5).setScrollFactor(0).setDepth(-19);
+
+        const layers: { depth: number; speedX: number; speedY: number; sink: number; z: number }[] = [
+            { depth: 0, speedX: 0.12, speedY: 0.05, sink: -40, z: -16 },
+            { depth: 1, speedX: 0.26, speedY: 0.1, sink: 10, z: -14 },
+            { depth: 2, speedX: 0.48, speedY: 0.18, sink: 60, z: -12 },
+        ];
+        for (const l of layers) {
+            const tex = key(`sky${l.depth}`);
+            if (!this.scene.textures.exists(tex)) this.scene.textures.addCanvas(tex, skylineCanvas(biome, l.depth));
+            const src = this.scene.textures.get(tex).getSourceImage() as HTMLCanvasElement;
+            const sprite = this.scene.add.tileSprite(0, 0, 16, src.height, tex).setOrigin(0.5, 1).setScrollFactor(0).setDepth(l.z);
+            this.strips.push({ sprite, speedX: l.speedX, speedY: l.speedY, sink: l.sink, anchor: 'bottom' });
+        }
+
+        if (this.scene.textures.exists('fog')) {
+            this.fog = this.scene.add.tileSprite(0, 0, 16, 16, 'fog').setOrigin(0.5).setScrollFactor(0).setDepth(30).setAlpha(0.16);
+        }
+
+        for (const edge of ['top', 'bottom'] as const) {
+            const el = foregroundCanvas(biome, edge);
+            if (!el) continue;
+            const tex = key(`fg-${edge}`);
+            if (!this.scene.textures.exists(tex)) this.scene.textures.addCanvas(tex, el);
+            const sprite = this.scene.add.tileSprite(0, 0, 16, FG_H, tex)
+                .setOrigin(0.5, edge === 'bottom' ? 1 : 0).setScrollFactor(0).setDepth(20).setAlpha(0.92);
+            // il primo piano incornicia: si muove solo in orizzontale, più veloce del mondo
+            this.strips.push({ sprite, speedX: 1.35, speedY: 0, sink: edge === 'bottom' ? 70 : 60, anchor: edge });
+        }
+
         this.resize();
         this.scene.scale.on('resize', this.onResize);
         this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.scene.scale.off('resize', this.onResize);
-            this.layers = [];
+            this.strips = [];
+            this.painted = null;
+            this.sky = null;
+            this.veil = null;
+            this.fog = null;
         });
     }
 
-    resize(): void {
+    private gradientTexture(key: string, stops: [number, string][]): string {
+        if (this.scene.textures.exists(key)) return key;
+        const el = document.createElement('canvas');
+        el.width = 4;
+        el.height = 256;
+        const ctx = el.getContext('2d')!;
+        const g = ctx.createLinearGradient(0, 0, 0, 256);
+        for (const [t, c] of stops) g.addColorStop(t, c);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 4, 256);
+        this.scene.textures.addCanvas(key, el);
+        return key;
+    }
+
+    /** viewport in coordinate scrollFactor 0, tenendo conto dello zoom centrato */
+    private view(): { cx: number; cy: number; w: number; h: number } {
         const cam = this.scene.cameras.main;
-        // lo zoom è centrato sul centro camera: un oggetto a scrollfactor 0
-        // copre lo schermo se sta al centro con dimensione viewport/zoom
-        const vw = cam.width / cam.zoom + 8;
-        const vh = cam.height / cam.zoom + 8;
-        for (const { sprite, cfg } of this.layers) {
-            sprite.setSize(Math.ceil(vw), Math.ceil(vh));
-            sprite.setPosition(cam.width / 2, cam.height / 2);
-            const tex = this.scene.textures.get(cfg.key).getSourceImage() as HTMLImageElement;
-            if (cfg.fitHeight && tex.height) {
-                const s = vh / tex.height;
-                sprite.setTileScale(s, s);
-            } else if (cfg.scale) {
-                sprite.setTileScale(cfg.scale, cfg.scale);
-            }
+        return { cx: cam.width / 2, cy: cam.height / 2, w: cam.width / cam.zoom + 8, h: cam.height / cam.zoom + 8 };
+    }
+
+    resize(): void {
+        const v = this.view();
+        for (const img of [this.sky, this.veil]) {
+            if (!img) continue;
+            img.setPosition(v.cx, v.cy);
+            img.setDisplaySize(v.w, v.h);
         }
+        if (this.painted) {
+            const sp = this.painted.sprite;
+            sp.setSize(Math.ceil(v.w), Math.ceil(v.h));
+            sp.setPosition(v.cx, v.cy);
+            const tex = this.scene.textures.get(this.painted.sourceKey).getSourceImage() as HTMLImageElement;
+            if (tex.height) sp.setTileScale(v.h / tex.height, v.h / tex.height);
+        }
+        if (this.fog) {
+            this.fog.setSize(Math.ceil(v.w), Math.ceil(v.h));
+            this.fog.setPosition(v.cx, v.cy);
+        }
+        for (const s of this.strips) s.sprite.width = Math.ceil(v.w);
     }
 
     update(time: number): void {
         const cam = this.scene.cameras.main;
-        for (const { sprite, cfg } of this.layers) {
-            sprite.tilePositionX = (cam.scrollX * cfg.speed + (cfg.driftX ? time * 0.001 * cfg.driftX : 0)) / sprite.tileScaleX;
-            sprite.tilePositionY = (cam.scrollY * (cfg.speedY ?? cfg.speed * 0.4)) / sprite.tileScaleY;
+        const v = this.view();
+        const left = v.cx - v.w / 2;
+        const top = v.cy - v.h / 2;
+        const bottom = top + v.h;
+        // riferimento verticale: il fondo della vista appoggiato al terreno.
+        // sotto terra le sagome salgono e spariscono, sopra scendono piano
+        const rise = this.groundY - (cam.scrollY + cam.height / cam.zoom);
+
+        if (this.painted) {
+            const sp = this.painted.sprite;
+            sp.tilePositionX = (cam.scrollX * this.painted.speed) / sp.tileScaleX;
+        }
+        if (this.fog) this.fog.tilePositionX = cam.scrollX * 1.15 + time * 0.006;
+
+        for (const s of this.strips) {
+            s.sprite.x = left + v.w / 2;
+            s.sprite.tilePositionX = cam.scrollX * s.speedX;
+            if (s.anchor === 'bottom') {
+                s.sprite.y = bottom + s.sink + rise * s.speedY;
+            } else {
+                s.sprite.y = top - s.sink;
+            }
         }
     }
 }

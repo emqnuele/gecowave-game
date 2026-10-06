@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
+import { FX } from '../engine/art/abilityFx';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 
@@ -33,8 +34,8 @@ export class Companion extends Phaser.Physics.Arcade.Sprite {
         this.facing = facing;
         this.setScale(PLAYER_SPRITE.scale)
             .setFlipX(facing < 0)
-            .setAlpha(0.7)
-            .setTint(0x22d3ee)
+            .setAlpha(0.75)
+            .setTint(0xa5f3fc)
             .setDepth(4)
             .setPipeline('Light2D');
 
@@ -208,32 +209,35 @@ export class Companion extends Phaser.Physics.Arcade.Sprite {
     }
 
     private slashVisual(dir: 'side' | 'up'): void {
-        const g = this.scene.add.graphics().setDepth(this.depth + 1);
         const angle = dir === 'up' ? -Math.PI / 2 : this.facing === 1 ? 0 : Math.PI;
-        g.lineStyle(3, 0x22d3ee, 0.9);
-        g.beginPath();
-        g.arc(0, 0, 40, angle - 0.95, angle + 0.95);
-        g.strokePath();
-        g.setPosition(this.x, this.y);
+        const img = this.scene.add.image(this.x, this.y, FX.slash).setDepth(this.depth + 1)
+            .setRotation(angle).setTint(0xa5f3fc).setAlpha(0.9);
         this.scene.tweens.add({
-            targets: g,
+            targets: img,
             alpha: 0,
-            scaleX: 1.25,
-            scaleY: 1.25,
+            scaleX: 1.15,
+            scaleY: 1.15,
             duration: 140,
-            onComplete: () => g.destroy(),
+            onComplete: () => img.destroy(),
         });
     }
 
     kill(): void {
-        this.scene.add.particles(this.x, this.y, 'p-spark', {
-            speed: { min: 80, max: 200 },
-            scale: { start: 0.8, end: 0 },
-            tint: 0x22d3ee,
-            lifespan: 350,
-            quantity: 12,
-            stopAfter: 12,
-        });
+        // si sbriciola in schegge di specchio
+        for (let i = 0; i < 8; i++) {
+            const s = this.scene.add.image(this.x, this.y, FX.mirrorShard).setDepth(6);
+            const a = (i / 8) * Math.PI * 2;
+            this.scene.tweens.add({
+                targets: s,
+                x: this.x + Math.cos(a) * 70,
+                y: this.y + Math.sin(a) * 70,
+                angle: 200,
+                alpha: 0,
+                duration: 450,
+                ease: 'Quad.easeOut',
+                onComplete: () => s.destroy(),
+            });
+        }
         this.attackHitbox.destroy();
         this.destroy();
     }

@@ -1,0 +1,601 @@
+/* ===========================================================
+   la bacheca dei trofei: opaca, a inchiostro, oro del realm.
+   niente backdrop-filter: cinquanta medaglie devono scorrere lisce
+   =========================================================== */
+
+.cabinet {
+  --gold: #dfb15b;
+  --gold-hi: #f6d58e;
+  --ink: #050506;
+  --panel: #111114;
+  --line: rgba(255, 255, 255, 0.07);
+  --muted: #8b8b94;
+  position: relative;
+  color: #e4e4e7;
+  font-family: var(--font-martian);
+}
+
+.cab-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 4px 0 14px;
+}
+
+.cab-ring {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex: none;
+}
+
+.cab-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.cab-ring circle {
+  fill: none;
+  stroke-width: 7;
+}
+
+.cab-ring .track {
+  stroke: #1d1d22;
+}
+
+.cab-ring .fill {
+  stroke: var(--gold);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cab-ring .count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1;
+}
+
+.cab-ring .count b {
+  font-family: var(--font-crisis);
+  font-size: 22px;
+  color: #fff;
+}
+
+.cab-ring .count span {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cab-title {
+  font-family: var(--font-crisis);
+  font-size: 22px;
+  line-height: 1;
+  color: #fff;
+}
+
+.cab-line {
+  margin-top: 6px;
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: var(--gold);
+  transform: rotate(-1.2deg);
+  transform-origin: left center;
+}
+
+.cab-warn {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px dashed rgba(248, 113, 113, 0.55);
+  background: #1a0c0e;
+  color: #fca5a5;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.cab-warn.soft {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--panel);
+  color: var(--muted);
+}
+
+/* segmented control: come quello di un telefono vero */
+.cab-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  padding: 3px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: #16161a;
+  border: 1px solid var(--line);
+}
+
+.cab-tab {
+  text-transform: none;
+  letter-spacing: normal;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 4px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: 10px var(--font-martian);
+  cursor: pointer;
+}
+
+.cab-tab i {
+  font-style: normal;
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+.cab-tab.on {
+  background: #26262c;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 2px 2px 0 rgba(0, 0, 0, 0.6);
+}
+
+.cab-tab:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+/* ---------- le medaglie ---------- */
+
+.medals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 8px;
+  contain: layout paint;
+}
+
+.cabinet.wide .medals {
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 22px 12px;
+}
+
+.medal {
+  min-width: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.medal .disc {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.18s ease;
+  /* non presa: disco d'inchiostro tratteggiato, come le ombre dei dipinti */
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.045) 0 2px, transparent 2px 6px),
+    #121216;
+  border: 2px solid #26262c;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+}
+
+/* il nastrino sotto la medaglia */
+.medal .disc::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  width: 18px;
+  height: 12px;
+  transform: translateX(-50%);
+  background: #26262c;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 62%, 0 100%);
+  z-index: -1;
+}
+
+.medal .glyph {
+  font-size: 24px;
+  line-height: 1;
+  opacity: 0.22;
+}
+
+.medal.secret .glyph {
+  font-family: var(--font-marker);
+  font-size: 26px;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.medal.have .disc {
+  background:
+    radial-gradient(circle at 34% 28%, var(--gold-hi), var(--gold) 46%, #8a6626 100%);
+  border-color: #0b0c10;
+}
+
+.medal.have .disc::after {
+  background: #b0413e;
+}
+
+.medal.have .glyph {
+  opacity: 1;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.55));
+}
+
+/* assistita: i trofei bloccati portano la X */
+.cabinet.assisted .medal:not(.have) .disc::before {
+  content: '×';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  line-height: 1;
+  color: #f87171;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.8);
+  z-index: 1;
+}
+
+.medal .medal-name {
+  max-width: 100%;
+  padding: 0 2px;
+  font-size: 9px;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.medal.have .medal-name {
+  color: #e4e4e7;
+}
+
+.medal:hover .disc,
+.medal:focus-visible .disc,
+.medal.selected .disc {
+  transform: rotate(0deg) scale(1.08);
+}
+
+.medal:focus-visible {
+  outline: none;
+}
+
+.medal:focus-visible .disc,
+.medal.selected .disc {
+  box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--gold);
+}
+
+.medals-empty {
+  grid-column: 1 / -1;
+  padding: 18px 4px;
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: var(--muted);
+  transform: rotate(-1deg);
+}
+
+/* ---------- la scheda che sale dal basso ---------- */
+
+.cab-sheet {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 0 -6px;
+  display: none;
+  grid-template-columns: 56px 1fr;
+  grid-template-areas:
+    'icon name'
+    'icon desc'
+    'icon state';
+  column-gap: 14px;
+  row-gap: 4px;
+  padding: 16px 40px 16px 16px;
+  border-radius: 20px 20px 14px 14px;
+  background: #18181c;
+  border: 1.5px solid #2a2a31;
+  box-shadow: 0 -18px 30px rgba(0, 0, 0, 0.65), 4px 4px 0 rgba(0, 0, 0, 0.9);
+}
+
+.cab-sheet.open {
+  display: grid;
+  animation: sheet-up 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.sheet-icon {
+  grid-area: icon;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 26px;
+  background: #121216;
+  border: 2px solid #26262c;
+}
+
+.cab-sheet.have .sheet-icon {
+  background: radial-gradient(circle at 34% 28%, var(--gold-hi), var(--gold) 46%, #8a6626 100%);
+  border-color: #0b0c10;
+}
+
+.sheet-name {
+  grid-area: name;
+  font-family: var(--font-crisis);
+  font-size: 15px;
+  line-height: 1.15;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.sheet-desc {
+  grid-area: desc;
+  font-size: 10px;
+  line-height: 1.55;
+  color: #c4c4cc;
+}
+
+.sheet-state {
+  grid-area: state;
+  margin-top: 4px;
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: var(--muted);
+  transform: rotate(-1deg);
+  transform-origin: left center;
+}
+
+.cab-sheet.have .sheet-state {
+  color: var(--gold);
+}
+
+.sheet-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: #26262c;
+  color: #e4e4e7;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sheet-close:focus-visible {
+  outline: 2px solid var(--gold);
+}
+
+/* ---------- record ---------- */
+
+.records {
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.records-title {
+  margin-bottom: 8px;
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: #fff;
+  transform: rotate(-1deg);
+  transform-origin: left center;
+}
+
+.rec {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+}
+
+.rec-open {
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  font: inherit;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rec-open:hover .rec-name,
+.rec-open[aria-expanded='true'] .rec-name {
+  color: #fff;
+}
+
+.rec-open:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.rec-open .rec-name::before {
+  content: '▸ ';
+  color: var(--muted);
+}
+
+.rec-open[aria-expanded='true'] .rec-name::before {
+  content: '▾ ';
+}
+
+.rec-detail {
+  padding: 8px 4px 12px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+}
+
+.rec-detail-head {
+  color: var(--muted);
+  font-size: 9px;
+  margin-bottom: 6px;
+}
+
+.rec-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  color: #d4d4d8;
+}
+
+.rec-line b {
+  font-variant-numeric: tabular-nums;
+  color: #e4e4e7;
+}
+
+.rec-line.total {
+  margin-top: 4px;
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+}
+
+.rec-line.total b {
+  color: var(--gold);
+}
+
+.rec-name {
+  color: #e4e4e7;
+}
+
+.rec-meta {
+  color: var(--muted);
+  font-size: 9px;
+  white-space: pre;
+}
+
+.rec-score {
+  font-family: var(--font-crisis);
+  font-size: 13px;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.rec.assisted .rec-score {
+  color: var(--muted);
+}
+
+.rec.total {
+  border-bottom: none;
+}
+
+.rec.total .rec-name {
+  font-family: var(--font-marker);
+  font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cab-sheet.open { animation: none; }
+  .cab-ring .fill { transition: none; }
+  .medal .disc { transition: none; }
+}
+
+.rec.board.first .rec-name {
+  color: var(--gold);
+}
+
+/* ---------- inchiostro nel telefono: la bacheca parla come i menu ---------- */
+
+.phone .cab-title {
+  font-family: var(--font-fell);
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  color: var(--sx-bone);
+}
+
+.phone .cab-line {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
+}
+
+.phone .cab-ring .count b {
+  font-family: var(--font-fell);
+  font-weight: 400;
+}
+
+.phone .cab-warn {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(163, 34, 28, 0.65);
+  border-radius: 4px;
+  color: var(--sx-bone);
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.phone .cab-tab {
+  font-family: var(--font-fell);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.phone .medal .medal-name {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 11px;
+  color: #b8b0a0;
+}
+
+.phone .medal.have .medal-name {
+  color: var(--sx-bone);
+}
+
+.phone .sheet-name {
+  font-family: var(--font-fell);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--sx-bone);
+}
+
+.phone .sheet-desc {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cfc6b0;
+}
+
+.phone .records-title {
+  font-family: var(--font-fell);
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  color: var(--sx-bone);
+  transform: none;
+}
+
+.phone .medals-empty {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  transform: none;
+}

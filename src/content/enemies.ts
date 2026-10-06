@@ -26,7 +26,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 2,
         speed: 200,
         aggroRange: 300,
-        barre: [1, 3],
+        barre: [1, 2],
         glowColor: 0x22d3ee,
     },
     citelis: {
@@ -47,7 +47,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         speed: 60,
         aggroRange: 190,
         lungeSpeed: 260,
-        barre: [1, 3],
+        barre: [1, 2],
         glowColor: 0xfacc15,
     },
     pittura: {
@@ -69,7 +69,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 1,
         speed: 240,
         aggroRange: 280,
-        barre: [1, 3],
+        barre: [1, 1],
         glowColor: 0xc084fc,
     },
     tecnodrone: {
@@ -80,7 +80,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         speed: 0,
         aggroRange: 420,
         fireRateMs: 2000,
-        barre: [1, 3],
+        barre: [2, 3],
         glowColor: 0xf87171,
     },
     tossico: {
@@ -110,7 +110,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 2,
         speed: 100,
         aggroRange: 300,
-        barre: [1, 3],
+        barre: [2, 4],
         glowColor: 0x60a5fa,
     },
     specchietto: {
@@ -120,7 +120,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 2,
         speed: 130,
         aggroRange: 340,
-        barre: [1, 3],
+        barre: [2, 3],
         glowColor: 0xc084fc,
     },
     padella: {
@@ -131,7 +131,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         speed: 0,
         aggroRange: 380,
         fireRateMs: 2400,
-        barre: [1, 3],
+        barre: [2, 4],
         glowColor: 0xf87171,
     },
     ammiratore: {
@@ -141,7 +141,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 3,
         speed: 190,
         aggroRange: 420,
-        barre: [1, 3],
+        barre: [2, 4],
         glowColor: 0xf87171,
     },
     telecamera: {
@@ -152,7 +152,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         speed: 0,
         aggroRange: 460,
         fireRateMs: 1800,
-        barre: [1, 3],
+        barre: [2, 4],
         glowColor: 0x22d3ee,
     },
     // notino senza la wave: saltella, spara e non sta mai zitto
@@ -164,7 +164,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         speed: 280,
         aggroRange: 520,
         fireRateMs: 1500,
-        barre: [1, 3],
+        barre: [2, 4],
         glowColor: 0xa855f7,
     },
     // eco della tommasorveglianza: un frammento di registrazione di te
@@ -175,7 +175,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 2,
         speed: 290,
         aggroRange: 520,
-        barre: [1, 3],
+        barre: [3, 5],
         glowColor: 0x22d3ee,
     },
     // bottiglia premium dello stabilimento: rimbalza e schizza
@@ -186,7 +186,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 2,
         speed: 250,
         aggroRange: 330,
-        barre: [1, 3],
+        barre: [1, 2],
         glowColor: 0x22d3ee,
     },
     // ricordo di pedro: fluttua, sbiadito, non vuole essere dimenticato
@@ -197,7 +197,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 2,
         speed: 120,
         aggroRange: 340,
-        barre: [1, 3],
+        barre: [3, 6],
         glowColor: 0x94a3b8,
     },
     'tossico-trenbo': {
@@ -207,7 +207,7 @@ export const ENEMIES: Record<EnemyKind, EnemyArchetype> = {
         hp: 2,
         speed: 245,
         aggroRange: 350,
-        barre: [1, 3],
+        barre: [2, 4],
         glowColor: 0x84cc16,
     },
     // le fiat tipo di galliate: sgommano addosso al player

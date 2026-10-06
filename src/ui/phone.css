@@ -1,0 +1,1459 @@
+/* ===========================================================
+   wavesung galaxy — il telefono del custode (acid glass)
+   =========================================================== */
+
+.phone-hint {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  padding: 7px 0;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: var(--zinc-300);
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transform: none;
+  text-shadow: 0 2px 10px #000, 0 1px 2px #000;
+  cursor: pointer;
+}
+
+.phone-hint kbd {
+  font-family: var(--font-martian);
+  font-size: 9px;
+  padding: 2px 6px;
+  border: 1px solid rgba(207, 167, 92, 0.4);
+  border-radius: 3px;
+  color: var(--sx-gold);
+}
+
+.phone-hint .icon {
+  position: relative;
+  display: inline-block;
+  font-size: 14px;
+}
+
+.phone-hint .unread {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 9px;
+  height: 9px;
+  padding: 0 2px;
+  border-radius: 5px;
+  background: var(--red);
+  color: #000;
+  font-size: 7px;
+  font-weight: 700;
+  line-height: 9px;
+  text-align: center;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
+}
+
+.phone-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 90% at 85% 60%, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.7));
+  animation: screen-in 0.25s ease both;
+}
+
+/* la scocca: plastica nera rigata a china, sbeccata, piena di adesivi */
+.phone {
+  --tint: var(--accent);
+  --ink: #050506;
+  --panel: #111114;
+  --panel-2: #18181c;
+  --line: rgba(255, 255, 255, 0.07);
+  --muted: #8b8b94;
+  position: absolute;
+  right: clamp(16px, 6vw, 90px);
+  bottom: 50%;
+  width: min(372px, calc(100vw - 32px));
+  height: min(760px, calc(100vh - 40px));
+  transform: translateY(50%) rotate(-2deg);
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  animation: phone-up 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+  padding: 11px;
+  border-radius: 48px;
+  background:
+    repeating-linear-gradient(-38deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 5px),
+    linear-gradient(160deg, #1d1d22, #060607 55%, #141418);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.9), 0 30px 80px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 2px #000, inset 0 0 0 3.5px rgba(255, 255, 255, 0.07);
+}
+
+/* tasti laterali: un telefono vero ha i tasti */
+.phone::before,
+.phone::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  border-radius: 2px;
+  background: #1d1d22;
+  box-shadow: inset 0 0 0 1px #000;
+}
+
+.phone::before { left: -4px; top: 150px; height: 64px; }
+.phone::after { right: -4px; top: 200px; height: 90px; }
+
+.phone:hover,
+.phone:focus-within {
+  transform: translateY(50%) rotate(0deg);
+}
+
+.phone.closing {
+  animation: phone-down 0.28s ease-in both;
+}
+
+@keyframes phone-up {
+  from { transform: translateY(130%) rotate(6deg); }
+  to { transform: translateY(50%) rotate(-2deg); }
+}
+
+@keyframes phone-down {
+  from { transform: translateY(50%) rotate(-2deg); }
+  to { transform: translateY(140%) rotate(8deg); }
+}
+
+/* lo schermo è opaco: niente vetro sfocato qui dentro, scorre liscio */
+.phone-screen {
+  position: relative;
+  height: 100%;
+  border-radius: 38px;
+  overflow: hidden;
+  background: var(--ink);
+  isolation: isolate;
+  contain: layout paint;
+}
+
+.phone-crack {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+.phone-status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 7;
+  height: 46px;
+  display: grid;
+  grid-template-columns: 1fr 104px 1fr;
+  align-items: center;
+  padding: 0 22px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: #f4f4f5;
+  pointer-events: none;
+}
+
+.phone-status .left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.phone-status .time {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-status .carrier {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.phone-status .island {
+  justify-self: center;
+  width: 96px;
+  height: 26px;
+  border-radius: 14px;
+  background: #000;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  position: relative;
+}
+
+/* la fotocamera nell'isola: un occhio di geco */
+.phone-status .island::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #1f3b2a, #050806 70%);
+  box-shadow: 0 0 0 1.5px #0c0c0e;
+}
+
+.phone-status .right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.phone-status .bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 10px;
+}
+
+.phone-status .bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: #f4f4f5;
+}
+
+.phone-status .bars i:nth-child(1) { height: 3px; }
+.phone-status .bars i:nth-child(2) { height: 5px; }
+.phone-status .bars i:nth-child(3) { height: 7px; }
+.phone-status .bars i:nth-child(4) { height: 10px; opacity: 0.3; }
+
+.phone-status .battery {
+  display: inline-block;
+  width: 22px;
+  height: 11px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 3.5px;
+  position: relative;
+}
+
+.phone-status .battery::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  width: calc(var(--level, 50%) - 2px);
+  background: var(--green);
+  border-radius: 1.5px;
+}
+
+.phone-status .battery::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 2.5px;
+  width: 2px;
+  height: 4px;
+  border-radius: 0 1px 1px 0;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.phone-status .battery.low::before {
+  background: var(--red);
+}
+
+/* home e app vivono nella stessa cornice; l'app si apre dall'icona toccata */
+.phone-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-view.app {
+  background: var(--ink);
+  animation: app-open 0.24s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+}
+
+.phone-view.home.back {
+  animation: home-back 0.22s ease-out both;
+}
+
+@keyframes app-open {
+  from { transform: scale(0.18); opacity: 0; border-radius: 30px; }
+  to { transform: none; opacity: 1; border-radius: 0; }
+}
+
+@keyframes home-back {
+  from { transform: scale(1.08); opacity: 0.4; }
+  to { transform: none; opacity: 1; }
+}
+
+.phone-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: clip;
+  padding: 50px 18px 22px;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+
+.phone-body::-webkit-scrollbar { display: none; }
+
+.phone-home-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 7;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.phone-home-bar span {
+  width: 116px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- home ---------- */
+
+.home-wall {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center 35%;
+}
+
+/* il dipinto della zona fa da sfondo: scurito verso il basso per leggere le icone */
+.home-wall::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5, 5, 6, 0.35) 0%, rgba(5, 5, 6, 0.55) 40%, rgba(5, 5, 6, 0.9) 100%),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 4px);
+}
+
+.home-body {
+  padding-top: 58px;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-clock {
+  font-family: var(--font-fell);
+  font-weight: 400;
+  font-size: 64px;
+  line-height: 0.95;
+  color: var(--sx-bone);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-greet {
+  margin: 6px 0 18px;
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: var(--tint);
+  transform: rotate(-1.5deg);
+  transform-origin: left center;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+}
+
+/* widget: dove sei e cosa devi fare, come la card meteo di un telefono vero */
+.home-widget {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 13px 14px;
+  margin-bottom: 22px;
+  border-radius: 22px;
+  background: rgba(14, 14, 17, 0.88);
+  border: 1px solid var(--line);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.75);
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.home-widget .w-kick {
+  font-family: var(--font-marker);
+  font-size: 12px;
+  color: var(--tint);
+}
+
+.home-widget .w-text {
+  grid-column: 1 / -1;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  line-height: 1.55;
+  color: #d4d4d8;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-widget .w-waves {
+  font-family: var(--font-fell);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--sx-bone);
+}
+
+.home-widget:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 2px;
+}
+
+.phone-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px 6px;
+}
+
+.phone-app {
+  letter-spacing: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #e4e4e7;
+  font-family: var(--font-martian);
+  font-size: 9px;
+  text-transform: lowercase;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+.phone-app > span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* icone: squircle pieni, colore dell'app, ombra dura da adesivo */
+.phone-app .icon {
+  --app: var(--zinc-300);
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--app) 34%, transparent), transparent 70%),
+    color-mix(in srgb, var(--app) 16%, #0e0e11);
+  border: 1.5px solid color-mix(in srgb, var(--app) 55%, #000);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  transition: transform 0.16s ease;
+}
+
+.phone-app:hover .icon,
+.phone-app:focus-visible .icon {
+  transform: translateY(-2px) scale(1.06);
+}
+
+.phone-app:active .icon {
+  transform: scale(0.92);
+}
+
+.phone-app:focus-visible {
+  outline: none;
+}
+
+.phone-app:focus-visible .icon {
+  box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--app), 3px 3px 0 rgba(0, 0, 0, 0.85);
+}
+
+.phone-app .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--red);
+  color: #000;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
+}
+
+.phone-dock {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 12px 10px;
+  border-radius: 28px;
+  background: rgba(14, 14, 17, 0.82);
+  border: 1px solid var(--line);
+}
+
+.phone-dock .phone-app > span:last-child {
+  display: none;
+}
+
+/* ---------- testata delle app ---------- */
+
+.phone-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 2px 0 8px;
+}
+
+.phone-back {
+  text-transform: none;
+  letter-spacing: normal;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-martian);
+  font-size: 11px;
+  color: var(--tint);
+}
+
+.phone-back b {
+  font-size: 20px;
+  line-height: 0.8;
+  font-weight: 400;
+}
+
+.phone-back:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.phone-head .app-icon {
+  font-size: 18px;
+}
+
+.phone-title {
+  font-family: var(--font-fell);
+  font-size: 30px;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  color: var(--sx-bone);
+}
+
+.phone-sub {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--tint);
+  margin: 6px 0 18px;
+}
+
+.phone-empty {
+  margin-top: 40px;
+  text-align: center;
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.6);
+  transform: rotate(-1.5deg);
+}
+
+.phone-section {
+  margin: 18px 0 8px;
+  font-family: var(--font-fell);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: var(--sx-bone);
+}
+
+.phone-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px;
+  margin-bottom: 9px;
+  text-align: left;
+  color: var(--zinc-300);
+  font-family: var(--font-martian);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+button.phone-row {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+
+.phone-row:hover,
+.phone-row:focus-visible {
+  transform: rotate(0deg);
+  outline: none;
+  border-color: color-mix(in srgb, var(--tint) 45%, transparent);
+}
+
+.phone-row .lead {
+  font-size: 22px;
+  width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.phone-row .main {
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-row .name {
+  font-family: var(--font-fell);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: var(--sx-bone);
+}
+
+.phone-row .preview {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phone-row .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.phone-row .meta {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* ---------- chat ---------- */
+
+.phone-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.phone-tab {
+  cursor: pointer;
+  padding: 6px 13px;
+  font-family: var(--font-fell);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.phone-tab.active {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--tint) 55%, transparent);
+}
+
+.bubble {
+  max-width: 86%;
+  padding: 10px 13px;
+  margin: 0 0 10px;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #cfc6b0;
+  border-radius: 16px 16px 16px 4px;
+}
+
+.bubble.me {
+  margin-left: auto;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.bubble .when {
+  display: block;
+  margin-top: 4px;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.call-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding-top: 30px;
+}
+
+.call-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 46px;
+  transform: rotate(-4deg);
+}
+
+.call-name {
+  font-family: var(--font-fell);
+  font-size: 26px;
+  letter-spacing: 0.08em;
+  color: var(--sx-bone);
+}
+
+.call-state {
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: var(--tint);
+}
+
+.call-ring {
+  animation: call-ring 0.9s ease-in-out infinite;
+}
+
+@keyframes call-ring {
+  0%, 100% { transform: rotate(-4deg); }
+  25% { transform: rotate(4deg); }
+  50% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+/* ---------- pulsanti dentro il telefono ---------- */
+
+.phone-btn {
+  cursor: pointer;
+  padding: 9px 18px;
+  font-family: var(--font-fell);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--sx-bone);
+  transition: transform 0.15s ease;
+}
+
+.phone-btn:hover,
+.phone-btn:focus-visible {
+  transform: rotate(0deg) scale(1.05) !important;
+  outline: none;
+}
+
+.phone-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.phone-note {
+  margin: 10px 0;
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  transform: rotate(-1deg);
+}
+
+.phone-note.bad { color: var(--red); }
+.phone-note.good { color: var(--green); }
+
+/* ---------- zaino e amuleti ---------- */
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.slot {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.slot:nth-child(3n) { transform: rotate(2deg); }
+.slot:nth-child(3n + 1) { transform: rotate(-2deg); }
+
+.slot:hover,
+.slot:focus-visible,
+.slot.selected {
+  transform: rotate(0deg) scale(1.06);
+  outline: none;
+  border-color: color-mix(in srgb, var(--tint) 70%, transparent);
+}
+
+.slot .qty {
+  position: absolute;
+  right: 5px;
+  bottom: 3px;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: #fff;
+}
+
+.slot.equipped::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  border: 2px solid var(--purple);
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.55);
+  pointer-events: none;
+}
+
+.slot .pips {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  display: flex;
+  gap: 2px;
+}
+
+.slot .pips i,
+.notches i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(192, 132, 252, 0.85);
+}
+
+.notches {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+
+.notches i {
+  width: 14px;
+  height: 14px;
+  border: 1.5px dashed rgba(192, 132, 252, 0.6);
+  background: transparent;
+}
+
+.notches i.used {
+  background: var(--purple);
+  border-style: solid;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+.detail {
+  margin-top: 16px;
+  padding: 14px 16px;
+}
+
+.detail .name {
+  font-family: var(--font-fell);
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  color: var(--sx-bone);
+}
+
+.detail p {
+  margin: 8px 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--zinc-300);
+}
+
+.detail .punch {
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail .actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* ---------- negozio ---------- */
+
+.price {
+  font-family: var(--font-martian);
+  font-size: 11px;
+  color: var(--yellow);
+  flex-shrink: 0;
+}
+
+.wallet {
+  display: inline-flex;
+  padding: 6px 12px;
+  margin-bottom: 12px;
+  font-family: var(--font-martian);
+  font-size: 11px;
+  color: var(--yellow);
+  transform: rotate(1.5deg);
+}
+
+/* ---------- mappa ---------- */
+
+.realm-map {
+  position: relative;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.realm-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.realm-map .node {
+  cursor: pointer;
+}
+
+.realm-map .node text {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+  fill: var(--sx-bone);
+}
+
+.realm-map .node.locked text {
+  fill: rgba(232, 223, 200, 0.28);
+}
+
+.realm-map .here {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: here-ping 2.2s ease-out infinite;
+}
+
+@keyframes here-ping {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.realm-map .node:focus-visible circle,
+.realm-map .node:hover circle {
+  stroke: #fff;
+  outline: none;
+}
+
+.realm-map .here {
+  animation: map-pulse 1.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes map-pulse {
+  50% { transform: scale(1.35); opacity: 0.6; }
+}
+
+/* ---------- diario e profilo ---------- */
+
+.objective {
+  padding: 16px 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #fff;
+  transform: rotate(-0.8deg);
+}
+
+.objective .where {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: var(--tint);
+}
+
+.progress {
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--tint);
+}
+
+.stat-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 2px;
+  font-size: 11px;
+  color: var(--zinc-300);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.stat-line b {
+  color: #fff;
+  font-weight: 700;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 8px;
+  transform: rotate(-1deg);
+}
+
+.player-card .avatar {
+  font-size: 42px;
+  transform: rotate(-12deg);
+}
+
+.player-card .pname {
+  font-family: var(--font-fell);
+  font-size: 24px;
+  letter-spacing: 0.08em;
+  color: var(--sx-bone);
+}
+
+/* ---------- radio ---------- */
+
+.now-playing {
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  transform: rotate(-1deg);
+}
+
+.now-playing .freq {
+  font-family: var(--font-fell);
+  font-size: 32px;
+  letter-spacing: 0.08em;
+  color: var(--yellow);
+  line-height: 1;
+}
+
+.now-playing .track {
+  margin-top: 8px;
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: #fff;
+}
+
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+
+.eq i {
+  width: 3px;
+  background: var(--yellow);
+  animation: eq 0.8s ease-in-out infinite;
+}
+
+.eq i:nth-child(2) { animation-delay: -0.3s; }
+.eq i:nth-child(3) { animation-delay: -0.55s; }
+
+@keyframes eq {
+  0%, 100% { height: 3px; }
+  50% { height: 14px; }
+}
+
+/* ---------- wavegram ---------- */
+
+.post {
+  padding: 14px 15px;
+  margin-bottom: 12px;
+}
+
+.post:nth-child(odd) { transform: rotate(-0.7deg); }
+.post:nth-child(even) { transform: rotate(0.6deg); }
+
+.post .who {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.post .author {
+  font-family: var(--font-fell);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+
+.post .handle {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.post p {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #cfc6b0;
+}
+
+.post .like {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-martian);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.post .like.on { color: var(--red); }
+
+@media (prefers-reduced-motion: reduce) {
+  .phone,
+  .phone.closing,
+  .phone-scrim,
+  .call-ring,
+  .realm-map .here,
+  .eq i {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.region-map {
+  padding: 6px;
+  margin: 4px 0 8px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.region-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.region-map .here {
+  animation: region-here 1.2s ease-in-out infinite;
+}
+
+.region-map .seal-33 {
+  animation: region-here 2.4s ease-in-out infinite;
+}
+
+@keyframes region-here {
+  50% { opacity: 0.35; }
+}
+
+.region-goal {
+  font-family: var(--font-marker);
+  color: #f87171;
+  font-size: 13px;
+  transform: rotate(-1deg);
+  margin-bottom: 6px;
+}
+
+/* ---------- niente vetro sfocato dentro lo schermo ---------- */
+/* il blur su decine di righe che scorrono faceva laggare il telefono: qui le superfici sono piene */
+.phone .glass-chip,
+.phone .glass-panel,
+.phone .sticker {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.phone .glass-chip,
+.phone .glass-panel {
+  background-color: var(--panel);
+  border-color: var(--line);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+}
+
+.phone .sticker {
+  background-color: var(--panel-2);
+}
+
+.phone-row {
+  border-radius: 14px;
+}
+
+.phone-view.app.still {
+  animation: none;
+}
+
+.phone .assist-row {
+  width: 100%;
+}
+
+/* ---------- fotocamera ---------- */
+
+.vf {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #050506;
+  border: 1px solid rgba(207, 167, 92, 0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.vf-cross::before,
+.vf-cross::after {
+  content: '';
+  position: absolute;
+  background: rgba(207, 167, 92, 0.5);
+}
+
+.vf-cross::before {
+  left: 50%;
+  top: 12%;
+  bottom: 12%;
+  width: 1px;
+}
+
+.vf-cross::after {
+  top: 50%;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+}
+
+.vf-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  text-align: center;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--sx-ash);
+  padding: 0 12px;
+}
+
+.cam-shoot {
+  display: block;
+  margin: 4px auto;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid rgba(163, 34, 28, 0.9);
+  background: radial-gradient(circle, rgba(163, 34, 28, 0.35), rgba(0, 0, 0, 0.4));
+  color: var(--sx-bone);
+  font-family: var(--font-fell);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.cam-preview {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--sx-line);
+  margin-bottom: 12px;
+}
+
+.cam-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cam-filter {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--sx-line);
+  padding: 8px 2px;
+  cursor: pointer;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--sx-ash);
+}
+
+.cam-filter.on {
+  color: var(--sx-gold);
+  border-bottom-color: var(--sx-gold);
+  text-shadow: 0 0 12px rgba(255, 154, 74, 0.4);
+}
+
+.cam-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--sx-line);
+}
+
+.cam-label {
+  font-family: var(--font-fell);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--sx-bone);
+}
+
+.cam-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--sx-ash);
+}
+
+.cam-caption {
+  width: 100%;
+  margin: 12px 0 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(207, 167, 92, 0.5);
+  outline: none;
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--sx-bone);
+  padding: 6px 2px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.cam-caption::placeholder {
+  color: var(--sx-dim);
+}
+
+.cam-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+/* bottoni con stile completo: non dipendono da altre regole */
+.btn-gold {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  cursor: pointer;
+  background: var(--sx-gold);
+  border: none;
+  border-radius: 3px;
+  color: #14100a;
+  font-family: var(--font-fell);
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+}
+
+.btn-gold:active {
+  transform: scale(0.98);
+}
+
+.btn-ghost {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sx-ash);
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.ph-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.ph-actions .btn-gold,
+.ph-actions .btn-ghost {
+  width: 100%;
+}
+
+/* ---------- galleria ---------- */
+
+.ph-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ph-thumb {
+  padding: 0;
+  background: none;
+  border: 1px solid var(--sx-line);
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 16 / 9;
+}
+
+.ph-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ph-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ph-photo {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--sx-line);
+}
+
+.ph-caption {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--sx-bone);
+  text-align: center;
+}
+
+.ph-meta {
+  font-family: var(--font-martian);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sx-dim);
+  text-align: center;
+}
+
+.ph-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.ph-actions .phone-btn {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+}

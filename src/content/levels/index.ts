@@ -1,4 +1,5 @@
 import type { LevelDef } from '../../types';
+import { ALL_ABILITIES } from '../../types';
 import { perduta } from './level01-perduta';
 import { bus } from './level02-bus';
 import { santuario } from './level03-santuario';
@@ -19,6 +20,7 @@ import { barrato } from './level15-barrato';
 import { custode } from './level16-custode';
 import { galliate } from './level02b-galliate';
 import { marcetti } from './level02c-marcetti';
+import { piazza } from './level00-piazza';
 
 /* per aggiungere un capitolo: crea un file qui accanto, importalo
    e aggiungilo alla lista. collega le zone col campo `next`. */
@@ -32,13 +34,22 @@ const all: LevelDef[] = [
    e dalla schermata viaggio. */
 const secret: LevelDef[] = [barrato, custode, galliate, marcetti];
 
+/* hub: fuori dalla progressione, niente regione generata */
+const hubs: LevelDef[] = [piazza];
+
 export const LEVELS: Record<string, LevelDef> = Object.fromEntries(
-    [...all, ...secret].map((l) => [l.id, l]),
+    [...all, ...secret, ...hubs].map((l) => [l.id, l]),
 );
+
+/** i capitoli che diventano regioni a stanze */
+export const REGION_IDS: string[] = [...all, ...secret].map((l) => l.id);
+
+export const HUB_ID = piazza.id;
+export const HUB_STOP = 'piazza:cp-90-24';
 
 /** ordine canonico dei capitoli, per la schermata di viaggio */
 export const LEVEL_ORDER: string[] = all.map((l) => l.id);
 
 export const FIRST_LEVEL = perduta.id;
 
-export const TOTAL_FRAGMENTS = 7;
+export const TOTAL_FRAGMENTS = ALL_ABILITIES.length;

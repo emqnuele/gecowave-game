@@ -1,0 +1,503 @@
+/* riepilogo di fine capitolo, versione cinematica: un protagonista alla
+   volta al centro, poi vola piccolo al suo posto. niente finestre */
+
+.chsum-overlay {
+  --chsum-accent: #4ade80;
+  --chsum-bad: #f87171;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #000;
+  overflow: hidden;
+  animation: chsum-black 0.9s ease both;
+  cursor: pointer;
+}
+
+/* alone d'accento quasi spento dietro tutto */
+.chsum-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 70% 55% at 50% 42%, color-mix(in srgb, var(--chsum-accent) 9%, transparent), transparent 70%);
+}
+
+/* grana + scanline da cinema */
+.chsum-overlay::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+}
+
+.chsum-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 4px);
+}
+
+/* barre da letterbox che scendono piano */
+.chsum-bar-top,
+.chsum-bar-bot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #000;
+  z-index: 2;
+  animation: chsum-letter 1.4s ease 0.2s both;
+}
+
+.chsum-bar-top { top: 0; }
+.chsum-bar-bot { bottom: 0; }
+
+/* lampo rosso quando qualcosa manca */
+.chsum-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(163, 34, 28, 0.5));
+  opacity: 0;
+}
+
+.chsum-flash.hit {
+  animation: chsum-flash 0.7s ease both;
+}
+
+.chsum-stage {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6vh 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.chsum-stage.shake {
+  animation: chsum-shake 0.45s ease;
+}
+
+/* tutto il contenuto scala per entrare in un'inquadratura sola */
+.chsum-fit {
+  width: min(880px, 94vw);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transform-origin: center center;
+}
+
+/* testata: il titolo rimpicciolito dopo il volo */
+.chsum-head {
+  min-height: 4vh;
+  display: flex;
+  justify-content: center;
+}
+
+/* il palco: un protagonista alla volta */
+.chsum-hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.chsum-beat {
+  width: 100%;
+  opacity: 0;
+}
+
+.chsum-beat.enter {
+  opacity: 1;
+  animation: chsum-rise 0.7s ease both;
+}
+
+.chsum-beat.leaving {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* il dock dei verdetti: piccoli, in fila */
+.chsum-dock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8vh 26px;
+  justify-content: center;
+  min-height: 3vh;
+  margin-top: 1vh;
+}
+
+.chsum-chip {
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #9a917e;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.chsum-chip.lit {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.chsum-chip.bad {
+  color: var(--chsum-bad);
+}
+
+.chsum-chip.head {
+  font-size: 13px;
+  color: #e8dfc8;
+}
+
+.chsum-kick {
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: var(--chsum-accent);
+  opacity: 0;
+}
+
+.chsum-kick.lit {
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+.chsum-title {
+  font-family: 'IM Fell English SC', serif;
+  font-weight: 400;
+  font-size: clamp(32px, 6vh, 62px);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: #e8dfc8;
+  margin: 1.2vh 0 0;
+  opacity: 0;
+  filter: url(#sx-ink);
+}
+
+.chsum-title.huge {
+  font-size: clamp(56px, 12vh, 132px);
+}
+
+.chsum-title.lit {
+  opacity: 1;
+  animation: chsum-slam 0.7s cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+
+.chsum-title em {
+  font-style: normal;
+  color: var(--chsum-accent);
+}
+
+.chsum-sub {
+  font-family: 'Permanent Marker', cursive;
+  font-size: clamp(16px, 2.6vh, 24px);
+  color: rgba(232, 223, 200, 0.9);
+  transform: rotate(-1deg);
+  margin-top: 1.4vh;
+  opacity: 0;
+}
+
+.chsum-sub.lit {
+  opacity: 1;
+  transition: opacity 1.2s ease;
+}
+
+.chsum-punch {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(12px, 1.8vh, 15px);
+  color: #9a917e;
+  margin-top: 0.8vh;
+  opacity: 0;
+}
+
+.chsum-punch.lit {
+  opacity: 1;
+  transition: opacity 1.2s ease;
+}
+
+.chsum-label {
+  font-family: 'Martian Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #9a917e;
+}
+
+.chsum-hero-num {
+  font-family: 'IM Fell English SC', serif;
+  font-size: clamp(72px, 15vh, 170px);
+  line-height: 0.95;
+  color: #e8dfc8;
+  margin-top: 1vh;
+  font-variant-numeric: tabular-nums;
+}
+
+.chsum-hero-num small {
+  font-size: 0.35em;
+  color: #9a917e;
+}
+
+.chsum-hero-num.accent {
+  color: var(--chsum-accent);
+  text-shadow: 0 0 38px color-mix(in srgb, var(--chsum-accent) 35%, transparent);
+}
+
+/* il trattino del senza-punteggio: spento, non un neon verde */
+.chsum-hero-num.dim,
+.chsum-mid.dim {
+  color: #5d574b;
+  font-size: clamp(48px, 8vh, 84px);
+}
+
+.chsum-subline {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(13px, 2.1vh, 17px);
+  color: #9a917e;
+  margin-top: 0.6vh;
+}
+
+/* la sezione che fa male diventa rossa */
+.chsum-beat.bad .chsum-label,
+.chsum-beat.bad .chsum-hero-num,
+.chsum-beat.bad .chsum-mid,
+.chsum-beat.bad .chsum-subline {
+  color: var(--chsum-bad);
+}
+
+.chsum-beat.bad .chsum-hero-num small {
+  color: var(--chsum-bad);
+}
+
+.chsum-mid {
+  font-family: 'IM Fell English SC', serif;
+  font-size: clamp(56px, 10vh, 110px);
+  line-height: 1;
+  color: #e8dfc8;
+  margin-top: 1vh;
+  font-variant-numeric: tabular-nums;
+}
+
+.chsum-mid.total {
+  font-size: clamp(64px, 12vh, 130px);
+  margin-top: 2vh;
+}
+
+.chsum-bar {
+  margin: 1.6vh auto 0;
+  max-width: 460px;
+  height: 10px;
+  border: 1px solid rgba(232, 223, 200, 0.3);
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chsum-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  background:
+    repeating-linear-gradient(-55deg, rgba(0, 0, 0, 0.3) 0 5px, transparent 5px 10px),
+    var(--chsum-accent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--chsum-accent) 60%, transparent);
+}
+
+.chsum-beat.bad .chsum-fill {
+  background:
+    repeating-linear-gradient(-55deg, rgba(0, 0, 0, 0.3) 0 5px, transparent 5px 10px),
+    var(--chsum-bad);
+  box-shadow: 0 0 22px rgba(248, 113, 113, 0.55);
+}
+
+.chsum-hearts {
+  display: flex;
+  gap: 14px;
+  margin-top: 1.4vh;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+}
+
+.chsum-hearts svg {
+  width: clamp(30px, 4.6vh, 44px);
+  height: clamp(30px, 4.6vh, 44px);
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.chsum-hearts svg.pop {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.2, 2.2, 0.4, 1);
+  filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.5));
+}
+
+.chsum-hearts svg.miss {
+  opacity: 0.9;
+  transform: scale(1);
+  transition: opacity 0.25s ease;
+  filter: none;
+}
+
+/* timbro storto */
+.chsum-stamp {
+  display: inline-block;
+  font-family: 'Permanent Marker', cursive;
+  font-size: clamp(14px, 2.2vh, 20px);
+  color: var(--chsum-accent);
+  border: 2px solid var(--chsum-accent);
+  border-radius: 6px;
+  padding: 1px 12px;
+  transform: rotate(-4deg);
+  margin-top: 1.4vh;
+  opacity: 0;
+}
+
+.chsum-stamp.on {
+  opacity: 1;
+  animation: chsum-stamp-in 0.4s cubic-bezier(0.2, 2.4, 0.4, 1) both;
+}
+
+.chsum-stamp.faded {
+  opacity: 0.12;
+  transition: opacity 0.5s ease;
+}
+
+.chsum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0.5vh 2px;
+  font-family: 'Martian Mono', monospace;
+  font-size: clamp(11px, 1.9vh, 14px);
+  color: #9a917e;
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.chsum-row.lit {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.chsum-row.faded {
+  opacity: 0.12;
+  transition: opacity 0.5s ease;
+}
+
+.chsum-row b {
+  color: #e8dfc8;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chsum-note {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: clamp(12px, 1.9vh, 15px);
+  color: #9a917e;
+  margin-top: 1vh;
+}
+
+.chsum-go-hint {
+  margin-top: 1.6vh;
+  font-family: 'Martian Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #9a917e;
+  opacity: 0;
+  min-height: 2vh;
+}
+
+.chsum-go-hint.lit {
+  opacity: 1;
+  transition: opacity 1s ease;
+  animation: chsum-breathe 2.6s ease-in-out 1s infinite;
+}
+
+@keyframes chsum-black {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes chsum-letter {
+  from { height: 0; }
+  to { height: 6vh; }
+}
+
+@keyframes chsum-slam {
+  from { opacity: 0; transform: scale(1.07); letter-spacing: 0.12em; }
+  to { opacity: 1; transform: scale(1); letter-spacing: 0.05em; }
+}
+
+@keyframes chsum-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes chsum-stamp-in {
+  from { opacity: 0; transform: rotate(-4deg) scale(2.2); }
+  to { opacity: 1; transform: rotate(-4deg) scale(1); }
+}
+
+@keyframes chsum-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-9px, 3px); }
+  40% { transform: translate(8px, -4px); }
+  60% { transform: translate(-6px, -3px); }
+  80% { transform: translate(5px, 2px); }
+}
+
+@keyframes chsum-flash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes chsum-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chsum-overlay,
+  .chsum-bar-top,
+  .chsum-bar-bot,
+  .chsum-kick.lit,
+  .chsum-title.lit,
+  .chsum-sub.lit,
+  .chsum-punch.lit,
+  .chsum-beat.enter,
+  .chsum-row.lit,
+  .chsum-stamp.on,
+  .chsum-go-hint.lit {
+    animation: none;
+    transition: opacity 0.2s ease;
+  }
+  .chsum-overlay::before,
+  .chsum-overlay::after {
+    display: none;
+  }
+  .chsum-stage.shake {
+    animation: none;
+  }
+}

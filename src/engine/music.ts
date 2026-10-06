@@ -1,5 +1,6 @@
 import { state } from './state';
 import { bus } from './events';
+import { acoustics } from './audio/acoustics';
 
 const MUSIC_VOLUME_MULT = 0.06;
 
@@ -8,7 +9,10 @@ class MusicManager {
     private currentPath: string | null = null;
     private fadeInterval: ReturnType<typeof setInterval> | null = null;
     private unlockListener: (() => void) | null = null;
-
+    /** true durante una battuta grave: la musica resta sotto i dialoghi seri */
+    private graveDuck = false;
+    /** true per tutto un capitolo cupo: la musica resta bassa (vedi Tana) */
+    private levelDuck = false;
     init(): void {
         bus.on('boss-hp', (payload) => {
             if (payload) {
@@ -19,10 +23,75 @@ class MusicManager {
         });
     }
 
+    /** 0 giorno, 1 notte fonda: di notte la musica si fa ovattata */
+    setNight(n: number): void {
+        const v = Math.max(0, Math.min(1, n));
+        if (Math.abs(v - acoustics.current.night) < 0.02) return;
+        acoustics.set({ night: v });
+    }
+
+    /** collega l'elemento alla catena acustica; se il browser non lo permette la musica suona lo stesso, asciutta */
+    private route(audio: HTMLAudioElement): void {
+        try {
+            const ctx = acoustics.context();
+            if (!ctx || !acoustics.musicIn) return;
+            ctx.createMediaElementSource(audio).connect(acoustics.musicIn);
+        } catch {
+            // niente webaudio: si resta sull'uscita normale dell'elemento
+        }
+    }
+
+    /** nastro che rallenta: la musica scende di tono e si spegne (morte, collasso) */
+    tapeStop(ms = 1400): void {
+        const a = this.currentAudio;
+        if (!a) return;
+        const t0 = performance.now();
+        (a as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = false;
+        const tick = () => {
+            if (this.currentAudio !== a) return;
+            const k = Math.min(1, (performance.now() - t0) / ms);
+            a.playbackRate = Math.max(0.35, 1 - 0.65 * k * k);
+            if (k < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    }
+
+    /** di nuovo a velocità normale, col tono giusto */
+    private normalRate(a: HTMLAudioElement): void {
+        a.playbackRate = 1;
+        (a as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+    }
+
     setVolume(vol: number): void {
         if (this.currentAudio) {
-            this.currentAudio.volume = vol * MUSIC_VOLUME_MULT;
+            this.currentAudio.volume = vol * MUSIC_VOLUME_MULT * this.duckFactor();
         }
+    }
+
+    /** abbassa/alza la musica sotto le battute gravi (vedi DialogueBox) */
+    setGraveDuck(on: boolean): void {
+        this.graveDuck = on;
+        if (this.currentAudio) {
+            this.currentAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor();
+        }
+    }
+
+    /** abbassa/alza la musica per tutto un capitolo */
+    setLevelDuck(on: boolean): void {
+        this.levelDuck = on;
+        if (this.currentAudio) {
+            this.currentAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor();
+        }
+    }
+
+    /** l'ordine raddrizza anche il suono: passa-basso graduale sullo stesso grafo */
+    setOrder(amount: 0 | 1 | 2 | 3): void {
+        acoustics.set({ order: amount });
+    }
+
+    /** 0.3 sotto le gravi, 0.55 nel capitolo cupo: si moltiplicano */
+    private duckFactor(): number {
+        return (this.graveDuck ? 0.3 : 1) * (this.levelDuck ? 0.55 : 1);
     }
 
     playMenu(): void {
@@ -34,7 +103,19 @@ class MusicManager {
     }
 
     playLevel(levelId: string): void {
-        this.transitionTo(this.getLevelTrack(levelId));
+        // la radio del telefono vince sulla traccia del capitolo, non sui boss
+        this.transitionTo(state.save.radio ? `assets/music/${state.save.radio}` : this.getLevelTrack(levelId));
+    }
+
+    /** sintonizza la radio su un file della colonna sonora, null = musica del capitolo */
+    setRadio(file: string | null): void {
+        state.save.radio = file;
+        state.persist();
+        this.playLevel(state.save.levelId);
+    }
+
+    get nowPlaying(): string | null {
+        return this.currentPath;
     }
 
     playBoss(bossName: string): void {
@@ -51,6 +132,8 @@ class MusicManager {
                 return 'assets/music/GECOWAVE.mp3';
             case 'bus':
                 return "assets/music/Ivan Maggini's OST 1.mp3";
+            case 'piazza':
+                return "assets/music/Until Here's OST.mp3";
             case 'galliate':
                 return 'assets/music/Altra #4 (Novara).mp3';
             case 'marcetti':
@@ -163,6 +246,7 @@ class MusicManager {
 
     private transitionTo(path: string, loop = true): void {
         if (this.currentPath === path) {
+            if (this.currentAudio) this.normalRate(this.currentAudio);
             if (this.currentAudio && this.currentAudio.paused) {
                 this.currentAudio.play().catch(() => {});
             }
@@ -188,12 +272,14 @@ class MusicManager {
         const newAudio = new Audio(encodedPath);
         newAudio.loop = loop;
         newAudio.volume = 0;
+        this.route(newAudio);
 
         const playPromise = newAudio.play();
         if (playPromise !== undefined) {
             // browser security blocks autoplay before user gestures
             playPromise.catch(() => {
                 this.unlockListener = () => {
+                    acoustics.resume();
                     newAudio.play().catch(() => {});
                     if (this.unlockListener) {
                         window.removeEventListener('click', this.unlockListener);
@@ -222,7 +308,7 @@ class MusicManager {
             if (oldAudio) {
                 oldAudio.volume = Math.max(0, startVol * (1 - progress));
             }
-            newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * progress;
+            newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor() * progress;
 
             if (currentStep >= steps) {
                 if (this.fadeInterval) {
@@ -233,7 +319,7 @@ class MusicManager {
                     oldAudio.pause();
                     oldAudio.remove();
                 }
-                newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT;
+                newAudio.volume = state.settings.volume * MUSIC_VOLUME_MULT * this.duckFactor();
             }
         }, stepTime);
     }

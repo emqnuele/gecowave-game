@@ -33,3 +33,6 @@ build/icon.icns
 build/installerSidebar.bmp
 build/installerHeader.bmp
 build/dmg-background.png
+
+# impostazioni locali di claude code
+.claude/settings.local.json

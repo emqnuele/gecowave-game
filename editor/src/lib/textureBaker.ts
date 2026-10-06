@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { ART_TILE } from '@game/config';
 import { generateBaseTextures } from '@game/engine/textures';
+import { ensureCreature } from '@game/engine/art/creatures';
 import { catalogTextureKeys } from './catalog';
 
 /* cuoce le texture procedurali del gioco in immagini riutilizzabili.
@@ -61,11 +62,14 @@ function bakeSprites(): Promise<Map<string, HTMLImageElement>> {
                     const map = new Map<string, HTMLImageElement>();
                     const pending: Promise<void>[] = [];
                     for (const key of keys) {
+                        // nemici, boss e personaggi sono fogli a inchiostro disegnati al primo uso
+                        ensureCreature(this, key);
                         if (!this.textures.exists(key)) {
                             console.warn(`[baker] texture mancante: ${key}`);
                             continue;
                         }
-                        const b64 = this.textures.getBase64(key);
+                        // dei fogli animati basta il primo fotogramma
+                        const b64 = this.textures.getBase64(key, this.textures.get(key).has('0') ? 0 : undefined);
                         pending.push(loadImage(b64).then((img) => void map.set(key, img)));
                     }
                     Promise.all(pending)
