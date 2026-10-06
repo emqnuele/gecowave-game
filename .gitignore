@@ -39,3 +39,4 @@ build/dmg-background.png
 
 # build di sviluppo per il bot di test
 dist-dev
+.env
