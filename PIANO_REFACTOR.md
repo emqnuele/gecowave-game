@@ -11,7 +11,7 @@
 - [x] Sistemare i bug bloccanti prima del merge (il resto può andare nel refactor)
 - [x] Merge di `remaster` in `main` (PR #2) (fast-forward pulito, 232 commit, nessun conflitto)
 - [ ] Tag di riferimento (es. `v2-pre-refactor`) per poter tornare indietro
-- [ ] Sostituire `public/assets/sprites/player_sheet.png` con lo sprite nuovo (stessa risoluzione e layout, niente modifiche al codice). Lo faccio io (Ema) + committarlo. (fare questo prima del tag)
+- [x] Sostituire `public/assets/sprites/player_sheet.png` con lo sprite nuovo (stessa risoluzione e layout, niente modifiche al codice). Lo faccio io (Ema) + committarlo. (fare questo prima del tag)
 
 ## Fase 2: refactor di GameScene (nuovo branch da main)
 Obiettivo: GameScene (7.7k righe) fa solo da orchestratore. Ogni sistema ha la sua `update()` e lo stato separato dal rendering.
