@@ -135,6 +135,8 @@ export function textureForSpec(spec: EntitySpec): string {
             return 'maschera';
         case 'portal':
             return 'portal';
+        case 'spawner':
+            return 'spawner-nest';
         case 'item':
             return 'fragment';
     }
@@ -161,6 +163,8 @@ export function describeSpec(spec: EntitySpec): string {
             return 'maschera';
         case 'portal':
             return `portale -> ${spec.to || '?'}`;
+        case 'spawner':
+            return `nido: ${spec.kind}`;
         case 'item':
             return `oggetto: ${spec.item}${spec.amount && spec.amount > 1 ? ` ×${spec.amount}` : ''}`;
     }
