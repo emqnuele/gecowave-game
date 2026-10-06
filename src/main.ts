@@ -104,8 +104,15 @@ async function boot(): Promise<void> {
             game.scene.start('GameScene', { levelId, checkpointId, showCard });
         }
     };
-    // il bot di test avvia il livello a un istante preciso dell'orologio finto
-    if (import.meta.env.DEV) Object.assign(window, { __startLevel: startLevel });
+    // il bot di test avvia il livello a un istante preciso dell'orologio finto, come fa "continua"
+    if (import.meta.env.DEV) {
+        Object.assign(window, {
+            __startLevel: (levelId: string, checkpointId: string | null = null) => {
+                screens.closeOverlay();
+                startLevel(levelId, checkpointId, false);
+            },
+        });
+    }
 
     const controller: GameController = {
         newGame() {

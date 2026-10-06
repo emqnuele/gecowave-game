@@ -17,6 +17,7 @@
   "devDependencies": {
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
+    "playwright-core": "^1.63.0",
     "png2icons": "^2.0.1",
     "sharp": "^0.35.1",
     "typescript": "~5.9.3",
