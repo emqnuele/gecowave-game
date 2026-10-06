@@ -650,6 +650,12 @@ body.film::after {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+/* la pausa a metà film: didascalia e barre coprivano il menu e ne rubavano i clic */
+body:has(#ui > .screen) #flashback-caption,
+body:has(#ui > .screen) #film-bar-top,
+body:has(#ui > .screen) #film-bar-bot {
+  visibility: hidden;
+}
 
 /* ---------- anteprima flashback (?flashback) ---------- */
 #flashback-preview-nav {

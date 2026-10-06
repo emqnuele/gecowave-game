@@ -83,6 +83,7 @@ export class FlashbackManager {
             enemies?: Phaser.GameObjects.Group;
             setPropsVisible?: (v: boolean) => void;
             findFlatStage?: (x: number, y: number) => { x: number; y: number } | null;
+            vignette?: Phaser.FX.Vignette | null;
         };
         host.folk?.setSuspended(true);
         host.setPropsVisible?.(false);
@@ -141,13 +142,14 @@ export class FlashbackManager {
         const barBot = document.createElement('div');
         barBot.id = 'film-bar-bot';
         ui().append(barTop, barBot);
-        scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-            document.body.classList.remove('film');
-            scene.events.off(Phaser.Scenes.Events.UPDATE, syncFrame);
-            barTop.remove();
-            barBot.remove();
-            this.playing = false;
-        });
+        // uscire al menu a metà film: il ricordo non deve sopravvivere alla scena
+        const onShutdown = (): void => {
+            for (const tm of timers) {
+                try { tm.remove(false); } catch { /* test */ }
+            }
+            restoreGlobals();
+        };
+        scene.events.once(Phaser.Scenes.Events.SHUTDOWN, onShutdown);
         // occhio di bue sul palco: alone caldo più luce vera per gli attori
         const dressing: Phaser.GameObjects.GameObject[] = [];
         const spotGlow = scene.add.image(sx, floorY - 110, 'fb-glow').setDisplaySize(460, 340)
@@ -168,9 +170,17 @@ export class FlashbackManager {
                 spotLight = null;
             }
         };
+        // la vignetta del livello si spegne e poi torna: clear() la distruggeva per sempre
+        const gameVignette = host.vignette ?? null;
+        const gameVigShape = gameVignette ? { radius: gameVignette.radius, strength: gameVignette.strength } : null;
+        let filmVignette: Phaser.FX.Vignette | null = null;
         try {
-            cam.postFX.clear();
-            cam.postFX.addVignette(0.5, 0.5, 0.72, 0.42);
+            // le post pipeline delle camere ignorano controller.active: raggio enorme e forza zero la rendono neutra
+            if (gameVignette) {
+                gameVignette.radius = 10;
+                gameVignette.strength = 0;
+            }
+            filmVignette = cam.postFX.addVignette(0.5, 0.5, 0.72, 0.42);
         } catch { /* canvas o test: si va di rettangoli */ }
         const zoomFrom = cam.zoom;
         const timers: Phaser.Time.TimerEvent[] = [];
@@ -201,6 +211,8 @@ export class FlashbackManager {
         try {
             vortexPipe = this.vortex(scene, fb.tint, 0, 1, ENTER - 100);
         } catch { vortexPipe = null; }
+        // saltando durante l'ingresso il primo vortice resta appeso: va tolto alla fine
+        const enterVortex = vortexPipe;
         if (!vortexPipe) {
             // senza WebGL niente shader: almeno le scie (mai più le righe)
             this.warp(scene, fb.tint, 'in', ENTER - 100);
@@ -308,7 +320,6 @@ export class FlashbackManager {
         const finish = (): void => {
             if (done) return;
             done = true;
-            this.playing = false;
             document.body.classList.remove('film');
             scene.events.off(Phaser.Scenes.Events.UPDATE, syncFrame);
             window.removeEventListener('keydown', skip);
@@ -325,6 +336,10 @@ export class FlashbackManager {
             // --- il tornado in uscita: il ricordo si riavvita e risputa fuori ---
             try { sfx.death('tecnodrone'); } catch { /* mai bloccare */ }
             try {
+                // saltando, lo zoom lento del film girava ancora: ignorava l'uscita e restava a 1.06 dopo la fine
+                cam.zoomEffect.reset();
+                cam.rotateToEffect.reset();
+                cam.panEffect.reset();
                 cam.shake(EXIT * 0.5, 0.005);
                 cam.zoomTo(cam.zoom * 1.5, EXIT * 0.45, 'Quad.easeIn');
                 cam.rotateTo(-0.5, false, EXIT * 0.45, 'Quad.easeIn');
@@ -345,16 +360,20 @@ export class FlashbackManager {
                 for (const o of [dark, dip]) {
                     try { o.destroy(); } catch { /* test */ }
                 }
-                barTop.remove();
-                barBot.remove();
                 try {
-                    cam.postFX.clear();
+                    for (const p of [enterVortex, vortexPipe]) if (p) cam.removePostPipeline(p);
+                    if (filmVignette) cam.postFX.remove(filmVignette);
+                    if (gameVignette && gameVigShape) {
+                        gameVignette.radius = gameVigShape.radius;
+                        gameVignette.strength = gameVigShape.strength;
+                    }
+                    cam.zoomEffect.reset();
+                    cam.rotateToEffect.reset();
                     cam.setZoom(zoomFrom);
                     cam.rotateTo(0, false, 200);
                     cam.fadeIn(380, 0, 0, 0);
                 } catch { /* test */ }
-                music.setGraveDuck(false);
-                state.godMode = godPrev;
+                restoreGlobals();
                 // il geco torna esattamente dov'era e com'era
                 try {
                     player.setPosition(home.x, home.y);
@@ -374,14 +393,34 @@ export class FlashbackManager {
             });
         };
 
+        // in pausa il tasto serve al menu, non al film
         const skip = (e: KeyboardEvent): void => {
+            if (!scene.sys.isActive()) return;
             if (e.code === 'Enter' || matchesAction(e, 'jump') || matchesAction(e, 'attack') || matchesAction(e, 'interact')) finish();
         };
         window.addEventListener('keydown', skip);
         timers.push(scene.time.delayedCall(ENTER + filmDur + 150, () => {
             finish();
         }));
-        cap.addEventListener('click', finish);
+        cap.addEventListener('click', () => {
+            if (scene.sys.isActive()) finish();
+        });
+
+        let restored = false;
+        const restoreGlobals = (): void => {
+            if (restored) return;
+            restored = true;
+            this.playing = false;
+            document.body.classList.remove('film');
+            scene.events.off(Phaser.Scenes.Events.UPDATE, syncFrame);
+            scene.events.off(Phaser.Scenes.Events.SHUTDOWN, onShutdown);
+            window.removeEventListener('keydown', skip);
+            cap.remove();
+            barTop.remove();
+            barBot.remove();
+            music.setGraveDuck(false);
+            state.godMode = godPrev;
+        };
 
         if (!seen && opts?.markSeen !== false) {
             state.save.seenDialogues.push(`fb-${id}`);

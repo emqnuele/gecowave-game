@@ -335,6 +335,8 @@ export class GameScene extends Phaser.Scene {
     /** la meccanica del bioma (porte a orario, correnti, telecamere...) */
     private mechanic: Mechanic | null = null;
     private playerLightRef: Phaser.GameObjects.Light | null = null;
+    /** il flashback la spegne e la riaccende invece di distruggerla */
+    vignette: Phaser.FX.Vignette | null = null;
     /** quante volte hai sbagliato ogni porta della mente: la domanda cambia */
     private quizAttempts = new Map<string, number>();
     private nextLessonCheck = 0;
@@ -706,7 +708,11 @@ export class GameScene extends Phaser.Scene {
             const tint = this.def.script === 'galliate' ? 0x150406 : 0x1a1206;
             const veil = this.add.rectangle(0, 0, cam.width, cam.height, tint, 0.42)
                 .setOrigin(0, 0).setScrollFactor(0).setDepth(3);
-            this.scale.on('resize', () => veil.setSize(cam.width, cam.height));
+            const fitVeil = (): void => {
+                veil.setSize(cam.width, cam.height);
+            };
+            this.scale.on('resize', fitVeil);
+            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off('resize', fitVeil));
         }
 
         state.setFlag(`visto-${this.def.id}`);
@@ -2424,7 +2430,7 @@ export class GameScene extends Phaser.Scene {
         // poi apri gli occhi a fine dialogo (vedi intro in create)
         if (this.def.id === 'tana') cam.fadeOut(0, 0, 0, 0);
         else cam.fadeIn(500, 0, 0, 0);
-        if (cam.postFX) cam.postFX.addVignette(0.5, 0.5, 0.86);
+        this.vignette = cam.postFX ? cam.postFX.addVignette(0.5, 0.5, 0.86) : null;
     }
 
     private buildPrompt(): void {
@@ -5785,9 +5791,10 @@ export class GameScene extends Phaser.Scene {
 
     private hitstop(): void {
         this.physics.world.timeScale = 6;
-        setTimeout(() => {
-            if (this.scene.isActive()) this.physics.world.timeScale = 1;
-        }, COMBAT.hitstopMs);
+        // orologio di scena: con setTimeout una pausa entro 55ms lasciava la fisica al rallentatore
+        this.time.delayedCall(COMBAT.hitstopMs, () => {
+            this.physics.world.timeScale = 1;
+        });
         this.shake(60, 0.003);
     }
 
