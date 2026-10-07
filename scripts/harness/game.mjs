@@ -34,7 +34,7 @@ export async function launch({ gl = process.env.GL ?? 'gpu', headless = true } =
    il loop di phaser invece riceve 16,67 ms costanti: con 17/17/16 la media mobile del delta oscilla attorno
    a 1000/60 e la fisica arcade salta un passo ogni tre fotogrammi; appena sopra la soglia fa un passo doppio
    ogni ~80 s, come un monitor vero. il tempo del loop dipende solo dal numero del frame */
-const STEPPER = (DRAW) => `((DRAW_EVERY) => {
+const STEPPER = (DRAW, HZ = 60) => `((DRAW_EVERY, SUB) => {
     const frameMs = (f) => (f % 3 === 2 ? 16 : 17);
     const loopTime = (f) => 100000 + f * 16.67;
     window.__h.frame = 0;
@@ -57,19 +57,31 @@ const STEPPER = (DRAW) => `((DRAW_EVERY) => {
         R.render = function (...a) { if (window.__h.frame % DRAW_EVERY === 0) return draw.apply(this, a); };
         R.__sparse = true;
     }
-    window.__h.stepOne = async () => {
+    // a 60 hz un passo per fotogramma, come sempre. a 120/180/240 hz il fotogramma degli scenari resta 1/60 di secondo
+    // e il loop fa SUB passi più corti: stessi scenari, stesso tempo di gioco, monitor più veloce
+    window.__h.stepOne = SUB === 1 ? async () => {
         await window.__pwClock.controller.runFor(frameMs(window.__h.frame));
         window.__h.driveAnimations();
         window.__h.frame++;
         window.__game.loop.step(loopTime(window.__h.frame));
+    } : async () => {
+        const f = window.__h.frame;
+        const ms = frameMs(f);
+        for (let j = 0; j < SUB; j++) {
+            await window.__pwClock.controller.runFor(Math.floor(ms / SUB) + (j < ms % SUB ? 1 : 0));
+            window.__h.driveAnimations();
+            window.__game.loop.step(100000 + (f + (j + 1) / SUB) * 16.67);
+        }
+        window.__h.frame++;
     };
-})(${DRAW})`;
+})(${DRAW}, ${HZ / 60})`;
 
 /**
  * apre il gioco fermo al menu con l'orologio in pausa.
  * ritorna la pagina e `step(n)`: avanza n frame, sempre a passi identici.
  */
-export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = process.env.VIEW ? { width: Number(process.env.VIEW.split('x')[0]), height: Number(process.env.VIEW.split('x')[1]) } : { width: 960, height: 540 }, coverage = false, draw = Number(process.env.DRAW ?? '4'), storage = null } = {}) {
+export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = process.env.VIEW ? { width: Number(process.env.VIEW.split('x')[0]), height: Number(process.env.VIEW.split('x')[1]) } : { width: 960, height: 540 }, coverage = false, draw = Number(process.env.DRAW ?? '4'), storage = null, hz = Number(process.env.HZ ?? '60') } = {}) {
+    if (hz % 60) throw new Error(`HZ deve essere un multiplo di 60 (${hz})`);
     const root = resolve(dist);
     const page = await browser.newPage({ viewport });
     // la copertura parte prima del bundle: conta anche il boot
@@ -114,7 +126,7 @@ export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev',
         await page.clock.runFor(pre % 3 === 2 ? 16 : 17);
         if (++pre > 3000) throw new Error('phaser non parte');
     }
-    await page.evaluate(STEPPER(draw));
+    await page.evaluate(STEPPER(draw, hz));
     await page.evaluate((n) => { window.__h.frame = n; window.__game.loop.sleep(); }, pre);
     if (!(await page.evaluate(() => window.__h.attach()))) throw new Error('hook di sviluppo assenti: serve la build di scripts/harness/build.sh');
 

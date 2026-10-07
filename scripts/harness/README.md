@@ -14,6 +14,7 @@ node scripts/harness/show.mjs <traccia>           # racconta una traccia: livell
 node scripts/harness/tracediff.mjs <a> <b>        # il primo fotogramma in cui due tracce divergono
 node scripts/harness/corpus.mjs check --tier rapido   # il giro rapido (tiers.json, da tiers.mjs)
 node scripts/harness/corpus.mjs run --seed 777    # il corpus con un altro seed, in traces/seed-777
+HZ=120 node scripts/harness/corpus.mjs run        # su un monitor a 120 hz (multipli di 60), in traces/hz-120
 node scripts/harness/esiti.mjs [dirA] [dirB] --rumore .harness/traces/seed-777   # sugli esiti, non al bit
 node scripts/harness/mutate.mjs                   # mutazioni di prova -> docs/refactor/mutazioni.md
 node scripts/harness/perf.mjs --save cand --vs base --profile   # prestazioni in tempo reale contro perf-base.json

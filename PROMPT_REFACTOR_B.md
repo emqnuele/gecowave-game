@@ -25,7 +25,7 @@ Nell'ordine:
 - Gli hash del riferimento sono in `scripts/harness/reference.json`. Le tracce complete di main stanno in `.harness/traces/ref` (cartella ignorata da git): se mancano, `node scripts/harness/corpus.mjs ref` le rigenera e **gli hash devono tornare identici** a `reference.json` (è anche una prova che la macchina va bene).
 - Nella cartella ci sono cose non tracciate da ignorare: `.env` (segreti del coop, **mai committarlo**), `tests/coop-2tab/out`.
 - Il branch `multiplayer-p2p` è un tentativo di coop: **non toccarlo**.
-- Il tag `v2-pre-refactor` del piano lo faccio io.
+- Il tag `v2-pre-refactor` esiste già, su `a16f39c`.
 
 ## Gli strumenti (già pronti, provati)
 
@@ -67,7 +67,7 @@ Cosa sa e non sa la rete (dettagli in `docs/refactor/parte-a.md`):
 - **Browser**: non usare mai il browser pane né un dev server per verificare. Usa l'harness headless. Per le verifiche di tipo, `npx tsc --noEmit` e `npm run build`. Anche l'editor deve compilare: `cd editor && npx tsc -b --noEmit`, poi `git checkout -- editor/*.tsbuildinfo` (sono tracciati e cambiano a ogni typecheck).
 - **Non toccare**: lo stile grafico, i testi di trama (la voce è minuscola, demenziale, in italiano), i JSON in `public/regions/` (**non rigenerarli**), il formato del salvataggio. I salvataggi di `main` devono caricarsi identici nel refactor (ci sono scenari che lo controllano: `carica-*`).
 - **Bug trovati per strada**: nei commit di refactor **non si sistemano**. Si annotano in `docs/refactor/bug-trovati.md` (ce ne sono già: leggili) e si sistemano dopo, in commit separati e dichiarati, rigenerando il riferimento con una nota in `docs/refactor/riferimenti.md`.
-- **Il riferimento si rigenera solo con il mio ok.**
+- **Il riferimento si rigenera solo per i passi già approvati** (B11-B14, vedi "Decisioni già prese"), sempre dopo la prova sugli esiti e con una riga in `docs/refactor/riferimenti.md`. Per qualsiasi altro cambio di tracce, chiedimelo.
 - Pensa da ingegnere senior: corretto prima che veloce, chiaro prima che furbo. Se una richiesta ti sembra sbagliata o c'è un rischio, dimmelo.
 
 ## Il refactor
@@ -81,9 +81,9 @@ Cosa sa e non sa la rete (dettagli in `docs/refactor/parte-a.md`):
 1. **Mappa prima, sposta dopo.** Il registro `docs/refactor/ledger.md` c'è già (generato dall'AST, con gli scenari che eseguono ogni metodo). Compila la colonna destinazione prima di spostare un sistema; aggiorna lo stato (da fare, portato, verificato) dopo. Per gli altri file che tocchi: `node scripts/harness/ledger.mjs src/entities/Player.ts ...`. Una riga senza destinazione e senza verifica non è portata.
 2. **Un sistema per commit, gioco funzionante dopo ogni commit.** Dopo ogni micro-passo: `tsc`, build, giro rapido. Prima del commit: `npm run build`, editor, **corpus intero** contro il riferimento, registro aggiornato, `DEV_LOG_REFACTOR.md` aggiornato.
 3. **I passi strutturali devono dare tracce identiche al bit.** Spostare codice senza cambiare l'ordine delle chiamate (comprese le chiamate a `Math.random`, i `delayedCall`, la creazione degli oggetti, la registrazione degli ascoltatori e dei collider) mantiene le tracce identiche. Se una traccia diverge, il passo non è finito: trova la causa col diff. "È equivalente" non basta.
-4. **I cambi che cambiano l'ordine di proposito vengono dopo, uno alla volta, con un riferimento nuovo dichiarato e il mio ok**: RNG centralizzato con seed al posto delle 204 estrazioni casuali (almeno quelle di logica; l'elenco con file, riga e funzione è `docs/refactor/caso.md`), eventi espliciti dove cambiano l'ordine, e il flag unico `simulates` pensato per il coop. Per questi passi l'uguaglianza al bit non è possibile:
+4. **I cambi che cambiano l'ordine di proposito vengono dopo, uno alla volta, con un riferimento nuovo dichiarato** (già approvati da me): RNG centralizzato con seed al posto delle 204 estrazioni casuali (almeno quelle di logica; l'elenco con file, riga e funzione è `docs/refactor/caso.md`), eventi espliciti dove cambiano l'ordine, e il flag unico `simulates` pensato per il coop. Per questi passi l'uguaglianza al bit non è possibile:
    - prima `esiti.mjs` tra il riferimento e il candidato: la trama deve coincidere su tutto il corpus, i numeri devono restare nella forbice che lo stesso corpus mostra con un altro seed (`run --seed 777`, poi `esiti.mjs .harness/traces/ref .harness/traces/seed-777`);
-   - poi, con il mio ok, il riferimento nuovo si prende **dal commit del refactor** che introduce il cambio, non più da main: `git worktree add ../gecowave-base <commit>`, `ln -s ../gecowave-game/node_modules ../gecowave-base/node_modules`, `scripts/harness/build.sh ../gecowave-base`, `REF_DIST=../gecowave-base/dist-dev node scripts/harness/corpus.mjs ref`. Da lì in avanti `check` si fa con lo stesso `REF_DIST`, e la riga va in `docs/refactor/riferimenti.md` (data, commit, perché, scenari);
+   - poi il riferimento nuovo si prende **dal commit del refactor** che introduce il cambio, non più da main: `git worktree add ../gecowave-base <commit>`, `ln -s ../gecowave-game/node_modules ../gecowave-base/node_modules`, `scripts/harness/build.sh ../gecowave-base`, `REF_DIST=../gecowave-base/dist-dev node scripts/harness/corpus.mjs ref`. Da lì in avanti `check` si fa con lo stesso `REF_DIST`, e la riga va in `docs/refactor/riferimenti.md` (data, commit, perché, scenari);
    - `../gecowave-main` resta com'è: serve a `ledger.mjs`, `coverage.mjs` e `mutate.mjs`, che ragionano sulle righe di main.
 5. **Test di unità** (vitest, `npm i -D vitest`) sulla logica pura che estrai: danni, fasi dei boss, cervello dell'ombra, punteggi, migrazioni del salvataggio.
 6. **Dopo ogni sistema estratto** rifai la prova delle mutazioni sul codice nuovo (`mutations.mjs` va aggiornato: le righe si spostano): la rete deve restare fitta. Rifai la copertura ogni tanto (`coverage.mjs --reuse` dopo aver tolto i grezzi degli scenari cambiati) e ricalcola il giro rapido.
@@ -158,24 +158,67 @@ Ogni blocco finisce con: `tsc`, build, editor, corpus intero uguale al riferimen
 
 **B9. Dialoghi e cutscene.**
 - Per ultimi: sono i più intrecciati coi singleton.
-- La coda dei film oggi è un `delayedCall` che si richiama ogni 1,2 s. Nel passo strutturale resta così; la coda vera è un passo che cambia i tempi, quindi va col blocco B11.
+- La coda dei film oggi è un `delayedCall` che si richiama ogni 1,2 s. Nel passo strutturale resta così; la coda vera cambia i tempi, quindi va nel blocco B13.
 
 **B10. Prestazioni, a struttura finita.**
 - Le ottimizzazioni prese da `prestazioni.md` (dove si spende oggi), una alla volta.
 - Ognuna deve dare tracce identiche al bit (più veloce, non diverso) e un numero migliore in `perf.mjs --vs base`.
 
-**B11. I cambi d'ordine voluti, uno per volta, ognuno col mio ok e un riferimento nuovo** (metodo, punto 4):
+**B11. I cambi d'ordine voluti, uno per volta, ognuno con un riferimento nuovo dichiarato** (metodo, punto 4; li ho già approvati, vedi "Decisioni già prese"):
 1. eventi espliciti (spawn, danno, morte, dialogo, checkpoint);
-2. RNG centralizzato. Due sequenze con seed: logica e cosmetico, così una particella in più non sposta più la trama. Si parte da `caso.md`, riempiendo la colonna "tipo";
+2. RNG centralizzato. Due sequenze con seed interno (non visibile al giocatore): logica e cosmetico, così una particella in più non sposta più la trama. Si parte da `caso.md`, riempiendo la colonna "tipo". Nei 27 scenari sensibili al caso la trama può cambiare, purché ogni differenza sia spiegata nel resoconto;
 3. il flag `simulates`. **Su main non c'è nessun `isHost`**: i 107 controlli stanno sul branch `multiplayer-p2p`, che non devi toccare. Qui `simulates` è solo il punto unico che i sistemi interrogano; in single vale sempre vero, quindi deve dare tracce identiche al bit;
 4. i `catch {}` vuoti sostituiti da controlli espliciti, dove il comportamento normale resta uguale (al bit).
 
-**B12. Chiusura.**
+**B12. Codice morto e riorganizzazione della repo.**
+- Togli, in commit dichiarati (ognuno col suo riferimento nuovo se le tracce cambiano):
+  - il ramo dei nidi scritti a mano nel JSON (`case 'spawner'` in `spawnEntities`, `GameScene.ts:767`, e il filtro `spec.type === 'spawner'` in `spawnCaveSpawners`): **i nidi delle caverne messi dall'algoritmo restano**;
+  - i consumabili vecchi (`LEGACY_ITEMS`);
+  - il boss `furgone` (caso in `onBossDefeated`, `recoverBossReward`, `BOSS_INTRO.furgone`, definizione);
+  - i resti mai usati: `LightingManager.torch`, `Boss.delayAttack`, `music.setVolume`, `sfx.startPad`, `StoryManager.destroy`.
+- Gli strumenti di sviluppo utili (es. `acoustics.meter/rms`, gli hook `window.__*`) restano, raccolti in un posto solo e caricati solo in sviluppo.
+- La repo oggi è disordinata: riorganizzala perché sia pulita, facile da estendere e da mantenere. Cartelle con un significato chiaro, moduli piccoli, niente file sparsi a caso, test di unità accanto alla logica. Vale anche per `scripts/`.
+- Spostare file cambia l'ordine di valutazione dei moduli: se un modulo fa qualcosa all'import (per esempio pesca dal caso), le tracce lo vedono.
+- Scrivi la struttura scelta come ADR.
+
+**B13. Bug da sistemare** (decisi da me, uno per commit dichiarato, con riferimento nuovo e una riga in `riferimenti.md`):
+1. i collider dei boss che si accumulano;
+2. l'avviso "Cannot pause non-running Scene" dopo le scelte;
+3. `MenuScene.t` e ogni altro campo che sopravvive al riavvio di una scena;
+4. la coda dei film vera, al posto del `delayedCall` che riprova ogni 1,2 s;
+5. gli shader dei flashback (`VortexPipeline`, `MemoryPipeline`) registrati in Phaser, così partono davvero. Cambia l'aspetto dei film: va bene, i flashback li rifaremo comunque da capo più avanti;
+6. la fase 2 del nucleo che si raddrizza (`straightenFakeWalls`, `extinguishWalls`): oggi non trova muri finti nell'arena. Falla funzionare senza rigenerare le regioni: se serve toccare i dati, chiedimelo.
+
+**B14. Il gioco uguale a qualsiasi frequenza.**
+- Oggi la logica gira a ogni frame di render: a 120 Hz il caso per fotogramma raddoppia (il tremito del trenbolone, per esempio) e i timer per fotogramma vanno al doppio.
+- Deve funzionare bene e in modo deterministico a 60, 120, 144 Hz.
+- L'harness lo prova: `HZ=120 node scripts/harness/corpus.mjs run` scrive in `traces/hz-120`, poi `esiti.mjs .harness/traces/ref .harness/traces/hz-120`.
+- Il dato di partenza: oggi a 120 Hz già `livello-perduta` cambia esito (un checkpoint che non scatta).
+- Obiettivo: a 120 Hz gli stessi esiti che a 60, sul corpus intero.
+- È un cambio di comportamento voluto: riferimento nuovo, e una riga in `riferimenti.md`.
+
+**B15. Chiusura.**
 - Mutazioni rifatte sul codice nuovo (`mutations.mjs` aggiornato alle righe nuove), copertura, giro rapido ricalcolato, registro tutto "verificato".
-- Resoconto finale e la lista dei bug annotati da decidere con me.
+- Prestazioni finali contro la base (`--vs base` e `--vs base-cpu4`).
+- Una sola PR `refactor` -> `main` con commit ben definiti (non la mergi tu), e il resoconto finale.
 
 ## Come mi tieni aggiornato
 
-- Lavora in autonomia per lunghi tratti. Fermati e chiedimi solo per le decisioni che sono mie: prodotto, design, cosa considerare codice morto (c'è una lista in `bug-trovati.md` da farmi decidere), rigenerazione del riferimento.
+- Lavora in autonomia. Struttura del codice, organizzazione della repo, test e prestazioni li decidi tu, senza chiedere: hai gli strumenti per verificare che tutto resti uguale. Fermati e chiedimi **solo** quando una scelta cambia la storia o come funziona il gioco per chi gioca, e non è già nelle decisioni sotto.
+- Il riferimento si rigenera senza chiedere solo per i passi già approvati sotto (B11, B12, B13, B14), sempre con la riga in `riferimenti.md` e la prova sugli esiti prima. Per qualsiasi altro cambio di tracce, chiedi.
 - A ogni traguardo (ogni gruppo di sistemi estratti) scrivi un resoconto breve: cosa è fatto, cosa dice il confronto, cosa diverge e perché, bug annotati, numeri delle prestazioni.
 - Tieni aggiornati `DEV_LOG_REFACTOR.md` (diario), `DEV_LOG.md` (nuovi ADR per le scelte architetturali, nello stesso stile), `PIANO_REFACTOR.md` (spunta le voci) e il registro.
+
+## Decisioni già prese (8 ottobre 2026)
+
+Sono anche in `PIANO_REFACTOR.md`. Non richiederle.
+- **Autonomia** piena su struttura, organizzazione, test e prestazioni; si chiede solo per storia e gameplay.
+- **Una sola PR** con commit ben definiti, uno per passo.
+- **Codice morto da togliere**: nidi scritti a mano nel JSON (non quelli delle caverne), `LEGACY_ITEMS`, boss `furgone`, resti mai usati (B12).
+- **Bug da sistemare**: collider dei boss, "Cannot pause", campi che sopravvivono al restart, coda dei film, shader dei flashback, fase 2 del nucleo (B13).
+- **Frequenza**: il gioco deve andare bene e in modo deterministico a qualsiasi Hz (B14).
+- **Cambi d'ordine** approvati: eventi espliciti, rng con due sequenze e seed interno, `simulates`, `catch {}` (B11).
+- **Prestazioni**: giudicate a cpu rallentata 4 volte (`--cpu 4`, base `perf-base-cpu4.json`). Obiettivo quasi zero fotogrammi oltre i 16,7 ms in `esplora-perduta` e `cap-bus`. Spostare lavoro nel caricamento va bene fino a +300 ms all'avvio del livello.
+- **Punti scoperti** accettati (trofeo intoccabile, ospite 12, lucchetto di galliate, insight casuali dell'ombra): se tocchi quel codice, scrivi prima lo scenario.
+- **Partita registrata**: registro io una breve sessione con `record.mjs` prima del blocco B4. Se non c'è ancora quando ci arrivi, ricordamelo e vai avanti.
+- **Non tuoi**: il ridisegno dei flashback, la fase 3 (coop), il branch `multiplayer-p2p`, i JSON in `public/regions/`, i testi di trama, lo stile grafico, il formato del salvataggio.

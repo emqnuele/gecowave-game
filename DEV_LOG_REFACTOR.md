@@ -110,3 +110,16 @@ node scripts/harness/corpus.mjs ref        # solo se .harness/traces/ref manca: 
 **Registro**: `ledger.mjs` perdeva le destinazioni scritte a mano rigenerandolo (indici delle celle spostati di uno: la riga comincia con `|`). Sistemato: le 338 destinazioni si conservano.
 
 **Giro rapido**: 80 scenari, 97% dei punti, 19% dei fotogrammi.
+
+### 2026-10-08: decisioni di Ema, pronti per la parte B
+
+Ema ha deciso tutto quello che era aperto (elenco completo in `PIANO_REFACTOR.md`, "Decisioni prese", e in fondo a `PROMPT_REFACTOR_B.md`):
+- **autonomia** piena su struttura, organizzazione, test e prestazioni; **una sola PR**;
+- **codice morto**: via i nidi scritti a mano nel JSON (quelli delle caverne, messi dall'algoritmo, restano: `bug-trovati.md` era scritto male e l'ho corretto), `LEGACY_ITEMS`, `furgone`, i resti mai usati;
+- **bug da sistemare**: collider, "Cannot pause", campi che sopravvivono al restart, coda dei film, shader dei flashback, fase 2 del nucleo;
+- **repo da riorganizzare** con test di unità;
+- **il gioco uguale a qualsiasi frequenza**.
+
+Tag `v2-pre-refactor` messo su `a16f39c` e pushato. Nel prompt B i blocchi nuovi: B12 (codice morto e repo), B13 (bug), B14 (frequenza), B15 (chiusura).
+
+**`HZ=120`** nell'harness: il fotogramma degli scenari resta 1/60 di secondo e il loop fa più passi corti. A 60 Hz il codice non cambia (controllato: `cap-bus`, `livello-perduta`, `wave-rio` uguali a main). Prova di fumo: a 120 Hz `livello-perduta` cambia esito (un checkpoint che non scatta), che è proprio il problema del blocco B14. Non ho misurato il corpus intero a 120 Hz: è il primo passo di B14.

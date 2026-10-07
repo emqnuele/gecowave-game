@@ -26,7 +26,7 @@ Per ognuno: cosa si vede, dove nasce, quale scenario lo mostra, stato.
 
 ### codice che i dati di oggi non raggiungono mai
 Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguirli perché le regioni generate non contengono più quei casi.
-- `spawnEntities` caso `'spawner'` e il conteggio dei nidi messi a mano (`spawnCaveSpawners`): nessuna regione ha entità `spawner`.
+- `spawnEntities` caso `'spawner'` (`GameScene.ts:767`): i nidi scritti a mano nel JSON di una regione. Nessuna regione ne ha: i nidi del gioco li mette l'algoritmo delle caverne (`spawnCaveSpawners`), che funziona ed è coperto. Da togliere è solo il ramo dei nidi scritti a mano (e il filtro `spec.type === 'spawner'` in `spawnCaveSpawners`).
 - `spawnItemPickup` ramo `LEGACY_ITEMS`: le regioni rigenerate (ADR-048) hanno solo crocchetta, panino e tacca.
 - boss `furgone`: nessuna regione lo contiene; `onBossDefeated` caso `'furgone'`, `recoverBossReward`, `BOSS_INTRO.furgone` restano senza strada.
 - `LightingManager.torch`, `acoustics.meter/rms` (strumento di sviluppo), `StoryManager.destroy` (mai chiamato; svuota solo un array), `Boss.delayAttack` (mai usato dall'ombra), `music.setVolume`, `sfx.startPad/stopPad` parzialmente (il pad non parte mai, `stopPad` sì).

@@ -10,7 +10,7 @@
 - [ ] Playtest completo del single dall'inizio alla fine, segnando bug e cose che non convincono in una lista
 - [x] Sistemare i bug bloccanti prima del merge (il resto può andare nel refactor)
 - [x] Merge di `remaster` in `main` (PR #2) (fast-forward pulito, 232 commit, nessun conflitto)
-- [ ] Tag di riferimento (es. `v2-pre-refactor`) per poter tornare indietro
+- [x] Tag di riferimento `v2-pre-refactor` su `a16f39c` (pushato)
 - [x] Sostituire `public/assets/sprites/player_sheet.png` con lo sprite nuovo (stessa risoluzione e layout, niente modifiche al codice). Lo faccio io (Ema) + committarlo. (fare questo prima del tag)
 
 ## Fase 2: refactor di GameScene (nuovo branch da main)
@@ -35,6 +35,31 @@ Obiettivo: GameScene (7.7k righe) fa solo da orchestratore. Ogni sistema ha la s
 - [ ] Un solo flag `simulates` (true in single e sull'host, false sul guest) al posto dei 101 controlli `coop.isHost` sparsi
 - [ ] Test vitest sui sistemi estratti
 - [ ] Il single deve comportarsi identico a prima
+
+### Decisioni prese da Ema (8 ottobre 2026)
+**Autonomia**: struttura del codice, organizzazione della repo, test e prestazioni li decide Claude, senza chiedere, purché tutto sia verificato con gli strumenti della parte A. Si chiede solo quando cambia la storia o come funziona il gioco.
+**Consegna**: una sola PR del branch `refactor` verso `main`, con commit ben definiti (uno per passo).
+**Codice morto, da togliere** (commit dichiarati, non dentro un commit di refactor):
+- il ramo dei nidi scritti a mano nel JSON (`case 'spawner'` in `spawnEntities`); i nidi delle caverne messi dall'algoritmo restano;
+- i consumabili vecchi (`LEGACY_ITEMS`);
+- il boss `furgone`;
+- i resti mai usati (`LightingManager.torch`, `Boss.delayAttack`, `music.setVolume`, `sfx.startPad`, `StoryManager.destroy`).
+
+**Strumenti di sviluppo**: tenere quelli utili (es. `acoustics.meter`), organizzati meglio.
+**Da sistemare** (dopo i passi strutturali, in commit dichiarati con riferimento nuovo):
+- la fase 2 del nucleo che si raddrizza (oggi non trova muri finti nell'arena);
+- gli shader dei flashback mai registrati (anche se i flashback andranno rifatti da capo, più avanti);
+- i collider dei boss che si accumulano;
+- l'avviso "Cannot pause";
+- `MenuScene.t` e i campi che sopravvivono al restart;
+- la coda dei film vera al posto del `delayedCall`.
+
+**Il gioco deve andare bene a qualsiasi frequenza** (60, 120, 144 Hz): logica indipendente dagli fps, deterministica, ottime prestazioni. L'harness lo prova con `HZ=120`. Oggi a 120 Hz `livello-perduta` cambia esito: è il dato di partenza.
+**Riorganizzazione della repo**: codice pulito, facile da estendere e da mantenere, con test di unità; niente più file sparsi in cartelle a caso.
+**Prestazioni**: giudicate a cpu rallentata 4 volte; obiettivo quasi zero fotogrammi oltre i 16,7 ms in `esplora-perduta` e `cap-bus`; spostare lavoro nel caricamento va bene, fino a +300 ms all'avvio del livello.
+**Cambi d'ordine voluti** (eventi espliciti, rng con due sequenze logica/cosmetico con seed interno, `simulates`, `catch {}` vuoti): approvati. Nei 27 scenari sensibili al caso la trama può cambiare, purché ogni differenza sia spiegata.
+**Punti scoperti** (trofeo intoccabile, ospite 12, lucchetto di galliate...): accettati; chi tocca quel codice scrive prima lo scenario.
+**Partita registrata**: Ema registra una breve sessione con `record.mjs` prima del blocco B4.
 
 ## Fase 3: riattaccare il coop
 - [ ] Ripartire dal refactor e riportare `src/net/` dal branch `multiplayer-p2p` (snapshot buffer, interpolazione, protocollo, test 2 tab sono già buoni)
