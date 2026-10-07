@@ -86,3 +86,17 @@ node scripts/harness/corpus.mjs ref        # solo se .harness/traces/ref manca: 
 **Bug nuovi**: i shader dei flashback (`VortexPipeline`, `MemoryPipeline`) non partono mai perché le classi non sono registrate nel `PipelineManager` di Phaser (i film usano sempre le scie di ripiego); `MenuScene.t` che sopravvive al restart. In `bug-trovati.md`, con l'elenco del codice che i dati di oggi non raggiungono (da far decidere a Ema).
 
 **Registro**: `docs/refactor/ledger.md` generato, 184/186 metodi di `GameScene` eseguiti da almeno uno scenario (i due mancanti, `arrivoDei` e `onTanaSniffed`, ora sono coperti da `finale-patto` e `tana-armadio` corretti); ogni membro ha una destinazione proposta presa da `mappa-sistemi.md`.
+
+### 2026-10-07 (notte): chiusura della parte A
+
+**Determinismo dimostrato su tutto il corpus.** Dopo aver tolto `audio.paused` dalla sonda, il giro `ref` sul worktree di main e il `check` sul branch (stesso codice, processi diversi, 198 scenari, circa 45 minuti ciascuno a 4 job) hanno dato **tutti uguali a main**. Commit `ffd04c5`.
+
+**Confronto sugli esiti** (`esiti.mjs`). La parte B ha passi che non possono dare tracce identiche al bit (rng centralizzato, eventi riordinati). Per quelli serve un confronto a livello di trama: livelli, dialoghi, scelte, boss, abilità, trofei, capitoli, flag e oggetti del salvataggio finale, errori in console devono coincidere; i numeri del combattimento (morti, nemici, punteggi, tempi, abitudini lette dall'ombra, inventario) si riportano a parte. Provato su `cap-bus`, `cap-rio` e `wave-rio` rifatti con un altro seed: stessa trama, numeri diversi (punteggio del bus 218 contro 217, nemici del rio 11 contro 16), come deve essere. `corpus.mjs run --seed N` fa girare il corpus con un altro seed per misurare quanto si muovono i numeri per il solo caso.
+
+**Censimento del caso** (`caso.mjs` -> `docs/refactor/caso.md`): 204 estrazioni casuali in 21 file (58 negli effetti dei finali, 25 in `sfx`, 23 in `GameScene`, 22 in `Boss`), con riga e funzione. La colonna logica/cosmetico va riempita leggendo, prima del passo rng della parte B.
+
+**Numeri del prompt verificati sul sorgente**: 109 `catch {}` vuoti (87 nel `FlashbackManager`), nessun `isHost` su main (i 107 sono su `multiplayer-p2p`), 80 rami su `def.id`/`case` in `GameScene`.
+
+**`perf.mjs --vs base`**: confronta direttamente con `perf-base.json`.
+
+**Sonda e bot per forma**: verificato che nessuno scenario legge campi privati della scena. Unica eccezione `waitPlayer` (`game.mjs:165`, `GameScene.player`), segnalata nel prompt B.

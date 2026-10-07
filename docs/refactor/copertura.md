@@ -1,16 +1,16 @@
 # copertura del corpus
 
-Generato da `scripts/harness/coverage.mjs` sulla build di main (196 scenari). È la mappa dei punti ciechi: una traccia uguale non dimostra niente sul codice che nessuno scenario esegue.
+Generato da `scripts/harness/coverage.mjs` sulla build di main (198 scenari). È la mappa dei punti ciechi: una traccia uguale non dimostra niente sul codice che nessuno scenario esegue.
 
 | | righe | rami | funzioni |
 |---|---|---|---|
-| **totale src** | 95.2% | 89.3% | 94.7% |
+| **totale src** | 95.2% | 89.3% | 94.8% |
 | src/config.ts | 100.0% (144/144) | 100.0% (0/0) | 100.0% (0/0) |
 | src/content | 98.6% (6078/6163) | 72.5% (132/182) | 83.0% (44/53) |
-| src/engine | 97.0% (17714/18255) | 90.6% (4873/5378) | 96.2% (974/1013) |
-| src/entities | 98.3% (2695/2741) | 93.7% (1046/1116) | 97.9% (140/143) |
+| src/engine | 97.1% (17717/18255) | 90.6% (4874/5378) | 96.2% (974/1013) |
+| src/entities | 98.3% (2695/2741) | 93.7% (1045/1115) | 97.9% (140/143) |
 | src/main.ts | 90.8% (247/272) | 86.4% (51/59) | 82.4% (14/17) |
-| src/scenes | 94.2% (5837/6194) | 89.0% (2183/2453) | 96.2% (280/291) |
+| src/scenes | 94.6% (5862/6194) | 89.0% (2191/2461) | 96.9% (282/291) |
 | src/types.ts | 100.0% (225/225) | 100.0% (0/0) | 100.0% (0/0) |
 | src/ui | 83.6% (4245/5079) | 81.8% (878/1073) | 88.5% (224/253) |
 | src/world | 96.8% (209/216) | 82.6% (19/23) | 100.0% (6/6) |
@@ -117,7 +117,7 @@ Generato da `scripts/harness/coverage.mjs` sulla build di main (196 scenari). È
 | src/engine/mechanics/Cameras.ts | 100.0% | 97.6% (2 mai) | 100.0% (0 mai) |
 | src/engine/mechanics/FloorFlow.ts | 100.0% | 98.7% (1 mai) | 100.0% (0 mai) |
 | src/engine/mechanics/Snipers.ts | 100.0% | 97.7% (1 mai) | 100.0% (0 mai) |
-| src/engine/mechanics/Tana.ts | 97.7% | 78.9% (16 mai) | 92.3% (1 mai) |
+| src/engine/mechanics/Tana.ts | 98.9% | 80.0% (15 mai) | 92.3% (1 mai) |
 | src/engine/mechanics/index.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/engine/mechanics/types.ts | 100.0% | 96.7% (1 mai) | 100.0% (0 mai) |
 | src/engine/music.ts | 92.1% | 95.2% (7 mai) | 90.9% (2 mai) |
@@ -137,7 +137,7 @@ Generato da `scripts/harness/coverage.mjs` sulla build di main (196 scenari). È
 | src/main.ts | 90.8% | 86.4% (8 mai) | 82.4% (3 mai) |
 | src/scenes/BootScene.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/scenes/GalleryScene.ts | 21.8% | 100.0% (0 mai) | 25.0% (6 mai) |
-| src/scenes/GameScene.ts | 95.8% | 89.0% (267 mai) | 98.5% (4 mai) |
+| src/scenes/GameScene.ts | 96.3% | 89.0% (267 mai) | 99.3% (2 mai) |
 | src/scenes/MenuScene.ts | 100.0% | 88.5% (3 mai) | 88.9% (1 mai) |
 | src/types.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/ui/assist.ts | 83.3% | 71.4% (4 mai) | 100.0% (0 mai) |
@@ -162,7 +162,7 @@ Generato da `scripts/harness/coverage.mjs` sulla build di main (196 scenari). È
 
 Ogni ramo (then/else, ?:, && || ??, case, catch, cicli) e ogni funzione di `GameScene.ts`, `entities/` ed `engine/`, enumerati dall'ast di typescript e controllati sulla copertura v8 di tutto il corpus. Gli else impliciti non si possono misurare con la copertura a blocchi di v8: restano fuori dal conto.
 
-**rami eseguiti: 5375/5956 (90.2%) · funzioni eseguite: 2052/2164 (94.8%)**
+**rami eseguiti: 5382/5956 (90.4%) · funzioni eseguite: 2056/2164 (95.0%)**
 
 | file | rami | funzioni |
 |---|---|---|
@@ -224,7 +224,7 @@ Ogni ramo (then/else, ?:, && || ??, case, catch, cicli) e ogni funzione di `Game
 | src/engine/mechanics/Cameras.ts | 49/50 | 14/14 |
 | src/engine/mechanics/FloorFlow.ts | 60/60 | 12/12 |
 | src/engine/mechanics/Snipers.ts | 28/28 | 7/7 |
-| src/engine/mechanics/Tana.ts | 59/67 | 20/20 |
+| src/engine/mechanics/Tana.ts | 60/67 | 20/20 |
 | src/engine/mechanics/index.ts | 11/11 | 7/7 |
 | src/engine/mechanics/types.ts | 23/23 | 3/3 |
 | src/engine/music.ts | 82/87 | 21/25 |
@@ -241,7 +241,7 @@ Ogni ramo (then/else, ?:, && || ??, case, catch, cicli) e ogni funzione di `Game
 | src/entities/Enemy.ts | 228/236 | 38/38 |
 | src/entities/Player.ts | 237/251 | 52/54 |
 | src/entities/Spawner.ts | 20/24 | 8/8 |
-| src/scenes/GameScene.ts | 1390/1618 | 533/559 |
+| src/scenes/GameScene.ts | 1396/1618 | 537/559 |
 
 ## punti ciechi
 
@@ -565,12 +565,11 @@ Funzioni mai chiamate e rami mai presi. Va ridotto a codice davvero morto o irra
   - 158 ?:falso: `a ? Phaser.Display.Color.GetColor(Math.round(a.r * 255), Math.round(a.`
 
 ### src/engine/mechanics/Tana.ts
-- rami mai presi (8):
+- rami mai presi (7):
   - 88 then: `if (this.ctx.player.hidden) {`
   - 88 then: `if (this.hiddenIn === wh) this.unhide(false);`
   - 163 else: `if (p.active) {`
   - 166 ?:falso: `wh.used ? 'tana-armadio-aperto' : 'tana-armadio'`
-  - 171 then: `if (found) {`
   - 177 ??: `BOSS_BARKS.lochef?.extra?.whisper ?? []`
   - 183 ?:falso: `typeof raw === 'string' ? raw : raw.text`
   - 205 ?:falso: `a ? Phaser.Display.Color.GetColor(Math.round(a.r * 255), Math.round(a.`
@@ -692,8 +691,8 @@ Funzioni mai chiamate e rami mai presi. Va ridotto a codice davvero morto o irra
   - 38 ??: `opts.radius ?? 600`
 
 ### src/scenes/GameScene.ts
-- funzioni mai chiamate (26): (callback di this.acquaPuddles.forEach):411, (callback di bus.on):514, (callback di bus.on):653, giveHeart:698, giveItem:699, (callback di this.startDialogue):1491, (callback di this.interactables.filter):1496, onComplete:1500, (callback di this.interactables.filter):1710, (callback di this.time.delayedCall):1720, (callback di this.time.delayedCall):1794, (callback di this.physics.add.collider):2106, (callback di this.physics.add.overlap):2157, (callback di bus.on):2330, (callback di this.physics.add.overlap):4013, (callback di this.physics.add.collider):4343, onTanaSniffed:4748, (callback di this.physics.add.overlap):4847, (callback di this.startDialogue):4850, arrivoDei:5072, (callback di this.startDialogue):5073, (callback di this.startDialogue):5414, (callback di this.time.delayedCall):5416, (callback di this.time.delayedCall):5426, (callback di this.time.delayedCall):5513, (callback di this.physics.add.overlap):5667
-- rami mai presi (186):
+- funzioni mai chiamate (22): (callback di this.acquaPuddles.forEach):411, (callback di bus.on):514, giveHeart:698, giveItem:699, (callback di this.startDialogue):1491, (callback di this.interactables.filter):1496, onComplete:1500, (callback di this.interactables.filter):1710, (callback di this.time.delayedCall):1720, (callback di this.time.delayedCall):1794, (callback di this.physics.add.collider):2106, (callback di this.physics.add.overlap):2157, (callback di bus.on):2330, (callback di this.physics.add.overlap):4013, (callback di this.physics.add.collider):4343, (callback di this.physics.add.overlap):4847, (callback di this.startDialogue):4850, (callback di this.startDialogue):5414, (callback di this.time.delayedCall):5416, (callback di this.time.delayedCall):5426, (callback di this.time.delayedCall):5513, (callback di this.physics.add.overlap):5667
+- rami mai presi (185):
   - 642 ??: `this.chaseEnds[i] ?? Infinity`
   - 696 ??: `body?.width ?? 36`
   - 768 case: `case 'spawner': {`
@@ -860,8 +859,7 @@ Funzioni mai chiamate e rami mai presi. Va ridotto a codice davvero morto o irra
   - 4711 ||: `Math.hypot(dx, dy) || 1`
   - 4720 then: `if (this.time.now - this.chaseNearSince > 8000 && this.time.now >= thi`
   - 4719 &&: `this.time.now - this.chaseNearSince > 8000 && this.time.now >= this.ch`
-  - 4740 then: `if (dist < 45) {`
-  - 4742 then: `if (this.player.hurt(1, chef.x)) {`
+  - 4751 ?:falso: `chef.x < this.player.x ? -1 : 1`
   - 4962 ?:vero: `state.hasFlag('notino-disarmato') ? 'notino-agguato-vendetta' : null`
   - 5103 ??: `color ?? 0xf87171`
   - 5297 else: `if (a === 'wave-risonante' || a === 'wave-analisi') bark = 'learn-shot`

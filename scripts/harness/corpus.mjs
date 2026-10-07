@@ -4,6 +4,7 @@
 //   node scripts/harness/corpus.mjs check [--only a,b] [--jobs 4]   tracce della build corrente contro il riferimento
 //   node scripts/harness/corpus.mjs self  [--only a,b]              la stessa build due volte: devono essere identiche
 //   node scripts/harness/corpus.mjs run   [--only a,b]              solo un giro sulla build corrente (VERBOSE=1 per il diario del bot)
+//   node scripts/harness/corpus.mjs run --seed 777                  lo stesso con un altro seed, in traces/seed-777: poi esiti.mjs
 //   node scripts/harness/corpus.mjs list
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -30,6 +31,7 @@ const tier = opt('tier');
 // il giro rapido viene da tiers.mjs: gli scenari che coprono quasi tutti i rami nel minor tempo
 const only = opt('only')?.split(',') ?? (tier ? JSON.parse(readFileSync(join(HERE, 'tiers.json'), 'utf8'))[tier]?.scenarios ?? null : null);
 const skip = opt('skip')?.split(',') ?? [];
+const seed = opt('seed');
 
 export async function loadScenarios() {
     const dir = join(HERE, 'scenarios');
@@ -98,7 +100,8 @@ async function main() {
 
     if (mode === 'run') {
         // giro di prova sulla build corrente, senza confronti: per scrivere e mettere a punto gli scenari
-        const res = await runAll(list, CUR_DIST, 'run');
+        // un altro seed dice quali esiti dipendono dal caso: è la prova da fare prima di cambiare l'ordine delle estrazioni
+        const res = seed ? await runAll(list.map((s) => ({ ...s, seed: Number(seed) })), CUR_DIST, `seed-${seed}`) : await runAll(list, CUR_DIST, 'run');
         for (const r of res) if (r.failure) console.log(`\n${r.id}: ${r.failure}`);
         return res.some((r) => r.failure) ? 1 : 0;
     }

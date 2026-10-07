@@ -2,7 +2,8 @@
 // gli stessi scenari del corpus, con il loop di phaser libero sul requestAnimationFrame vero.
 // misura nella pagina il tempo di update e di render di ogni fotogramma, le metriche cdp e un profilo cpu
 // riportato ai file .ts. uso:
-//   node scripts/harness/perf.mjs [--only a,b] [--runs 3] [--dist dir] [--save base|cand] [--profile]
+//   node scripts/harness/perf.mjs [--only a,b] [--runs 3] [--dist dir] [--save base|cand] [--profile] [--vs base]
+//   --vs base: alla fine confronta scenario per scenario con perf-base.json
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +23,7 @@ const DIST = resolve(ROOT, opt('dist', process.env.DIST ?? 'dist-dev'));
 const runs = Number(opt('runs', '3'));
 const only = opt('only')?.split(',') ?? ['livello-perduta', 'livello-bus', 'livello-tana', 'livello-void', 'nastro-perduta', 'nastro-stabilimento', 'nastro-cantina', 'esplora-perduta', 'cap-bus', 'wave-rio'];
 const save = opt('save');
+const vs = opt('vs');
 const profile = args.includes('--profile');
 const ORIGIN = 'http://gecowave.test';
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
@@ -207,6 +209,17 @@ if (save) {
     const out = join(HERE, `perf-${save}.json`);
     writeFileSync(out, `${JSON.stringify({ dist: relative(ROOT, DIST), runs, at: new Date().toISOString(), rows }, null, 1)}\n`);
     console.log(`-> ${relative(ROOT, out)}`);
+}
+if (vs) {
+    const base = JSON.parse(readFileSync(join(HERE, `perf-${vs}.json`), 'utf8'));
+    const by = new Map(base.rows.map((r) => [r.id, r]));
+    const d = (a, b) => `${a.toFixed(2)} (${b ? `${a >= b ? '+' : ''}${((100 * (a - b)) / b).toFixed(0)}%` : 'n/d'})`;
+    console.log(`\ncontro perf-${vs}.json (${base.at}), tra parentesi la differenza:`);
+    for (const r of rows) {
+        const b = by.get(r.id);
+        if (!b) { console.log(`  ${r.id.padEnd(24)} (non c'è nella base)`); continue; }
+        console.log(`  ${r.id.padEnd(24)} update ${d(r.update.mean, b.update.mean)} p95 ${d(r.update.p95, b.update.p95)}  render ${d(r.render.mean, b.render.mean)}  >16.7ms ${r.long} (base ${b.long})  avvio ${r.startMs}ms (base ${b.startMs}ms)  heap ${r.heapMB.toFixed(0)}MB (base ${b.heapMB.toFixed(0)}MB)`);
+    }
 }
 if (profiles.length) {
     const h = hotspots(profiles);
