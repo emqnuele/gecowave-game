@@ -17,7 +17,7 @@ Branch di lavoro: `remaster` (remote `origin/remaster`). Commit in stile convenz
 | entità | `src/entities/` | Player, Enemy (stati + navigazione), Boss, Companion |
 | scena | `src/scenes/GameScene.ts` | orchestrazione: spawn, script dei capitoli, arene, trofei, viaggio |
 | UI | `src/ui/` | DOM: HUD, dialoghi, schermate, telefono |
-| test | `scripts/playtest/bot.mjs` | bot headless che gioca la campagna nel gioco vero |
+| test | `scripts/harness/` | runner deterministico, tracce, corpus di scenari, copertura, mutazioni, prestazioni (ADR-050); `scripts/playtest/bot.mjs` è il bot vecchio |
 
 ### Pipeline delle regioni (`npm run regions`)
 1. `generateRegion` (modello di salti astratto) costruisce stanze, varchi, scheletro percorribile, trama.
@@ -291,6 +291,12 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 **Decisione**: rigenerato tutto (`npm run regions`), `seals.ts` fallisce forte senza cancello fisico e riserva le nicchie vere ai loro sigilli; le stanze normali non le toccano. Il bus non genera nicchie apribili (debug: `open:false` ovunque, `locked:false` altrove), così il camino sta in perduta con porta diretta sul percorso; santuario tiene solo la risonanza. Premi allineati al mondo (il primo cancello di ogni passaggio paga un cuore, verificato dal validatore: premio scritto contro lettera nella griglia). La prima wave spiega i 33 una volta sola (`sigilli-spiegati` già al frammento, non più solo alla vista).
 **Deviazioni dal piano**: 8 abilità non 9 (acquatossica apre miasma e resina, una wave due sigilli); perduta ha tre sigilli, il bus uno solo; rimbalzo e camino pagano un cuore invece di tacca e cuore.
 **Conseguenze**: `simcheck` verde su tutte le sette regioni (uscita vera, zero blocchi, mancanti solo le ricompense chiuse per disegno); chi non torna vede comunque il finale. Effetto collaterale onesto: i pesi del cibo nuovi mescolano i loot laterali rigenerati (stesse quantità, posti diversi); le chiavi `item-<regione>-<x>-<y>` già raccolte restano orfane senza rompere nulla.
+
+### ADR-050 — il refactor si dimostra con le tracce
+**Contesto**: il refactor di `GameScene` non deve cambiare nemmeno un comportamento, e i comportamenti sono migliaia, sparsi in righe dimenticate. Né la memoria né la lettura bastano: servono prove.
+**Decisione**: `scripts/harness/` fa girare la build di sviluppo in chromium headless con orologio finto, caso con seed e loop fatto avanzare a mano (vedi il suo README). Una sonda iniettata prima del gioco registra a ogni fotogramma un'impronta dello stato osservabile, trovato per forma e non per campo privato della scena: geco e boss, entità del gioco, display list (multiinsieme e, a parte, ordine di disegno), corpi, luci, camera, salvataggio, ui, musica, eventi, suoni, console. Un corpus di scenari (campagna intera col bot, capitoli dal loro salvataggio d'ingresso, finali, esplorazione di ogni punto verificato, sistemi uno per uno, nastri di tasti dal geco simulato, partite registrate) gira su `main` e sul refactor; `corpus.mjs check` dice il primo fotogramma diverso, la sezione, il campo e la riga `.ts` che l'ha emesso. La copertura v8 del corpus, coi rami enumerati dall'ast, dice cosa nessuno scenario ha mai eseguito; le mutazioni di prova dicono se la rete è fitta.
+**Vincoli trovati**: il loop di phaser vuole un delta costante (16,67 ms), altrimenti la media mobile fa saltare un passo di fisica ogni tre fotogrammi; l'orologio finto di playwright cede con un `setTimeout(0)` vero da 4 ms dopo ogni timer (sostituito da un messaggio); il disegno webgl non entra mai nella logica (solo `camera.preRender`), quindi si disegna un fotogramma su quattro; animazioni e transizioni css vanno in tempo reale e nell'harness arrivano subito alla fine; la fase del `requestAnimationFrame` finto dipende dai tick assoluti, fissati all'avvio.
+**Conseguenze**: ogni passo del refactor si confronta col riferimento di `main` (`reference.json`); i passi strutturali devono dare tracce identiche al bit. Le prestazioni si misurano a parte, in tempo reale (`perf.mjs`).
 
 ---
 

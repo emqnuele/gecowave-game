@@ -1,6 +1,6 @@
 // ogni regione per intero: tutti i punti verificati, tutti i microfoni e le fermate, "interagisci" ovunque.
 // trova le note, le pagine di pedro, le missioni, i sigilli, le corse, il microfono rosso, il 100% della mappa.
-import { botState, chapterSave, K, prepareSave, region, teleport } from '../lib.mjs';
+import { botState, chapterSave, DEFAULT_CHOICES, K, prepareSave, region, teleport } from '../lib.mjs';
 import { collect, resolveAll } from '../bot.mjs';
 import { ABILITIES_AT } from './levels.mjs';
 
@@ -20,10 +20,10 @@ function cells(level, ch) {
     return out;
 }
 
-export function explore(level, { policy, film = 'skip', patch = {} } = {}) {
+export function explore(level, { id = null, policy, film = 'skip', patch = {} } = {}) {
     const save = chapterSave(level);
     return {
-        id: `esplora-${level}`,
+        id: id ?? `esplora-${level}`,
         level,
         ...prepareSave({ ...(save ? { replace: save } : { abilities: ABILITIES_AT[level] ?? [] }), stats: { forza: 0, costituzione: 45, flusso: 0 }, ...patch }),
         async run(ctx) {
@@ -59,4 +59,11 @@ export function explore(level, { policy, film = 'skip', patch = {} } = {}) {
     };
 }
 
-export default REGIONS.map((l) => explore(l));
+const policy = (...rules) => [...rules, ...DEFAULT_CHOICES];
+
+export default [
+    ...REGIONS.map((l) => explore(l)),
+    // il pensiero sepolto di piema: cancellarlo o portarlo fuori
+    explore('mente', { id: 'esplora-mente-cancella', policy: policy([/pensiero/, 0]) }),
+    explore('mente', { id: 'esplora-mente-porta', policy: policy([/pensiero/, 1]) }),
+];

@@ -34,8 +34,7 @@ export async function launch({ gl = process.env.GL ?? 'gpu', headless = true } =
    il loop di phaser invece riceve 16,67 ms costanti: con 17/17/16 la media mobile del delta oscilla attorno
    a 1000/60 e la fisica arcade salta un passo ogni tre fotogrammi; appena sopra la soglia fa un passo doppio
    ogni ~80 s, come un monitor vero. il tempo del loop dipende solo dal numero del frame */
-const DRAW = Number(process.env.DRAW ?? '4');
-const STEPPER = `((DRAW_EVERY) => {
+const STEPPER = (DRAW) => `((DRAW_EVERY) => {
     const frameMs = (f) => (f % 3 === 2 ? 16 : 17);
     const loopTime = (f) => 100000 + f * 16.67;
     window.__h.frame = 0;
@@ -70,7 +69,7 @@ const STEPPER = `((DRAW_EVERY) => {
  * apre il gioco fermo al menu con l'orologio in pausa.
  * ritorna la pagina e `step(n)`: avanza n frame, sempre a passi identici.
  */
-export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = process.env.VIEW ? { width: Number(process.env.VIEW.split('x')[0]), height: Number(process.env.VIEW.split('x')[1]) } : { width: 960, height: 540 }, coverage = false } = {}) {
+export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = process.env.VIEW ? { width: Number(process.env.VIEW.split('x')[0]), height: Number(process.env.VIEW.split('x')[1]) } : { width: 960, height: 540 }, coverage = false, draw = Number(process.env.DRAW ?? '4') } = {}) {
     const root = resolve(dist);
     const page = await browser.newPage({ viewport });
     // la copertura parte prima del bundle: conta anche il boot
@@ -113,7 +112,7 @@ export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev',
         await page.clock.runFor(pre % 3 === 2 ? 16 : 17);
         if (++pre > 3000) throw new Error('phaser non parte');
     }
-    await page.evaluate(STEPPER);
+    await page.evaluate(STEPPER(draw));
     await page.evaluate((n) => { window.__h.frame = n; window.__game.loop.sleep(); }, pre);
     if (!(await page.evaluate(() => window.__h.attach()))) throw new Error('hook di sviluppo assenti: serve la build di scripts/harness/build.sh');
 

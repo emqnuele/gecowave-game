@@ -46,8 +46,6 @@ export default [
     chapter('cap-rio-povero', 'rio', { patch: { set: { barre: 0 } }, choices: policy([/tommasorveglianza/, 0], [/acqua premium/, 0]) }),
     chapter('cap-rio-acqua', 'rio', { patch: { set: { barre: 100 } }, choices: policy([/acqua premium/, 0]), exit: false }),
     chapter('cap-stabilimento-acqua', 'stabilimento', { choices: policy([/acqua di smela/, 0]), exit: false }),
-    chapter('cap-mente-cancella', 'mente', { choices: policy([/pensiero/, 0]) }),
-    chapter('cap-mente-porta', 'mente', { choices: policy([/pensiero/, 1]) }),
     chapter('cap-sorveglianza-premium', 'sorveglianza', { patch: { flags: ['tommasorveglianza'], ombra: { premium: true, sightings: 6, total: 60, counts: { 'attack-side': 50, dash: 10 } } } }),
     chapter('cap-cantina-cliente', 'cantina', { patch: { flags: ['tommasorveglianza'] }, film: 'watch' }),
     chapter('cap-cantina-calpesta', 'cantina', { choices: policy([/boccetta di trenbolone/, 1]) }),

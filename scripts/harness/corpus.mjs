@@ -88,7 +88,7 @@ async function detail(s, frame) {
 async function main() {
     const all = await loadScenarios();
     if (mode === 'list') {
-        for (const s of all) console.log(`${s.id.padEnd(40)} ${s.level.padEnd(14)} ${s.file}`);
+        for (const s of all) console.log(`${s.id.padEnd(40)} ${String(s.level ?? "(menu)").padEnd(14)} ${s.file}`);
         return 0;
     }
     const list = pick(all);
