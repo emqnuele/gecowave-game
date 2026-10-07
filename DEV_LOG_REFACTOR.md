@@ -100,3 +100,13 @@ node scripts/harness/corpus.mjs ref        # solo se .harness/traces/ref manca: 
 **`perf.mjs --vs base`**: confronta direttamente con `perf-base.json`.
 
 **Sonda e bot per forma**: verificato che nessuno scenario legge campi privati della scena. Unica eccezione `waitPlayer` (`game.mjs:165`, `GameScene.player`), segnalata nel prompt B.
+
+**Mutazioni**: 14/14 scoperte. La soglia di fase dei boss passava inosservata perché `mutate.mjs` provava solo i 6 scenari più corti che eseguono la riga (un getter chiamato ovunque gira anche dove non conta); `cap-bus` la vede al fotogramma 3020. Ora i candidati sono metà i più corti e metà quelli che eseguono la riga più volte (`countAt` in `branches.mjs`).
+
+**Prestazioni** (`prestazioni.md`, `perf-base.json`, `perf-base-cpu4.json` con `--cpu 4`): in media leggerissimo, i problemi sono i picchi (ingressi nelle stanze, passaggi di capitolo) e `getImageData` nella cottura delle texture.
+
+**Corpus con un altro seed** (`run --seed 777`, 44 minuti): su 198 scenari, 103 danno esiti identici, 68 la stessa trama con numeri diversi, 27 una trama diversa. Le 27 non sono rumore dello strumento: battute dei passanti estratte a caso, voci del bar della piazza (`Shuffle`), agguati di notino che dipendono da dove si trova il geco, nastri di tasti che prendono un colpo diverso e cambiano strada, e la campagna che a metà affronta riba invece di smela. Quindi per il passo rng: `esiti.mjs .harness/traces/ref .harness/traces/cur --rumore .harness/traces/seed-777`. I 103 scenari stabili al caso devono dare esattamente gli stessi esiti; per gli altri le differenze si giudicano, e vanno spiegate una per una nel resoconto. Il report di partenza è `.harness/report-esiti.txt` (si rigenera).
+
+**Registro**: `ledger.mjs` perdeva le destinazioni scritte a mano rigenerandolo (indici delle celle spostati di uno: la riga comincia con `|`). Sistemato: le 338 destinazioni si conservano.
+
+**Giro rapido**: 80 scenari, 97% dei punti, 19% dei fotogrammi.

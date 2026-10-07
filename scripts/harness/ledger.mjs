@@ -45,9 +45,10 @@ function previous() {
     const keep = new Map();
     if (!existsSync(OUT)) return keep;
     for (const l of readFileSync(OUT, 'utf8').split('\n')) {
+        // la riga comincia con | e la prima colonna è vuota: il membro è la terza cella
         const c = l.split('|').map((x) => x.trim());
-        if (c.length < 8 || !c[1] || c[1] === 'membro' || c[1].startsWith('---')) continue;
-        keep.set(`${c[0] ? '' : ''}${c[1]}@${c[2]}`, { dest: c[5], state: c[6] });
+        if (c.length < 9 || !c[2] || c[2] === 'membro' || c[2].startsWith('---')) continue;
+        keep.set(`${c[2].replace(/^static /, '')}@${c[3]}`, { dest: c[6], state: c[7] });
     }
     return keep;
 }

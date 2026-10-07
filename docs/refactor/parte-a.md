@@ -6,13 +6,13 @@ Branch `refactor`, riferimento `main` a16f39c. Nessuna riga del gioco è cambiat
 
 | | |
 |---|---|
-| scenari | __SCENARI__ (__FRAMES__ fotogrammi, circa __MIN__ minuti a 4 job) |
-| giro rapido | __RAPIDO_N__ scenari, __RAPIDO_PCT__ dei punti coperti, circa __RAPIDO_MIN__ minuti |
-| copertura `GameScene`/`entities`/`engine` | __RAMI__ dei bracci di ramo, __FUNZ__ delle funzioni (enumerati dall'ast) |
-| copertura di `GameScene` | __GS_RAMI__ bracci, __GS_FUNZ__ funzioni |
-| copertura di tutto `src` (righe) | __RIGHE__ |
-| mutazioni di prova | __MUT__ scoperte, col punto giusto |
-| determinismo | __DET__ |
+| scenari | 198 (621.655 fotogrammi, circa 45 minuti a 4 job) |
+| giro rapido | 80 scenari, 97% dei punti coperti, circa 11 minuti |
+| copertura `GameScene`/`entities`/`engine` | 90,4% (5382/5956) dei bracci di ramo, 95,0% (2056/2164) delle funzioni (enumerati dall'ast) |
+| copertura di `GameScene` | 1396/1618 (86,3%) bracci, 537/559 (96,1%) funzioni |
+| copertura di tutto `src` (righe) | 95,2% |
+| mutazioni di prova | 14/14 scoperte, col punto giusto |
+| determinismo | dimostrato: `ref` su main e `check` sul branch, processi diversi, 198/198 scenari identici al bit |
 
 ## cosa c'è
 
@@ -49,6 +49,15 @@ Branch `refactor`, riferimento `main` a16f39c. Nessuna riga del gioco è cambiat
 
 **Prestazioni** (`perf.mjs`). Gli stessi scenari in tempo reale, con i tempi di update e render per fotogramma, le metriche cdp e un profilo cpu riportato ai file `.ts`.
 
+**Esiti** (`esiti.mjs`, `corpus.mjs run --seed`). Per i passi della parte B che cambiano l'ordine del caso di proposito, quindi non possono dare tracce identiche al bit. La trama (livelli, dialoghi, scelte, boss, abilità, trofei, flag) deve coincidere, i numeri del combattimento si giudicano. Col seed 777 il corpus dà:
+- 103 scenari identici negli esiti;
+- 68 con la stessa trama e numeri diversi;
+- 27 con la trama diversa, perché sensibili al caso del gioco (battute casuali, voci del bar, agguati, nastri, la campagna che a metà affronta un altro boss).
+
+Con `--rumore` quei 27 si riportano a parte.
+
+**Il caso nel codice** (`caso.mjs` -> `caso.md`): 204 estrazioni casuali in 21 file, con riga e funzione. È il punto di partenza del passo rng.
+
 **Registro** (`ledger.mjs`). Ogni membro di `GameScene` con righe, scenari che lo eseguono e destinazione proposta (`docs/refactor/ledger.md`).
 
 ## cosa dice la copertura
@@ -66,7 +75,11 @@ Branch `refactor`, riferimento `main` a16f39c. Nessuna riga del gioco è cambiat
 
 ## cosa dicono le mutazioni
 
-__MUTAZIONI__
+Tutte e 14 scoperte (`mutazioni.md`), ognuna col fotogramma e la riga giusta: un `sfx` tolto, un `setFlag` tolto, un `bus.emit` tolto, un tween tolto, un `>=` diventato `>`, l'ordine di creazione di due oggetti alla stessa profondità, un `persist` tolto, una profondità cambiata, un suono del geco tolto, una costante del rinculo dei nemici, la soglia di fase dei boss, la soglia di un suono del motore, un testo della ui, un tween dei film. Su 7 file diversi (`GameScene`, `Player`, `Enemy`, `Boss`, `HazardManager`, `hud`, `FlashbackManager`).
+
+Due lezioni:
+- **mutazioni equivalenti**: nella prima versione lo scambio di creazione tra crepa e bagliore del riflesso "sopravviveva", ma era equivalente (profondità diverse: l'ordine lo decide la profondità). Sostituita con uno scambio vero a parità di profondità.
+- **la scelta degli scenari conta**: la soglia di fase dei boss (`Boss.ts:91`) passava inosservata perché `mutate.mjs` provava solo i 6 scenari più corti che eseguono la riga, e un getter chiamato ovunque gira anche dove non conta. `cap-bus` e la campagna la vedono subito (voce di guggu e `boss-phase` spariti). Ora i candidati sono metà i più corti, metà quelli che eseguono la riga più volte. Nella parte B, se una mutazione sopravvive, prima di aggiungere scenari prova `--per 40`.
 
 ## limiti della rete (da sapere prima di fidarsi)
 
@@ -79,7 +92,11 @@ __MUTAZIONI__
 
 ## prestazioni di partenza
 
-__PERF__
+Dettagli in `prestazioni.md`, base in `perf-base.json` e `perf-base-cpu4.json`.
+- In media il gioco è leggero: su un M5 meno di 0,5 ms di logica e meno di 1 ms di disegno per fotogramma, cpu ferma l'88% del tempo.
+- I problemi sono i picchi dove il gioco crea cose. A cpu rallentata 4 volte, `esplora-perduta` (ingressi nelle stanze) ha 501 fotogrammi su 3627 oltre i 16,7 ms e `cap-bus` un picco di 799 ms.
+- `getImageData` (cottura delle texture procedurali in `creatureKit`, `materials`, `playerSkin`) pesa più di tutto il codice del gioco insieme.
+- Il refactor strutturale non deve peggiorare questi numeri; le ottimizzazioni vere vengono a struttura finita (blocco B10), ognuna con tracce identiche al bit.
 
 ## bug trovati
 

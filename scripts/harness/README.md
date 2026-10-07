@@ -14,14 +14,14 @@ node scripts/harness/show.mjs <traccia>           # racconta una traccia: livell
 node scripts/harness/tracediff.mjs <a> <b>        # il primo fotogramma in cui due tracce divergono
 node scripts/harness/corpus.mjs check --tier rapido   # il giro rapido (tiers.json, da tiers.mjs)
 node scripts/harness/corpus.mjs run --seed 777    # il corpus con un altro seed, in traces/seed-777
-node scripts/harness/esiti.mjs [dirA] [dirB]      # confronto sugli esiti, non al bit (default ref contro cur)
+node scripts/harness/esiti.mjs [dirA] [dirB] --rumore .harness/traces/seed-777   # sugli esiti, non al bit
 node scripts/harness/mutate.mjs                   # mutazioni di prova -> docs/refactor/mutazioni.md
 node scripts/harness/perf.mjs --save cand --vs base --profile   # prestazioni in tempo reale contro perf-base.json
 node scripts/harness/ledger.mjs                   # registro membro per membro -> docs/refactor/ledger.md
 node scripts/harness/caso.mjs                     # censimento delle estrazioni casuali -> docs/refactor/caso.md
 ```
 
-**Al bit o sugli esiti.** `check` vuole tracce identiche al bit: è la prova per ogni passo che sposta codice senza cambiare l'ordine delle chiamate. I passi che cambiano l'ordine di proposito (rng centralizzato, eventi riordinati) non possono darla: per quelli `esiti.mjs` confronta la trama (livelli, dialoghi, scelte, boss, abilità, trofei, capitoli, flag e oggetti del salvataggio finale, errori) e riporta a parte i numeri del combattimento (morti, nemici, punteggi, tempi, abitudini lette dall'ombra). La trama deve coincidere; i numeri si giudicano, e il confronto col corpus fatto girare con un altro seed (`run --seed`) dice quanto si muovono già per il solo caso.
+**Al bit o sugli esiti.** `check` vuole tracce identiche al bit: è la prova per ogni passo che sposta codice senza cambiare l'ordine delle chiamate. I passi che cambiano l'ordine di proposito (rng centralizzato, eventi riordinati) non possono darla: per quelli `esiti.mjs` confronta la trama (livelli, dialoghi, scelte, boss, abilità, trofei, capitoli, flag e oggetti del salvataggio finale, errori) e riporta a parte i numeri del combattimento (morti, nemici, punteggi, tempi, abitudini lette dall'ombra). La trama deve coincidere; i numeri si giudicano, e il confronto col corpus fatto girare con un altro seed (`run --seed`) dice quanto si muovono già per il solo caso: con `--rumore` gli scenari che cambiano trama anche solo cambiando seed (27 su 198 con seed 777: battute casuali, agguati, nastri, campagna) si riportano a parte; per gli altri la trama deve coincidere.
 
 `--only a,b` sceglie gli scenari (anche per prefisso), `--jobs N` quanti in parallelo (default 4). `REF_DIST` e `DIST` cambiano le build. Le tracce complete stanno in `.harness/` (ignorata da git), gli hash del riferimento in `reference.json`.
 

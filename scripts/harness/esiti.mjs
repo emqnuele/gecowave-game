@@ -2,7 +2,9 @@
 // (rng centralizzato, eventi riordinati) e quindi non possono dare tracce identiche.
 // trama (livelli, dialoghi, scelte, boss, abilità, trofei, salvataggio finale, errori) deve coincidere;
 // i numeri del combattimento (morti, nemici, barre, punteggi) si riportano con la differenza, da giudicare.
-// uso: node scripts/harness/esiti.mjs [dirA] [dirB] [--only a,b]   (default .harness/traces/ref e .harness/traces/cur)
+// uso: node scripts/harness/esiti.mjs [dirA] [dirB] [--only a,b] [--rumore dirSeed]   (default .harness/traces/ref e .harness/traces/cur)
+//   --rumore: gli scenari la cui trama cambia già tra dirA e dirSeed (stesso codice, altro seed) sono sensibili al caso:
+//   le loro differenze si riportano a parte, da giudicare; per tutti gli altri la trama deve coincidere
 //      node scripts/harness/esiti.mjs a.jsonl.gz b.jsonl.gz
 import { existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
@@ -13,9 +15,11 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const args = process.argv.slice(2);
 const oi = args.indexOf('--only');
 const only = oi >= 0 ? args[oi + 1].split(',') : null;
-const pos = args.filter((a, i) => !a.startsWith('--') && i !== oi + 1);
+const ri = args.indexOf('--rumore');
+const pos = args.filter((a, i) => !a.startsWith('--') && i !== oi + 1 && i !== ri + 1);
 const A = resolve(ROOT, pos[0] ?? '.harness/traces/ref');
 const B = resolve(ROOT, pos[1] ?? '.harness/traces/cur');
+const NOISE = ri >= 0 ? resolve(ROOT, args[ri + 1]) : null;
 
 /** gli esiti di una traccia */
 export function outcomes(file) {
@@ -108,11 +112,16 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         }
     }
     const L = [];
-    let bad = 0, judge = 0, same = 0, miss = 0;
+    let bad = 0, judge = 0, same = 0, miss = 0, noisy = 0;
     for (const [id, fa, fb] of pairs) {
         if (!existsSync(fb)) { miss++; continue; }
-        const { trama, numeri } = compareOutcomes(outcomes(fa), outcomes(fb));
-        if (trama.length) {
+        const oa = outcomes(fa);
+        const { trama, numeri } = compareOutcomes(oa, outcomes(fb));
+        const fn = NOISE && join(NOISE, basename(fa));
+        if (trama.length && fn && existsSync(fn) && compareOutcomes(oa, outcomes(fn)).trama.length) {
+            noisy++;
+            L.push(`${id}: trama diversa, ma sensibile al caso (cambia anche con l'altro seed): da giudicare`, ...trama.map((x) => `    ${x}`));
+        } else if (trama.length) {
             bad++;
             L.push(`${id}: TRAMA DIVERSA`, ...trama.map((x) => `    ${x}`), ...numeri.map((x) => `    (numeri) ${x}`));
         } else if (numeri.length) {
@@ -120,7 +129,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
             L.push(`${id}: stessa trama, numeri diversi`, ...numeri.map((x) => `    ${x}`));
         } else same++;
     }
-    L.push('', `${pairs.length - miss} confrontati: ${same} uguali negli esiti, ${judge} con numeri diversi da giudicare, ${bad} con la trama diversa${miss ? `, ${miss} senza la seconda traccia` : ''}`);
+    L.push('', `${pairs.length - miss} confrontati: ${same} uguali negli esiti, ${judge} con numeri diversi da giudicare, ${noisy ? `${noisy} sensibili al caso con la trama diversa (da giudicare), ` : ''}${bad} con la trama diversa${miss ? `, ${miss} senza la seconda traccia` : ''}`);
     const out = L.join('\n');
     console.log(out);
     writeFileSync(join(ROOT, '.harness/report-esiti.txt'), `${out}\n`);
