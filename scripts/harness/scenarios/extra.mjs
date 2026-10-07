@@ -105,6 +105,30 @@ export default [
         await ctx.wait(60);
     }, { abilities: ALL_ABILITIES })),
 
+    // le lastre che crollano: ci si sale e si scappa a distanze diverse (il crollo si sente solo da vicino)
+    ...['tana', 'ricordi'].map((level) => at(`lastre-${level}`, level, async (ctx) => {
+        await ctx.wait(20);
+        await resolveAll(ctx);
+        const wp = waypoints(level).waypoints;
+        let tried = 0;
+        for (const w of wp.filter((_, i) => i % 4 === 0)) {
+            if (tried >= 6) break;
+            await teleport(ctx, w.x, w.y - 10);
+            await ctx.wait(4);
+            const p = (await botState(ctx)).p;
+            const slab = p && (await ctx.eval(() => window.__h.bot.sprites(['hz-slab-']))).find((x) => Math.hypot(x.x - p.x, x.y - p.y) < 1500);
+            if (!slab) continue;
+            await teleport(ctx, slab.x, slab.y - 40);
+            await ctx.wait(8);
+            // via a 200, 600 e 900 px mentre trema
+            await teleport(ctx, slab.x + [200, 600, 900][tried % 3], slab.y - 200);
+            await ctx.wait(90);
+            await resolveAll(ctx);
+            tried++;
+        }
+        ctx.mark(`lastre provate: ${tried}`);
+    })),
+
     // la tana: la caccia di lochef, l'armadio, la casa che ti sente
     at('tana-armadio', 'tana', async (ctx) => {
         await ctx.wait(40);
@@ -117,7 +141,8 @@ export default [
         for (let k = 0; k < 2; k++) {
             const closets = await ctx.eval(() => window.__h.bot.sprites(['tana-armadio']));
             const p = (await botState(ctx)).p;
-            const c = closets.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+            // ogni armadio vale una volta per caccia: il secondo nascondiglio è un altro armadio
+            const c = closets.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[k];
             ctx.mark(`armadi: ${closets.length}`);
             if (!c) break;
             await teleport(ctx, c.x, c.y - 30);

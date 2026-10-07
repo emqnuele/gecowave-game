@@ -110,7 +110,8 @@ async function main() {
         console.log(`riferimento: ${REF_DIST} @ ${commit.slice(0, 8)}, ${list.length} scenari`);
         const res = await runAll(list, REF_DIST, 'ref');
         const prev = existsSync(REF_FILE) ? JSON.parse(readFileSync(REF_FILE, 'utf8')) : { scenarios: {} };
-        if (prev.commit && prev.commit !== commit && !only) prev.scenarios = {};
+        // un giro completo riparte da zero: niente hash di scenari tolti o di strumenti vecchi
+        if (!only || (prev.commit && prev.commit !== commit)) prev.scenarios = {};
         const out = { commit, note: prev.commit === commit ? prev.note : null, scenarios: { ...prev.scenarios } };
         for (const r of res) out.scenarios[r.id] = { strict: r.strict, diag: r.diag, frames: r.frames, failure: r.failure ? r.failure.split('\n')[0] : null };
         const sorted = Object.fromEntries(Object.entries(out.scenarios).sort(([a], [b]) => a.localeCompare(b)));

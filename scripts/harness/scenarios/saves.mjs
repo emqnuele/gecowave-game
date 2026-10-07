@@ -80,6 +80,10 @@ export default [
             await resolveAll(ctx);
             for (const [w, h] of [[1280, 720], [800, 600], [960, 540]]) {
                 await ctx.page.setViewportSize({ width: w, height: h });
+                // il resize arriva col tempo reale del browser: si aspetta che phaser l'abbia visto prima di avanzare
+                // (con l'orologio finto i timer della pagina sono fermi: si aspetta da fuori)
+                while (!(await ctx.eval(([w, h]) => window.innerWidth === w && window.innerHeight === h, [w, h]))) await new Promise((r) => setTimeout(r, 20));
+                await new Promise((r) => setTimeout(r, 100));
                 await ctx.wait(60);
                 await resolveAll(ctx);
             }

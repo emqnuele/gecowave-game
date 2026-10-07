@@ -15,7 +15,19 @@
 
 ## Fase 2: refactor di GameScene (nuovo branch da main)
 Obiettivo: GameScene (7.7k righe) fa solo da orchestratore. Ogni sistema ha la sua `update()` e lo stato separato dal rendering.
-- [ ] Mappare i blocchi di GameScene e decidere i sistemi (bozza: Enemy, Boss, Trap/Hazard, Folk/NPC, Dialogue, Flashback, Doomsday, Atmosphere/Audio, Camera/World)
+
+### Parte A: gli strumenti empirici (fatta, vedi `docs/refactor/parte-a.md` e `DEV_LOG_REFACTOR.md`)
+- [x] Branch `refactor` da `main` a16f39c, worktree di riferimento `../gecowave-main`
+- [x] Tracce dello stato osservabile a ogni fotogramma e diff col primo fotogramma diverso (`scripts/harness/`)
+- [x] Corpus di scenari: campagna col bot, capitoli e varianti, finali, esplorazione, npc, combattimento, sistemi, salvataggi, nastri di tasti, partite registrate
+- [x] Copertura del corpus con i rami enumerati dal sorgente (`docs/refactor/copertura.md`)
+- [x] Mutazioni di prova (`docs/refactor/mutazioni.md`)
+- [x] Prestazioni in tempo reale di partenza (`docs/refactor/prestazioni.md`)
+- [x] Riferimento congelato (`scripts/harness/reference.json`) e determinismo dimostrato su tutto il corpus
+- [x] Registro membro per membro di GameScene con le destinazioni proposte (`docs/refactor/ledger.md`)
+
+### Parte B: il refactor (prompt in `PROMPT_REFACTOR_B.md`)
+- [~] Mappare i blocchi di GameScene e decidere i sistemi: bozza in `docs/refactor/mappa-sistemi.md`, da confermare spostando codice (bozza originale: Enemy, Boss, Trap/Hazard, Folk/NPC, Dialogue, Flashback, Doomsday, Atmosphere/Audio, Camera/World)
 - [ ] Estrarli uno alla volta, un commit per sistema, gioco giocabile dopo ogni commit
 - [ ] Logica (decide cosa succede) separata dalla presentazione (disegna e suona)
 - [ ] Eventi espliciti per le cose importanti: spawn, danno, morte, inizio/fine dialogo, checkpoint

@@ -1,18 +1,18 @@
 # copertura del corpus
 
-Generato da `scripts/harness/coverage.mjs` sulla build di main (197 scenari). È la mappa dei punti ciechi: una traccia uguale non dimostra niente sul codice che nessuno scenario esegue.
+Generato da `scripts/harness/coverage.mjs` sulla build di main (196 scenari). È la mappa dei punti ciechi: una traccia uguale non dimostra niente sul codice che nessuno scenario esegue.
 
 | | righe | rami | funzioni |
 |---|---|---|---|
-| **totale src** | 95.1% | 89.5% | 94.7% |
+| **totale src** | 95.2% | 89.3% | 94.7% |
 | src/config.ts | 100.0% (144/144) | 100.0% (0/0) | 100.0% (0/0) |
-| src/content | 98.2% (6054/6163) | 80.1% (129/161) | 83.0% (44/53) |
-| src/engine | 97.0% (17701/18255) | 90.7% (4868/5368) | 96.1% (973/1013) |
+| src/content | 98.6% (6078/6163) | 72.5% (132/182) | 83.0% (44/53) |
+| src/engine | 97.0% (17714/18255) | 90.6% (4873/5378) | 96.2% (974/1013) |
 | src/entities | 98.3% (2695/2741) | 93.7% (1046/1116) | 97.9% (140/143) |
 | src/main.ts | 90.8% (247/272) | 86.4% (51/59) | 82.4% (14/17) |
-| src/scenes | 94.2% (5837/6194) | 89.0% (2184/2454) | 96.2% (280/291) |
+| src/scenes | 94.2% (5837/6194) | 89.0% (2183/2453) | 96.2% (280/291) |
 | src/types.ts | 100.0% (225/225) | 100.0% (0/0) | 100.0% (0/0) |
-| src/ui | 83.5% (4239/5079) | 81.5% (869/1066) | 88.5% (224/253) |
+| src/ui | 83.6% (4245/5079) | 81.8% (878/1073) | 88.5% (224/253) |
 | src/world | 96.8% (209/216) | 82.6% (19/23) | 100.0% (6/6) |
 
 ## per file
@@ -29,7 +29,7 @@ Generato da `scripts/harness/coverage.mjs` sulla build di main (197 scenari). È
 | src/content/enemies.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/content/flashbacks.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/content/folk.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
-| src/content/items.ts | 89.6% | 50.0% (1 mai) | 100.0% (0 mai) |
+| src/content/items.ts | 100.0% | 17.4% (19 mai) | 100.0% (0 mai) |
 | src/content/lessons.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/content/levels/index.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/content/levels/level00-piazza.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
@@ -127,7 +127,7 @@ Generato da `scripts/harness/coverage.mjs` sulla build di main (197 scenari). È
 | src/engine/regionView.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/engine/score.ts | 95.0% | 75.0% (4 mai) | 100.0% (0 mai) |
 | src/engine/sfx.ts | 97.0% | 93.0% (15 mai) | 96.3% (3 mai) |
-| src/engine/state.ts | 96.7% | 91.6% (10 mai) | 97.3% (1 mai) |
+| src/engine/state.ts | 100.0% | 88.4% (15 mai) | 100.0% (0 mai) |
 | src/engine/textures.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
 | src/entities/Boss.ts | 99.5% | 93.7% (19 mai) | 97.7% (1 mai) |
 | src/entities/Companion.ts | 98.8% | 97.8% (2 mai) | 100.0% (0 mai) |
@@ -149,7 +149,7 @@ Generato da `scripts/harness/coverage.mjs` sulla build di main (197 scenari). È
 | src/ui/endingFx.ts | 99.4% | 87.1% (11 mai) | 94.1% (1 mai) |
 | src/ui/finalSummary.ts | 54.2% | 52.4% (10 mai) | 71.4% (2 mai) |
 | src/ui/hud.ts | 97.3% | 87.0% (9 mai) | 100.0% (0 mai) |
-| src/ui/phone.ts | 84.2% | 80.8% (69 mai) | 94.3% (3 mai) |
+| src/ui/phone.ts | 84.7% | 81.7% (67 mai) | 94.3% (3 mai) |
 | src/ui/photos.ts | 77.5% | 30.0% (7 mai) | 50.0% (2 mai) |
 | src/ui/screens.ts | 87.6% | 85.2% (43 mai) | 86.3% (14 mai) |
 | src/ui/subtitles.ts | 100.0% | 100.0% (0 mai) | 100.0% (0 mai) |
@@ -162,7 +162,7 @@ Generato da `scripts/harness/coverage.mjs` sulla build di main (197 scenari). È
 
 Ogni ramo (then/else, ?:, && || ??, case, catch, cicli) e ogni funzione di `GameScene.ts`, `entities/` ed `engine/`, enumerati dall'ast di typescript e controllati sulla copertura v8 di tutto il corpus. Gli else impliciti non si possono misurare con la copertura a blocchi di v8: restano fuori dal conto.
 
-**rami eseguiti: 5371/5956 (90.2%) · funzioni eseguite: 2049/2164 (94.7%)**
+**rami eseguiti: 5375/5956 (90.2%) · funzioni eseguite: 2052/2164 (94.8%)**
 
 | file | rami | funzioni |
 |---|---|---|
@@ -234,7 +234,7 @@ Ogni ramo (then/else, ?:, && || ??, case, catch, cicli) e ogni funzione di `Game
 | src/engine/regionView.ts | 0/0 | 0/0 |
 | src/engine/score.ts | 7/8 | 9/10 |
 | src/engine/sfx.ts | 107/116 | 87/98 |
-| src/engine/state.ts | 56/68 | 40/43 |
+| src/engine/state.ts | 60/68 | 43/43 |
 | src/engine/textures.ts | 7/7 | 23/23 |
 | src/entities/Boss.ts | 179/186 | 65/66 |
 | src/entities/Companion.ts | 63/64 | 14/14 |
@@ -631,14 +631,15 @@ Funzioni mai chiamate e rami mai presi. Va ridotto a codice davvero morto o irra
   - 355 case: `case 'padella':`
 
 ### src/engine/state.ts
-- funzioni mai chiamate (3): (callback di this.save.equipped.reduce):305, toggleCharm:313, (callback di this.save.equipped.filter):316
-- rami mai presi (6):
+- rami mai presi (8):
   - 97 ??: `parsed.record ?? {}`
   - 97 ??: `parsed.explored ?? {}`
   - 125 ??: `this.save.runScores ?? {}`
   - 126 ??: `this.save.scores ?? {}`
   - 180 ?:vero: `this.run.patto ? 2 : 1`
   - 305 ??: `ITEMS[id]?.cost ?? 0`
+  - 314 &&: `!this.run.nearMic && !this.godMode`
+  - 318 ??: `ITEMS[id]?.cost ?? 0`
 
 ### src/entities/Boss.ts
 - funzioni mai chiamate (1): delayAttack:164

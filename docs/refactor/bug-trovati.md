@@ -12,6 +12,26 @@ Per ognuno: cosa si vede, dove nasce, quale scenario lo mostra, stato.
 - **scenari**: `piazza`, `arena-rio`, `cap-rio-*` (sezione `con` della traccia).
 - **stato**: da indagare.
 
+### il tempo del menu sopravvive al riavvio della scena
+- **si vede**: niente a occhio. Il menu del fondale (`MenuScene`) riprende le sue animazioni (braci, parallasse) dal tempo che aveva la volta prima, invece che da zero.
+- **nasce**: il campo `t` di `MenuScene` non si azzera in `create()`. Phaser riusa la stessa istanza di scena a ogni restart (la stessa trappola di `GameScene`).
+- **trovato**: era una fonte di non determinismo nell'harness (il menu gira già durante il boot, che durava un numero variabile di fotogrammi). L'harness ora rende il boot deterministico, e il campo si porta dietro sempre lo stesso valore.
+- **stato**: innocuo; da sistemare dopo, insieme agli altri campi che sopravvivono al restart.
+
+### i shader dei flashback non partono mai (vortice e ricordo)
+- **si vede**: l'ingresso e l'uscita dei film usano sempre le "scie" di ripiego (`warp`); il tornado sul frame (`VortexPipeline`) e la tinta del ricordo (`MemoryPipeline`) non si vedono mai.
+- **nasce**: `FlashbackManager.vortex` e il blocco della memoria (righe ~251 e ~599) chiamano `cam.setPostPipeline(Classe)`, ma in Phaser 3.90 una pipeline post passata come classe si istanzia solo se è registrata (`PipelineManager.getPostPipeline` controlla `postPipelineClasses.contains`). Nessuno chiama `renderer.pipelines.addPostPipeline` (né c'è `pipeline:` nella config del gioco): `getPostPipeline` torna vuoto e il codice ripiega in silenzio.
+- **prova**: la copertura del corpus non vede mai eseguiti i costruttori di `VortexPipeline` e `MemoryPipeline` (`docs/refactor/copertura.md`), in nessuno dei film guardati o saltati.
+- **stato**: da decidere con Ema. Sistemarlo cambia l'aspetto dei flashback (che il refactor non deve toccare): è una decisione di prodotto, insieme al ridisegno dei film.
+
+### codice che i dati di oggi non raggiungono mai
+Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguirli perché le regioni generate non contengono più quei casi.
+- `spawnEntities` caso `'spawner'` e il conteggio dei nidi messi a mano (`spawnCaveSpawners`): nessuna regione ha entità `spawner`.
+- `spawnItemPickup` ramo `LEGACY_ITEMS`: le regioni rigenerate (ADR-048) hanno solo crocchetta, panino e tacca.
+- boss `furgone`: nessuna regione lo contiene; `onBossDefeated` caso `'furgone'`, `recoverBossReward`, `BOSS_INTRO.furgone` restano senza strada.
+- `LightingManager.torch`, `acoustics.meter/rms` (strumento di sviluppo), `StoryManager.destroy` (mai chiamato; svuota solo un array), `Boss.delayAttack` (mai usato dall'ombra), `music.setVolume`, `sfx.startPad/stopPad` parzialmente (il pad non parte mai, `stopPad` sì).
+- `TerrainRenderer.straightenFakeWalls/releaseStraightenedWalls` e `TrentatreMarks.extinguishWalls/restoreExtinguished`: la fase 2 del nucleo che si raddrizza non trova muri `F` nell'arena (ADR-041 lo dice già): restano pronti per una rigenerazione.
+
 ## già noti dalla revisione del remaster (ANALISI_REMASTER.md)
 
 ### i collider dei boss si accumulano

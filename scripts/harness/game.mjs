@@ -124,6 +124,14 @@ export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev',
         }, n);
     };
     while (!(await page.evaluate(() => !!window.__startLevel && !!window.__game?.scene?.isActive('MenuScene')))) {
+        // il caricamento degli asset va in tempo reale: mentre il loader lavora il gioco non avanza, così il boot
+        // dura sempre gli stessi fotogrammi (la scena del menu gira già qui e si porta dietro il suo tempo)
+        // il loader avanza solo nell'update della scena: lo si spinge a mano, senza far avanzare il gioco
+        while (await page.evaluate(() => {
+            const busy = window.__game.scene.scenes.filter((s) => s.load?.isLoading?.());
+            for (const s of busy) s.load.update();
+            return busy.length > 0;
+        })) await new Promise((r) => setTimeout(r, 15));
         await step();
         if ((await frame()) > 3000) throw new Error('boot bloccato prima del menu');
     }

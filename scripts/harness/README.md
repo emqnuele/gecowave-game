@@ -53,3 +53,8 @@ node scripts/harness/tracediff.mjs <a> <b>        # il primo fotogramma in cui d
 - I passi nascosti delle schermate restano nel dom: il bot clicca solo quello che si vede (`offsetParent`), come `bindNav`.
 - Viewport fisso (960×540): lo zoom della camera dipende dall'altezza della finestra.
 - `sfx.init` consuma `Math.random` per i buffer di rumore in proporzione al sample rate dell'audio: sulla stessa macchina è costante, su un'altra la sequenza del caso si sposta. Riferimento e confronto vanno fatti sulla stessa macchina.
+- **Il boot**: il caricamento degli asset va in tempo reale e la scena del menu gira già durante il boot (e si porta dietro il suo tempo anche dopo i titoli di coda). Mentre il loader lavora il gioco non avanza: si chiama a mano `load.update()` (il loader di phaser procede solo nell'update della scena), così il boot dura sempre un fotogramma.
+- **`audio.paused`** lo decide la pipeline multimediale del browser in tempo reale: non entra nella traccia (le chiamate alla musica sì).
+- **Il resize** arriva con l'evento del browser in tempo reale: si aspetta da fuori che la finestra abbia la misura nuova prima di far avanzare il gioco (i timer della pagina sono fermi, `waitForFunction` con polling non funziona).
+- **Gli scenari cambiati dopo l'avvio di un `ref`** risultano diversi al `check`: il corpus si carica all'inizio del giro. Dopo un cambio, `corpus.mjs ref --only <id>`.
+- **Il bot non deve girare a vuoto**: due morti contro lo stesso boss e si arrende; se un boss resta invulnerabile ripassa dalle tappe di trama. Senza queste due regole un capitolo segreto arrivava a 268 mila fotogrammi.

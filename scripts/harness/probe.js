@@ -454,7 +454,8 @@
         const a = m.currentAudio;
         D.au = {
             now: m.currentPath ?? null, grave: m.graveDuck, lvl: m.levelDuck,
-            vol: a ? R(a.volume) : null, rate: a ? R(a.playbackRate) : null, paused: a ? a.paused : null,
+            // paused no: lo decide la pipeline multimediale del browser, in tempo reale (caricamento, fine traccia)
+            vol: a ? R(a.volume) : null, rate: a ? R(a.playbackRate) : null,
             ac: reduce(window.__acoustics?.current ?? null),
         };
 

@@ -120,16 +120,6 @@ export default [
         await resolveAll(ctx);
     }, { unflags: ['ivan'] }),
 
-    // un boss battuto senza farsi toccare: il trofeo intoccabile
-    at('boss-intoccabile', 'bus', async (ctx) => {
-        await ctx.wait(20);
-        await resolveAll(ctx);
-        await faceBoss(ctx, 'bus', 'guggu');
-        await fight(ctx, { bossFrames: 3000 });
-        await ctx.wait(200);
-        await resolveAll(ctx);
-    }, { flags: ['ivan'], stats: { forza: 80, costituzione: 45, flusso: 0 } }),
-
     // l'ombra che legge: ogni abitudine ha la sua contromossa (premium e beta)
     ...[['premium', true], ['beta', false]].map(([name, premium]) => at(`ombra-${name}`, 'sorveglianza', async (ctx) => {
         await ctx.wait(20);

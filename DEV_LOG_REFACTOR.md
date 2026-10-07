@@ -73,3 +73,16 @@ node scripts/harness/corpus.mjs ref        # solo se .harness/traces/ref manca: 
 **Giro rapido** (`tiers.mjs`): dalla copertura per scenario, una copertura di insiemi greedy sceglie il sottoinsieme che esegue il 97% dei punti (rami e funzioni) col minor numero di fotogrammi. `corpus.mjs check --tier rapido` lo fa girare: è il controllo da fare a ogni micro-passo della parte B; il corpus intero prima di ogni commit.
 
 **Contratto implicito della scena** trovato leggendo: `FlashbackManager` usa per duck typing `vignette`, `setPropsVisible` e `findFlatStage`; `Player` usa `cloneAlive`. Annotato in `docs/refactor/mappa-sistemi.md`, insieme all'ordine di `update()` e alla bozza dei 12 sistemi.
+
+### 2026-10-07 (sera) — riferimento, controllo incrociato, ultime fonti di rumore
+
+**Il controllo incrociato** (`ref` su main e `check` sul branch, stesso codice, processi diversi) è la prova di determinismo su tutto il corpus. I primi giri hanno trovato tre fonti di rumore, tutte dell'harness:
+- la `MenuScene` del fondale gira già durante il boot, che durava un numero variabile di fotogrammi, e il suo campo `t` sopravvive al riavvio della scena (piccolo bug del gioco, annotato): il menu dopo i titoli di coda partiva da un tempo diverso. Ora durante il caricamento il gioco non avanza (si spinge a mano il loader) e il boot dura sempre un fotogramma;
+- il resize della finestra arriva in tempo reale: lo scenario aspetta che la misura sia cambiata prima di avanzare;
+- `audio.paused` lo decide la pipeline multimediale: tolto dalla traccia.
+
+**Mutazioni** (prima versione, prima dei fix sopra): 12/14 scoperte. Le due sopravvissute erano istruttive: lo scambio di creazione tra crepa e bagliore del riflesso è **equivalente** (profondità diverse, l'ordine di disegno lo decide la profondità), sostituito da uno scambio vero a parità di profondità (pali delle fermate e nidi); la soglia del suono delle lastre (700 → 500 px) non la vedeva nessuno scenario, perché nessuno faceva crollare una lastra col geco a quella distanza: aggiunto `lastre-*`. Alcune "scoperte" erano dovute al rumore del resize: le mutazioni vanno rifatte dopo che il corpus è pulito.
+
+**Bug nuovi**: i shader dei flashback (`VortexPipeline`, `MemoryPipeline`) non partono mai perché le classi non sono registrate nel `PipelineManager` di Phaser (i film usano sempre le scie di ripiego); `MenuScene.t` che sopravvive al restart. In `bug-trovati.md`, con l'elenco del codice che i dati di oggi non raggiungono (da far decidere a Ema).
+
+**Registro**: `docs/refactor/ledger.md` generato, 184/186 metodi di `GameScene` eseguiti da almeno uno scenario (i due mancanti, `arrivoDei` e `onTanaSniffed`, ora sono coperti da `finale-patto` e `tana-armadio` corretti); ogni membro ha una destinazione proposta presa da `mappa-sistemi.md`.

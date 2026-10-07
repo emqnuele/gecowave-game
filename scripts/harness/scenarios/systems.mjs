@@ -301,6 +301,22 @@ export default [
             await ctx.eval(() => window.__h.bot.click('.phone .phone-home-bar'));
             await ctx.wait(15);
         }
+        // gli amuleti: si sceglie uno slot e si indossa, poi si toglie; due amuleti
+        const openApp = async (name) => {
+            const labels = await ctx.eval(() => window.__h.bot.labels('.phone .phone-app'));
+            const i = labels.indexOf(name);
+            if (i >= 0) await ctx.eval((i) => window.__h.bot.click('.phone .phone-app', i), i);
+            await ctx.wait(20);
+        };
+        await openApp('amuleti');
+        for (const slot of [0, 1, 0]) {
+            await ctx.eval((i) => window.__h.bot.click('.phone .slot', i), slot);
+            await ctx.wait(10);
+            await ctx.eval(() => window.__h.bot.click('.phone .actions .phone-btn', 0));
+            await ctx.wait(15);
+        }
+        await ctx.eval(() => window.__h.bot.click('.phone .phone-home-bar'));
+        await ctx.wait(15);
         await ctx.tap(K.phone, 2);
         await ctx.wait(60);
         await resolveAll(ctx);
