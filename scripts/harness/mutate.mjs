@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
-import { BundleIndex, bundleOffset, executedAt } from './branches.mjs';
+import { BundleIndex, bundleOffset, countAt } from './branches.mjs';
 import { loadScenarios } from './corpus.mjs';
 import { runScenario } from './runner.mjs';
 import { compare, readTrace } from './tracediff.mjs';
@@ -68,7 +68,8 @@ function covering(scenarios, rel, line, column) {
             base = new BundleIndex(readFileSync(bundle, 'utf8'), JSON.parse(readFileSync(`${bundle}.map`, 'utf8')), []);
         }
         const off = bundleOffset(base, rel, line, column);
-        if (off !== null && executedAt(cov.functions, off)) out.push(s);
+        const n = off === null ? 0 : countAt(cov.functions, off);
+        if (n > 0) out.push({ s, n });
     }
     return out;
 }
@@ -81,7 +82,13 @@ prepareWorktree();
 for (const m of list) {
     git('checkout', '--', '.');
     const { line, column } = apply(m);
-    const cands = covering(all, m.file, line, column).sort((a, b) => (ref.scenarios[a.id]?.frames ?? 1e9) - (ref.scenarios[b.id]?.frames ?? 1e9));
+    // metà i più corti, metà quelli che eseguono la riga più volte: un getter chiamato ovunque conta solo dove si combatte davvero
+    const hits = covering(all, m.file, line, column);
+    const frames = (s) => ref.scenarios[s.id]?.frames ?? 1e9;
+    const short = [...hits].sort((a, b) => frames(a.s) - frames(b.s)).map((x) => x.s);
+    const busy = [...hits].sort((a, b) => b.n - a.n || frames(a.s) - frames(b.s)).map((x) => x.s);
+    const cands = [];
+    for (let k = 0; cands.length < hits.length; k++) for (const s of [short[k], busy[k]]) if (s && !cands.includes(s)) cands.push(s);
     console.log(`\n${m.id} (${m.kind}) ${m.file}:${line}: ${cands.length} scenari la eseguono`);
     if (!cands.length) {
         rows.push({ m, line, verdict: 'non coperta', note: 'nessuno scenario esegue la riga' });

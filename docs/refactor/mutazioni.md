@@ -9,13 +9,13 @@ Generato da `scripts/harness/mutate.mjs`. Ogni mutazione toglie o cambia una rig
 | toast-arena | bus.emit tolto | src/scenes/GameScene.ts:3685 | scoperta | guida-santuario, fotogramma 139, sezioni ui, ev |
 | tween-cuore | tween tolto | src/scenes/GameScene.ts:1967 | scoperta | rio-cura, fotogramma 2, sezioni bod |
 | gocce-lametta | confronto >= in > | src/scenes/GameScene.ts:4826 | scoperta | cap-santuario, fotogramma 3394, sezioni dl, dlo, bod, lit, ui, ev |
-| ordine-crepa | ordine di creazione | src/scenes/GameScene.ts:3986 | SOPRAVVISSUTA | eseguita da 15 scenari, provati 6: nessuna differenza |
+| ordine-pali-nidi | ordine di creazione | src/scenes/GameScene.ts:543 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni dlo |
 | persist-lore | persist tolto | src/scenes/GameScene.ts:1807 | scoperta | piazza, fotogramma 96, sezioni store |
 | profondita-prompt | profondità | src/scenes/GameScene.ts:2448 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni dl, dlo |
 | salto-sfx | sfx tolto (entità) | src/entities/Player.ts:346 | scoperta | livello-perduta, fotogramma 71, sezioni sfx |
-| rinculo-nemico | costante (entità) | src/entities/Enemy.ts:591 | scoperta | colpo-pausa, fotogramma 53, sezioni ent, bod |
-| fase-boss | soglia (entità) | src/entities/Boss.ts:91 | scoperta | ridimensiona, fotogramma 86, sezioni dl, dlo, cam |
-| lastre-suono | soglia (motore) | src/engine/HazardManager.ts:262 | SOPRAVVISSUTA | eseguita da 18 scenari, provati 6: nessuna differenza |
+| rinculo-nemico | costante (entità) | src/entities/Enemy.ts:591 | scoperta | campagna, fotogramma 1812, sezioni ent, bod |
+| fase-boss | soglia (entità) | src/entities/Boss.ts:91 | scoperta | campagna, fotogramma 6190, sezioni boss, ent, dl, dlo, cam, ui, ev, sev, sfx, mus |
+| lastre-suono | soglia (motore) | src/engine/HazardManager.ts:262 | scoperta | campagna, fotogramma 1938, sezioni sfx |
 | hud-barre | testo ui | src/ui/hud.ts:109 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni ui |
 | film-buio | tween (film) | src/engine/FlashbackManager.ts:194 | scoperta | film-uscita, fotogramma 43, sezioni dl, dlo |
 
@@ -116,6 +116,17 @@ sezioni diverse: dl, dlo, bod, lit, ui, ev
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 ```
 
+## ordine-pali-nidi
+
+```
+PRIMA DIVERGENZA al fotogramma 1 (tempo di scena {"BootScene":110018.67,"GameScene":110018.67})
+sezioni diverse: dlo
+
+[dlo] l'ordine di disegno a parità di profondità
+  conteggi: {"dl":1060,"ent":223,"bod":426,"lit":293} -> {"dl":1060,"ent":223,"bod":426,"lit":293}
+  (servono le impronte complete di questo fotogramma: rilancia con --full)
+```
+
 ## persist-lore
 
 ```
@@ -164,42 +175,65 @@ sezioni diverse: sfx
 ## rinculo-nemico
 
 ```
-PRIMA DIVERGENZA al fotogramma 53 (tempo di scena {"BootScene":110885.51,"GameScene":110885.51})
+PRIMA DIVERGENZA al fotogramma 1812 (tempo di scena {"BootScene":140208.04,"GameScene":140208.04})
 sezioni diverse: ent, bod
 
 [ent] le entità del gioco (classi: nemici, nidi, clone, compagni...)
-  conteggi: {"dl":1089,"ent":223,"bod":426,"lit":293} -> {"dl":1089,"ent":223,"bod":426,"lit":293}
+  conteggi: {"dl":1046,"ent":189,"bod":390,"lit":246} -> {"dl":1046,"ent":189,"bod":390,"lit":246}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [bod] i corpi fisici
-  conteggi: {"dl":1089,"ent":223,"bod":426,"lit":293} -> {"dl":1089,"ent":223,"bod":426,"lit":293}
+  conteggi: {"dl":1046,"ent":189,"bod":390,"lit":246} -> {"dl":1046,"ent":189,"bod":390,"lit":246}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 ultimi eventi prima (riferimento):
-  41 GameScene:enemy-alert
-  52 GameScene:player-act
+  1786 GameScene:enemy-alert
+  1803 hp-changed {"hp":51,"hurt":false,"maxHp":51}
+  1803 toast {"text":"un cuore del realm. la vita massima aumenta per sempre."}
+  1804 hp-changed {"hp":50,"hurt":true,"maxHp":51}
+  1804 flow-changed {"flow":16,"maxFlow":99}
+  1811 GameScene:player-act
 ```
 
 ## fase-boss
 
 ```
-PRIMA DIVERGENZA al fotogramma 86 (tempo di scena {"BootScene":111435.62,"GameScene":111435.62})
-sezioni diverse: dl, dlo, cam
+PRIMA DIVERGENZA al fotogramma 6190 (tempo di scena {"BootScene":213189.30000000002,"GameScene":213189.30000000002})
+sezioni diverse: boss, ent, dl, dlo, cam, ui, ev, sev, sfx, mus
+
+[boss] il boss (tutti i suoi campi)
+  .animT: 31753.849499999575  ->  31748.014999999574
+  .heardPhase: 2  ->  1
+
+[ent] le entità del gioco (classi: nemici, nidi, clone, compagni...)
+  conteggi: {"dl":1130,"ent":213,"bod":310,"lit":250} -> {"dl":1128,"ent":213,"bod":310,"lit":250}
+  (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [dl] la display list come multiinsieme: un oggetto grafico in più, in meno o diverso
-  conteggi: {"dl":565,"ent":97,"bod":178,"lit":116} -> {"dl":565,"ent":97,"bod":178,"lit":116}
+  conteggi: {"dl":1130,"ent":213,"bod":310,"lit":250} -> {"dl":1128,"ent":213,"bod":310,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [dlo] l'ordine di disegno a parità di profondità
-  conteggi: {"dl":565,"ent":97,"bod":178,"lit":116} -> {"dl":565,"ent":97,"bod":178,"lit":116}
+  conteggi: {"dl":1130,"ent":213,"bod":310,"lit":250} -> {"dl":1128,"ent":213,"bod":310,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
+```
 
-[cam] la camera e i suoi effetti
-  .BootScene.w: 1280  ->  960
-  .BootScene.h: 720  ->  540
-  .BootScene.wv[2]: 1280  ->  960
-  .BootScene.wv[3]: 720  ->  540
-  .GameScene.sx: -30.47619047619048  ->  -22.85714285714289
+## lastre-suono
+
+```
+PRIMA DIVERGENZA al fotogramma 1938 (tempo di scena {"BootScene":142308.46000000002,"GameScene":142308.46000000002})
+sezioni diverse: sfx
+
+[sfx] effetti sonori
+  [0][0]: crumble  ->  setRain
+  [0][1][0]: (assente)  ->  0.2500000000002323
+  [1]: ["setRain",[0.2500000000002323]]  ->  (assente)
+  emessi nel riferimento da: src/engine/HazardManager.ts:262 (update), src/engine/Atmosphere.ts:176 (update)
+  emessi nella candidata da: ../gecowave-mut/src/engine/Atmosphere.ts:176 (update)
+
+ultimi eventi prima (riferimento):
+  1926 GameScene:enemy-alert
+  1934 GameScene:player-act
 ```
 
 ## hud-barre

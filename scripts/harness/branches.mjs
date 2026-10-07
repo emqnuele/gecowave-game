@@ -107,6 +107,17 @@ export function bundleOffset(index, rel, line, column) {
 }
 
 /** quella posizione è stata eseguita in questa copertura? vince il blocco più interno */
+/** quante volte gira il blocco più stretto che contiene l'offset (0 se mai) */
+export function countAt(functions, off) {
+    let best = null;
+    for (const fn of functions) {
+        for (const r of fn.ranges) {
+            if (r.startOffset <= off && off < r.endOffset && (!best || r.endOffset - r.startOffset < best.endOffset - best.startOffset)) best = r;
+        }
+    }
+    return best ? best.count : 0;
+}
+
 export function executedAt(functions, off) {
     let best = null;
     for (const fn of functions) {
