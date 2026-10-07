@@ -956,6 +956,18 @@
    "frames": 681,
    "failure": null
   },
+  "registrata-ema-bus": {
+   "strict": "bd0d16863bc9ad7a",
+   "diag": "725a05e4faae1b38",
+   "frames": 12841,
+   "failure": null
+  },
+  "registrata-ema-rio": {
+   "strict": "46b65916e73182af",
+   "diag": "6d14a50bf048fc66",
+   "frames": 23526,
+   "failure": null
+  },
   "ridimensiona": {
    "strict": "6280acb97459c450",
    "diag": "1933699324aac953",
