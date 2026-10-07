@@ -4,6 +4,7 @@
 // riportato ai file .ts. uso:
 //   node scripts/harness/perf.mjs [--only a,b] [--runs 3] [--dist dir] [--save base|cand] [--profile] [--vs base]
 //   --vs base: alla fine confronta scenario per scenario con perf-base.json
+//   --cpu 4: cpu rallentata 4 volte (cdp), per avvicinarsi a una macchina normale
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +25,7 @@ const runs = Number(opt('runs', '3'));
 const only = opt('only')?.split(',') ?? ['livello-perduta', 'livello-bus', 'livello-tana', 'livello-void', 'nastro-perduta', 'nastro-stabilimento', 'nastro-cantina', 'esplora-perduta', 'cap-bus', 'wave-rio'];
 const save = opt('save');
 const vs = opt('vs');
+const cpu = Number(opt('cpu', '1'));
 const profile = args.includes('--profile');
 const ORIGIN = 'http://gecowave.test';
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
@@ -113,6 +115,7 @@ async function once(scn) {
         const startMs = Date.now() - tStart;
         const cdp = await page.context().newCDPSession(page);
         await cdp.send('Performance.enable');
+        if (cpu > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpu });
         if (profile) { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start'); }
         const m0 = Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]));
         await page.evaluate(() => { window.__perf.on = true; });
@@ -207,7 +210,7 @@ for (const s of list) {
 }
 if (save) {
     const out = join(HERE, `perf-${save}.json`);
-    writeFileSync(out, `${JSON.stringify({ dist: relative(ROOT, DIST), runs, at: new Date().toISOString(), rows }, null, 1)}\n`);
+    writeFileSync(out, `${JSON.stringify({ dist: relative(ROOT, DIST), runs, cpu, at: new Date().toISOString(), rows }, null, 1)}\n`);
     console.log(`-> ${relative(ROOT, out)}`);
 }
 if (vs) {
