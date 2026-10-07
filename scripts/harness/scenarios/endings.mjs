@@ -9,7 +9,8 @@ const end = { exit: false, after: (ctx) => toMenu(ctx) };
 
 export default [
     chapter('finale-consegna', 'nucleo', { ...end }),
-    chapter('finale-dei', 'nucleo', { ...end, choices: policy([/le wave tornano/, 1]) }),
+    // gli dei sono duri: con la forza e i cuori della campagna il bot perde (e quello è finale-sconfitta)
+    chapter('finale-dei', 'nucleo', { ...end, patch: { stats: { forza: 10, costituzione: 200, flusso: 0 } }, choices: policy([/le wave tornano/, 1]) }),
     chapter('finale-sconfitta', 'nucleo', { ...end, patch: fragile, choices: policy([/le wave tornano/, 1]) }),
     chapter('finale-patto', 'nucleo', { ...end, patch: fragile, choices: policy([/pedro aspetta/, 0]) }),
     chapter('finale-riscatto', 'nucleo', { ...end, film: 'watch', patch: { flags: ['ricordi-visti', 'void-concluso', 'caso-risolto'], unflags: ['pensiero-cancellato'] }, choices: policy([/pedro aspetta/, 2], [/le wave tornano/, 2]) }),

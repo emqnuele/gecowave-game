@@ -1,5 +1,5 @@
 // ogni capitolo da solo, dal salvataggio con cui la campagna ci entra: film saltati, e le varianti delle scelte.
-import { botState, chapterSave, DEFAULT_CHOICES, prepareSave } from '../lib.mjs';
+import { botState, chapterSave, DEFAULT_CHOICES, K, prepareSave, teleport } from '../lib.mjs';
 import { playChapter, resolveAll } from '../bot.mjs';
 
 const say = (id) => (s) => {
@@ -52,9 +52,23 @@ export default [
     chapter('cap-void-33', 'void', { choices: policy([/il 33 pulsa/, 0]) }),
     chapter('cap-void-garante-porta', 'void', { patch: { flags: ['pensiero-portato'] } }),
     chapter('cap-void-garante-cancella', 'void', { patch: { flags: ['pensiero-cancellato'] } }),
+    // lochef battuto: l'ospite n.12 compare accanto alle statue, ci si parla e se ne va
+    chapter('cap-tana-ospite', 'tana', {
+        exit: false,
+        after: async (ctx) => {
+            for (const n of await ctx.eval(() => window.__h.bot.sprites(['npc-']))) {
+                await teleport(ctx, n.x - 20, n.y - 6);
+                await ctx.wait(8);
+                await ctx.tap(K.interact, 3);
+                await ctx.wait(6);
+                await resolveAll(ctx);
+            }
+            await ctx.wait(120);
+        },
+    }),
     // walter: galliate e marcetti, poi di nuovo al bus
-    chapter('cap-walter', 'bus', { patch: { flags: ['boss-down-guggu', 'ivan'] }, choices: policy([/walter sbadiglia/, 0]), chain: 3 }),
+    chapter('cap-walter', 'bus', { patch: { flags: ['boss-down-guggu', 'ivan'], stats: { forza: 10, costituzione: 200, flusso: 0 } }, choices: policy([/walter sbadiglia/, 0]), chain: 3 }),
     // i varchi segreti
-    chapter('cap-custode', 'perduta', { patch: { flags: ['maschera-completa'], abilities: ['scivolata', 'rimbalzo', 'riflesso', 'risonante', 'aggrappo'] }, choices: policy([/varco verso/, 0]), chain: 2 }),
-    chapter('cap-barrato', 'tecnokill', { patch: { flags: ['boss-down-walter'] }, choices: policy([/varco verso/, 0]), chain: 2 }),
+    chapter('cap-custode', 'perduta', { patch: { stats: { forza: 10, costituzione: 200, flusso: 0 }, flags: ['maschera-completa'], abilities: ['scivolata', 'rimbalzo', 'riflesso', 'risonante', 'aggrappo'] }, choices: policy([/varco verso/, 0]), chain: 2 }),
+    chapter('cap-barrato', 'tecnokill', { patch: { stats: { forza: 10, costituzione: 200, flusso: 0 }, flags: ['boss-down-walter'] }, choices: policy([/varco verso/, 0]), chain: 2 }),
 ];

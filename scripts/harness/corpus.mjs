@@ -26,7 +26,9 @@ const opt = (name, def = null) => {
     return i >= 0 ? args[i + 1] : def;
 };
 const jobs = Number(opt('jobs', '4'));
-const only = opt('only')?.split(',') ?? null;
+const tier = opt('tier');
+// il giro rapido viene da tiers.mjs: gli scenari che coprono quasi tutti i rami nel minor tempo
+const only = opt('only')?.split(',') ?? (tier ? JSON.parse(readFileSync(join(HERE, 'tiers.json'), 'utf8'))[tier]?.scenarios ?? null : null);
 const skip = opt('skip')?.split(',') ?? [];
 
 export async function loadScenarios() {

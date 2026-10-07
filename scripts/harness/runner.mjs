@@ -151,7 +151,7 @@ export async function runScenario(scn, opts = {}) {
     const browser = await launch();
     const t0 = Date.now();
     try {
-        const game = await openGame(browser, { dist: opts.dist, coverage: !!opts.coverage });
+        const game = await openGame(browser, { dist: opts.dist, coverage: !!opts.coverage, storage: scn.storage ?? null, ...(scn.viewport ? { viewport: scn.viewport } : {}) });
         const bundle = await game.page.evaluate(() => [...document.scripts].map((s) => s.src).find((s) => s.includes('/assets/')) ?? null);
         const trace = new Trace({ id: scn.id, level: scn.level, dist: opts.dist ?? process.env.DIST ?? 'dist-dev', bundle, boot: game.bootFrame }, opts.out);
         await startLevel(game, scn.level, { seed: scn.seed ?? 12345, checkpointId: scn.checkpoint ?? null, prepare: scn.prepare ?? null, prepareArg: scn.prepareArg ?? null });

@@ -69,7 +69,7 @@ const STEPPER = (DRAW) => `((DRAW_EVERY) => {
  * apre il gioco fermo al menu con l'orologio in pausa.
  * ritorna la pagina e `step(n)`: avanza n frame, sempre a passi identici.
  */
-export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = process.env.VIEW ? { width: Number(process.env.VIEW.split('x')[0]), height: Number(process.env.VIEW.split('x')[1]) } : { width: 960, height: 540 }, coverage = false, draw = Number(process.env.DRAW ?? '4') } = {}) {
+export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = process.env.VIEW ? { width: Number(process.env.VIEW.split('x')[0]), height: Number(process.env.VIEW.split('x')[1]) } : { width: 960, height: 540 }, coverage = false, draw = Number(process.env.DRAW ?? '4'), storage = null } = {}) {
     const root = resolve(dist);
     const page = await browser.newPage({ viewport });
     // la copertura parte prima del bundle: conta anche il boot
@@ -85,8 +85,10 @@ export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev',
             await route.fulfill({ status: 404, body: '' });
         }
     });
-    await page.addInitScript(() => {
+    await page.addInitScript((storage) => {
         localStorage.clear();
+        // un salvataggio già su disco prima del boot: è così che si provano caricamento e migrazioni
+        for (const [k, v] of Object.entries(storage ?? {})) localStorage.setItem(k, v);
         // mulberry32: lo stesso seed dà la stessa sequenza, in ogni build
         let s = 1;
         window.__seed = (v) => { s = v >>> 0; };
@@ -96,7 +98,7 @@ export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev',
             t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
             return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
         };
-    });
+    }, storage);
     await page.addInitScript(PROBE);
     // install fa partire l'orologio in tempo reale: sotto carico pauseAt lo troverebbe già oltre l'epoca
     await page.clock.install({ time: new Date(EPOCH.getTime() - 5000) });

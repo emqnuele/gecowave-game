@@ -48,6 +48,8 @@ export async function fight(ctx, opts = {}) {
     let invuln = 0;
     let lastHp = null;
     let still = 0;
+    let deaths = 0;
+    let wasDead = false;
     while (ctx.f < end) {
         await resolveAll(ctx, opts);
         const s = await botState(ctx);
@@ -59,9 +61,13 @@ export async function fight(ctx, opts = {}) {
             return 'scena cambiata';
         }
         if (!s.p || s.p.dead) {
+            // un boss che ti batte due volte non lo batterai alla terza: lo scenario va avanti
+            if (!wasDead && ++deaths >= (opts.maxBossDeaths ?? 2)) return 'troppe morti';
+            wasDead = true;
             await ctx.wait(20);
             continue;
         }
+        wasDead = false;
         if (!s.boss) return 'giù';
         const b = s.boss;
         if (b.inv && b.engaged) {
@@ -124,6 +130,8 @@ export async function playChapter(ctx, opts = {}) {
     // anche i varchi: se entrarci lo decide la politica delle scelte (di default si resta)
     const talk = opts.talk ?? ((tag) => /^(npc|lore|portal):/.test(tag));
     let pendingBoss = false;
+    // boss che hanno vinto loro: dopo due rese il capitolo finisce senza combattere
+    let gaveUp = 0;
     for (const w of wp.waypoints) {
         let s = await botState(ctx);
         if (s.level !== level || s.status === 8) break;
@@ -149,26 +157,41 @@ export async function playChapter(ctx, opts = {}) {
         await collect(ctx, opts, 420);
         s = await botState(ctx);
         if (s.level !== level) break;
-        if (s.boss && (s.boss.engaged || Math.hypot(s.boss.x - s.p.x, s.boss.y - s.p.y) < 500)) {
+        if (gaveUp < 2 && s.boss && (s.boss.engaged || Math.hypot(s.boss.x - s.p.x, s.boss.y - s.p.y) < 500)) {
             const r = await fight(ctx, opts);
             log(`   boss ${s.boss.kind}: ${r}`);
             if (r === 'invulnerabile') pendingBoss = true;
+            if (r === 'troppe morti') gaveUp++;
             await resolveAll(ctx, opts);
             await collect(ctx, opts);
+        }
+    }
+    // un boss rimasto invulnerabile vuol dire che manca un pezzo di trama (un indizio, un incontro):
+    // come un giocatore, si ripassa da chi si può parlare, poi si torna dal boss
+    if (pendingBoss) {
+        log('   boss invulnerabile: secondo giro dalle tappe di trama');
+        for (const w of wp.waypoints.filter((x) => talk(x.tag))) {
+            const s = await botState(ctx);
+            if (s.level !== level || !s.p || s.p.dead) break;
+            await teleport(ctx, w.x, w.y - 10);
+            await ctx.wait(8);
+            await ctx.tap(K.interact, 3);
+            await ctx.wait(6);
+            await resolveAll(ctx, opts);
         }
     }
     // i boss lasciati indietro (invulnerabili finché la trama non li apre), e quelli che arrivano dopo
     for (let k = 0; k < 8; k++) {
         const s = await botState(ctx);
         if (s.level !== level) return s.level;
-        if (!s.boss) break;
+        if (!s.boss || gaveUp >= 2) break;
         const r = await fight(ctx, opts);
         log(`   boss ${s.boss.kind} (ripresa): ${r}`);
+        if (r === 'troppe morti') gaveUp++;
         await resolveAll(ctx, opts);
         await collect(ctx, opts);
         if (r !== 'giù') break;
     }
-    void pendingBoss;
     if (opts.beforeExit) await opts.beforeExit(ctx, level);
     const s = await botState(ctx);
     if (s.level !== level) return s.level;

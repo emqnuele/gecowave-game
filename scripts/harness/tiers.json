@@ -1,0 +1,23 @@
+{
+ "budget": 0.97,
+ "points": 8120,
+ "covered": 5940,
+ "rapido": {
+  "scenarios": [
+   "cap-caso",
+   "cap-tana",
+   "cap-walter",
+   "cap-cantina-cliente",
+   "cap-santuario",
+   "cap-sorveglianza-premium",
+   "cap-perduta",
+   "cap-rio-povero",
+   "cap-void-33",
+   "finale-dei",
+   "cap-tecnokill-disarmato",
+   "cap-ruhra"
+  ],
+  "reach": 5803,
+  "frames": 240000
+ }
+}
