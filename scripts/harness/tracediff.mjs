@@ -5,12 +5,21 @@ import { gunzipSync } from 'node:zlib';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SourceMapConsumer } from 'source-map-js';
-import { STRICT } from './runner.mjs';
+import { CARRY, STRICT } from './runner.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 export function readTrace(file) {
-    const lines = gunzipSync(readFileSync(file)).toString().split('\n').filter(Boolean).map((l) => JSON.parse(l));
+    const lines = [];
+    // a pezzi: una traccia lunga non sta in una stringa sola
+    const buf = gunzipSync(readFileSync(file));
+    let start = 0;
+    for (let i = 0; i < buf.length; i++) {
+        if (buf[i] !== 10) continue;
+        if (i > start) lines.push(JSON.parse(buf.toString('utf8', start, i)));
+        start = i + 1;
+    }
+    if (start < buf.length) lines.push(JSON.parse(buf.toString('utf8', start)));
     const meta = lines[0].meta;
     const samples = [];
     const marks = [];
@@ -19,6 +28,14 @@ export function readTrace(file) {
         if (l.mark !== undefined) marks.push(l);
         else if (l.end !== undefined) end = l.end;
         else samples.push(l);
+    }
+    // ogni fotogramma ritrova le sezioni di stato non ripetute
+    const last = {};
+    for (const s of samples) {
+        for (const k of CARRY) {
+            if (s.D[k] !== undefined) last[k] = s.D[k];
+            else if (k in last) s.D[k] = last[k];
+        }
     }
     return { meta, samples, marks, end };
 }

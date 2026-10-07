@@ -40,12 +40,14 @@ export function prepareSave(patch) {
             const s = st.save;
             for (const [k, v] of Object.entries(p.set ?? {})) s[k] = v;
             for (const f of p.flags ?? []) if (!s.flags.includes(f)) s.flags.push(f);
+            if (p.unflags) s.flags = s.flags.filter((f) => !p.unflags.includes(f));
             for (const a of p.abilities ?? []) if (!s.abilities.includes(a)) s.abilities.push(a);
             for (const [id, n] of Object.entries(p.inventory ?? {})) s.inventory[id] = n;
             for (const c of p.charms ?? []) if (!s.charms.includes(c)) s.charms.push(c);
             for (const d of p.seen ?? []) if (!s.seenDialogues.includes(d)) s.seenDialogues.push(d);
             for (const l of p.lore ?? []) if (!s.collectedLore.includes(l)) s.collectedLore.push(l);
             if (p.stats) Object.assign(s.stats, p.stats);
+            if (p.ombra) { const { counts, ...rest } = p.ombra; Object.assign(s.ombra, rest); if (counts) Object.assign(s.ombra.counts, counts); }
             if (p.settings) Object.assign(st.settings, p.settings);
             if (p.dropped) st.dropped = p.dropped;
         },
@@ -64,6 +66,8 @@ export function chapterSave(levelId) {
 
 /** politica di default delle scelte: per titolo, come farebbe un giocatore "di trama" */
 export const DEFAULT_CHOICES = [
+    [/^citelis$/, (items) => items.length - 1],
+    [/orario del citelis/, 1],
     [/varco verso/, 1],
     [/walter sbadiglia/, 1],
     [/pedro aspetta/, 1],
@@ -109,7 +113,8 @@ export async function resolveUI(ctx, { policy = DEFAULT_CHOICES, max = 80, log =
             await ctx.wait(10);
             continue;
         }
-        if (u.screen && u.screen.items.length) {
+        // il menu principale non è una scelta di gioco: lo guida lo scenario
+        if (u.screen && u.screen.items.length && u.inGame) {
             const death_ = /sx-death/.test(u.screen.cls);
             const i = death_ ? death : u.screen.items.length === 1 ? 0 : choose(policy, u.screen.title, u.screen.items);
             seen.push(`${u.screen.title} -> ${u.screen.items[i]}`);

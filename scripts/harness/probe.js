@@ -28,6 +28,36 @@
         return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
     };
     H.hash = hash;
+    /** due hash a 32 bit della stessa stringa */
+    // fnv-1a a 32 bit e un secondo valore dallo stesso giro: la sicurezza contro le collisioni qui non serve
+    const h32 = (str) => {
+        let a = 0x811c9dc5;
+        for (let i = 0; i < str.length; i++) a = Math.imul(a ^ str.charCodeAt(i), 16777619);
+        a >>>= 0;
+        return [a, Math.imul(a ^ (a >>> 16), 0x45d9f3b) >>> 0];
+    };
+    // multiinsieme: somma degli hash, non dipende dall'ordine e non serve ordinare né concatenare
+    const bag = (items) => {
+        let a = 0;
+        let b = 0;
+        for (const it of items) {
+            const [x, y] = typeof it === 'string' ? h32(it) : it;
+            a = (a + x) >>> 0;
+            b = (b + y) >>> 0;
+        }
+        return `${items.length}.${a.toString(36)}.${b.toString(36)}`;
+    };
+    // sequenza: l'ordine conta
+    const seq = (items) => {
+        let a = 0x12345;
+        let b = 0x6789a;
+        for (const it of items) {
+            const [x, y] = typeof it === 'string' ? h32(it) : it;
+            a = (Math.imul(a, 31) + x) >>> 0;
+            b = (Math.imul(b, 37) ^ y) >>> 0;
+        }
+        return `${items.length}.${a.toString(36)}.${b.toString(36)}`;
+    };
     // la grafica si confronta al millesimo di pixel: lo stato delle entità resta a precisione piena
     const R = (v) => (typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
     const isClass = (fn) => typeof fn === 'function' && Function.prototype.toString.call(fn).startsWith('class');
@@ -85,8 +115,10 @@
 
     /* ---------- prima del gioco: salvataggi, animazioni web, dom ---------- */
 
+    // in tempo reale (perf.mjs) la sonda dà solo gli strumenti del bot: niente agganci che costano
+    const perf = !!window.__hPerf;
     // errori e avvisi sono comportamento: un refactor che ne fa sparire o comparire uno va visto
-    for (const level of ['error', 'warn']) {
+    for (const level of perf ? [] : ['error', 'warn']) {
         const orig = console[level];
         console[level] = (...args) => {
             H.log.con.push([level, args.map((a) => (a instanceof Error ? `${a.name}: ${a.message}` : typeof a === 'string' ? a : JSON.stringify(reduce(a))))]);
@@ -110,7 +142,7 @@
 
     // le animazioni web seguono il tempo reale: qui le porta avanti l'orologio finto, fotogramma per fotogramma
     const animate = Element.prototype.animate;
-    Element.prototype.animate = function (...args) {
+    if (!perf) Element.prototype.animate = function (...args) {
         const a = animate.apply(this, args);
         a.pause();
         H.anims.push({ a, t0: performance.now() });
@@ -131,6 +163,19 @@
         });
     };
 
+    // le animazioni e transizioni css vanno in tempo reale: chi legge il layout a metà (il telefono che apre un'app
+    // dall'icona) leggerebbe un istante a caso. nell'harness arrivano subito allo stato finale
+    if (!perf) {
+        const css = '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }';
+        const add = () => {
+            const st = document.createElement('style');
+            st.textContent = css;
+            (document.head ?? document.documentElement).append(st);
+        };
+        if (document.documentElement) add();
+        else document.addEventListener('readystatechange', add, { once: true });
+    }
+
     let observer = null;
     const observe = () => {
         observer = new MutationObserver(() => { H.uiDirty = true; });
@@ -145,7 +190,8 @@
         if (el.nodeType !== 1 || SKIP_TAGS.has(el.tagName)) return '';
         let s = `<${el.tagName.toLowerCase()}`;
         for (const a of el.attributes) {
-            const v = a.name === 'src' && a.value.startsWith('data:') ? `data#${hash(a.value)}` : a.value;
+            // le immagini data: sono foto del canvas, pixel della gpu: conta che ci siano, non cosa contengono
+            const v = a.name === 'src' && a.value.startsWith('data:') ? 'data:' : a.value;
             s += ` ${a.name}=${JSON.stringify(v)}`;
         }
         if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') s += ` value=${JSON.stringify(el.value)}`;
@@ -214,29 +260,67 @@
 
     /* ---------- l'impronta del fotogramma ---------- */
 
-    const objEntry = (o, path) => {
-        let s = `${path}${o.type}|${o.texture?.key ?? ''}|${o.frame?.name ?? ''}|${R(o.x)},${R(o.y)}|d${o.depth}|a${R(o.alpha)}|v${o.visible ? 1 : 0}`
-            + `|s${R(o.scaleX)},${R(o.scaleY)}|r${R(o.rotation)}|f${o.flipX ? 1 : 0}${o.flipY ? 1 : 0}|o${R(o.originX)},${R(o.originY)}`
-            + `|b${o.blendMode}|sf${R(o.scrollFactorX)},${R(o.scrollFactorY)}|p${o.pipeline?.name ?? ''}`;
-        if (o.tintTopLeft !== undefined) s += `|t${o.tintTopLeft},${o.tintTopRight},${o.tintBottomLeft},${o.tintBottomRight},${o.tintFill ? 1 : 0}`;
-        if (o.width !== undefined) s += `|wh${R(o.width)},${R(o.height)}`;
-        if (o.type === 'Text') s += `|${JSON.stringify(o.text)}|${o.style?.color}|${o.style?.fontSize}|${o.style?.backgroundColor}`;
-        if (o.type === 'Graphics') s += `|g${hash(JSON.stringify(o.commandBuffer))}`;
-        if (o.fillColor !== undefined) s += `|fc${o.fillColor},${R(o.fillAlpha)},${o.isFilled ? 1 : 0},${o.strokeColor},${R(o.lineWidth)},${o.isStroked ? 1 : 0}`;
-        if (o.tilePositionX !== undefined) s += `|tp${R(o.tilePositionX)},${R(o.tilePositionY)}`;
-        if (o.type === 'ParticleEmitter') {
-            let ps = '';
-            for (const p of o.alive) ps += `${Math.round(p.x)},${Math.round(p.y)},${R(p.alpha)},${R(p.scaleX)},${p.tint};`;
-            s += `|pe${o.alive.length},${o.emitting ? 1 : 0},${o.frequency},${hash(ps)}`;
+    // un numero si mescola per i suoi bit: niente stringhe per ogni campo di ogni oggetto a ogni fotogramma
+    const f64 = new Float64Array(1);
+    const u32 = new Uint32Array(f64.buffer);
+    const strHash = new Map();
+    const hstr = (str) => {
+        let h = strHash.get(str);
+        if (h === undefined) {
+            h = h32(str)[0];
+            if (strHash.size < 50000) strHash.set(str, h);
         }
-        if (o.isCropped) s += `|crop`;
-        if (o.mask) s += `|mask`;
-        return s;
+        return h;
+    };
+    const mix = (h, v) => {
+        if (typeof v === 'number') {
+            f64[0] = v;
+            h = Math.imul(h ^ u32[0], 16777619);
+            return Math.imul(h ^ u32[1], 16777619);
+        }
+        return Math.imul(h ^ hstr(String(v)), 16777619);
+    };
+    /** i campi di un oggetto grafico, nello stesso ordine per l'impronta e per il dump */
+    const objFields = (o, path) => {
+        const v = [path + o.type, o.texture?.key ?? '', o.frame?.name ?? '', R(o.x), R(o.y), o.depth, R(o.alpha), o.visible ? 1 : 0,
+            R(o.scaleX), R(o.scaleY), R(o.rotation), o.flipX ? 1 : 0, o.flipY ? 1 : 0, R(o.originX), R(o.originY),
+            o.blendMode, R(o.scrollFactorX), R(o.scrollFactorY), o.pipeline?.name ?? ''];
+        if (o.tintTopLeft !== undefined) v.push('t', o.tintTopLeft, o.tintTopRight, o.tintBottomLeft, o.tintBottomRight, o.tintFill ? 1 : 0);
+        if (o.width !== undefined) v.push('wh', R(o.width), R(o.height));
+        if (o.type === 'Text') v.push('tx', o.text, o.style?.color ?? '', o.style?.fontSize ?? '', o.style?.backgroundColor ?? '');
+        if (o.type === 'Graphics') {
+            let g = 0x811c9dc5;
+            for (const c of o.commandBuffer) g = mix(g, c);
+            v.push('g', g >>> 0);
+        }
+        if (o.fillColor !== undefined) v.push('fc', o.fillColor, R(o.fillAlpha), o.isFilled ? 1 : 0, o.strokeColor, R(o.lineWidth), o.isStroked ? 1 : 0);
+        if (o.tilePositionX !== undefined) v.push('tp', R(o.tilePositionX), R(o.tilePositionY));
+        if (o.type === 'ParticleEmitter') {
+            let p = 0x811c9dc5;
+            for (const q of o.alive) {
+                p = mix(p, Math.round(q.x));
+                p = mix(p, Math.round(q.y));
+                p = mix(p, R(q.alpha));
+                p = mix(p, R(q.scaleX));
+                p = mix(p, q.tint);
+            }
+            v.push('pe', o.alive.length, o.emitting ? 1 : 0, o.frequency, p >>> 0);
+        }
+        if (o.isCropped) v.push('crop');
+        if (o.mask) v.push('mask');
+        return v;
+    };
+    const fieldsHash = (v) => {
+        let h = 0x811c9dc5;
+        for (const x of v) h = mix(h, x);
+        h >>>= 0;
+        return [h, Math.imul(h ^ (h >>> 16), 0x45d9f3b) >>> 0];
     };
 
     const walk = (list, path, out) => {
         for (const o of list) {
-            out.push({ o, e: objEntry(o, path) });
+            const fields = objFields(o, path);
+            out.push({ o, fields, h: fieldsHash(fields) });
             if (o.list && Array.isArray(o.list) && (o.type === 'Container' || o.type === 'Layer')) walk(o.list, `${path}${o.type}>`, out);
         }
     };
@@ -248,10 +332,17 @@
             + `|${b.checkCollision ? `${b.checkCollision.up ? 1 : 0}${b.checkCollision.down ? 1 : 0}${b.checkCollision.left ? 1 : 0}${b.checkCollision.right ? 1 : 0}` : ''}`;
     };
 
+    // i campi che phaser mette su ogni oggetto: li porta già la display list. si imparano dagli oggetti di phaser
+    const phaserKeys = new Set();
+    const learnPhaser = (o) => {
+        for (const k of Object.keys(o)) phaserKeys.add(k);
+    };
+    const KEEP = new Set(['x', 'y', 'active', 'visible', 'alpha', 'depth', 'flipX', 'flipY', 'scaleX', 'scaleY', 'rotation']);
     /** campi primitivi propri di un'entità del gioco (classi es6, non phaser), più il corpo fisico */
     const entityData = (o) => {
         const d = { cls: ctorName(o) };
         for (const k of Object.keys(o).sort()) {
+            if (phaserKeys.has(k) && !KEEP.has(k)) continue;
             const v = o[k];
             const t = typeof v;
             if (v === null || t === 'number' || t === 'string' || t === 'boolean') d[k] = t === 'number' && !Number.isFinite(v) ? String(v) : v;
@@ -316,6 +407,7 @@
             const key = s.sys.settings.key;
             const items = [];
             walk(s.children.list, `${key}:`, items);
+            for (const it of items) if (!isClass(it.o.constructor) && phaserKeys.size < 400) learnPhaser(it.o);
             for (const it of items) {
                 dl.push(it);
                 if (isClass(it.o.constructor)) ents.push(entityData(it.o));
@@ -331,15 +423,14 @@
             }
             if (s.cameras?.main) cams[key] = camData(s.cameras.main);
         }
-        const multiset = dl.map((x) => x.e).sort();
-        Hs.dl = hash(multiset.join('\n'));
+        Hs.dl = bag(dl.map((x) => x.h));
         // phaser disegna per profondità con ordinamento stabile: a parità di profondità conta l'ordine nella lista
-        const order = dl.map((x, i) => ({ d: x.o.depth, i, e: x.e })).sort((a, b) => a.d - b.d || a.i - b.i).map((x) => x.e);
-        Hs.dlo = hash(order.join('\n'));
+        const order = dl.map((x, i) => ({ d: x.o.depth, i, x })).sort((a, b) => a.d - b.d || a.i - b.i).map((y) => y.x);
+        Hs.dlo = seq(order.map((x) => x.h));
         const entJson = ents.map((e) => JSON.stringify(e));
-        Hs.ent = hash(entJson.join('\n'));
-        Hs.bod = hash(bodies.slice().sort().join('\n'));
-        Hs.lit = hash(lights.slice().sort().join('\n'));
+        Hs.ent = seq(entJson);
+        Hs.bod = bag(bodies);
+        Hs.lit = bag(lights);
         D.cam = cams;
         D.counts = { dl: dl.length, ent: ents.length, bod: bodies.length, lit: lights.length };
 
@@ -402,13 +493,16 @@
             timers: (gs.time?._active?.length ?? 0) + (gs.time?._pendingInsertion?.length ?? 0),
             colliders: gs.physics?.world?.colliders?.length ?? null,
             busHandlers: window.__bus.handlers ? [...window.__bus.handlers].map(([k, v]) => `${k}:${v.size}`).join(',') : null,
+            // ascoltatori di scena: un sistema che non si stacca allo shutdown si vede qui
+            sceneListeners: gs.sys.events.eventNames().map((n) => `${String(n)}:${gs.sys.events.listenerCount(n)}`).join(','),
+            scaleListeners: window.__game.scale.eventNames().map((n) => `${String(n)}:${window.__game.scale.listenerCount(n)}`).join(','),
         } : null;
 
         for (const k of ['meta', 'cam', 'pl', 'boss', 'st', 'vol', 'au', 'ev', 'sev', 'sfx', 'mus', 'store', 'con']) Hs[k] = hash(JSON.stringify(D[k] ?? null));
         Hs.diag = hash(JSON.stringify(D.diag));
 
         if (full) {
-            D.full = { dl: order, ent: ents, bod: bodies.slice().sort(), lit: lights.slice().sort() };
+            D.full = { dl: order.map((x) => x.fields.join('|')), ent: ents, bod: bodies.slice().sort(), lit: lights.slice().sort() };
         }
         return { f, H: Hs, D, sites };
     };
@@ -436,18 +530,20 @@
             const dlg = document.getElementById('dialogue');
             const sum = document.querySelector('.chsum-overlay');
             const scr = [...document.querySelectorAll('.screen')].at(-1) ?? null;
-            const items = scr ? [...scr.querySelectorAll('[data-nav]')].filter((e) => !e.hasAttribute('disabled')).map((e) => e.textContent.trim().replace(/\s+/g, ' ')) : [];
+            const items = scr ? [...scr.querySelectorAll('[data-nav]')].filter((e) => !e.hasAttribute('disabled') && e.offsetParent !== null).map((e) => e.textContent.trim().replace(/\s+/g, ' ')) : [];
             return {
                 dialogue: dlg ? { speaker: dlg.querySelector('.speaker')?.textContent ?? '', text: dlg.querySelector('.text')?.textContent ?? '' } : null,
                 summary: !!sum,
                 screen: scr ? { cls: scr.className, title: (scr.querySelector('.sx-name, h2, h1')?.textContent ?? '').trim(), items } : null,
                 phone: !!document.querySelector('.phone.open, #phone.open'),
+                film: document.body.classList.contains('film'),
+                inGame: [5, 6].includes(H.find.running()),
             };
         },
         /** clic sulla voce i del menu aperto (come col mouse: il gestore di click della ui) */
         pick: (i) => {
             const scr = [...document.querySelectorAll('.screen')].at(-1);
-            const items = scr ? [...scr.querySelectorAll('[data-nav]')].filter((e) => !e.hasAttribute('disabled')) : [];
+            const items = scr ? [...scr.querySelectorAll('[data-nav]')].filter((e) => !e.hasAttribute('disabled') && e.offsetParent !== null) : [];
             if (!items[i]) return false;
             items[i].click();
             return true;
@@ -474,5 +570,44 @@
             p.body.reset(x, y);
             return true;
         },
+        /** le cose da raccogliere vicine, per texture: frammenti, cuori, maschere, amuleti, gocce... */
+        pickups: (r = 700) => {
+            const p = H.find.player();
+            if (!p) return [];
+            const KEYS = new Set(['fragment', 'cuore', 'maschera', 'pickup-charm', 'pickup-item', 'drop-ghost', 'color-drop', 'barra']);
+            return objects()
+                .filter((o) => o.active && o.visible !== false && KEYS.has(o.texture?.key) && Math.hypot(o.x - p.x, o.y - p.y) < r)
+                .map((o) => ({ key: o.texture.key, x: o.x, y: o.y }))
+                .sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
+        },
+        /** uno sprite per texture (lo specchio nero, il portale...) */
+        sprite: (key) => {
+            const o = objects().find((x) => x.active && x.texture?.key === key);
+            return o ? { x: o.x, y: o.y, alpha: o.alpha } : null;
+        },
+        film: () => document.body.classList.contains('film'),
+        /** clic sull'i-esimo elemento che corrisponde al selettore (come col mouse) */
+        click: (sel, i = 0) => {
+            // solo quello che si vede: i passi nascosti di una schermata restano nel dom
+            const els = [...document.querySelectorAll(sel)].filter((e) => e.offsetParent !== null);
+            if (!els[i]) return false;
+            els[i].click();
+            return true;
+        },
+        labels: (sel) => [...document.querySelectorAll(sel)].filter((e) => e.offsetParent !== null).map((e) => (e.getAttribute('aria-label') ?? e.textContent ?? '').trim().replace(/\s+/g, ' ')),
+        /** sprite della scena per prefisso di texture: npc, microfoni, tavolette... */
+        sprites: (prefixes) => objects()
+            .filter((o) => o.active && o.visible !== false && typeof o.texture?.key === 'string' && prefixes.some((p) => o.texture.key.startsWith(p)))
+            .map((o) => ({ key: o.texture.key, x: Math.round(o.x), y: Math.round(o.y), tint: o.tintTopLeft })),
+        /** i nemici svegli vicini, dal più vicino */
+        enemies: (r = 900) => {
+            const p = H.find.player();
+            if (!p) return [];
+            return H.find.enemies()
+                .filter((e) => !e.dormant && Math.hypot(e.x - p.x, e.y - p.y) < r)
+                .map((e) => ({ kind: e.arch?.kind ?? '?', x: e.x, y: e.y, hp: e.hp, mode: e.mode }))
+                .sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
+        },
+        flags: () => window.__state.save.flags.slice(),
     };
 })();

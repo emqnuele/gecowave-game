@@ -1,11 +1,13 @@
 // esegue uno scenario nel gioco vero e ne registra la traccia: un'impronta dello stato osservabile a ogni fotogramma.
 import { createHash } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { createGzip, gzipSync } from 'node:zlib';
 import { launch, openGame, startLevel } from './game.mjs';
 
 /** le sezioni che devono coincidere al bit; diag dice solo "guarda qui" */
+/** sezioni di stato: nella traccia si scrivono solo quando cambiano (chi legge le porta avanti) */
+export const CARRY = ['meta', 'cam', 'pl', 'boss', 'st', 'vol', 'au', 'diag', 'counts'];
 export const STRICT = ['meta', 'pl', 'boss', 'ent', 'dl', 'dlo', 'bod', 'lit', 'cam', 'st', 'vol', 'save', 'ui', 'au', 'ev', 'sev', 'sfx', 'mus', 'store', 'con'];
 
 /**
@@ -94,26 +96,49 @@ function makeCtx(game, sink, opts) {
 }
 
 class Trace {
-    constructor(meta) {
-        this.lines = [JSON.stringify({ meta })];
+    constructor(meta, out) {
         this.strict = createHash('sha1');
         this.diag = createHash('sha1');
         this.frames = 0;
-        this.firstStrict = null;
+        this.prev = {};
+        this.gz = null;
+        this.done = null;
+        if (out) {
+            mkdirSync(dirname(out), { recursive: true });
+            this.gz = createGzip();
+            const file = createWriteStream(out);
+            this.gz.pipe(file);
+            this.done = new Promise((res, rej) => { file.on('finish', res); file.on('error', rej); });
+        }
+        this.write({ meta });
+    }
+    write(obj) {
+        this.gz?.write(`${JSON.stringify(obj)}\n`);
     }
     sample(s) {
         this.frames++;
         const h = STRICT.map((k) => s.H[k] ?? '-').join(',');
         this.strict.update(`${s.f}:${h}\n`);
         this.diag.update(`${s.f}:${s.H.diag}\n`);
-        this.lines.push(JSON.stringify(s));
+        // le sezioni di stato uguali al fotogramma prima non si ripetono: la traccia resta piccola
+        const keep = s.D.full !== undefined;
+        for (const k of CARRY) {
+            const hk = k === 'counts' ? JSON.stringify(s.D.counts) : s.H[k];
+            if (!keep && this.prev[k] === hk) delete s.D[k];
+            this.prev[k] = hk;
+        }
+        this.write(s);
     }
     mark(f, label) {
-        this.lines.push(JSON.stringify({ f, mark: label }));
+        this.write({ f, mark: label });
         this.strict.update(`${f}#${label}\n`);
     }
-    finish(extra) {
-        this.lines.push(JSON.stringify({ end: extra }));
+    async finish(extra) {
+        this.write({ end: extra });
+        if (this.gz) {
+            this.gz.end();
+            await this.done;
+        }
         return { strict: this.strict.digest('hex').slice(0, 16), diag: this.diag.digest('hex').slice(0, 16), frames: this.frames };
     }
 }
@@ -126,9 +151,9 @@ export async function runScenario(scn, opts = {}) {
     const browser = await launch();
     const t0 = Date.now();
     try {
-        const game = await openGame(browser, { dist: opts.dist });
+        const game = await openGame(browser, { dist: opts.dist, coverage: !!opts.coverage });
         const bundle = await game.page.evaluate(() => [...document.scripts].map((s) => s.src).find((s) => s.includes('/assets/')) ?? null);
-        const trace = new Trace({ id: scn.id, level: scn.level, dist: opts.dist ?? process.env.DIST ?? 'dist-dev', bundle, boot: game.bootFrame });
+        const trace = new Trace({ id: scn.id, level: scn.level, dist: opts.dist ?? process.env.DIST ?? 'dist-dev', bundle, boot: game.bootFrame }, opts.out);
         await startLevel(game, scn.level, { seed: scn.seed ?? 12345, checkpointId: scn.checkpoint ?? null, prepare: scn.prepare ?? null, prepareArg: scn.prepareArg ?? null });
         // la prima impronta porta salvataggio e ui per intero: la traccia si legge da sola
         await game.page.evaluate(() => { window.__h.prevSave = ''; window.__h.prevUi = ''; window.__h.uiDirty = true; });
@@ -142,10 +167,12 @@ export async function runScenario(scn, opts = {}) {
         // l'ultimo fotogramma sempre per intero: il confronto finale non dipende dal campionamento
         const last = await game.page.evaluate(async (f) => { await window.__h.stepOne(); return window.__h.sample(f + 1, true); }, ctx.f);
         trace.sample(last);
-        const summary = trace.finish({ failure, errors: game.errors, ms: Date.now() - t0 });
-        if (opts.out) {
-            mkdirSync(dirname(opts.out), { recursive: true });
-            writeFileSync(opts.out, gzipSync(trace.lines.join('\n')));
+        const summary = await trace.finish({ failure, errors: game.errors, ms: Date.now() - t0 });
+        if (opts.coverage) {
+            const cov = await game.page.coverage.stopJSCoverage();
+            const js = cov.find((c) => c.url.includes('/assets/'));
+            mkdirSync(dirname(opts.coverage), { recursive: true });
+            writeFileSync(opts.coverage, gzipSync(JSON.stringify({ url: js?.url ?? null, functions: js?.functions ?? [] })));
         }
         return { id: scn.id, ...summary, failure, errors: game.errors, ms: Date.now() - t0 };
     } finally {

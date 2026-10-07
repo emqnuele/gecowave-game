@@ -30,27 +30,51 @@ export async function launch({ gl = process.env.GL ?? 'gpu', headless = true } =
 }
 
 /* il passo del gioco vive nella pagina: un solo viaggio cdp per tanti fotogrammi.
-   millisecondi interi per frame (17, 17, 16): media esatta a 60 hz senza arrotondamenti dell'orologio finto;
-   il tempo del loop dipende solo dal numero del frame, mai da quando il boot ha finito */
-const STEPPER = `(() => {
+   l'orologio finto (timer, Date, tween) va a millisecondi interi 17, 17, 16: media esatta a 60 hz senza arrotondamenti.
+   il loop di phaser invece riceve 16,67 ms costanti: con 17/17/16 la media mobile del delta oscilla attorno
+   a 1000/60 e la fisica arcade salta un passo ogni tre fotogrammi; appena sopra la soglia fa un passo doppio
+   ogni ~80 s, come un monitor vero. il tempo del loop dipende solo dal numero del frame */
+const DRAW = Number(process.env.DRAW ?? '4');
+const STEPPER = `((DRAW_EVERY) => {
     const frameMs = (f) => (f % 3 === 2 ? 16 : 17);
-    const loopTime = (f) => 100000 + 50 * Math.floor(f / 3) + [0, 17, 34][f % 3];
+    const loopTime = (f) => 100000 + f * 16.67;
     window.__h.frame = 0;
+    // dopo ogni timer finto l'orologio di playwright cede con un setTimeout(0) vero, che annidato dura 4 ms:
+    // un messaggio è lo stesso confine di macrotask (microtask svuotati) senza l'attesa
+    const emb = window.__pwClock.controller._embedder;
+    if (emb && !emb.__fast) {
+        const st = emb.setTimeout;
+        const ch = new MessageChannel();
+        const q = [];
+        ch.port1.onmessage = () => q.shift()?.();
+        emb.setTimeout = (f, ms) => { if (ms) return st(f, ms); q.push(f); ch.port2.postMessage(0); return 0; };
+        emb.__fast = true;
+    }
+    // il disegno webgl non entra mai nella logica (camera.preRender sì, e resta a ogni fotogramma): si disegna
+    // davvero un fotogramma su DRAW. il processo gpu di chromium era il collo di bottiglia
+    const R = window.__game.renderer;
+    if (R && !R.__sparse && DRAW_EVERY > 1) {
+        const draw = R.render;
+        R.render = function (...a) { if (window.__h.frame % DRAW_EVERY === 0) return draw.apply(this, a); };
+        R.__sparse = true;
+    }
     window.__h.stepOne = async () => {
         await window.__pwClock.controller.runFor(frameMs(window.__h.frame));
         window.__h.driveAnimations();
         window.__h.frame++;
         window.__game.loop.step(loopTime(window.__h.frame));
     };
-})()`;
+})(${DRAW})`;
 
 /**
  * apre il gioco fermo al menu con l'orologio in pausa.
  * ritorna la pagina e `step(n)`: avanza n frame, sempre a passi identici.
  */
-export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = { width: 960, height: 540 } } = {}) {
+export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev', viewport = process.env.VIEW ? { width: Number(process.env.VIEW.split('x')[0]), height: Number(process.env.VIEW.split('x')[1]) } : { width: 960, height: 540 }, coverage = false } = {}) {
     const root = resolve(dist);
     const page = await browser.newPage({ viewport });
+    // la copertura parte prima del bundle: conta anche il boot
+    if (coverage) await page.coverage.startJSCoverage({ resetOnNavigation: false });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route(`${ORIGIN}/**`, async (route) => {
@@ -75,9 +99,13 @@ export async function openGame(browser, { dist = process.env.DIST ?? 'dist-dev',
         };
     });
     await page.addInitScript(PROBE);
-    await page.clock.install({ time: EPOCH });
+    // install fa partire l'orologio in tempo reale: sotto carico pauseAt lo troverebbe già oltre l'epoca
+    await page.clock.install({ time: new Date(EPOCH.getTime() - 5000) });
     await page.clock.pauseAt(EPOCH);
     await page.goto(`${ORIGIN}/`);
+    // install e pauseAt si rigiocano nel documento con un istante reale in mezzo: i tick si portano dietro una
+    // frazione di millisecondo, e il requestAnimationFrame finto cade a 16 - tick % 16. si riparte da valori esatti
+    await page.evaluate((epoch) => { const n = window.__pwClock.controller._now; n.ticks = 5000; n.time = epoch; }, EPOCH.getTime());
 
     // fino al loop di phaser l'orologio va avanti da fuori; poi il loop si addormenta e lo guida la pagina
     let pre = 0;
@@ -118,7 +146,8 @@ export async function startLevel(game, levelId, { seed = 12345, checkpointId = n
     await page.evaluate(() => window.__h.sample(-1));
     await page.evaluate(({ levelId, seed, checkpointId }) => {
         window.__seed(seed);
-        window.__startLevel(levelId, checkpointId);
+        // senza livello lo scenario parte dal menu, come un giocatore
+        if (levelId) window.__startLevel(levelId, checkpointId);
     }, { levelId, seed, checkpointId });
 }
 

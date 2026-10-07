@@ -3,6 +3,7 @@
 //   node scripts/harness/corpus.mjs ref   [--only a,b] [--jobs 4]   tracce di main (REF_DIST), hash in reference.json
 //   node scripts/harness/corpus.mjs check [--only a,b] [--jobs 4]   tracce della build corrente contro il riferimento
 //   node scripts/harness/corpus.mjs self  [--only a,b]              la stessa build due volte: devono essere identiche
+//   node scripts/harness/corpus.mjs run   [--only a,b]              solo un giro sulla build corrente (VERBOSE=1 per il diario del bot)
 //   node scripts/harness/corpus.mjs list
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -92,6 +93,13 @@ async function main() {
     }
     const list = pick(all);
     if (!list.length) throw new Error('nessuno scenario selezionato');
+
+    if (mode === 'run') {
+        // giro di prova sulla build corrente, senza confronti: per scrivere e mettere a punto gli scenari
+        const res = await runAll(list, CUR_DIST, 'run');
+        for (const r of res) if (r.failure) console.log(`\n${r.id}: ${r.failure}`);
+        return res.some((r) => r.failure) ? 1 : 0;
+    }
 
     if (mode === 'ref') {
         if (!existsSync(resolve(ROOT, REF_DIST))) throw new Error(`manca la build di riferimento ${REF_DIST}: scripts/harness/build.sh ../gecowave-main`);
