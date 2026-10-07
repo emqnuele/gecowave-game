@@ -123,3 +123,16 @@ Ema ha deciso tutto quello che era aperto (elenco completo in `PIANO_REFACTOR.md
 Tag `v2-pre-refactor` messo su `a16f39c` e pushato. Nel prompt B i blocchi nuovi: B12 (codice morto e repo), B13 (bug), B14 (frequenza), B15 (chiusura).
 
 **`HZ=120`** nell'harness: il fotogramma degli scenari resta 1/60 di secondo e il loop fa più passi corti. A 60 Hz il codice non cambia (controllato: `cap-bus`, `livello-perduta`, `wave-rio` uguali a main). Prova di fumo: a 120 Hz `livello-perduta` cambia esito (un checkpoint che non scatta), che è proprio il problema del blocco B14. Non ho misurato il corpus intero a 120 Hz: è il primo passo di B14.
+
+### 2026-10-08: parte B, B0 (preparazione)
+
+**Macchina controllata.** `corpus.mjs ref --only cap-bus,campagna` sul worktree di main ridà gli hash di `reference.json` (`a9f0d56e…`, `f3ae3d26…`): la macchina e l'harness sono quelli della parte A. Le partite registrate da Ema (`ema-bus`, `ema-rio`) ci sono già.
+
+**Test di unità.** vitest 4.1.11 (la linea stabile: la 5 è uscita da un mese), `npm test`, `vitest.config.ts` a parte così la build di vite non dipende da vitest. Solo logica pura in node, senza phaser né dom: il resto lo prova l'harness. Primo file: `src/engine/OmbraProfile.test.ts` (profilo e lettura dell'ombra, i numeri dell'ADR-039).
+
+**ADR-051** nel `DEV_LOG.md`: forma di un sistema, contesto con `Pick`, scena come regista, facciata tipata, campi che sopravvivono al restart in un posto solo.
+
+**Lettura completa di `GameScene`** prima di toccarla. Cose nuove rispetto alla mappa:
+- la facciata del film usa anche `folk` ed `enemies` della scena (non solo `vignette`, `setPropsVisible`, `findFlatStage`): sei membri in tutto con `cloneAlive` del geco;
+- 14 campi non si azzerano in `create()` e passano al restart: `spawnerToastShown` (il toast del primo nido esce una volta per sessione), `safeTimer`, `exitLockToastAt`, `parryUntil`, `nextLessonCheck`, `cloneUntil`, `lamettaFloorY`, `nextLametteAt`, `nextPitturaAt`, `pattoDeiAt`, `pattoNextSpawnAt`, `chaseLastSeen`, `chaseStartedAt`, `nextIvanStrikeAt`. Alcuni si riscrivono sempre prima di essere letti, altri no (le lamette del santuario possono partire durante il film d'ingresso con l'orario della vita precedente). Vanno in `RestartCarry` fino al blocco B13;
+- `time.now` di phaser è il tempo del loop di gioco, non riparte al restart: un orario rimasto da prima vale ancora per qualche secondo.
