@@ -97,7 +97,7 @@ export class PedroApparition {
         state.persist();
         sfx.bossVoice('boss-pedro');
         this.light = this.lighting.static(this.baseX, this.baseY - 20, 0x22d3ee, 200, 0.9);
-        try { this.scene.cameras.main.flash(90, 34, 211, 238); } catch { /* camera finta */ }
+        this.scene.cameras.main.flash(90, 34, 211, 238);
         // tre lampi prima di restare: arriva a scatti, come nei suoi boss
         for (let i = 1; i <= 3; i++) {
             this.later(i * 110, () => sp.setAlpha(i === 3 ? 0.92 : i % 2 ? 0.8 : 0.15));

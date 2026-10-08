@@ -1,4 +1,39 @@
-# mappa dei sistemi di GameScene (proposta per la parte B)
+# mappa dei sistemi di GameScene
+
+## com'è venuta (parte B, blocchi B1-B9)
+
+La bozza qui sotto è stata messa alla prova spostando il codice. Il risultato, con le differenze dalla bozza:
+
+| sistema | file | cosa fa | note rispetto alla bozza |
+|---|---|---|---|
+| contesto | `src/game/context.ts` | `GameContext` (una vita di scena), `GameSystem`, `Flow`, `SceneData` | i sistemi prendono il contesto con `Pick` (ADR-051) |
+| campi che sopravvivono al restart | `src/game/carry.ts` | `RestartCarry`: i 14 campi che `create()` non azzerava | bug da chiudere in B13 |
+| mondo | `src/game/world/LevelWorld.ts` | definizione, layout, livello, nav, bioma; stanze, progresso, punti liberi, palco dei film, varchi | la costruzione (luci, terreno, fondali) resta nella scena: è composizione |
+| gruppi fisici | `src/game/groups.ts` | gli 8 gruppi nell'ordine di creazione di prima | nuovo: phaser processa i gruppi nell'ordine in cui nascono, e nemici, proiettili, porte e sbarre li toccano in tanti |
+| peso dei colpi | `src/game/Feel.ts` | scossa e hitstop | nuovo, prima erano due metodi usati ovunque |
+| interattivi | `src/game/Interactions.ts` | il registro (ordine d'inserimento conservato), il più vicino, il prompt | come da bozza |
+| dialoghi | `src/game/Dialogues.ts` | film poi righe, righe al volo, intro del capitolo | anticipato da B9: tutti lo usano; la coda dei film resta il `delayedCall` (B13) |
+| ricompense | `src/game/Rewards.ts` | oggetti, frammenti, cuori, maschere, barre, note, ricompense che volano | come da bozza |
+| nemici | `src/game/Enemies.ts` | nascita, tratti, élite, nidi, sonno e risveglio, morte e barre, lezioni, minacce | |
+| combattimento | `src/game/Combat.ts` | collider, danni, proiettili, esplosioni, schianto, spine | con abilità nello stesso passo: si chiamano a vicenda |
+| abilità | `src/game/abilities/` | una cartella, un modulo per abilità (riflesso, analisi, scudo e rimando, bottiglia, veleno, risonante) più i colpi in volo; `index.ts` è la facciata `Abilities` | in ogni modulo la grafica sta in una classe `...Fx` chiamata negli stessi punti di prima; le regole pure in `src/rules/combat.ts` e `src/rules/abilities.ts` |
+| posizione sicura | `src/game/SafeGround.ts` | l'ultimo punto a terra (spine, barre alla morte) | nuovo, era in progressione |
+| boss | `src/game/Bosses.ts` | creazione, luce, intro e ingaggio, voce e ombra, ritmo del custode, trofeo intoccabile, parte comune della sconfitta | |
+| arena | `src/game/Arena.ts` | sbarre e blocco della stanza | condiviso con le sfide |
+| npc | `src/game/Npcs.ts` | comparsa e interazione generiche | i casi speciali vanno ai capitoli |
+| capitoli | `src/game/chapters/` | uno script per capitolo, registrati per id (`index.ts`), con pezzi condivisi in `shared/` (agguati di notino, guida che accompagna, acqua di smela, messaggi una tantum) | gli agganci sono in `ChapterScript.ts`; ogni aggancio si chiama dove il vecchio codice controllava `def.id` |
+| progressione | `src/game/Progression.ts` | uscite, riepiloghi, punteggi, fine partita, morte, esplorazione, trofei | implementa `Flow`, l'unica cosa che i capitoli vedono del flusso |
+| viaggio | `src/game/Travel.ts` | microfoni, fermate, viaggio, varchi, servizi spenti nei film | |
+| guida | `src/game/Guide.ts` | obiettivo, mappa del telefono, freccia | |
+| sfide | `src/game/Challenges.ts` | microfono rosso a ondate, corsa contro il citelis | |
+| doomsday | `src/game/Doomsday.ts` | tempo che stringe, glitch, pedro del collasso e il ritorno del boss di prima | |
+| regole pure | `src/rules/` | combattimento, punteggi, salvataggio, profilo dell'ombra, con i test vitest accanto | nuovo strato: niente phaser, lo importano tutti |
+
+`GameScene` (673 righe) compone i sistemi in `create()` nello stesso ordine di prima, li chiama in `update()` nello stesso ordine (sotto), collega gli eventi in un posto solo (`setupEvents`) e implementa la facciata per il film e il geco (`FilmHost`, `PlayerHost`).
+
+---
+
+## la bozza di partenza (parte A)
 
 Righe su `main` a16f39c (`src/scenes/GameScene.ts`, 5804 righe, 168 metodi, ~180 campi). È una **bozza da confermare**: nasce dalla lettura completa del file e dalle chiamate incrociate, non è ancora stata messa alla prova spostando codice. Il registro membro per membro (con gli scenari che eseguono ogni metodo) è `ledger.md`.
 

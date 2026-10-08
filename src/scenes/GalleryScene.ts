@@ -81,7 +81,7 @@ export class GalleryScene extends Phaser.Scene {
             b.textContent = `${i + 1} ${id.replace('fb-', '')}`;
             b.onclick = () => {
                 if (flashback.isPlaying) return;
-                try { sfx.init(); } catch { /* anteprima senza audio */ }
+                sfx.init();
                 idx = i;
                 sequence = false;
                 this.playOne(dummy, ids[idx]!, () => this.idleNext(dummy, ids, () => idx, (v) => { idx = v; }, sequence));
@@ -94,7 +94,7 @@ export class GalleryScene extends Phaser.Scene {
         all.textContent = '▶ tutti';
         all.onclick = () => {
             if (flashback.isPlaying) return;
-            try { sfx.init(); } catch { /* anteprima senza audio */ }
+            sfx.init();
             sequence = true;
             this.playOne(dummy, ids[idx]!, () => this.idleNext(dummy, ids, () => idx, (v) => { idx = v; }, sequence));
         };
@@ -112,7 +112,7 @@ export class GalleryScene extends Phaser.Scene {
         const go = document.createElement('button');
         go.textContent = '▶ guarda i ricordi (attiva l\u2019audio)';
         go.onclick = () => {
-            try { sfx.init(); } catch { /* anteprima senza audio */ }
+            sfx.init();
             gate.remove();
             this.playOne(dummy, ids[idx]!, () => this.idleNext(dummy, ids, () => idx, (v) => { idx = v; }, sequence));
         };

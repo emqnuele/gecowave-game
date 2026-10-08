@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { Bark, BarkSet, BarkTrigger } from '../content/barks';
 import { bus } from './events';
-import type { PlayerAct } from './OmbraProfile';
+import type { PlayerAct } from '../rules/ombra';
 import { sfx } from './sfx';
 
 /* la voce di un boss durante lo scontro: decide quando parlare, così le

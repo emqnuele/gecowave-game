@@ -82,9 +82,9 @@ export class Input {
             for (const key of bindingsFor(a)) {
                 if (key.startsWith('MOUSE_')) continue;
                 if (this.keys.has(key)) continue;
-                try {
-                    this.keys.set(key, kb.addKey(key, false));
-                } catch { /* nome ignoto: lo salta, la rimappatura resta */ }
+                // un nome ignoto a phaser darebbe un tasto senza codice: lo salta, la rimappatura resta
+                if (!(key.toUpperCase() in Phaser.Input.Keyboard.KeyCodes)) continue;
+                this.keys.set(key, kb.addKey(key, false));
             }
         }
     }
@@ -129,10 +129,8 @@ export class Input {
         const gp = this.scene.input.gamepad;
         if (!gp) return null;
         for (let i = 0; i < 4; i++) {
-            try {
-                const p = gp.getPad(i) as unknown as (Gamepad & { connected: boolean }) | null;
-                if (p?.connected) return p;
-            } catch { /* slot vuoto */ }
+            const p = gp.getPad(i) as unknown as (Gamepad & { connected: boolean }) | null;
+            if (p?.connected) return p;
         }
         return null;
     }

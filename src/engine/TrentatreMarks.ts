@@ -126,14 +126,12 @@ export class TrentatreMarks {
     restoreExtinguished(): void {
         for (const e of this.extinguished) {
             if (!e.img.scene) continue;
-            try {
-                const glow = this.scene.add.particles(e.img.x, e.img.y, 'p-spark', {
-                    speed: { min: 20, max: 80 }, scale: { start: 0.6, end: 0 },
-                    tint: 0x7dd3fc, lifespan: 400, quantity: 6, stopAfter: 6,
-                });
-                glow.setDepth(6);
-                this.scene.time.delayedCall(600, () => glow.destroy());
-            } catch { /* test */ }
+            const glow = this.scene.add.particles(e.img.x, e.img.y, 'p-spark', {
+                speed: { min: 20, max: 80 }, scale: { start: 0.6, end: 0 },
+                tint: 0x7dd3fc, lifespan: 400, quantity: 6, stopAfter: 6,
+            });
+            glow.setDepth(6);
+            this.scene.time.delayedCall(600, () => glow.destroy());
             this.scene.tweens.add({ targets: e.img, alpha: e.alpha, duration: 600, ease: 'Sine.easeOut' });
         }
         this.extinguished = [];

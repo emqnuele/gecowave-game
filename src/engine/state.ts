@@ -1,9 +1,9 @@
 import { COMBAT } from '../config';
-import { BASE_NOTCHES, charmMods, ITEMS, LEGACY_ITEMS, STARTING_ITEMS, type CharmMods } from '../content/items';
+import { charmMods, ITEMS, type CharmMods } from '../content/items';
 import type { AbilityId, DroppedBarre, SaveData } from '../types';
 import { bus } from './events';
-import { DEFAULT_SKIN_ID, isValidSkinId } from './playerSkin';
-import { defaultOmbraProfile, observe as observeOmbraAct, sanitizeOmbraProfile, type PlayerAct } from './OmbraProfile';
+import { observe as observeOmbraAct, type PlayerAct } from '../rules/ombra';
+import { defaultSave, loadedSave, migrateSave } from '../rules/save';
 import type { Action, PresetId } from './input/actions';
 
 const SAVE_KEY = 'gecowave-save-v2';
@@ -34,43 +34,6 @@ export interface PortalReturn {
     y: number;
 }
 
-const defaultSave = (): SaveData => ({
-    levelId: 'perduta',
-    checkpointId: null,
-    barre: 0,
-    abilities: [],
-    seenDialogues: [],
-    collectedLore: [],
-    flags: [],
-    endingSeen: null,
-    playerName: 'Geco',
-    skin: DEFAULT_SKIN_ID,
-    doomsdayMode: false,
-    doomsday: 0,
-    stats: {
-        forza: 0,
-        costituzione: 0,
-        flusso: 0,
-    },
-    inventory: { ...STARTING_ITEMS },
-    charms: [],
-    equipped: [],
-    notches: BASE_NOTCHES,
-    messages: [],
-    record: { deaths: 0, kills: 0, bosses: 0, playMs: 0, talks: 0 },
-    radio: null,
-    explored: {},
-    stops: [],
-    quests: {},
-    trials: {},
-    achievements: [],
-    assisted: false,
-    scores: {},
-    runScores: {},
-    chapterLog: {},
-    chapterRun: null,
-    ombra: defaultOmbraProfile(),
-});
 
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
 class GameState {
@@ -93,52 +56,8 @@ class GameState {
             const raw = localStorage.getItem(SAVE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                const fresh = defaultSave();
-                this.save = { ...fresh, ...parsed, record: { ...fresh.record, ...(parsed.record ?? {}) }, explored: { ...(parsed.explored ?? {}) } };
-                if (typeof this.save.barre !== 'number' || isNaN(this.save.barre)) {
-                    this.save.barre = 0;
-                }
-                // i consumabili tolti dall'economia tornano in barre
-                for (const [id, value] of Object.entries(LEGACY_ITEMS)) {
-                    const n = this.save.inventory?.[id] ?? 0;
-                    if (n > 0) this.save.barre += n * value;
-                    if (this.save.inventory) delete this.save.inventory[id];
-                }
-                // la tana non perdona più: chi l'aveva lasciato andare lo ritrova in cella
-                if (this.save.flags.includes('lochef-libero')) {
-                    this.save.flags = this.save.flags.filter((f) => f !== 'lochef-libero');
-                    if (!this.save.flags.includes('lochef-arrestato')) this.save.flags.push('lochef-arrestato');
-                }
-                // la rigenerazione non esiste più: si cura solo col cibo
-                if ((this.save.abilities as string[]).includes('rigenerazione')) {
-                    this.save.abilities = this.save.abilities.filter((a) => (a as string) !== 'rigenerazione');
-                }
-                // fallback for backward compatibility
-                if (parsed.collassoMode !== undefined && this.save.doomsdayMode === false) {
-                    this.save.doomsdayMode = parsed.collassoMode;
-                }
-                if (parsed.collasso !== undefined && this.save.doomsday === 0) {
-                    this.save.doomsday = parsed.collasso;
-                }
-                // i punteggi vecchi usavano un'altra scala: si azzerano, non si mescolano
-                const oldScale =
-                    Object.values(this.save.runScores ?? {}).some((v) => v > 500) ||
-                    Object.values(this.save.scores ?? {}).some((s) => s.score > 500);
-                if (oldScale) {
-                    this.save.runScores = {};
-                    this.save.scores = {};
-                    this.save.chapterLog = {};
-                }
-                // l'ombra ha un profilo per partita: i salvataggi vecchi partono puliti
-                this.save.ombra = sanitizeOmbraProfile((parsed as { ombra?: unknown }).ombra);
-                // le pelli vecchie o manomesse tornano al bosco
-                if (!isValidSkinId((parsed as { skin?: unknown }).skin)) {
-                    this.save.skin = DEFAULT_SKIN_ID;
-                }
-                if (this.hasFlag('tommasorveglianza') && !this.save.ombra.premium) {
-                    this.save.ombra.premium = true;
-                    this.persist();
-                }
+                this.save = loadedSave(parsed);
+                if (migrateSave(this.save, parsed)) this.persist();
             }
             const s = localStorage.getItem(SETTINGS_KEY);
             if (s) {

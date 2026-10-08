@@ -4,12 +4,18 @@ import { FX } from '../engine/art/abilityFx';
 import { bus } from '../engine/events';
 import type { Input } from '../engine/input/Input';
 import { completeEat, eatProblem, pickSnack } from '../engine/inventory';
-import type { PlayerAct } from '../engine/OmbraProfile';
+import type { PlayerAct } from '../rules/ombra';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { AbilityId } from '../types';
 
 export type AttackDir = 'side' | 'up' | 'down';
+
+/** cosa il geco chiede alla scena che lo ospita */
+export interface PlayerHost {
+    /** con il clone vivo la seconda pressione del riflesso è uno scambio */
+    readonly cloneAlive: boolean;
+}
 
 /* quanto la wave aspetta la direzione dopo la pressione da sola */
 const WAVE_GRACE_MS = 250;
@@ -78,9 +84,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     private eating: { id: string; until: number } | null = null;
     private eatCrumbsAt = 0;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, input: Input) {
+    private readonly host: PlayerHost;
+
+    constructor(scene: Phaser.Scene, x: number, y: number, input: Input, host: PlayerHost) {
         super(scene, x, y, 'player', 0);
         this.controls = input;
+        this.host = host;
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -438,8 +447,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
         if (this.controls.pressed('riflesso') && state.hasAbility('riflesso')) {
             // seconda pressione col clone vivo: scambio di posto, non un clone nuovo
-            const scene = this.scene as unknown as { cloneAlive?: boolean };
-            if (this.riflessoSwapAvailable && scene.cloneAlive) {
+            if (this.riflessoSwapAvailable && this.host.cloneAlive) {
                 this.scene.events.emit('player-riflesso-swap', {});
                 return;
             }

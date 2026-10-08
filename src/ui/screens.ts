@@ -11,7 +11,8 @@ import { ACTIONS, ACTION_LABEL, bindingLabel, bindingsFor, keyNameForCode, PRESE
 import { formatKeys } from '../engine/input/keyText';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
-import { isValidSkinId, PLAYER_FRAME, renderSkinPreview, skinFinalCss, SKIN_PRESETS, skinPreset } from '../engine/playerSkin';
+import { isValidSkinId, SKIN_PRESETS, skinPreset } from '../content/skins';
+import { PLAYER_FRAME, renderSkinPreview, skinFinalCss } from '../engine/playerSkin';
 import { music } from '../engine/music';
 import type { ZoneColor } from '../types';
 import { el, ui } from './dom';

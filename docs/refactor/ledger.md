@@ -9,342 +9,342 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 
 | | membro | tipo | righe | scenari | destinazione | stato |
 |---|---|---|---|---|---|---|
-| | def | campo | 159-159 |  | LevelWorld (proposta) | da fare |
-| | layout | campo | 161-161 |  | LevelWorld (proposta) | da fare |
-| | roomBySlot | campo | 163-163 |  | LevelWorld (proposta) | da fare |
-| | level | campo | 164-164 |  | LevelWorld (proposta) | da fare |
-| | nav | campo | 166-166 |  | LevelWorld (proposta) | da fare |
-| | player | campo | 167-167 |  | Orchestratore (proposta) | da fare |
-| | controls | campo | 169-169 |  | Orchestratore (proposta) | da fare |
-| | boss | campo | 170-170 |  | Bosses (proposta) | da fare |
-| | enemies | campo | 171-171 |  | Enemies (proposta) | da fare |
-| | spawners | campo | 173-173 |  | Enemies (proposta) | da fare |
-| | spawnerToastShown | campo | 174-174 |  | Enemies (proposta) | da fare |
-| | threatCache | campo | 176-176 |  | Enemies (proposta) | da fare |
-| | playerProjectiles | campo | 177-177 |  | Combat (proposta) | da fare |
-| | enemyProjectiles | campo | 178-178 |  | Combat (proposta) | da fare |
-| | lametteGroup | campo | 179-179 |  | Combat (proposta) | da fare |
-| | barreGroup | campo | 180-180 |  | Enemies (proposta) | da fare |
-| | doorGroup | campo | 181-181 |  | script: mente (porte del quiz) (proposta) | da fare |
-| | interactables | campo | 182-182 |  | Interazioni (proposta) | da fare |
-| | prompt | campo | 183-183 |  | Interazioni (proposta) | da fare |
-| | promptTxt | campo | 184-184 |  | Interazioni (proposta) | da fare |
-| | lastSafe | campo | 185-185 |  | Progressione (proposta) | da fare |
-| | safeTimer | campo | 186-186 |  | Progressione (proposta) | da fare |
-| | exiting | campo | 187-187 |  | Progressione (proposta) | da fare |
-| | checkpointSprites | campo | 188-188 |  | Progressione (proposta) | da fare |
-| | propDressing | campo | 190-190 |  | Progressione (proposta) | da fare |
-| | lighting | campo | 191-191 |  | LevelWorld (proposta) | da fare |
-| | parallax | campo | 192-192 |  | LevelWorld (proposta) | da fare |
-| | biome | campo | 193-193 |  | LevelWorld (proposta) | da fare |
-| | terrain | campo | 194-194 |  | LevelWorld (proposta) | da fare |
-| | ambience | campo | 195-195 |  | LevelWorld (proposta) | da fare |
-| | water | campo | 196-196 |  | LevelWorld (proposta) | da fare |
-| | clone | campo | 197-197 |  | Abilities (proposta) | da fare |
-| | cloneUntil | campo | 198-198 |  | Abilities (proposta) | da fare |
-| | cloneColliders | campo | 199-199 |  | Abilities (proposta) | da fare |
-| | cloneTwin | campo | 200-200 |  | Abilities (proposta) | da fare |
-| | cloneJitterAt | campo | 201-201 |  | Abilities (proposta) | da fare |
-| | cloneWaveAt | campo | 202-202 |  | Abilities (proposta) | da fare |
-| | cloneSwapUsed | campo | 203-203 |  | Abilities (proposta) | da fare |
-| | cloneAlive | get | 205-207 | riflesso-senza-flow, sigillo-bus-specchio, wave-rio (+7) | Abilities (proposta) | da fare |
-| | analisiUntil | campo | 208-208 |  | Abilities (proposta) | da fare |
-| | nextAnalisiTick | campo | 209-209 |  | Abilities (proposta) | da fare |
-| | analisiGlyphs | campo | 210-210 |  | Abilities (proposta) | da fare |
-| | analisiPhase | campo | 211-211 |  | Abilities (proposta) | da fare |
-| | analisiStart | campo | 212-212 |  | Abilities (proposta) | da fare |
-| | analisiQedDone | campo | 213-213 |  | Abilities (proposta) | da fare |
-| | analisiMarked | campo | 214-214 |  | Abilities (proposta) | da fare |
-| | analisiMarks | campo | 215-215 |  | Abilities (proposta) | da fare |
-| | analisiBossMarked | campo | 216-216 |  | Abilities (proposta) | da fare |
-| | analisiCircle | campo | 217-217 |  | Abilities (proposta) | da fare |
-| | analisiQed | campo | 218-218 |  | Abilities (proposta) | da fare |
-| | lastCooldownEmit | campo | 219-219 |  | Abilities (proposta) | da fare |
-| | lastDashWaveAt | campo | 220-220 |  | Abilities (proposta) | da fare |
-| | guide | campo | 221-221 |  | Progressione (proposta) | da fare |
-| | guideCacheKey | campo | 223-223 |  | Progressione (proposta) | da fare |
-| | guideCache | campo | 224-224 |  | Progressione (proposta) | da fare |
-| | liveFragments | campo | 226-226 |  | Rewards (proposta) | da fare |
-| | folk | campo | 227-227 |  | Orchestratore (proposta) | da fare |
-| | traps | campo | 228-228 |  | Orchestratore (proposta) | da fare |
-| | hazards | campo | 229-229 |  | Orchestratore (proposta) | da fare |
-| | trial | campo | 230-230 |  | Sfide (proposta) | da fare |
-| | story | campo | 231-231 |  | Orchestratore (proposta) | da fare |
-| | pedroGhost | campo | 232-232 |  | Orchestratore (proposta) | da fare |
-| | marks33 | campo | 233-233 |  | Orchestratore (proposta) | da fare |
-| | seals | campo | 235-235 |  | Orchestratore (proposta) | da fare |
-| | staging | campo | 236-236 |  | Orchestratore (proposta) | da fare |
-| | quests | campo | 237-237 |  | Orchestratore (proposta) | da fare |
-| | atmosphere | campo | 238-238 |  | Orchestratore (proposta) | da fare |
-| | soundscape | campo | 239-239 |  | Orchestratore (proposta) | da fare |
-| | nextTrophyCheckAt | campo | 240-240 |  | Progressione (proposta) | da fare |
-| | bossFight | campo | 242-242 |  | Bosses (proposta) | da fare |
-| | guideGfx | campo | 243-243 |  | Progressione (proposta) | da fare |
-| | lastRoom | campo | 244-244 |  | Progressione (proposta) | da fare |
-| | npcAt | campo | 246-246 |  | Npc (proposta) | da fare |
-| | arenaBars | campo | 248-248 |  | Arena (proposta) | da fare |
-| | arenaGfx | campo | 249-249 |  | Arena (proposta) | da fare |
-| | arenaRoom | campo | 250-250 |  | Arena (proposta) | da fare |
-| | challenge | campo | 252-252 |  | Sfide (proposta) | da fare |
-| | challengeSpot | campo | 253-253 |  | Sfide (proposta) | da fare |
-| | busStops | campo | 254-254 |  | Progressione (proposta) | da fare |
-| | homing | campo | 255-255 |  | Rewards (proposta) | da fare |
-| | bossIntroShown | campo | 256-256 |  | Bosses (proposta) | da fare |
-| | exitLockToastAt | campo | 257-257 |  | Bosses (proposta) | da fare |
-| | lamettaCenter | campo | 259-259 |  | script: santuario (proposta) | da fare |
-| | lamettaActive | campo | 260-260 |  | script: santuario (proposta) | da fare |
-| | lamettaFloorY | campo | 261-261 |  | script: santuario (proposta) | da fare |
-| | smelaArena | campo | 262-262 |  | script: stabilimento (proposta) | da fare |
-| | acquaPuddles | campo | 263-263 |  | Abilities (proposta) | da fare |
-| | nextLametteAt | campo | 264-264 |  | script: santuario (proposta) | da fare |
-| | nextPitturaAt | campo | 265-265 |  | script: santuario (proposta) | da fare |
-| | colorDropsTaken | campo | 266-266 |  | script: santuario (proposta) | da fare |
-| | mirror | campo | 267-267 |  | script: santuario (proposta) | da fare |
-| | pedroChoiceShown | campo | 268-268 |  | script: nucleo (proposta) | da fare |
-| | pedroShell | campo | 270-270 |  | script: nucleo (proposta) | da fare |
-| | nucleusStraightening | campo | 272-272 |  | script: nucleo (proposta) | da fare |
-| | pattoActive | campo | 274-274 |  | script: nucleo (proposta) | da fare |
-| | finalGodsFight | campo | 277-277 |  | script: nucleo (proposta) | da fare |
-| | pattoDeiAt | campo | 278-278 |  | script: nucleo (proposta) | da fare |
-| | pattoNextSpawnAt | campo | 279-279 |  | script: nucleo (proposta) | da fare |
-| | pattoWarned | campo | 280-280 |  | script: nucleo (proposta) | da fare |
-| | scudoUntil | campo | 282-282 |  | Abilities (proposta) | da fare |
-| | scudoGfx | campo | 283-283 |  | Abilities (proposta) | da fare |
-| | scudoStart | campo | 284-284 |  | Abilities (proposta) | da fare |
-| | scudoBubble | campo | 285-285 |  | Abilities (proposta) | da fare |
-| | scudoBubbleGlow | campo | 286-286 |  | Abilities (proposta) | da fare |
-| | scudoRec | campo | 287-287 |  | Abilities (proposta) | da fare |
-| | acquaBottles | campo | 289-289 |  | Abilities (proposta) | da fare |
-| | poisoned | campo | 290-290 |  | Abilities (proposta) | da fare |
-| | chaseSprite | campo | 292-292 |  | script: tana (proposta) | da fare |
-| | chaseLastSeen | campo | 293-293 |  | script: tana (proposta) | da fare |
-| | chaseWhisperAt | campo | 294-294 |  | script: tana (proposta) | da fare |
-| | chaseWhisperIdx | campo | 295-295 |  | script: tana (proposta) | da fare |
-| | chaseTrail | campo | 296-296 |  | script: tana (proposta) | da fare |
-| | chaseStarts | campo | 297-297 |  | script: tana (proposta) | da fare |
-| | chaseEnds | campo | 298-298 |  | script: tana (proposta) | da fare |
-| | chaseZoneIdx | campo | 299-299 |  | script: tana (proposta) | da fare |
-| | chaseStartedAt | campo | 300-300 |  | script: tana (proposta) | da fare |
-| | chaseDone | campo | 301-301 |  | script: tana (proposta) | da fare |
-| | chaseNearSince | campo | 303-303 |  | script: tana (proposta) | da fare |
-| | chaseTiredUntil | campo | 304-304 |  | script: tana (proposta) | da fare |
-| | ospite12Sprite | campo | 306-306 |  | script: tana (proposta) | da fare |
-| | ospite12Interact | campo | 307-307 |  | script: tana (proposta) | da fare |
-| | ivanSprite | campo | 309-309 |  | script: bus (proposta) | da fare |
-| | ivanInArena | campo | 310-310 |  | script: bus (proposta) | da fare |
-| | ivanBusy | campo | 311-311 |  | script: bus (proposta) | da fare |
-| | nextIvanStrikeAt | campo | 312-312 |  | script: bus (proposta) | da fare |
-| | ivanDead | campo | 313-313 |  | script: bus (proposta) | da fare |
-| | companion | campo | 315-315 |  | script: guide (void, walter) (proposta) | da fare |
-| | companionBaseY | campo | 316-316 |  | script: guide (void, walter) (proposta) | da fare |
-| | companionInteract | campo | 317-317 |  | script: guide (void, walter) (proposta) | da fare |
-| | voidArenas | campo | 318-318 |  | script: void (proposta) | da fare |
-| | voidStep | campo | 319-319 |  | script: void (proposta) | da fare |
-| | voidBusy | campo | 320-320 |  | script: void (proposta) | da fare |
-| | baruffoniArenas | campo | 322-322 |  | script: walter (proposta) | da fare |
-| | baruffoniStep | campo | 323-323 |  | script: walter (proposta) | da fare |
-| | baruffoniBusy | campo | 324-324 |  | script: walter (proposta) | da fare |
-| | collapsePedro | campo | 326-326 |  | Doomsday (proposta) | da fare |
-| | collapseTriggered | campo | 327-327 |  | Doomsday (proposta) | da fare |
-| | doomsdayWarned | campo | 328-328 |  | Doomsday (proposta) | da fare |
-| | replacedBossKind | campo | 329-329 |  | Doomsday (proposta) | da fare |
-| | replacedBossX | campo | 330-330 |  | Doomsday (proposta) | da fare |
-| | replacedBossY | campo | 331-331 |  | Doomsday (proposta) | da fare |
-| | nextWildGlitchAt | campo | 332-332 |  | Doomsday (proposta) | da fare |
-| | parryUntil | campo | 334-334 |  | Combat (proposta) | da fare |
-| | mechanic | campo | 336-336 |  | Orchestratore (proposta) | da fare |
-| | playerLightRef | campo | 337-337 |  | LevelWorld (proposta) | da fare |
-| | vignette | campo | 339-339 |  | LevelWorld (proposta) | da fare |
-| | quizAttempts | campo | 341-341 |  | script: mente (proposta) | da fare |
-| | nextLessonCheck | campo | 342-342 |  | Enemies (proposta) | da fare |
-| | voice | campo | 344-344 |  | Bosses (proposta) | da fare |
-| | ombraBrain | campo | 345-345 |  | Bosses (proposta) | da fare |
-| | beatMs | campo | 347-347 |  | Bosses (proposta) | da fare |
-| | nextBeatAt | campo | 348-348 |  | Bosses (proposta) | da fare |
-| | constructor | costruttore | 350-352 | riflesso-senza-flow, carica-corrotto, rio-cura (+195) | Orchestratore (proposta) | da fare |
-| | init | metodo | 354-370 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | LevelWorld (proposta) | da fare |
-| | create | metodo | 372-753 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | LevelWorld (proposta) | da fare |
-| | spawnEntities | metodo | 757-823 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Orchestratore: smista le entità ai sistemi (proposta) | da fare |
-| | spawnItemPickup | metodo | 826-863 | riflesso-senza-flow, rio-cura, nidi-rio (+179) | Rewards (proposta) | da fare |
-| | dropBossCharm | metodo | 866-870 | npc-spaccino-dopo-flauto, npc-ivan-dopo, npc-walter-dopo (+42) | Bosses (proposta) | da fare |
-| | recoverBossReward | metodo | 873-897 | npc-spaccino-dopo-flauto, npc-ivan-dopo, npc-walter-dopo (+11) | Bosses (proposta) | da fare |
-| | castSprite | metodo | 900-905 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Npc (proposta) | da fare |
-| | lightBoss | metodo | 908-911 | riflesso-senza-flow, rio-cura, nidi-rio (+168) | Bosses (proposta) | da fare |
-| | makeBoss | metodo | 914-928 | riflesso-senza-flow, rio-cura, nidi-rio (+168) | Bosses (proposta) | da fare |
-| | isEliteSpot | metodo | 931-938 | riflesso-senza-flow, rio-cura, nidi-rio (+186) | Enemies (proposta) | da fare |
-| | traitFor | metodo | 941-956 | riflesso-senza-flow, rio-cura, nidi-rio (+186) | Enemies (proposta) | da fare |
-| | spawnEnemy | metodo | 958-969 | riflesso-senza-flow, rio-cura, nidi-rio (+187) | Enemies (proposta) | da fare |
-| | spawnSpawner | metodo | 973-979 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | Enemies (proposta) | da fare |
-| | spawnCaveSpawners | metodo | 984-1036 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Enemies (proposta) | da fare |
-| | caveSpawnerSpot | metodo | 1039-1057 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | Enemies (proposta) | da fare |
-| | updateSpawners | metodo | 1061-1110 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Enemies (proposta) | da fare |
-| | damageSpawner | metodo | 1112-1120 | nidi-stabilimento, nidi-cantina, arena-perduta (+38) | Enemies (proposta) | da fare |
-| | breakSpawner | metodo | 1122-1141 | nidi-stabilimento, nidi-cantina, arena-perduta (+1) | Enemies (proposta) | da fare |
-| | parry | metodo | 1144-1156 | arena-ruhra, cap-trenbolone-rifiuta, wave-caso (+4) | Combat (proposta) | da fare |
-| | onEnemyExplode | metodo | 1158-1175 | colpo-pausa, cibo, livello-nucleo (+12) | Combat (proposta) | da fare |
-| | spawnNpc | metodo | 1178-1275 | riflesso-senza-flow, rio-cura, nidi-rio (+162) | Npc (proposta) | da fare |
-| | spawnOspite12 | metodo | 1278-1294 | cap-tana, cap-tana-ospite, campagna | script: tana (proposta) | da fare |
-| | interactNpc | metodo | 1296-1537 | npc-spaccino-dopo-flauto, npc-spaccino-fatto, npc-walter-dorme (+44) | Npc (proposta) | da fare |
-| | spawnPiazzaGuests | metodo | 1542-1550 | viaggio, piazza-inizio, livello-piazza (+3) | Npc (proposta) | da fare |
-| | interactRomeroPiazza | metodo | 1552-1569 | piazza | Npc (proposta) | da fare |
-| | oracleLines | metodo | 1572-1590 | piazza-inizio, piazza-meta, piazza-fine (+1) | Npc (proposta) | da fare |
-| | boardLines | metodo | 1593-1606 | piazza | Npc (proposta) | da fare |
-| | barRumors | metodo | 1609-1626 | piazza-inizio, piazza-meta, piazza-fine (+1) | Npc (proposta) | da fare |
-| | openPiazzaShop | metodo | 1629-1661 | piazza-inizio, piazza-meta, piazza-fine (+1) | Npc (proposta) | da fare |
-| | interactPiema | metodo | 1663-1676 | npc-piema-dopo, npc-piema-senza, cap-ruhra (+1) | Npc (proposta) | da fare |
-| | spawnQuizDoor | metodo | 1680-1688 | livello-mente, esplora-mente-cancella, esplora-mente-porta (+5) | script: mente (proposta) | da fare |
-| | interactPorta | metodo | 1690-1725 | cap-mente, campagna | script: mente (proposta) | da fare |
-| | rewardSpot | metodo | 1728-1745 | npc-ivan-dopo, sigillo-rio-resina, npc-walter-dopo (+29) | LevelWorld (proposta) | da fare |
-| | homeIn | metodo | 1748-1750 | npc-ivan-dopo, sigillo-rio-resina, npc-walter-dopo (+29) | Rewards (proposta) | da fare |
-| | updateHoming | metodo | 1752-1769 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Rewards (proposta) | da fare |
-| | spawnFragment | metodo | 1771-1797 | gamepad, guida-perduta, npc-ivan-dopo (+27) | Rewards (proposta) | da fare |
-| | spawnLore | metodo | 1799-1814 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Rewards (proposta) | da fare |
-| | micKey | metodo | 1816-1818 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | spawnBusStops | metodo | 1821-1834 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | setPropsVisible | metodo | 1837-1842 | film-uscita, livello-barrato, guida-void (+27) | Progressione (proposta) | da fare |
-| | updateBusStops | metodo | 1844-1853 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | openTravel | metodo | 1855-1877 | viaggio, corsa-vinta, esplora-mente-cancella (+22) | Progressione (proposta) | da fare |
-| | travelTo | metodo | 1880-1895 | viaggio | Progressione (proposta) | da fare |
-| | spawnCheckpoints | metodo | 1897-1920 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | spawnDroppedBarre | metodo | 1922-1938 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Rewards (proposta) | da fare |
-| | spawnBarrePickup | metodo | 1940-1955 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | Rewards (proposta) | da fare |
-| | spawnCuore | metodo | 1958-1979 | rio-cura, nidi-rio, sigillo-perduta-camino (+83) | Rewards (proposta) | da fare |
-| | maschereCount | metodo | 1983-1985 | esplora-ricordi, esplora-stabilimento, esplora-cantina (+32) | Rewards (proposta) | da fare |
-| | spawnMaschera | metodo | 1987-2016 | riflesso-senza-flow, sigillo-perduta-camino, sigillo-perduta-rimbalzo (+125) | Rewards (proposta) | da fare |
-| | spawnPortal | metodo | 2020-2066 | riflesso-senza-flow, sigillo-perduta-camino, sigillo-perduta-rimbalzo (+29) | Progressione (proposta) | da fare |
-| | indiziRaccolti | metodo | 2070-2072 | npc-romero-lochef, film-coda, film-uscita (+8) | script: caso (proposta) | da fare |
-| | interactIndizio | metodo | 2074-2086 | film-uscita, cap-caso, campagna | script: caso (proposta) | da fare |
-| | setupColliders | metodo | 2090-2294 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Combat (proposta) | da fare |
-| | setupEvents | metodo | 2296-2336 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Eventi (proposta) | da fare |
-| | roomAt | metodo | 2340-2348 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | LevelWorld (proposta) | da fare |
-| | findFlatStage | metodo | 2352-2373 | film-uscita, livello-barrato, guida-void (+27) | LevelWorld (proposta) | da fare |
-| | progressAt | metodo | 2376-2384 | rio-cura, nidi-rio, ridimensiona (+96) | LevelWorld (proposta) | da fare |
-| | progressOfOldX | metodo | 2387-2389 | rio-cura, nidi-rio, schianto-tana (+75) | LevelWorld (proposta) | da fare |
-| | openSpotNear | metodo | 2392-2411 | spine, schianto-santuario, npc-piema-dopo (+96) | LevelWorld (proposta) | da fare |
-| | setupCamera | metodo | 2413-2434 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | LevelWorld (proposta) | da fare |
-| | buildPrompt | metodo | 2436-2449 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Interazioni (proposta) | da fare |
-| | setupScript | metodo | 2453-2525 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: messaggi (proposta) | da fare |
-| | baruffoniSeq | metodo | 2530-2532 | ridimensiona, livello-galliate, livello-marcetti (+6) | script: walter (proposta) | da fare |
-| | setupBaruffoni | metodo | 2534-2552 | ridimensiona, livello-galliate, livello-marcetti (+6) | script: walter (proposta) | da fare |
-| | spawnBaruffoniBoss | metodo | 2555-2568 | ridimensiona, livello-galliate, livello-marcetti (+6) | script: walter (proposta) | da fare |
-| | onBaruffoniDown | metodo | 2571-2584 | cap-walter | script: walter (proposta) | da fare |
-| | onBaruffoniComplete | metodo | 2587-2590 | cap-walter | script: walter (proposta) | da fare |
-| | walterReveal | metodo | 2593-2623 | cap-walter | script: walter (proposta) | da fare |
-| | updateBaruffoni | metodo | 2626-2637 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: walter (proposta) | da fare |
-| | interactWalterGuida | metodo | 2640-2644 | esplora-galliate, esplora-marcetti, cap-walter | script: walter (proposta) | da fare |
-| | nextRegret | metodo | 2649-2652 | trentatre, uscita-chiusa-void, livello-void (+10) | script: void (proposta) | da fare |
-| | setupVoid | metodo | 2654-2678 | trentatre, uscita-chiusa-void, livello-void (+10) | script: void (proposta) | da fare |
-| | spawnRegret | metodo | 2681-2689 | trentatre, livello-void, guida-void (+9) | script: void (proposta) | da fare |
-| | onVeritaRivelata | metodo | 2692-2703 | cap-void-garante-cancella, cap-void-garante-porta, cap-void (+2) | script: void (proposta) | da fare |
-| | updateVoid | metodo | 2706-2720 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: void (proposta) | da fare |
-| | moveGuide | metodo | 2724-2758 | ridimensiona, livello-galliate, livello-marcetti (+19) | script: guide (void, walter) (proposta) | da fare |
-| | interactGuida | metodo | 2761-2768 | esplora-void, cap-void-garante-cancella, cap-void-garante-porta (+3) | script: void (proposta) | da fare |
-| | interactSfida33 | metodo | 2772-2793 | trentatre, cap-void-garante-cancella, cap-void-garante-porta (+3) | script: void (proposta) | da fare |
-| | voidClimax | metodo | 2796-2821 | uscita-chiusa-void, cap-void-garante-cancella, cap-void-garante-porta (+3) | script: void (proposta) | da fare |
-| | update | metodo | 2825-2912 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Orchestratore (proposta) | da fare |
-| | awakeEnemies | metodo | 2915-2922 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | Enemies (proposta) | da fare |
-| | updateEnemies | metodo | 2926-2941 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Enemies (proposta) | da fare |
-| | updateDoomsday | metodo | 2945-2996 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Doomsday (proposta) | da fare |
-| | updateRhythm | metodo | 3000-3009 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Bosses (proposta) | da fare |
-| | updateFakeWalls | metodo | 3011-3013 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | LevelWorld (proposta) | da fare |
-| | destroyBreakableWall | metodo | 3015-3030 | schianto-santuario, cap-ricordi, cap-cantina-calpesta (+7) | LevelWorld (proposta) | da fare |
-| | slamLand | metodo | 3033-3060 | schianto-santuario, livello-bus, livello-santuario (+56) | Combat (proposta) | da fare |
-| | updateIvan | metodo | 3064-3093 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: bus (proposta) | da fare |
-| | killIvanCutscene | metodo | 3095-3136 | doomsday-sollievo, wave-boss-guggu, cap-bus (+1) | script: bus (proposta) | da fare |
-| | ivanStrike | metodo | 3138-3190 | doomsday-sollievo, wave-boss-guggu, cap-bus (+1) | script: bus (proposta) | da fare |
-| | trackSafePosition | metodo | 3192-3203 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | checkExits | metodo | 3205-3260 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | returnFromSecret | metodo | 3263-3275 | cap-custode, cap-barrato, cap-walter | Progressione (proposta) | da fare |
-| | completeChapterAndGo | metodo | 3278-3334 | uscita-chiusa-void, cap-trenbolone, cap-mente (+27) | Progressione (proposta) | da fare |
-| | gotoLevel | metodo | 3336-3347 | npc-spaccino-dopo-flauto, uscita-chiusa-void, cap-trenbolone (+29) | Progressione (proposta) | da fare |
-| | updatePrompt | metodo | 3349-3358 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Interazioni (proposta) | da fare |
-| | updateExplore | metodo | 3362-3377 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | updateTrophies | metodo | 3380-3393 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | finishChapter | metodo | 3396-3422 | npc-spaccino-dopo-flauto, uscita-chiusa-void, cap-trenbolone (+29) | Progressione (proposta) | da fare |
-| | liveChapterScore | metodo | 3425-3434 | caduta, morte-barre, arena-perduta (+24) | Progressione (proposta) | da fare |
-| | endGame | metodo | 3437-3518 | doomsday-collasso, finale-consegna, finale-giorno30-vuoto (+7) | Progressione (proposta) | da fare |
-| | currentObjective | metodo | 3521-3551 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | freeFragment | metodo | 3554-3575 | riflesso-senza-flow, rio-cura, nidi-rio (+184) | Rewards (proposta) | da fare |
-| | buildGuide | metodo | 3577-3587 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | updateGuide | metodo | 3590-3625 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Progressione (proposta) | da fare |
-| | updateArenaLock | metodo | 3628-3650 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Arena (proposta) | da fare |
-| | doorRects | metodo | 3653-3672 | guida-santuario, guggu-senza-ivan, schianto (+64) | LevelWorld (proposta) | da fare |
-| | lockArena | metodo | 3674-3686 | guida-santuario, guggu-senza-ivan, schianto (+64) | Arena (proposta) | da fare |
-| | unlockArena | metodo | 3688-3697 | flauto-fatto, wave-boss-breccio, wave-boss-ticummi (+39) | Arena (proposta) | da fare |
-| | spawnChallenge | metodo | 3702-3728 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Sfide (proposta) | da fare |
-| | challengePoints | metodo | 3730-3734 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Sfide (proposta) | da fare |
-| | spawnTrial | metodo | 3737-3745 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Sfide (proposta) | da fare |
-| | offerChallenge | metodo | 3747-3764 | arena-perduta, arena-ruhra, arena-rio (+22) | Sfide (proposta) | da fare |
-| | updateChallenge | metodo | 3766-3800 | arena-perduta, arena-ruhra, arena-rio | Sfide (proposta) | da fare |
-| | winChallenge | metodo | 3802-3814 | arena-ruhra, arena-rio | Sfide (proposta) | da fare |
-| | drawArenaBars | metodo | 3817-3845 | guida-santuario, guggu-senza-ivan, schianto (+64) | Arena (proposta) | da fare |
-| | updateBossTrigger | metodo | 3847-3913 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Bosses (proposta) | da fare |
-| | magnetBarre | metodo | 3916-3927 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Enemies (proposta) | da fare |
-| | findNearestInteractable | metodo | 3929-3940 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Interazioni (proposta) | da fare |
-| | tryInteract | metodo | 3942-3945 | npc-spaccino-dopo-flauto, npc-spaccino-fatto, npc-walter-dorme (+107) | Interazioni (proposta) | da fare |
-| | onRisonante | metodo | 3949-3969 | sigillo-santuario-risonanza, wave-boss-breccio, wave-boss-ticummi (+12) | Abilities (proposta) | da fare |
-| | onRiflesso | metodo | 3971-4031 | riflesso-senza-flow, sigillo-bus-specchio, wave-boss-breccio (+12) | Abilities (proposta) | da fare |
-| | onRiflessoSwap | metodo | 4034-4070 | riflesso-senza-flow, sigillo-bus-specchio, wave-rio (+7) | Abilities (proposta) | da fare |
-| | killClone | metodo | 4072-4080 | riflesso-senza-flow, sigillo-bus-specchio, wave-boss-breccio (+12) | Abilities (proposta) | da fare |
-| | cloneHitFx | metodo | 4082-4092 | sigillo-bus-specchio, wave-boss-breccio, wave-boss-ticummi (+11) | Abilities (proposta) | da fare |
-| | nearestHostile | metodo | 4094-4108 | riflesso-senza-flow, guida-santuario, sigillo-bus-specchio (+95) | Combat (proposta) | da fare |
-| | nearHostile | metodo | 4111-4115 | riflesso-senza-flow, sigillo-bus-specchio, wave-boss-breccio (+12) | Abilities (proposta) | da fare |
-| | updateClone | metodo | 4117-4141 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Abilities (proposta) | da fare |
-| | onAnalisi | metodo | 4143-4153 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | Abilities (proposta) | da fare |
-| | updateAnalisi | metodo | 4156-4222 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Abilities (proposta) | da fare |
-| | markAnalisiTargets | metodo | 4225-4237 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | Abilities (proposta) | da fare |
-| | qedAnalisi | metodo | 4240-4260 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | Abilities (proposta) | da fare |
-| | clearAnalisiFx | metodo | 4262-4278 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | Abilities (proposta) | da fare |
-| | onScudo | metodo | 4282-4293 | sigillo-sorveglianza-ricevitore, wave-boss-breccio, wave-boss-ticummi (+13) | Abilities (proposta) | da fare |
-| | updateScudo | metodo | 4295-4308 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Abilities (proposta) | da fare |
-| | clearScudoFx | metodo | 4310-4319 | sigillo-sorveglianza-ricevitore, wave-boss-breccio, wave-boss-ticummi (+13) | Abilities (proposta) | da fare |
-| | refundNote | metodo | 4322-4325 | wave-boss-ticummi, rimando-sorveglianza, rimando-tecnokill | Abilities (proposta) | da fare |
-| | onAcquaTossica | metodo | 4328-4349 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-breccio (+12) | Abilities (proposta) | da fare |
-| | burstBottle | metodo | 4352-4388 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-breccio (+12) | Abilities (proposta) | da fare |
-| | spawnPuddle | metodo | 4390-4407 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-breccio (+12) | Abilities (proposta) | da fare |
-| | updateAcquaTossica | metodo | 4409-4452 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Abilities (proposta) | da fare |
-| | applyPoison | metodo | 4455-4459 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-ticummi (+5) | Abilities (proposta) | da fare |
-| | updatePoison | metodo | 4461-4468 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Abilities (proposta) | da fare |
-| | dmgTo | metodo | 4471-4477 | schianto-santuario, sigillo-bus-specchio, sigillo-rio-resina (+73) | Combat (proposta) | da fare |
-| | waveWorld | metodo | 4480-4488 | riflesso-senza-flow, sigillo-perduta-cortina, sigillo-bus-specchio (+56) | Abilities (proposta) | da fare |
-| | updateAbilityFx | metodo | 4491-4551 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Abilities (proposta) | da fare |
-| | reflectProjectile | metodo | 4552-4585 | wave-boss-ticummi, wave-boss-guggu, wave-boss-ombra (+3) | Combat (proposta) | da fare |
-| | static CHASE_LINES | campo | 4590-4593 |  | script: tana (proposta) | da fare |
-| | updateChase | metodo | 4595-4745 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: tana (proposta) | da fare |
-| | onTanaSniffed | metodo | 4748-4755 | tana-armadio | script: tana (proposta) | da fare |
-| | updateLamettaArena | metodo | 4759-4792 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: santuario (proposta) | da fare |
-| | updateSmelaArena | metodo | 4795-4807 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: stabilimento (proposta) | da fare |
-| | spawnColorDrop | metodo | 4809-4835 | guida-santuario, lametta-attesa, esplora-santuario (+2) | script: santuario (proposta) | da fare |
-| | spawnMirror | metodo | 4837-4855 | cap-santuario, campagna | script: santuario (proposta) | da fare |
-| | updateWaterCure | metodo | 4859-4877 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: rio/trenbolone (proposta) | da fare |
-| | playSmelaPoisonEffect | metodo | 4879-4935 | npc-acqua-due-volte, cap-rio-acqua, cap-rio-povero (+1) | script: rio/trenbolone (proposta) | da fare |
-| | updateAmbush | metodo | 4937-4992 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: agguati (proposta) | da fare |
-| | spawnNotinoAmbush | metodo | 4995-5009 | npc-piema-dopo, carica-microfono, npc-lametta-libero (+27) | script: agguati (proposta) | da fare |
-| | startPatto | metodo | 5013-5045 | finale-patto | script: nucleo (proposta) | da fare |
-| | updatePatto | metodo | 5047-5069 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | script: nucleo (proposta) | da fare |
-| | arrivoDei | metodo | 5072-5085 | finale-patto | script: nucleo (proposta) | da fare |
-| | onSpikes | metodo | 5089-5098 | spine, sigillo-santuario-risonanza, cibo (+5) | Combat (proposta) | da fare |
-| | onEnemyShoot | metodo | 5100-5134 | guida-santuario, carica-microfono, npc-lametta-libero (+88) | Combat (proposta) | da fare |
-| | onBossLamette | metodo | 5136-5161 | schianto-santuario, guida-santuario, schianto (+25) | Combat (proposta) | da fare |
-| | popProjectile | metodo | 5163-5175 | guida-santuario, npc-lametta-libero, colpo-pausa (+92) | Combat (proposta) | da fare |
-| | onEnemyDied | metodo | 5177-5202 | schianto-santuario, sigillo-rio-resina, sigillo-trenbolone-miasma (+70) | Enemies (proposta) | da fare |
-| | onEnemyAlert | metodo | 5205-5211 | rio-cura, sigillo-perduta-rimbalzo, sigillo-perduta-cortina (+117) | Enemies (proposta) | da fare |
-| | onBossSummon | metodo | 5213-5217 | agguato-vendetta, trentatre, flauto-fatto (+37) | Enemies (proposta) | da fare |
-| | updateLessons | metodo | 5220-5235 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Enemies (proposta) | da fare |
-| | weakFeedback | metodo | 5238-5247 | colpo-pausa, sigillo-ruhra-teorema, nidi-stabilimento (+63) | Combat (proposta) | da fare |
-| | onBossEngaged | metodo | 5250-5275 | schianto-santuario, guida-santuario, guggu-senza-ivan (+81) | Bosses (proposta) | da fare |
-| | onOmbraInsight | metodo | 5278-5300 | ombra-beta, wave-boss-ombra, cap-sorveglianza (+3) | Bosses (proposta) | da fare |
-| | silenceBoss | metodo | 5302-5307 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Bosses (proposta) | da fare |
-| | onBossDefeated | metodo | 5309-5542 | trentatre, flauto-fatto, doomsday-respinto (+39) | Bosses (proposta) | da fare |
-| | giorno30 | metodo | 5545-5576 | finale-giorno30-vuoto, finale-riscatto-senza-caso, finale-riscatto-solo (+1) | script: nucleo (proposta) | da fare |
-| | startOrder | metodo | 5579-5603 | finale-riscatto-senza-caso, finale-riscatto-solo, finale-riscatto | script: nucleo (proposta) | da fare |
-| | sceltaFinale | metodo | 5606-5650 | finale-consegna, finale-giorno30-vuoto, finale-riscatto-senza-caso (+5) | script: nucleo (proposta) | da fare |
-| | setupBossColliders | metodo | 5653-5682 | ridimensiona, livello-galliate, livello-marcetti (+28) | Combat (proposta) | da fare |
-| | onPlayerDead | metodo | 5684-5713 | npc-acqua-due-volte, caduta, morte-barre (+18) | Progressione (proposta) | da fare |
-| | activateCheckpoint | metodo | 5715-5743 | livello-tana, piazza, esplora-mente-cancella (+21) | Progressione (proposta) | da fare |
-| | threats | metodo | 5746-5755 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | Enemies (proposta) | da fare |
-| | startDialogue | metodo | 5757-5772 | rio-cura, nidi-rio, ridimensiona (+133) | Dialoghi e cutscene (proposta) | da fare |
-| | startLines | metodo | 5775-5788 | rio-cura, nidi-rio, ridimensiona (+132) | Dialoghi e cutscene (proposta) | da fare |
-| | hitstop | metodo | 5792-5799 | colpo-pausa, nidi-stabilimento, nidi-cantina (+63) | Combat (proposta) | da fare |
-| | shake | metodo | 5801-5803 | rio-cura, nidi-rio, schianto-tana (+138) | Combat (proposta) | da fare |
+| | def | campo | 159-159 |  | game/world/LevelWorld.def | portato |
+| | layout | campo | 161-161 |  | game/world/LevelWorld.layout | portato |
+| | roomBySlot | campo | 163-163 |  | game/world/LevelWorld | portato |
+| | level | campo | 164-164 |  | game/world/LevelWorld.level | portato |
+| | nav | campo | 166-166 |  | game/world/LevelWorld.nav | portato |
+| | player | campo | 167-167 |  | scene/GameScene (orchestratore) | portato |
+| | controls | campo | 169-169 |  | scene/GameScene (orchestratore) | portato |
+| | boss | campo | 170-170 |  | game/Bosses.current | portato |
+| | enemies | campo | 171-171 |  | game/groups.enemies (logica in game/Enemies) | portato |
+| | spawners | campo | 173-173 |  | game/groups.spawners | portato |
+| | spawnerToastShown | campo | 174-174 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | threatCache | campo | 176-176 |  | game/Enemies.threatCache | portato |
+| | playerProjectiles | campo | 177-177 |  | game/groups | portato |
+| | enemyProjectiles | campo | 178-178 |  | game/groups | portato |
+| | lametteGroup | campo | 179-179 |  | game/groups.lamette | portato |
+| | barreGroup | campo | 180-180 |  | game/groups.barre | portato |
+| | doorGroup | campo | 181-181 |  | game/groups.doors | portato |
+| | interactables | campo | 182-182 |  | game/Interactions.list | portato |
+| | prompt | campo | 183-183 |  | game/Interactions | portato |
+| | promptTxt | campo | 184-184 |  | game/Interactions | portato |
+| | lastSafe | campo | 185-185 |  | game/SafeGround.lastSafe | portato |
+| | safeTimer | campo | 186-186 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | exiting | campo | 187-187 |  | game/Progression.exiting | portato |
+| | checkpointSprites | campo | 188-188 |  | game/Travel.checkpointSprites | portato |
+| | propDressing | campo | 190-190 |  | game/Travel.propDressing | portato |
+| | lighting | campo | 191-191 |  | scene/GameScene (orchestratore) | portato |
+| | parallax | campo | 192-192 |  | scene/GameScene (orchestratore) | portato |
+| | biome | campo | 193-193 |  | game/world/LevelWorld.biome | portato |
+| | terrain | campo | 194-194 |  | scene/GameScene (orchestratore) | portato |
+| | ambience | campo | 195-195 |  | scene/GameScene (orchestratore) | portato |
+| | water | campo | 196-196 |  | scene/GameScene (orchestratore) | portato |
+| | clone | campo | 197-197 |  | game/abilities/Riflesso.clone | portato |
+| | cloneUntil | campo | 198-198 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | cloneColliders | campo | 199-199 |  | game/abilities/Riflesso.colliders | portato |
+| | cloneTwin | campo | 200-200 |  | game/abilities/Riflesso (RiflessoFx.twin) | portato |
+| | cloneJitterAt | campo | 201-201 |  | game/abilities/Riflesso (RiflessoFx.jitterAt) | portato |
+| | cloneWaveAt | campo | 202-202 |  | game/abilities/Riflesso.waveAt | portato |
+| | cloneSwapUsed | campo | 203-203 |  | game/abilities/Riflesso.swapUsed | portato |
+| | cloneAlive | get | 205-207 | riflesso-senza-flow, sigillo-bus-specchio, wave-rio (+7) | game/abilities/Riflesso.alive (+ facciata Abilities e della scena) | portato |
+| | analisiUntil | campo | 208-208 |  | game/abilities/Analisi.until | portato |
+| | nextAnalisiTick | campo | 209-209 |  | game/abilities/Analisi.nextTick | portato |
+| | analisiGlyphs | campo | 210-210 |  | game/abilities/Analisi (AnalisiFx.glyphs) | portato |
+| | analisiPhase | campo | 211-211 |  | game/abilities/Analisi.phase | portato |
+| | analisiStart | campo | 212-212 |  | game/abilities/Analisi.start | portato |
+| | analisiQedDone | campo | 213-213 |  | game/abilities/Analisi.qedDone | portato |
+| | analisiMarked | campo | 214-214 |  | game/abilities/Analisi.marked | portato |
+| | analisiMarks | campo | 215-215 |  | game/abilities/Analisi (AnalisiFx.marks) | portato |
+| | analisiBossMarked | campo | 216-216 |  | game/abilities/Analisi.bossMarked | portato |
+| | analisiCircle | campo | 217-217 |  | game/abilities/Analisi (AnalisiFx.circle) | portato |
+| | analisiQed | campo | 218-218 |  | game/abilities/Analisi (AnalisiFx.qed) | portato |
+| | lastCooldownEmit | campo | 219-219 |  | game/abilities (Abilities.lastCooldownEmit) | portato |
+| | lastDashWaveAt | campo | 220-220 |  | game/abilities (Abilities.lastDashWaveAt) | portato |
+| | guide | campo | 221-221 |  | game/Guide.guide | portato |
+| | guideCacheKey | campo | 223-223 |  | game/Guide.guideCacheKey | portato |
+| | guideCache | campo | 224-224 |  | game/Guide.guideCache | portato |
+| | liveFragments | campo | 226-226 |  | game/Rewards.liveFragments | portato |
+| | folk | campo | 227-227 |  | scene/GameScene (orchestratore) | portato |
+| | traps | campo | 228-228 |  | scene/GameScene (orchestratore) | portato |
+| | hazards | campo | 229-229 |  | scene/GameScene (orchestratore) | portato |
+| | trial | campo | 230-230 |  | game/Challenges.trial | portato |
+| | story | campo | 231-231 |  | scene/GameScene (orchestratore) | portato |
+| | pedroGhost | campo | 232-232 |  | scene/GameScene (orchestratore) | portato |
+| | marks33 | campo | 233-233 |  | scene/GameScene (orchestratore) | portato |
+| | seals | campo | 235-235 |  | scene/GameScene (orchestratore) | portato |
+| | staging | campo | 236-236 |  | scene/GameScene (orchestratore) | portato |
+| | quests | campo | 237-237 |  | scene/GameScene (orchestratore) | portato |
+| | atmosphere | campo | 238-238 |  | scene/GameScene (orchestratore) | portato |
+| | soundscape | campo | 239-239 |  | scene/GameScene (orchestratore) | portato |
+| | nextTrophyCheckAt | campo | 240-240 |  | game/Progression.nextTrophyCheckAt | portato |
+| | bossFight | campo | 242-242 |  | game/Bosses.fight | portato |
+| | guideGfx | campo | 243-243 |  | game/Guide.guideGfx | portato |
+| | lastRoom | campo | 244-244 |  | game/Progression.lastRoom | portato |
+| | npcAt | campo | 246-246 |  | game/Npcs.at | portato |
+| | arenaBars | campo | 248-248 |  | game/groups.arenaBars | portato |
+| | arenaGfx | campo | 249-249 |  | game/Arena.gfx | portato |
+| | arenaRoom | campo | 250-250 |  | game/Arena.room | portato |
+| | challenge | campo | 252-252 |  | game/Challenges.challenge | portato |
+| | challengeSpot | campo | 253-253 |  | game/Challenges.challengeSpot | portato |
+| | busStops | campo | 254-254 |  | game/Travel.busStops | portato |
+| | homing | campo | 255-255 |  | game/Rewards.homing | portato |
+| | bossIntroShown | campo | 256-256 |  | game/Bosses.introShown | portato |
+| | exitLockToastAt | campo | 257-257 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | lamettaCenter | campo | 259-259 |  | game/chapters/santuario.lamettaCenter | portato |
+| | lamettaActive | campo | 260-260 |  | game/chapters/santuario.lamettaActive | portato |
+| | lamettaFloorY | campo | 261-261 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | smelaArena | campo | 262-262 |  | game/chapters/stabilimento.smelaArena | portato |
+| | acquaPuddles | campo | 263-263 |  | game/abilities/Bottiglia.puddles | portato |
+| | nextLametteAt | campo | 264-264 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | nextPitturaAt | campo | 265-265 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | colorDropsTaken | campo | 266-266 |  | game/chapters/santuario.colorDropsTaken | portato |
+| | mirror | campo | 267-267 |  | game/chapters/santuario.mirror | portato |
+| | pedroChoiceShown | campo | 268-268 |  | game/chapters/nucleo.pedroChoiceShown | portato |
+| | pedroShell | campo | 270-270 |  | game/chapters/nucleo.pedroShell | portato |
+| | nucleusStraightening | campo | 272-272 |  | game/chapters/nucleo.nucleusStraightening | portato |
+| | pattoActive | campo | 274-274 |  | game/chapters/nucleo.pattoActive | portato |
+| | finalGodsFight | campo | 277-277 |  | game/chapters/nucleo.finalGodsFight | portato |
+| | pattoDeiAt | campo | 278-278 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | pattoNextSpawnAt | campo | 279-279 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | pattoWarned | campo | 280-280 |  | game/chapters/nucleo.pattoWarned | portato |
+| | scudoUntil | campo | 282-282 |  | game/abilities/Scudo.until | portato |
+| | scudoGfx | campo | 283-283 |  | tolto: sempre null (DEV_LOG_REFACTOR) | portato |
+| | scudoStart | campo | 284-284 |  | game/abilities/Scudo.start | portato |
+| | scudoBubble | campo | 285-285 |  | game/abilities/Scudo (ScudoFx.bubble) | portato |
+| | scudoBubbleGlow | campo | 286-286 |  | game/abilities/Scudo (ScudoFx.glow) | portato |
+| | scudoRec | campo | 287-287 |  | game/abilities/Scudo (ScudoFx.rec) | portato |
+| | acquaBottles | campo | 289-289 |  | tolto: scritto e mai letto (DEV_LOG_REFACTOR) | portato |
+| | poisoned | campo | 290-290 |  | game/abilities/Veleno.poisoned | portato |
+| | chaseSprite | campo | 292-292 |  | game/chapters/tana.chaseSprite | portato |
+| | chaseLastSeen | campo | 293-293 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | chaseWhisperAt | campo | 294-294 |  | game/chapters/tana.chaseWhisperAt | portato |
+| | chaseWhisperIdx | campo | 295-295 |  | game/chapters/tana.chaseWhisperIdx | portato |
+| | chaseTrail | campo | 296-296 |  | game/chapters/tana.chaseTrail | portato |
+| | chaseStarts | campo | 297-297 |  | game/chapters/tana.chaseStarts | portato |
+| | chaseEnds | campo | 298-298 |  | game/chapters/tana.chaseEnds | portato |
+| | chaseZoneIdx | campo | 299-299 |  | game/chapters/tana.chaseZoneIdx | portato |
+| | chaseStartedAt | campo | 300-300 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | chaseDone | campo | 301-301 |  | game/chapters/tana.chaseDone | portato |
+| | chaseNearSince | campo | 303-303 |  | game/chapters/tana.chaseNearSince | portato |
+| | chaseTiredUntil | campo | 304-304 |  | game/chapters/tana.chaseTiredUntil | portato |
+| | ospite12Sprite | campo | 306-306 |  | game/chapters/tana.ospite12Sprite | portato |
+| | ospite12Interact | campo | 307-307 |  | game/chapters/tana.ospite12Interact | portato |
+| | ivanSprite | campo | 309-309 |  | game/chapters/bus.ivanSprite | portato |
+| | ivanInArena | campo | 310-310 |  | game/chapters/bus.ivanInArena | portato |
+| | ivanBusy | campo | 311-311 |  | game/chapters/bus.ivanBusy | portato |
+| | nextIvanStrikeAt | campo | 312-312 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | ivanDead | campo | 313-313 |  | game/chapters/bus.ivanDead | portato |
+| | companion | campo | 315-315 |  | game/chapters/shared/WalkingGuide.sprite | portato |
+| | companionBaseY | campo | 316-316 |  | game/chapters/shared/WalkingGuide.baseY | portato |
+| | companionInteract | campo | 317-317 |  | game/chapters/shared/WalkingGuide.entry | portato |
+| | voidArenas | campo | 318-318 |  | game/chapters/void.voidArenas | portato |
+| | voidStep | campo | 319-319 |  | game/chapters/void.voidStep | portato |
+| | voidBusy | campo | 320-320 |  | game/chapters/void.voidBusy | portato |
+| | baruffoniArenas | campo | 322-322 |  | game/chapters/walter.baruffoniArenas | portato |
+| | baruffoniStep | campo | 323-323 |  | game/chapters/walter.baruffoniStep | portato |
+| | baruffoniBusy | campo | 324-324 |  | game/chapters/walter.baruffoniBusy | portato |
+| | collapsePedro | campo | 326-326 |  | game/Doomsday.collapsePedro | portato |
+| | collapseTriggered | campo | 327-327 |  | game/Doomsday.collapseTriggered | portato |
+| | doomsdayWarned | campo | 328-328 |  | game/Doomsday.doomsdayWarned | portato |
+| | replacedBossKind | campo | 329-329 |  | game/Doomsday.replacedBossKind | portato |
+| | replacedBossX | campo | 330-330 |  | game/Doomsday.replacedBossX | portato |
+| | replacedBossY | campo | 331-331 |  | game/Doomsday.replacedBossY | portato |
+| | nextWildGlitchAt | campo | 332-332 |  | game/Doomsday.nextWildGlitchAt | portato |
+| | parryUntil | campo | 334-334 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | mechanic | campo | 336-336 |  | scene/GameScene (orchestratore) | portato |
+| | playerLightRef | campo | 337-337 |  | scene/GameScene (orchestratore) | portato |
+| | vignette | campo | 339-339 |  | scene/GameScene (facciata del film) | portato |
+| | quizAttempts | campo | 341-341 |  | game/chapters/mente.quizAttempts | portato |
+| | nextLessonCheck | campo | 342-342 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | voice | campo | 344-344 |  | game/Bosses.voice | portato |
+| | ombraBrain | campo | 345-345 |  | game/Bosses.ombraBrain | portato |
+| | beatMs | campo | 347-347 |  | game/Bosses.beatMs | portato |
+| | nextBeatAt | campo | 348-348 |  | game/Bosses.nextBeatAt | portato |
+| | constructor | costruttore | 350-352 | riflesso-senza-flow, carica-corrotto, rio-cura (+195) | scene/GameScene (orchestratore) | portato |
+| | init | metodo | 354-370 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scene/GameScene (orchestratore) | portato |
+| | create | metodo | 372-753 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scene/GameScene (orchestratore) | portato |
+| | spawnEntities | metodo | 757-823 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scene/GameScene (smista le entità ai sistemi) | portato |
+| | spawnItemPickup | metodo | 826-863 | riflesso-senza-flow, rio-cura, nidi-rio (+179) | game/Rewards.spawnItemPickup | portato |
+| | dropBossCharm | metodo | 866-870 | npc-spaccino-dopo-flauto, npc-ivan-dopo, npc-walter-dopo (+42) | game/Rewards.dropBossCharm | portato |
+| | recoverBossReward | metodo | 873-897 | npc-spaccino-dopo-flauto, npc-ivan-dopo, npc-walter-dopo (+11) | game/Bosses.recoverReward | portato |
+| | castSprite | metodo | 900-905 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Npcs.castSprite | portato |
+| | lightBoss | metodo | 908-911 | riflesso-senza-flow, rio-cura, nidi-rio (+168) | game/Bosses.light | portato |
+| | makeBoss | metodo | 914-928 | riflesso-senza-flow, rio-cura, nidi-rio (+168) | game/Bosses.make | portato |
+| | isEliteSpot | metodo | 931-938 | riflesso-senza-flow, rio-cura, nidi-rio (+186) | game/Enemies.isEliteSpot | portato |
+| | traitFor | metodo | 941-956 | riflesso-senza-flow, rio-cura, nidi-rio (+186) | game/Enemies.traitFor | portato |
+| | spawnEnemy | metodo | 958-969 | riflesso-senza-flow, rio-cura, nidi-rio (+187) | game/Enemies.spawnEnemy | portato |
+| | spawnSpawner | metodo | 973-979 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | game/Enemies.spawnSpawner | portato |
+| | spawnCaveSpawners | metodo | 984-1036 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Enemies.spawnCaveSpawners | portato |
+| | caveSpawnerSpot | metodo | 1039-1057 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | game/Enemies.caveSpawnerSpot | portato |
+| | updateSpawners | metodo | 1061-1110 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Enemies.updateSpawners | portato |
+| | damageSpawner | metodo | 1112-1120 | nidi-stabilimento, nidi-cantina, arena-perduta (+38) | game/Enemies.damageSpawner | portato |
+| | breakSpawner | metodo | 1122-1141 | nidi-stabilimento, nidi-cantina, arena-perduta (+1) | game/Enemies.breakSpawner | portato |
+| | parry | metodo | 1144-1156 | arena-ruhra, cap-trenbolone-rifiuta, wave-caso (+4) | game/Combat.parry | portato |
+| | onEnemyExplode | metodo | 1158-1175 | colpo-pausa, cibo, livello-nucleo (+12) | game/Combat.onEnemyExplode | portato |
+| | spawnNpc | metodo | 1178-1275 | riflesso-senza-flow, rio-cura, nidi-rio (+162) | game/Npcs.spawn (+ capitoli: marker) | portato |
+| | spawnOspite12 | metodo | 1278-1294 | cap-tana, cap-tana-ospite, campagna | game/chapters/tana.spawnOspite12 | portato |
+| | interactNpc | metodo | 1296-1537 | npc-spaccino-dopo-flauto, npc-spaccino-fatto, npc-walter-dorme (+44) | game/Npcs.interact (+ capitoli: interact) | portato |
+| | spawnPiazzaGuests | metodo | 1542-1550 | viaggio, piazza-inizio, livello-piazza (+3) | game/chapters/piazza.spawnPiazzaGuests | portato |
+| | interactRomeroPiazza | metodo | 1552-1569 | piazza | game/chapters/piazza.interactRomeroPiazza | portato |
+| | oracleLines | metodo | 1572-1590 | piazza-inizio, piazza-meta, piazza-fine (+1) | game/chapters/piazza.oracleLines | portato |
+| | boardLines | metodo | 1593-1606 | piazza | game/chapters/piazza.boardLines | portato |
+| | barRumors | metodo | 1609-1626 | piazza-inizio, piazza-meta, piazza-fine (+1) | game/chapters/piazza.barRumors | portato |
+| | openPiazzaShop | metodo | 1629-1661 | piazza-inizio, piazza-meta, piazza-fine (+1) | game/chapters/piazza.openPiazzaShop | portato |
+| | interactPiema | metodo | 1663-1676 | npc-piema-dopo, npc-piema-senza, cap-ruhra (+1) | game/chapters/ruhra.interactPiema | portato |
+| | spawnQuizDoor | metodo | 1680-1688 | livello-mente, esplora-mente-cancella, esplora-mente-porta (+5) | game/chapters/mente.spawnQuizDoor | portato |
+| | interactPorta | metodo | 1690-1725 | cap-mente, campagna | game/chapters/mente.interactPorta | portato |
+| | rewardSpot | metodo | 1728-1745 | npc-ivan-dopo, sigillo-rio-resina, npc-walter-dopo (+29) | game/world/LevelWorld.rewardSpot | portato |
+| | homeIn | metodo | 1748-1750 | npc-ivan-dopo, sigillo-rio-resina, npc-walter-dopo (+29) | game/Rewards.homeIn | portato |
+| | updateHoming | metodo | 1752-1769 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Rewards.updateHoming | portato |
+| | spawnFragment | metodo | 1771-1797 | gamepad, guida-perduta, npc-ivan-dopo (+27) | game/Rewards.spawnFragment | portato |
+| | spawnLore | metodo | 1799-1814 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Rewards.spawnLore | portato |
+| | micKey | metodo | 1816-1818 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Travel.micKey | portato |
+| | spawnBusStops | metodo | 1821-1834 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Travel.spawnBusStops | portato |
+| | setPropsVisible | metodo | 1837-1842 | film-uscita, livello-barrato, guida-void (+27) | game/Travel.setPropsVisible (+ facciata della scena) | portato |
+| | updateBusStops | metodo | 1844-1853 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Travel.updateBusStops | portato |
+| | openTravel | metodo | 1855-1877 | viaggio, corsa-vinta, esplora-mente-cancella (+22) | game/Travel.openTravel | portato |
+| | travelTo | metodo | 1880-1895 | viaggio | game/Travel.travelTo | portato |
+| | spawnCheckpoints | metodo | 1897-1920 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Travel.spawnCheckpoints | portato |
+| | spawnDroppedBarre | metodo | 1922-1938 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Rewards.spawnDroppedBarre | portato |
+| | spawnBarrePickup | metodo | 1940-1955 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | game/Rewards.spawnBarrePickup | portato |
+| | spawnCuore | metodo | 1958-1979 | rio-cura, nidi-rio, sigillo-perduta-camino (+83) | game/Rewards.spawnCuore | portato |
+| | maschereCount | metodo | 1983-1985 | esplora-ricordi, esplora-stabilimento, esplora-cantina (+32) | game/Rewards.maschereCount | portato |
+| | spawnMaschera | metodo | 1987-2016 | riflesso-senza-flow, sigillo-perduta-camino, sigillo-perduta-rimbalzo (+125) | game/Rewards.spawnMaschera | portato |
+| | spawnPortal | metodo | 2020-2066 | riflesso-senza-flow, sigillo-perduta-camino, sigillo-perduta-rimbalzo (+29) | game/Travel.spawnPortal | portato |
+| | indiziRaccolti | metodo | 2070-2072 | npc-romero-lochef, film-coda, film-uscita (+8) | game/chapters/caso (funzione) | portato |
+| | interactIndizio | metodo | 2074-2086 | film-uscita, cap-caso, campagna | game/chapters/caso.interactIndizio | portato |
+| | setupColliders | metodo | 2090-2294 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Combat.setupColliders | portato |
+| | setupEvents | metodo | 2296-2336 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scenes/GameScene.setupEvents | portato |
+| | roomAt | metodo | 2340-2348 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | game/world/LevelWorld.roomAt | portato |
+| | findFlatStage | metodo | 2352-2373 | film-uscita, livello-barrato, guida-void (+27) | game/world/LevelWorld.findFlatStage (+ facciata della scena) | portato |
+| | progressAt | metodo | 2376-2384 | rio-cura, nidi-rio, ridimensiona (+96) | game/world/LevelWorld.progressAt | portato |
+| | progressOfOldX | metodo | 2387-2389 | rio-cura, nidi-rio, schianto-tana (+75) | game/world/LevelWorld.progressOfOldX | portato |
+| | openSpotNear | metodo | 2392-2411 | spine, schianto-santuario, npc-piema-dopo (+96) | game/world/LevelWorld.openSpotNear | portato |
+| | setupCamera | metodo | 2413-2434 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scenes/GameScene.setupCamera | portato |
+| | buildPrompt | metodo | 2436-2449 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Interactions.buildPrompt | portato |
+| | setupScript | metodo | 2453-2525 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scene/GameScene.setupScript + capitoli: setup | portato |
+| | baruffoniSeq | metodo | 2530-2532 | ridimensiona, livello-galliate, livello-marcetti (+6) | game/chapters/walter.baruffoniSeq | portato |
+| | setupBaruffoni | metodo | 2534-2552 | ridimensiona, livello-galliate, livello-marcetti (+6) | game/chapters/walter.setupBaruffoni | portato |
+| | spawnBaruffoniBoss | metodo | 2555-2568 | ridimensiona, livello-galliate, livello-marcetti (+6) | game/chapters/walter.spawnBaruffoniBoss | portato |
+| | onBaruffoniDown | metodo | 2571-2584 | cap-walter | game/chapters/walter.onBaruffoniDown | portato |
+| | onBaruffoniComplete | metodo | 2587-2590 | cap-walter | game/chapters/walter.onBaruffoniComplete | portato |
+| | walterReveal | metodo | 2593-2623 | cap-walter | game/chapters/walter.walterReveal | portato |
+| | updateBaruffoni | metodo | 2626-2637 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/walter.updateBaruffoni | portato |
+| | interactWalterGuida | metodo | 2640-2644 | esplora-galliate, esplora-marcetti, cap-walter | game/chapters/walter.interactWalterGuida | portato |
+| | nextRegret | metodo | 2649-2652 | trentatre, uscita-chiusa-void, livello-void (+10) | game/chapters/void.nextRegret | portato |
+| | setupVoid | metodo | 2654-2678 | trentatre, uscita-chiusa-void, livello-void (+10) | game/chapters/void.setupVoid | portato |
+| | spawnRegret | metodo | 2681-2689 | trentatre, livello-void, guida-void (+9) | game/chapters/void.spawnRegret | portato |
+| | onVeritaRivelata | metodo | 2692-2703 | cap-void-garante-cancella, cap-void-garante-porta, cap-void (+2) | game/chapters/void.onVeritaRivelata | portato |
+| | updateVoid | metodo | 2706-2720 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/void.updateVoid | portato |
+| | moveGuide | metodo | 2724-2758 | ridimensiona, livello-galliate, livello-marcetti (+19) | game/chapters/shared/WalkingGuide.move | portato |
+| | interactGuida | metodo | 2761-2768 | esplora-void, cap-void-garante-cancella, cap-void-garante-porta (+3) | game/chapters/void.interactGuida | portato |
+| | interactSfida33 | metodo | 2772-2793 | trentatre, cap-void-garante-cancella, cap-void-garante-porta (+3) | game/chapters/void.interactSfida33 | portato |
+| | voidClimax | metodo | 2796-2821 | uscita-chiusa-void, cap-void-garante-cancella, cap-void-garante-porta (+3) | game/chapters/void.voidClimax | portato |
+| | update | metodo | 2825-2912 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scene/GameScene (orchestratore) | portato |
+| | awakeEnemies | metodo | 2915-2922 | riflesso-senza-flow, rio-cura, nidi-rio (+189) | game/Enemies.awakeEnemies | portato |
+| | updateEnemies | metodo | 2926-2941 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Enemies.updateEnemies | portato |
+| | updateDoomsday | metodo | 2945-2996 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Doomsday.update | portato |
+| | updateRhythm | metodo | 3000-3009 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Bosses.updateRhythm | portato |
+| | updateFakeWalls | metodo | 3011-3013 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scenes/GameScene.updateFakeWalls | portato |
+| | destroyBreakableWall | metodo | 3015-3030 | schianto-santuario, cap-ricordi, cap-cantina-calpesta (+7) | game/Combat.destroyBreakableWall | portato |
+| | slamLand | metodo | 3033-3060 | schianto-santuario, livello-bus, livello-santuario (+56) | game/Combat.slamLand | portato |
+| | updateIvan | metodo | 3064-3093 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/bus.updateIvan | portato |
+| | killIvanCutscene | metodo | 3095-3136 | doomsday-sollievo, wave-boss-guggu, cap-bus (+1) | game/chapters/bus.killIvanCutscene | portato |
+| | ivanStrike | metodo | 3138-3190 | doomsday-sollievo, wave-boss-guggu, cap-bus (+1) | game/chapters/bus.ivanStrike | portato |
+| | trackSafePosition | metodo | 3192-3203 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/SafeGround.track | portato |
+| | checkExits | metodo | 3205-3260 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Progression.checkExits | portato |
+| | returnFromSecret | metodo | 3263-3275 | cap-custode, cap-barrato, cap-walter | game/Progression.returnFromSecret (Flow) | portato |
+| | completeChapterAndGo | metodo | 3278-3334 | uscita-chiusa-void, cap-trenbolone, cap-mente (+27) | game/Progression.completeChapterAndGo (Flow) | portato |
+| | gotoLevel | metodo | 3336-3347 | npc-spaccino-dopo-flauto, uscita-chiusa-void, cap-trenbolone (+29) | game/Progression.gotoLevel (Flow) | portato |
+| | updatePrompt | metodo | 3349-3358 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Interactions.updatePrompt | portato |
+| | updateExplore | metodo | 3362-3377 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Progression.updateExplore | portato |
+| | updateTrophies | metodo | 3380-3393 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Progression.updateTrophies | portato |
+| | finishChapter | metodo | 3396-3422 | npc-spaccino-dopo-flauto, uscita-chiusa-void, cap-trenbolone (+29) | game/Progression.finishChapter | portato |
+| | liveChapterScore | metodo | 3425-3434 | caduta, morte-barre, arena-perduta (+24) | game/Progression.liveChapterScore | portato |
+| | endGame | metodo | 3437-3518 | doomsday-collasso, finale-consegna, finale-giorno30-vuoto (+7) | game/Progression.endGame (Flow) | portato |
+| | currentObjective | metodo | 3521-3551 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Guide.currentObjective | portato |
+| | freeFragment | metodo | 3554-3575 | riflesso-senza-flow, rio-cura, nidi-rio (+184) | game/Rewards.freeFragment | portato |
+| | buildGuide | metodo | 3577-3587 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Guide.buildGuide | portato |
+| | updateGuide | metodo | 3590-3625 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Guide.updateGuide | portato |
+| | updateArenaLock | metodo | 3628-3650 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | scene/GameScene.updateArenaLock + game/Arena.updateBossLock | portato |
+| | doorRects | metodo | 3653-3672 | guida-santuario, guggu-senza-ivan, schianto (+64) | game/world/LevelWorld.doorRects | portato |
+| | lockArena | metodo | 3674-3686 | guida-santuario, guggu-senza-ivan, schianto (+64) | game/Arena.lock | portato |
+| | unlockArena | metodo | 3688-3697 | flauto-fatto, wave-boss-breccio, wave-boss-ticummi (+39) | game/Arena.unlock | portato |
+| | spawnChallenge | metodo | 3702-3728 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Challenges.spawnChallenge | portato |
+| | challengePoints | metodo | 3730-3734 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Challenges.challengePoints | portato |
+| | spawnTrial | metodo | 3737-3745 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Challenges.spawnTrial | portato |
+| | offerChallenge | metodo | 3747-3764 | arena-perduta, arena-ruhra, arena-rio (+22) | game/Challenges.offerChallenge | portato |
+| | updateChallenge | metodo | 3766-3800 | arena-perduta, arena-ruhra, arena-rio | game/Challenges.updateChallenge | portato |
+| | winChallenge | metodo | 3802-3814 | arena-ruhra, arena-rio | game/Challenges.winChallenge | portato |
+| | drawArenaBars | metodo | 3817-3845 | guida-santuario, guggu-senza-ivan, schianto (+64) | game/Arena.draw | portato |
+| | updateBossTrigger | metodo | 3847-3913 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Bosses.updateTrigger (+ capitoli: beforeBossEngage) | portato |
+| | magnetBarre | metodo | 3916-3927 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Enemies.magnetBarre | portato |
+| | findNearestInteractable | metodo | 3929-3940 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Interactions.nearest | portato |
+| | tryInteract | metodo | 3942-3945 | npc-spaccino-dopo-flauto, npc-spaccino-fatto, npc-walter-dorme (+107) | scenes/GameScene.tryInteract | portato |
+| | onRisonante | metodo | 3949-3969 | sigillo-santuario-risonanza, wave-boss-breccio, wave-boss-ticummi (+12) | game/abilities/Risonante.cast | portato |
+| | onRiflesso | metodo | 3971-4031 | riflesso-senza-flow, sigillo-bus-specchio, wave-boss-breccio (+12) | game/abilities/Riflesso.cast | portato |
+| | onRiflessoSwap | metodo | 4034-4070 | riflesso-senza-flow, sigillo-bus-specchio, wave-rio (+7) | game/abilities/Riflesso.swap | portato |
+| | killClone | metodo | 4072-4080 | riflesso-senza-flow, sigillo-bus-specchio, wave-boss-breccio (+12) | game/abilities/Riflesso.kill | portato |
+| | cloneHitFx | metodo | 4082-4092 | sigillo-bus-specchio, wave-boss-breccio, wave-boss-ticummi (+11) | game/abilities/Riflesso (RiflessoFx.hit) | portato |
+| | nearestHostile | metodo | 4094-4108 | riflesso-senza-flow, guida-santuario, sigillo-bus-specchio (+95) | game/Enemies.nearestHostile | portato |
+| | nearHostile | metodo | 4111-4115 | riflesso-senza-flow, sigillo-bus-specchio, wave-boss-breccio (+12) | game/abilities/Riflesso.nearHostile | portato |
+| | updateClone | metodo | 4117-4141 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/abilities/Riflesso.update | portato |
+| | onAnalisi | metodo | 4143-4153 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | game/abilities/Analisi.cast | portato |
+| | updateAnalisi | metodo | 4156-4222 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/abilities/Analisi.update | portato |
+| | markAnalisiTargets | metodo | 4225-4237 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | game/abilities/Analisi.markTargets | portato |
+| | qedAnalisi | metodo | 4240-4260 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | game/abilities/Analisi.qed | portato |
+| | clearAnalisiFx | metodo | 4262-4278 | sigillo-ruhra-teorema, wave-boss-breccio, wave-boss-ticummi (+12) | game/abilities/Analisi.clear | portato |
+| | onScudo | metodo | 4282-4293 | sigillo-sorveglianza-ricevitore, wave-boss-breccio, wave-boss-ticummi (+13) | game/abilities/Scudo.cast | portato |
+| | updateScudo | metodo | 4295-4308 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/abilities/Scudo.update | portato |
+| | clearScudoFx | metodo | 4310-4319 | sigillo-sorveglianza-ricevitore, wave-boss-breccio, wave-boss-ticummi (+13) | game/abilities/Scudo (ScudoFx.clear) | portato |
+| | refundNote | metodo | 4322-4325 | wave-boss-ticummi, rimando-sorveglianza, rimando-tecnokill | game/abilities/Scudo.refundNote | portato |
+| | onAcquaTossica | metodo | 4328-4349 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-breccio (+12) | game/abilities/Bottiglia.cast | portato |
+| | burstBottle | metodo | 4352-4388 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-breccio (+12) | game/abilities/Bottiglia.burst | portato |
+| | spawnPuddle | metodo | 4390-4407 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-breccio (+12) | game/abilities/Bottiglia.spawnPuddle | portato |
+| | updateAcquaTossica | metodo | 4409-4452 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/abilities/Bottiglia.update | portato |
+| | applyPoison | metodo | 4455-4459 | sigillo-rio-resina, sigillo-trenbolone-miasma, wave-boss-ticummi (+5) | game/abilities/Veleno.apply | portato |
+| | updatePoison | metodo | 4461-4468 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/abilities/Veleno.update | portato |
+| | dmgTo | metodo | 4471-4477 | schianto-santuario, sigillo-bus-specchio, sigillo-rio-resina (+73) | game/Combat.dmgTo | portato |
+| | waveWorld | metodo | 4480-4488 | riflesso-senza-flow, sigillo-perduta-cortina, sigillo-bus-specchio (+56) | game/abilities/shared.waveWorld | portato |
+| | updateAbilityFx | metodo | 4491-4551 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/abilities (Abilities.updateAbilityFx + Volo.updateFlight) | portato |
+| | reflectProjectile | metodo | 4552-4585 | wave-boss-ticummi, wave-boss-guggu, wave-boss-ombra (+3) | game/abilities/Scudo.reflect | portato |
+| | static CHASE_LINES | campo | 4590-4593 |  | game/chapters/tana | portato |
+| | updateChase | metodo | 4595-4745 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/tana.updateChase | portato |
+| | onTanaSniffed | metodo | 4748-4755 | tana-armadio | game/chapters/tana (sniffed) | portato |
+| | updateLamettaArena | metodo | 4759-4792 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/santuario.updateLamettaArena | portato |
+| | updateSmelaArena | metodo | 4795-4807 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/stabilimento.updateSmelaArena | portato |
+| | spawnColorDrop | metodo | 4809-4835 | guida-santuario, lametta-attesa, esplora-santuario (+2) | game/chapters/santuario.spawnColorDrop | portato |
+| | spawnMirror | metodo | 4837-4855 | cap-santuario, campagna | game/chapters/santuario.spawnMirror | portato |
+| | updateWaterCure | metodo | 4859-4877 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/rio.updateWaterCure | portato |
+| | playSmelaPoisonEffect | metodo | 4879-4935 | npc-acqua-due-volte, cap-rio-acqua, cap-rio-povero (+1) | game/chapters/shared/smela.drinkSmela | portato |
+| | updateAmbush | metodo | 4937-4992 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/shared/Ambushes.update | portato |
+| | spawnNotinoAmbush | metodo | 4995-5009 | npc-piema-dopo, carica-microfono, npc-lametta-libero (+27) | game/chapters/shared/Ambushes | portato |
+| | startPatto | metodo | 5013-5045 | finale-patto | game/chapters/nucleo.startPatto | portato |
+| | updatePatto | metodo | 5047-5069 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/chapters/nucleo.updatePatto | portato |
+| | arrivoDei | metodo | 5072-5085 | finale-patto | game/chapters/nucleo.arrivoDei | portato |
+| | onSpikes | metodo | 5089-5098 | spine, sigillo-santuario-risonanza, cibo (+5) | game/Combat.onSpikes | portato |
+| | onEnemyShoot | metodo | 5100-5134 | guida-santuario, carica-microfono, npc-lametta-libero (+88) | game/Combat.onEnemyShoot | portato |
+| | onBossLamette | metodo | 5136-5161 | schianto-santuario, guida-santuario, schianto (+25) | game/Combat.onBossLamette | portato |
+| | popProjectile | metodo | 5163-5175 | guida-santuario, npc-lametta-libero, colpo-pausa (+92) | game/Combat.popProjectile | portato |
+| | onEnemyDied | metodo | 5177-5202 | schianto-santuario, sigillo-rio-resina, sigillo-trenbolone-miasma (+70) | game/Enemies.onEnemyDied | portato |
+| | onEnemyAlert | metodo | 5205-5211 | rio-cura, sigillo-perduta-rimbalzo, sigillo-perduta-cortina (+117) | game/Enemies.onEnemyAlert | portato |
+| | onBossSummon | metodo | 5213-5217 | agguato-vendetta, trentatre, flauto-fatto (+37) | game/Enemies.onBossSummon | portato |
+| | updateLessons | metodo | 5220-5235 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Enemies.updateLessons | portato |
+| | weakFeedback | metodo | 5238-5247 | colpo-pausa, sigillo-ruhra-teorema, nidi-stabilimento (+63) | game/Combat.weakFeedback | portato |
+| | onBossEngaged | metodo | 5250-5275 | schianto-santuario, guida-santuario, guggu-senza-ivan (+81) | game/Bosses.onEngaged | portato |
+| | onOmbraInsight | metodo | 5278-5300 | ombra-beta, wave-boss-ombra, cap-sorveglianza (+3) | game/Bosses.onOmbraInsight | portato |
+| | silenceBoss | metodo | 5302-5307 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Bosses.silence | portato |
+| | onBossDefeated | metodo | 5309-5542 | trentatre, flauto-fatto, doomsday-respinto (+39) | game/Bosses.onDefeated (+ Doomsday.repel, capitoli: bossDefeated) | portato |
+| | giorno30 | metodo | 5545-5576 | finale-giorno30-vuoto, finale-riscatto-senza-caso, finale-riscatto-solo (+1) | game/chapters/nucleo.giorno30 | portato |
+| | startOrder | metodo | 5579-5603 | finale-riscatto-senza-caso, finale-riscatto-solo, finale-riscatto | game/chapters/nucleo.startOrder | portato |
+| | sceltaFinale | metodo | 5606-5650 | finale-consegna, finale-giorno30-vuoto, finale-riscatto-senza-caso (+5) | game/chapters/nucleo.sceltaFinale | portato |
+| | setupBossColliders | metodo | 5653-5682 | ridimensiona, livello-galliate, livello-marcetti (+28) | game/Combat.setupBossColliders | portato |
+| | onPlayerDead | metodo | 5684-5713 | npc-acqua-due-volte, caduta, morte-barre (+18) | game/Progression.onPlayerDead | portato |
+| | activateCheckpoint | metodo | 5715-5743 | livello-tana, piazza, esplora-mente-cancella (+21) | game/Travel.activateCheckpoint | portato |
+| | threats | metodo | 5746-5755 | riflesso-senza-flow, rio-cura, nidi-rio (+194) | game/Enemies.threats + scene/GameScene.threats (lochef) | portato |
+| | startDialogue | metodo | 5757-5772 | rio-cura, nidi-rio, ridimensiona (+133) | game/Dialogues.start | portato |
+| | startLines | metodo | 5775-5788 | rio-cura, nidi-rio, ridimensiona (+132) | game/Dialogues.lines | portato |
+| | hitstop | metodo | 5792-5799 | colpo-pausa, nidi-stabilimento, nidi-cantina (+63) | game/Feel.hitstop | portato |
+| | shake | metodo | 5801-5803 | rio-cura, nidi-rio, schianto-tana (+138) | game/Feel.shake | portato |
 

@@ -10,7 +10,7 @@ import {
     type OmbraAction,
     type OmbraInsight,
     type PlayerAct,
-} from './OmbraProfile';
+} from '../rules/ombra';
 import { sfx } from './sfx';
 import { state } from './state';
 
@@ -199,12 +199,10 @@ export class OmbraBrain {
 
     /** sagoma verso di te più un bip che sale: tra poco si teletrasporta */
     private ghost(): void {
-        try {
-            const ghost = this.scene.add.image(this.boss.x, this.boss.y, this.boss.texture.key, this.boss.frame.name)
-                .setScale(this.boss.scaleX).setAlpha(0.45).setTint(0x22d3ee).setDepth(4);
-            this.scene.tweens.add({ targets: ghost, alpha: 0, x: this.player.x, duration: 550 });
-            this.keep(ghost, 600);
-        } catch { /* texture di test */ }
+        const ghost = this.scene.add.image(this.boss.x, this.boss.y, this.boss.texture.key, this.boss.frame.name)
+            .setScale(this.boss.scaleX).setAlpha(0.45).setTint(0x22d3ee).setDepth(4);
+        this.scene.tweens.add({ targets: ghost, alpha: 0, x: this.player.x, duration: 550 });
+        this.keep(ghost, 600);
         sfx.beep(0, 1);
         this.scene.time.delayedCall(160, () => sfx.beep(0, 1));
     }

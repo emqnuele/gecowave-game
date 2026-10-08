@@ -1,5 +1,6 @@
 import { BOSS_CHARMS } from '../content/items';
 import type { BossKind, ZoneColor } from '../types';
+import { softFail } from './softFail';
 import { state } from './state';
 
 /* il catalogo dei collezionabili di ogni capitolo: una sola fonte per i
@@ -97,10 +98,11 @@ export function countsFor(levelId: string, kind: CompletionKind): ChapterCounts 
     for (const e of entries.values()) {
         if (e.levelId !== levelId || e.kind !== kind) continue;
         total++;
+        // un predicato rotto non deve mai rompere il riepilogo
         try {
             if (e.collected()) found++;
-        } catch {
-            // un predicato rotto non deve mai rompere il riepilogo
+        } catch (err) {
+            softFail(`completamento ${e.key}`, err);
         }
     }
     return { found, total };

@@ -122,7 +122,7 @@ export class Tana implements Mechanic {
         if (p.hidden) {
             if (now >= this.nextBeatAt) {
                 this.nextBeatAt = now + 880;
-                try { sfx.heartbeat(0.8); } catch { /* senza audio non si muore */ }
+                sfx.heartbeat(0.8);
             }
             if (p.movePressed) this.unhide(false);
             else if (now - this.hiddenSince > HIDE_MAX_MS) this.unhide(true);
@@ -181,10 +181,8 @@ export class Tana implements Mechanic {
         this.lastWhisper = i;
         const raw = set[i]!;
         bus.emit('bark', { speaker: 'lochef85', color: 'red', text: typeof raw === 'string' ? raw : raw.text });
-        try {
-            sfx.whisper(-0.4, 0.8);
-            sfx.growlFar(0.4, 0.7);
-        } catch { /* senza audio non si muore */ }
+        sfx.whisper(-0.4, 0.8);
+        sfx.growlFar(0.4, 0.7);
     }
 
     /** un respiro della casa, senza sottotitoli: passa nel riverbero del posto */
@@ -193,9 +191,7 @@ export class Tana implements Mechanic {
         let i = Math.floor(this.rnd() * names.length);
         if (names.length > 1 && i === this.lastRumble) i = (i + 1) % names.length;
         this.lastRumble = i;
-        try {
-            sfx[names[i]!]((this.rnd() * 2 - 1) * 0.8, 0.3 + this.rnd() * 0.3);
-        } catch { /* senza audio non si muore */ }
+        sfx[names[i]!]((this.rnd() * 2 - 1) * 0.8, 0.3 + this.rnd() * 0.3);
     }
 
     /** il buio della tana: la luce la porti tu, e ne porti poca */

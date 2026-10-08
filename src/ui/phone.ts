@@ -20,7 +20,7 @@ import { buildTrophyCabinet } from './trophies';
 import { assistToggle } from './assist';
 import { QUESTS } from '../content/quests';
 import { chapterCompletion } from '../engine/ChapterCompletion';
-import { TOTAL_MASCHERE } from '../scenes/GameScene';
+import { TOTAL_MASCHERE } from '../game/Rewards';
 import type { ZoneColor } from '../types';
 import './phone.css';
 import { el, ui } from './dom';

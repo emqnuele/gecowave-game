@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultOmbraProfile, normalizeOmbraAct, observe, sanitizeOmbraProfile, strongestHabit, type OmbraAction } from './OmbraProfile';
+import { defaultOmbraProfile, normalizeOmbraAct, observe, sanitizeOmbraProfile, strongestHabit, type OmbraAction } from './ombra';
 
 const profileWith = (counts: Partial<Record<OmbraAction, number>>, extra: { sightings?: number } = {}) => {
     const p = defaultOmbraProfile();

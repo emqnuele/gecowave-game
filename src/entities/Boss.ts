@@ -4,11 +4,12 @@ import { bus } from '../engine/events';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { BossKind } from '../types';
+import { bossPhase, type BossPhase } from '../rules/combat';
 import { ensureCreature } from '../engine/art/creatures';
 import { acoustics } from '../engine/audio/acoustics';
 import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 
-type Phase = 1 | 2 | 3;
+type Phase = BossPhase;
 
 /** da dove arriva un colpo: serve a chi para una direzione sola (l'ombra che impara) */
 export type HitDir = 'side' | 'up' | 'down' | 'shot';
@@ -88,9 +89,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     get phase(): Phase {
-        if (this.hp > this.maxHp * 0.66) return 1;
-        if (this.hp > this.maxHp * 0.33) return 2;
-        return 3;
+        return bossPhase(this.hp, this.maxHp);
     }
 
     engage(): void {
@@ -617,15 +616,13 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     /** polvere ai piedi: peso e attrito */
     private dust(n: number): void {
         if (!this.active) return;
-        try {
-            const p = this.scene.add.particles(this.x, this.y + 30, 'p-dot', {
-                speed: { min: 40, max: 160 }, angle: { min: 200, max: 340 },
-                scale: { start: 0.7, end: 0 }, alpha: { start: 0.5, end: 0 },
-                tint: 0xd6d3d1, lifespan: 450, quantity: n, stopAfter: n,
-            });
-            p.setDepth(4);
-            this.scene.time.delayedCall(600, () => p.destroy());
-        } catch { /* test */ }
+        const p = this.scene.add.particles(this.x, this.y + 30, 'p-dot', {
+            speed: { min: 40, max: 160 }, angle: { min: 200, max: 340 },
+            scale: { start: 0.7, end: 0 }, alpha: { start: 0.5, end: 0 },
+            tint: 0xd6d3d1, lifespan: 450, quantity: n, stopAfter: n,
+        });
+        p.setDepth(4);
+        this.scene.time.delayedCall(600, () => p.destroy());
     }
 
     /** onda d'urto ad anello: fasi, slam, engage. si sente. */
@@ -649,11 +646,9 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     /** afterimage: scia per chi si muove da glitch */
     private afterimage(): void {
         if (!this.active) return;
-        try {
-            const ghost = this.scene.add.image(this.x, this.y, this.texture.key, this.frame.name)
-                .setDepth(4).setScale(this.scaleX).setAlpha(0.35).setTint(this.def.glowColor);
-            this.scene.tweens.add({ targets: ghost, alpha: 0, duration: 320, onComplete: () => ghost.destroy() });
-        } catch { /* test */ }
+        const ghost = this.scene.add.image(this.x, this.y, this.texture.key, this.frame.name)
+            .setDepth(4).setScale(this.scaleX).setAlpha(0.35).setTint(this.def.glowColor);
+        this.scene.tweens.add({ targets: ghost, alpha: 0, duration: 320, onComplete: () => ghost.destroy() });
     }
 
     takeDamage(amount: number, fromX: number, dir?: HitDir): boolean {
@@ -693,12 +688,10 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             this.ringShock(this.x, this.y, this.def.glowColor);
             this.dust(10);
             // punch della camera: dentro e fuori in 300ms
-            try {
-                const cam = this.scene.cameras.main;
-                const z = cam.zoom;
-                cam.zoomTo(z * 1.05, 140);
-                this.scene.time.delayedCall(160, () => cam.zoomTo(z, 220));
-            } catch { /* camera test finta */ }
+            const cam = this.scene.cameras.main;
+            const z = cam.zoom;
+            cam.zoomTo(z * 1.05, 140);
+            this.scene.time.delayedCall(160, () => cam.zoomTo(z, 220));
             // l'aura si scalda: più rabbia, più luce
             this.setTintFill(0xffffff);
             this.scene.time.delayedCall(140, () => this.active && this.clearTint());

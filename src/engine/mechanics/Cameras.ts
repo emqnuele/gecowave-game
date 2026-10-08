@@ -135,7 +135,7 @@ export class Cameras implements Mechanic {
         this.ctx.scene.time.delayedCall(COOLDOWN_MS, () => c.light.setColor(this.color(false)));
         sfx.beep(0, 1);
         this.ctx.scene.time.delayedCall(160, () => sfx.beep(0, 1));
-        try { this.ctx.scene.cameras.main.flash(120, 120, 20, 20); } catch { /* camera finta */ }
+        this.ctx.scene.cameras.main.flash(120, 120, 20, 20);
         if (this.mode.kind === 'sorveglianza') {
             state.recordOmbraSighting();
             bus.emit('toast', { text: `la tommasorveglianza ti ha ripreso. l'ombra impara (${state.save.ombra.sightings}/${MAX_DATA}).` });
