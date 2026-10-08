@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { TILE } from '../config';
+import { CAMERA_LERP, LOGIC_STEP_MS, TILE } from '../config';
 import { MECHANIC_HINTS } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../core/events';
@@ -62,11 +62,14 @@ import { waveOnce } from '../game/chapters/shared/wave';
 import type { SceneData } from '../game/context';
 import { emitWorld, offWorld, onWorld, type WorldEvent, type WorldHandler } from '../core/worldEvents';
 import { reseedRng, rng } from '../core/rng';
+import { FixedStep } from '../rules/fixedStep';
 
 const FALL_DEATH_MARGIN = 3000;
 
 export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
     private ctx!: GameContext;
+    /** nasce in create: phaser riusa l'istanza, un passo a metà non deve passare alla vita dopo */
+    private sim!: FixedStep;
     private world!: LevelWorld;
     private player!: Player;
     /** il livello input: nessuno legge più tasti fisici */
@@ -129,6 +132,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
     }
 
     create(data: SceneData): void {
+        this.sim = new FixedStep(LOGIC_STEP_MS);
         this.progression = this.ctx.flow = new Progression(this.ctx);
         this.bosses = this.ctx.bosses = new Bosses(this.ctx);
         this.arena = this.ctx.arena = new Arena(this.ctx);
@@ -468,7 +472,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
         // sotto la mappa c'è solo roccia: il margine della camera non deve mostrare il parallasse
         if (pad) this.add.rectangle(0, this.world.level.heightPx, this.world.level.widthPx, pad + 40, this.world.biome.deep).setOrigin(0, 0).setDepth(2);
         this.physics.world.setBounds(0, 0, this.world.level.widthPx, this.world.level.heightPx);
-        cam.startFollow(this.player, true, 0.12, 0.12);
+        cam.startFollow(this.player, true, CAMERA_LERP, CAMERA_LERP);
         cam.setDeadzone(50, 36);
         const applyZoom = () => {
             cam.setZoom(Math.max(1.05, this.scale.height / this.world.level.heightPx));
@@ -560,6 +564,32 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
 
     update(time: number, delta: number): void {
         if (!this.player) return;
+        this.followAtAnyRate(delta);
+        const n = this.sim.advance(delta);
+        for (let i = 0; i < n; i++) this.tick(time - (n - 1 - i) * this.sim.dt, this.sim.dt);
+        // senza passo il mondo è fermo, ma la camera si è mossa: quello che si vede la segue
+        if (n === 0) this.present(time);
+    }
+
+    /** phaser applica il lerp della camera a ogni fotogramma: a 120 hz la camera inseguirebbe il doppio */
+    private followAtAnyRate(delta: number): void {
+        const k = delta / LOGIC_STEP_MS;
+        // a 60 hz resta esattamente quello di sempre
+        const lerp = Math.abs(k - 1) < 1e-3 ? CAMERA_LERP : 1 - Math.pow(1 - CAMERA_LERP, k);
+        this.cameras.main.setLerp(lerp, lerp);
+    }
+
+    /** solo quello che si vede e dipende dalla camera, senza toccare il mondo */
+    private present(time: number): void {
+        this.lighting.update();
+        this.terrain.update(this.cameras.main.worldView);
+        this.parallax.update(time);
+        this.ambience.update(this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor);
+        this.water.update(time);
+    }
+
+    /** un passo di logica: l'ordine è quello di sempre, a 60 hz un passo per fotogramma */
+    private tick(time: number, delta: number): void {
         this.controls.update();
         if (this.controls.pressed('interact')) this.tryInteract();
         else if (this.controls.device === 'gamepad' && this.controls.pressed('up')

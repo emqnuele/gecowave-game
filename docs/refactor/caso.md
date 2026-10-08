@@ -233,7 +233,7 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 636 | GameScene.update | rng.fx.next | `if (state.run.trenbolone && rng.fx.next() < 0.2) {` | cosmetico |
+| 666 | GameScene.tick | rng.fx.next | `if (state.run.trenbolone && rng.fx.next() < 0.2) {` | cosmetico |
 
 ## src/stage/Atmosphere.ts
 
@@ -300,15 +300,15 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 605 | FlashbackManager.warp | rng.fx.next | `const a = (Math.PI * 2 * i) / 14 + rng.fx.next() * 0.3;` | cosmetico |
-| 606 | FlashbackManager.warp | rng.fx.next | `const len = 60 + rng.fx.next() * 80;` | cosmetico |
-| 607 | FlashbackManager.warp | rng.fx.next | `const r = scene.add.rectangle(0, 0, len, 2 + rng.fx.next() * 2, i % 3 ? 0xffffff : tint, 0.55);` | cosmetico |
-| 639 | FlashbackManager.room | rng.fx.next | `glowC.setAlpha(0.12 + rng.fx.next() * 0.08);` | cosmetico |
-| 640 | FlashbackManager.room | rng.fx.next | `bulb.setAlpha(0.75 + rng.fx.next() * 0.25);` | cosmetico |
-| 979 | (modulo) | rng.fx.next | `lamp.setAlpha(0.4 + rng.fx.next() * 0.4);` | cosmetico |
-| 1025 | (modulo) | rng.fx.next | `win.setAlpha(0.6 + rng.fx.next() * 0.35);` | cosmetico |
-| 1081 | (modulo) | rng.fx.next | `cells.push({ r, seed: rng.fx.next() * 900 });` | cosmetico |
-| 1085 | (modulo) | rng.fx.next | `c.r.setAlpha(0.55 + rng.fx.next() * 0.45);` | cosmetico |
+| 606 | FlashbackManager.warp | rng.fx.next | `const a = (Math.PI * 2 * i) / 14 + rng.fx.next() * 0.3;` | cosmetico |
+| 607 | FlashbackManager.warp | rng.fx.next | `const len = 60 + rng.fx.next() * 80;` | cosmetico |
+| 608 | FlashbackManager.warp | rng.fx.next | `const r = scene.add.rectangle(0, 0, len, 2 + rng.fx.next() * 2, i % 3 ? 0xffffff : tint, 0.55);` | cosmetico |
+| 640 | FlashbackManager.room | rng.fx.next | `glowC.setAlpha(0.12 + rng.fx.next() * 0.08);` | cosmetico |
+| 641 | FlashbackManager.room | rng.fx.next | `bulb.setAlpha(0.75 + rng.fx.next() * 0.25);` | cosmetico |
+| 980 | (modulo) | rng.fx.next | `lamp.setAlpha(0.4 + rng.fx.next() * 0.4);` | cosmetico |
+| 1026 | (modulo) | rng.fx.next | `win.setAlpha(0.6 + rng.fx.next() * 0.35);` | cosmetico |
+| 1082 | (modulo) | rng.fx.next | `cells.push({ r, seed: rng.fx.next() * 900 });` | cosmetico |
+| 1086 | (modulo) | rng.fx.next | `c.r.setAlpha(0.55 + rng.fx.next() * 0.45);` | cosmetico |
 
 ## src/story/PedroApparition.ts
 

@@ -6,6 +6,11 @@ export const TILE = 32;
 export const ART_TILE = 160;
 export const ART_SCALE = TILE / ART_TILE;
 
+/** il ritmo della logica: lo schermo disegna a qualsiasi frequenza, il mondo avanza sempre a 60 passi al secondo */
+export const LOGIC_STEP_MS = 1000 / 60;
+/** quanto la camera insegue il geco a ogni passo da 1/60 s */
+export const CAMERA_LERP = 0.12;
+
 export const PHYSICS = {
     gravity: 2400,
     runSpeed: 340,

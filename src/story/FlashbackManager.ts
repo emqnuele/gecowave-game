@@ -12,6 +12,7 @@ import { ensureCreature } from '../art/creatures';
 import { VortexPipeline, hexToTint } from '../art/fx/VortexPipeline';
 import { MemoryPipeline } from '../art/fx/MemoryPipeline';
 import { rng } from '../core/rng';
+import { CAMERA_LERP } from '../config';
 
 /* Flashback come mini-film, v5. Il palco è il livello vero: la camera
    inquadra un punto accanto al geco, il buio cala sul resto, gli attori
@@ -342,7 +343,7 @@ export class FlashbackManager {
                 pbody?.setVelocity(home.vx, home.vy);
                 (player as unknown as { wake?: () => void }).wake?.();
                 if (wasVisible) player.setVisible(true);
-                cam.startFollow(player, true, 0.12, 0.12);
+                cam.startFollow(player, true, CAMERA_LERP, CAMERA_LERP);
                 clearDressing();
                 host.folk?.setSuspended(false);
                 host.setPropsVisible?.(true);

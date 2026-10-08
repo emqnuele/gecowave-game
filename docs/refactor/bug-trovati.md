@@ -47,7 +47,8 @@ Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguir
 
 ### la logica gira a ogni frame di render
 - **nasce**: niente limite agli fps; la fisica arcade ha passo fisso ma `update()` gira a ogni frame (su 120 Hz il doppio: per esempio i controlli casuali per frame del trenbolone).
-- **stato**: proposta, non si cambia nel refactor.
+- **stato**: sistemato in B14. La logica di `GameScene` va a passi fissi da 1/60 s (`rules/fixedStep.ts`, con i test): a 120 Hz un passo ogni due fotogrammi, a 144 Hz due o tre, dopo un intoppo fino a quattro di recupero. Il conteggio usa il `delta` dei fotogrammi, quindi il tempo in pausa non si recupera. A 60 Hz ogni fotogramma fa esattamente un passo col suo `delta`, e il gioco è identico a prima: i fotogrammi entro 0,2 ms da un multiplo o da una frazione del passo contano come esatti, altrimenti lo scarto di un monitor vero (16,67 o 16,68 ms) ogni tanto fa due passi in un fotogramma. A 120 e 240 Hz il passo cade nello stesso istante che a 60 Hz, dopo il passo della fisica e i timer di phaser (l'accumulatore parte a 0,2 passi). Le due cose le hanno trovate le tracce, il diario racconta come. Nei fotogrammi senza passo si aggiorna solo quello che si vede e dipende dalla camera (luci, terreno, parallasse, aria, acqua). Il `lerp` della camera di phaser è per fotogramma: si corregge col tempo (`1 - (1 - 0,12)^k`), ed è esattamente 0,12 a 60 Hz. Fisica, tween, timer e animazioni di phaser erano già a tempo.
+
 ## trovati nella parte B
 
 ### i collider delle bottiglie restano dopo lo scoppio
