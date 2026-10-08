@@ -68,7 +68,8 @@ await page.evaluate((choiceMode) => {
 
 const state = () => page.evaluate(() => {
   const s = window.__game.scene.getScene('GameScene');
-  return { level: s.def?.id, active: s.sys.isActive(), paused: s.sys.isPaused(), exiting: s.exiting, px: s.player?.x, py: s.player?.y, boss: s.boss && s.boss.active ? { kind: s.boss.def.kind, engaged: s.boss.engaged, inv: s.boss.invulnerable, hp: s.boss.hp, x: s.boss.x, y: s.boss.y } : null };
+  const b = s.ctx?.bosses?.current;
+  return { level: s.ctx?.world?.def?.id, active: s.sys.isActive(), paused: s.sys.isPaused(), exiting: s.ctx?.flow?.exiting, px: s.player?.x, py: s.player?.y, boss: b && b.active ? { kind: b.def.kind, engaged: b.engaged, inv: b.invulnerable, hp: b.hp, x: b.x, y: b.y } : null };
 });
 const flush = async () => { const e = await page.evaluate(() => { const e = window.__ev; window.__ev = []; return e; }); e.forEach((x) => say('   ' + x)); };
 
@@ -87,7 +88,7 @@ async function visit(x, y, tag) {
   // parla con chi c'è vicino (una volta per tappa)
   await page.evaluate(() => {
     const s = window.__game.scene.getScene('GameScene');
-    if (s.sys.isActive() && !s.exiting) s.tryInteract();
+    if (s.sys.isActive() && !s.ctx.flow.exiting) s.tryInteract();
     window.__frames(4); window.__ui(); window.__frames(10); window.__ui();
   });
 }
@@ -98,7 +99,7 @@ async function fightBoss() {
     if (!st.boss) return true;
     const res = await page.evaluate(() => {
       const s = window.__game.scene.getScene('GameScene');
-      const b = s.boss;
+      const b = s.ctx.bosses.current;
       if (!b?.active) return 'giù';
       const p = s.player;
       p.hurt = () => false;

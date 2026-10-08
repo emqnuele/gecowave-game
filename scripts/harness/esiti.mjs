@@ -16,7 +16,8 @@ const args = process.argv.slice(2);
 const oi = args.indexOf('--only');
 const only = oi >= 0 ? args[oi + 1].split(',') : null;
 const ri = args.indexOf('--rumore');
-const pos = args.filter((a, i) => !a.startsWith('--') && i !== oi + 1 && i !== ri + 1);
+// un'opzione assente ha indice -1: senza il controllo, -1 + 1 scartava il primo argomento
+const pos = args.filter((a, i) => !a.startsWith('--') && (oi < 0 || i !== oi + 1) && (ri < 0 || i !== ri + 1));
 const A = resolve(ROOT, pos[0] ?? '.harness/traces/ref');
 const B = resolve(ROOT, pos[1] ?? '.harness/traces/cur');
 const NOISE = ri >= 0 ? resolve(ROOT, args[ri + 1]) : null;

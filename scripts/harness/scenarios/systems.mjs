@@ -142,20 +142,28 @@ export default [
         await resolveAll(ctx);
     }, { patch: { unflags: ['indizio-1'] } }),
 
-    // un film saltato e uno guardato fino in fondo, e un secondo indizio mentre il primo gira
+    // un secondo indizio mentre il primo film gira: il secondo film aspetta in fila, poi uno guardato e uno saltato.
+    // arrivando all'indizio 2 parte l'agguato di notino: prima si chiude quello, o i tasti scorrono il suo dialogo
     atLevel('film-coda', 'caso', async (ctx) => {
         await ctx.wait(30);
         await resolveAll(ctx);
         await toTag(ctx, 'caso', 'npc:indizio-2');
-        await ctx.tap(K.interact, 3);
+        await resolveAll(ctx);
+        await ctx.tap(K.interact, 1);
         await ctx.wait(120);
-        await toTag(ctx, 'caso', 'npc:indizio-3');
-        await ctx.tap(K.interact, 3);
+        ctx.mark(`film: ${(await ui(ctx)).film}`);
+        // durante il film il geco è fermo: il secondo indizio si chiede come farebbe la scena (main: startDialogue, dopo: dialogues.start)
+        await ctx.eval(() => {
+            const s = window.__game.scene.getScene('GameScene');
+            if (s.ctx?.dialogues) s.ctx.dialogues.start('indizio-3');
+            else s.startDialogue('indizio-3');
+        });
         await ctx.wait(60);
         await resolveAll(ctx, { film: 'watch' });
         await resolveAll(ctx, { film: 'skip' });
         await ctx.wait(200);
         await resolveAll(ctx);
+        ctx.mark(`visti: ${await ctx.eval(() => window.__state.save.seenDialogues.filter((d) => d.startsWith('fb-')).join(' '))}`);
     }, { patch: { unflags: ['indizio-2', 'indizio-3'] } }),
 
     // pausa subito dopo un colpo andato a segno: la fisica non resta al rallentatore

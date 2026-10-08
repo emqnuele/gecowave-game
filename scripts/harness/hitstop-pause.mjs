@@ -9,7 +9,7 @@ await waitPlayer(game);
 const { page, step } = game;
 await step(30);
 await page.evaluate(() => {
-    window.__game.scene.getScene('GameScene').hitstop();
+    window.__game.scene.getScene('GameScene').ctx.feel.hitstop();
     window.__game.scene.pause('GameScene');
 });
 await step(10);

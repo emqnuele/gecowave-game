@@ -31,7 +31,8 @@ const only = opt('only')?.split(',') ?? null;
 const reuse = args.includes('--reuse');
 
 /** i file su cui il refactor lavora: lì vogliamo ogni ramo raggiungibile eseguito */
-const FOCUS = (f) => f === 'src/scenes/GameScene.ts' || f.startsWith('src/entities/') || f.startsWith('src/engine/');
+// i percorsi di main (engine/) e quelli dopo il refactor (parte B): lo stesso filtro vale sui due codici
+const FOCUS = (f) => f === 'src/scenes/GameScene.ts' || f === 'src/world/NavGraph.ts' || /^src\/(entities|engine|game|core|audio|input|art|stage|story|mechanics|rules)\//.test(f);
 
 async function collect() {
     const all = await loadScenarios();
@@ -131,7 +132,7 @@ function blindSpots(index) {
     }
     L.push(`## rami e funzioni dei file del refactor (dal sorgente)`);
     L.push('');
-    L.push(`Ogni ramo (then/else, ?:, && || ??, case, catch, cicli) e ogni funzione di \`GameScene.ts\`, \`entities/\` ed \`engine/\`, enumerati dall'ast di typescript e controllati sulla copertura v8 di tutto il corpus. Gli else impliciti non si possono misurare con la copertura a blocchi di v8: restano fuori dal conto.`);
+    L.push(`Ogni ramo (then/else, ?:, && || ??, case, catch, cicli) e ogni funzione di \`GameScene.ts\`, \`entities/\` e dei moduli di gioco (\`engine/\` su main; \`game/\`, \`core/\`, \`stage/\`, \`story/\`, \`mechanics/\` e gli altri dopo il refactor), enumerati dall'ast di typescript e controllati sulla copertura v8 di tutto il corpus. Gli else impliciti non si possono misurare con la copertura a blocchi di v8: restano fuori dal conto.`);
     L.push('');
     L.push(`**rami eseguiti: ${ae}/${at} (${(100 * ae / at).toFixed(1)}%) · funzioni eseguite: ${fe}/${ft} (${(100 * fe / ft).toFixed(1)}%)**`);
     L.push('');

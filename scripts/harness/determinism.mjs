@@ -21,7 +21,7 @@ async function play() {
         if (f % 10 === 0) {
             trace.push(await page.evaluate(() => {
                 const s = window.__game.scene.getScene('GameScene');
-                const foes = s.enemies.getChildren().filter((e) => e.active && !e.dormant).map((e) => `${e.x.toFixed(2)},${e.y.toFixed(2)},${e.mode}`).join(';');
+                const foes = s.ctx.groups.enemies.getChildren().filter((e) => e.active && !e.dormant).map((e) => `${e.x.toFixed(2)},${e.y.toFixed(2)},${e.mode}`).join(';');
                 return `${s.player.x.toFixed(3)},${s.player.y.toFixed(3)},${window.__state.run.hp},${window.__state.run.flow}|${foes}|t=${s.time.now.toFixed(1)}|w=${s.atmosphere?.weather}`;
             }));
         }

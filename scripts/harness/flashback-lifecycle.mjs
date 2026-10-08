@@ -23,7 +23,7 @@ const snap = () => page.evaluate(() => {
 
 await step(60);
 const before = await snap();
-await page.evaluate(() => window.__game.scene.getScene('GameScene').startDialogue('indizio-1'));
+await page.evaluate(() => window.__game.scene.getScene('GameScene').ctx.dialogues.start('indizio-1'));
 await step(180);
 check((await snap()).god, 'durante il film il geco deve essere intoccabile');
 await page.keyboard.press('Enter');
@@ -35,7 +35,7 @@ for (const k of ['god', 'film', 'caption', 'bars', 'duck', 'vignette', 'pipes', 
 
 await page.evaluate(() => {
     window.__state.save.seenDialogues = window.__state.save.seenDialogues.filter((d) => !d.startsWith('fb-'));
-    window.__game.scene.getScene('GameScene').startDialogue('indizio-1');
+    window.__game.scene.getScene('GameScene').ctx.dialogues.start('indizio-1');
 });
 await step(180);
 await page.keyboard.down('Escape'); await step(2); await page.keyboard.up('Escape'); await step(2);

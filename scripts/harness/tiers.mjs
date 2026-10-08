@@ -1,5 +1,5 @@
 // il giro rapido: il sottoinsieme di scenari che esegue gli stessi rami del corpus intero nel minor numero di fotogrammi.
-// copertura di insiemi greedy sui rami di GameScene, entities/ ed engine/ (dalla copertura per scenario).
+// copertura di insiemi greedy sui rami di GameScene, entities/ e dei moduli di gioco (dalla copertura per scenario).
 // uso: node scripts/harness/tiers.mjs [--budget 0.97]   -> scripts/harness/tiers.json
 //   poi: node scripts/harness/corpus.mjs check --tier rapido
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -16,7 +16,8 @@ const RAW = join(ROOT, '.harness/coverage/raw');
 const i = process.argv.indexOf('--budget');
 const budget = i > 0 ? Number(process.argv[i + 1]) : 0.97;
 
-const FOCUS = (f) => f === 'src/scenes/GameScene.ts' || f.startsWith('src/entities/') || f.startsWith('src/engine/');
+// i percorsi di main (engine/) e quelli dopo il refactor (parte B): lo stesso filtro vale sui due codici
+const FOCUS = (f) => f === 'src/scenes/GameScene.ts' || f === 'src/world/NavGraph.ts' || /^src\/(entities|engine|game|core|audio|input|art|stage|story|mechanics|rules)\//.test(f);
 const files = [];
 const walk = (d) => {
     for (const n of readdirSync(join(SRC, d))) {
