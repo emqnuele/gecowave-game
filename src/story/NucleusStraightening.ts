@@ -60,6 +60,9 @@ export class NucleusStraightening {
     private selectedWalls: Phaser.Physics.Arcade.Sprite[] = [];
     private selectedGroup: Phaser.Physics.Arcade.StaticGroup | null = null;
     private collider: Phaser.Physics.Arcade.Collider | null = null;
+    /** senza muri finti nell'arena l'ordine alza i suoi: dove, deciso al preavviso */
+    private plannedColumns: Phaser.Geom.Rectangle[] = [];
+    private orderColumns: Phaser.GameObjects.Rectangle[] = [];
     private phase3ShotDone = false;
     private shattered = false;
     private lastBoss = { x: 0, y: 0 };
@@ -116,6 +119,7 @@ export class NucleusStraightening {
             this.ctx.terrain.releaseStraightenedWalls(sel);
             this.ctx.marks.restoreExtinguished();
         }
+        this.breakColumns();
         this.ctx.music.setOrder(0);
         this.straightOverlay.clear();
         this.gridOverlay.clear();
@@ -142,6 +146,9 @@ export class NucleusStraightening {
             this.selectedGroup = null;
         }
         this.selectedWalls = [];
+        for (const c of this.orderColumns) c.destroy();
+        this.orderColumns = [];
+        this.plannedColumns = [];
         this.orderTelegraph?.destroy();
         this.orderTelegraph = null;
         this.dimRect?.destroy();
@@ -159,6 +166,7 @@ export class NucleusStraightening {
         if (next === undefined) return;
         this.pendingPhase = next;
         this.activateAt = time + 650;
+        if (next === 2 && !this.hasFakeWalls()) this.plannedColumns = this.planColumns();
         this.redraw();
         this.say(`straight-${next}`, this.fallbackLine(next));
         sfx.straighten();
@@ -196,6 +204,10 @@ export class NucleusStraightening {
         for (const seg of this.platformEdges()) {
             g.lineBetween(seg.x0, seg.y, seg.x1, seg.y);
         }
+        if (this.pendingPhase === 2) {
+            g.lineStyle(2, 0xffffff, 0.45);
+            for (const r of this.plannedColumns) g.strokeRect(r.x, r.y, r.width, r.height);
+        }
         if (this.phase >= 2) {
             // tre cavi verticali senza oscillazione
             g.lineStyle(2, 0xa5f3fc, 0.4);
@@ -222,6 +234,8 @@ export class NucleusStraightening {
                 for (const w of sel) group.add(w);
                 this.selectedGroup = group;
                 this.collider = this.ctx.scene.physics.add.collider(this.ctx.player, group);
+            } else {
+                this.raiseColumns(boss);
             }
             this.redraw();
         } else {
@@ -236,6 +250,71 @@ export class NucleusStraightening {
     /** la scossa rispetta l'impostazione, come ogni altra scossa della scena */
     private orderShake(duration: number, intensity: number): void {
         if (state.settings.screenShake) this.ctx.scene.cameras.main.shake(duration, intensity);
+    }
+
+    private hasFakeWalls(): boolean {
+        return (this.ctx.fakeWalls.getChildren() as Phaser.Physics.Arcade.Sprite[]).some((w) => w.active
+            && Phaser.Geom.Intersects.RectangleToRectangle(w.getBounds(), this.ctx.arenaBounds));
+    }
+
+    /** colonne alte tre celle sul pavimento, saltabili: rallentano il geco, mai lo chiudono. posti fissi, niente caso */
+    private planColumns(): Phaser.Geom.Rectangle[] {
+        const b = this.ctx.arenaBounds;
+        const out: Phaser.Geom.Rectangle[] = [];
+        const r0 = Math.floor(b.top / TILE);
+        const r1 = Math.floor((b.bottom - 1) / TILE);
+        for (const f of [0.3, 0.5, 0.7]) {
+            const c = Math.floor((b.left + b.width * f) / TILE);
+            // il pavimento sotto la colonna, cercato dal fondo dell'arena
+            let floor = -1;
+            for (let r = r1; r > r0 + 4; r--) {
+                if (this.ctx.solid(c, r + 1) && !this.ctx.solid(c, r)) {
+                    floor = r;
+                    break;
+                }
+            }
+            if (floor < 0) continue;
+            // tre celle libere più una sopra: niente tunnel chiusi sotto una piattaforma
+            let free = true;
+            for (let r = floor - 3; r <= floor; r++) if (this.ctx.solid(c, r)) free = false;
+            if (!free) continue;
+            const rect = new Phaser.Geom.Rectangle(c * TILE, (floor - 2) * TILE, TILE, 3 * TILE);
+            const nearDoor = this.ctx.arenaDoorRects.some((d) => Phaser.Geom.Intersects.RectangleToRectangle(rect, new Phaser.Geom.Rectangle(d.x - 3 * TILE, d.y, d.width + 6 * TILE, d.height)));
+            if (nearDoor) continue;
+            out.push(rect);
+        }
+        return out;
+    }
+
+    private raiseColumns(boss: Boss): void {
+        const planned = this.plannedColumns;
+        this.plannedColumns = [];
+        // chi è già lì non viene murato: si salta quella colonna
+        const margin = (r: Phaser.Geom.Rectangle) => new Phaser.Geom.Rectangle(r.x - TILE, r.y - TILE, r.width + 2 * TILE, r.height + 2 * TILE);
+        const actors = [this.ctx.player.getBounds(), boss.getBounds()].map(margin);
+        const rects = planned.filter((r) => actors.every((a) => !Phaser.Geom.Intersects.RectangleToRectangle(r, a)));
+        if (!rects.length) return;
+        const scene = this.ctx.scene;
+        const group = scene.physics.add.staticGroup();
+        for (const r of rects) {
+            const col = scene.add.rectangle(r.centerX, r.centerY, r.width, r.height, 0x0b1220, 0.95)
+                .setStrokeStyle(3, 0xffffff, 0.9).setDepth(4.8).setAlpha(0);
+            group.add(col);
+            this.orderColumns.push(col);
+            scene.tweens.add({ targets: col, alpha: 1, duration: 200, ease: 'Quad.easeOut' });
+        }
+        this.selectedGroup = group;
+        this.collider = scene.physics.add.collider(this.ctx.player, group);
+    }
+
+    /** le colonne si spezzano dopo le collisioni: un lampo e via */
+    private breakColumns(): void {
+        const cols = this.orderColumns;
+        this.orderColumns = [];
+        this.plannedColumns = [];
+        for (const c of cols) {
+            this.ctx.scene.tweens.add({ targets: c, alpha: 0, scaleX: 1.6, duration: 350, ease: 'Quad.easeIn', onComplete: () => c.destroy() });
+        }
     }
 
     /** solo muri finti dentro l'arena, lontani da porte e attori */
@@ -270,7 +349,7 @@ export class NucleusStraightening {
         for (let x = b.left; x <= b.right; x += TILE) g.lineBetween(x, b.top, x, b.bottom);
         for (let y = b.top; y <= b.bottom; y += TILE) g.lineBetween(b.left, y, b.right, y);
         g.lineStyle(2, 0xf87171, 0.5);
-        for (const w of this.selectedWalls) {
+        for (const w of [...this.selectedWalls, ...this.orderColumns]) {
             if (!w.active) continue;
             const box = w.getBounds();
             g.strokeRect(box.x, box.y, box.width, box.height);
