@@ -226,8 +226,9 @@ export class Combat implements GameSystem {
         });
 
         if (this.ctx.bosses.current) {
-            this.scene.physics.add.collider(this.ctx.bosses.current, layer);
-            this.scene.physics.add.overlap(this.ctx.player.attackHitbox, this.ctx.bosses.current, () => {
+            const cols = this.collidersOf(this.ctx.bosses.current);
+            cols.push(this.scene.physics.add.collider(this.ctx.bosses.current, layer));
+            cols.push(this.scene.physics.add.overlap(this.ctx.player.attackHitbox, this.ctx.bosses.current, () => {
                 if (!this.ctx.player.attackActive || !this.ctx.bosses.current) return;
                 this.ctx.player.attackActive = false;
                 if (this.dmgTo(this.ctx.bosses.current, this.ctx.player.attackDamage, this.ctx.player.x, this.ctx.player.attackDir)) {
@@ -238,11 +239,11 @@ export class Combat implements GameSystem {
                 } else if (this.ctx.bosses.current.def.kind === 'limite') {
                     bus.emit('toast', { text: TOASTS.limiteScudo });
                 }
-            });
-            this.scene.physics.add.overlap(this.ctx.player, this.ctx.bosses.current, () => {
+            }));
+            cols.push(this.scene.physics.add.overlap(this.ctx.player, this.ctx.bosses.current, () => {
                 if (this.ctx.bosses.current) this.ctx.player.hurt(this.ctx.bosses.current.def.contactDamage, this.ctx.bosses.current.x);
-            });
-            this.scene.physics.add.overlap(this.ctx.groups.playerProjectiles, this.ctx.bosses.current, (obj, proj) => {
+            }));
+            cols.push(this.scene.physics.add.overlap(this.ctx.groups.playerProjectiles, this.ctx.bosses.current, (obj, proj) => {
                 const bullet = (obj === this.ctx.bosses.current ? proj : obj) as Phaser.Physics.Arcade.Sprite;
                 if (!this.ctx.bosses.current || !bullet.active) return;
                 const level = (bullet.getData('level') as number | undefined) ?? -1;
@@ -260,7 +261,7 @@ export class Combat implements GameSystem {
                     }
                     if (level === 0) this.popProjectile(bullet);
                 }
-            });
+            }));
         }
     }
 
@@ -428,19 +429,20 @@ export class Combat implements GameSystem {
     /** colliders per un boss evocato dopo il create (gli dei) */
     setupBossColliders(): void {
         if (!this.ctx.bosses.current) return;
-        this.scene.physics.add.collider(this.ctx.bosses.current, this.ctx.world.level.layer);
-        this.scene.physics.add.overlap(this.ctx.player.attackHitbox, this.ctx.bosses.current, () => {
+        const cols = this.collidersOf(this.ctx.bosses.current);
+        cols.push(this.scene.physics.add.collider(this.ctx.bosses.current, this.ctx.world.level.layer));
+        cols.push(this.scene.physics.add.overlap(this.ctx.player.attackHitbox, this.ctx.bosses.current, () => {
             if (!this.ctx.player.attackActive || !this.ctx.bosses.current) return;
             this.ctx.player.attackActive = false;
             if (this.dmgTo(this.ctx.bosses.current, this.ctx.player.attackDamage, this.ctx.player.x, this.ctx.player.attackDir)) {
                 this.ctx.player.onAttackHit();
                 this.ctx.feel.hitstop();
             }
-        });
-        this.scene.physics.add.overlap(this.ctx.player, this.ctx.bosses.current, () => {
+        }));
+        cols.push(this.scene.physics.add.overlap(this.ctx.player, this.ctx.bosses.current, () => {
             if (this.ctx.bosses.current) this.ctx.player.hurt(this.ctx.bosses.current.def.contactDamage, this.ctx.bosses.current.x);
-        });
-        this.scene.physics.add.overlap(this.ctx.groups.playerProjectiles, this.ctx.bosses.current, (obj, proj) => {
+        }));
+        cols.push(this.scene.physics.add.overlap(this.ctx.groups.playerProjectiles, this.ctx.bosses.current, (obj, proj) => {
             const bullet = (obj === this.ctx.bosses.current ? proj : obj) as Phaser.Physics.Arcade.Sprite;
             if (!this.ctx.bosses.current || !bullet.active) return;
             const level = (bullet.getData('level') as number | undefined) ?? -1;
@@ -454,9 +456,18 @@ export class Combat implements GameSystem {
                 }
                 if (level === 0) this.popProjectile(bullet);
             }
-        });
+        }));
     }
 
+    /** i collider di un boss muoiono con lui: chi arriva dopo non si trascina dietro quelli del boss distrutto */
+    private collidersOf(boss: Boss): Phaser.Physics.Arcade.Collider[] {
+        const cols: Phaser.Physics.Arcade.Collider[] = [];
+        boss.once(Phaser.GameObjects.Events.DESTROY, () => {
+            // allo spegnimento della scena il mondo fisico li ha già tolti: un collider si distrugge una volta sola
+            for (const c of cols) if (c.world) c.destroy();
+        });
+        return cols;
+    }
 
     destroy(): void {}
 }

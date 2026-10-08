@@ -38,7 +38,7 @@ Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguir
 ### i collider dei boss si accumulano
 - **nasce**: `setupBossColliders` aggiunge collider a ogni boss evocato dopo il `create` e non toglie quelli del boss distrutto (void, galliate, marcetti, patto, dei, doomsday).
 - **scenari**: `cap-void*`, `cap-walter`, `finale-*`, `doomsday-collasso` (diagnostica `colliders`).
-- **stato**: da sistemare dopo il refactor.
+- **stato**: sistemato in B13: i collider di un boss sono legati al suo `DESTROY` (`Combat.collidersOf`) e muoiono con lui. Non si tolgono quelli del boss precedente quando ne arriva uno nuovo, perché in alcuni capitoli il vecchio resta vivo.
 
 ### `startDialogue` riprova ogni 1,2 s se un film è in corso
 - **nasce**: niente coda esplicita, un `delayedCall` che si richiama.
@@ -48,3 +48,10 @@ Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguir
 ### la logica gira a ogni frame di render
 - **nasce**: niente limite agli fps; la fisica arcade ha passo fisso ma `update()` gira a ogni frame (su 120 Hz il doppio: per esempio i controlli casuali per frame del trenbolone).
 - **stato**: proposta, non si cambia nel refactor.
+## trovati nella parte B
+
+### i collider delle bottiglie restano dopo lo scoppio
+- **nasce**: `Bottiglia.cast` crea tre o quattro collider per bottiglia (terreno, muri, nemici, boss) e non li distrugge quando la bottiglia scoppia. Phaser salta i collider di un oggetto distrutto, quindi il gioco non cambia, ma la lista dei collider cresce a ogni lancio.
+- **scenari**: `wave-*` con l'acqua tossica (diagnostica `colliders`).
+- **stato**: annotato, non nella lista dei bug decisi. Stessa cura dei boss: legarli al `DESTROY` della bottiglia.
+
