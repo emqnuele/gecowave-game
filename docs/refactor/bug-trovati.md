@@ -10,7 +10,7 @@ Per ognuno: cosa si vede, dove nasce, quale scenario lo mostra, stato.
 - **si vede**: un avviso in console ogni volta che una scelta parte dalla fine di un dialogo (bottega della piazza, offerta di ticummi, missioni dei passanti). Nessun effetto visibile.
 - **nasce**: `Screens.choice` chiama `controller.pause()` mentre la scena è ancora ferma dal dialogo appena chiuso; da capire se è l'ordine tra `scene.resume()` in `startLines` e il `pause` della scelta.
 - **scenari**: `piazza`, `arena-rio`, `cap-rio-*` (sezione `con` della traccia).
-- **stato**: da indagare.
+- **stato**: sistemato in B13. La causa: a fine dialogo `Dialogues.lines` riprendeva la scena col plugin (`scene.scene.resume()`), che mette la ripresa in coda al fotogramma dopo; la scelta chiamava subito `game.scene.pause()`, immediata, che trovava la scena ancora in pausa: avviso e niente pausa. Al fotogramma dopo la ripresa in coda faceva ripartire la scena **con la scelta aperta** (nella traccia di `piazza` la scena è in esecuzione sotto la bottega). Non era solo un avviso: il mondo andava avanti durante le scelte. Ora a fine dialogo la ripresa è immediata, come la pausa della scelta.
 
 ### il tempo del menu sopravvive al riavvio della scena
 - **si vede**: niente a occhio. Il menu del fondale (`MenuScene`) riprende le sue animazioni (braci, parallasse) dal tempo che aveva la volta prima, invece che da zero.

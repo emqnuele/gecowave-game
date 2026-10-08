@@ -57,12 +57,13 @@ export class Dialogues implements GameSystem {
             onEnd?.();
             return;
         }
-        const plugin = this.ctx.scene.scene;
-        plugin.pause();
+        const scene = this.ctx.scene;
+        scene.scene.pause();
         bus.emit('dialogue-start', {
             lines,
             onEnd: () => {
-                plugin.resume();
+                // la ripresa del plugin aspetta il fotogramma dopo: una scelta aperta qui troverebbe la scena ancora ferma e poi la vedrebbe ripartire
+                scene.game.scene.resume(scene.scene.key);
                 onEnd?.();
             },
         });
