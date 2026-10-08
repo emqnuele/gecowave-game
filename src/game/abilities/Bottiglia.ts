@@ -98,12 +98,18 @@ export class Bottiglia {
         body.setSize(20, 36);
         this.ctx.lighting.follow(bottle, 0x22d3ee, 120, 0.7);
         sfx.bottleThrow();
-        this.scene.physics.add.collider(bottle, this.ctx.world.level.layer, () => this.burst(bottle, null));
-        this.scene.physics.add.collider(bottle, this.ctx.world.level.breakableWalls, () => this.burst(bottle, null));
-        this.scene.physics.add.overlap(bottle, this.ctx.groups.enemies, (_b, obj) => this.burst(bottle, obj as Enemy));
+        const cols = [
+            this.scene.physics.add.collider(bottle, this.ctx.world.level.layer, () => this.burst(bottle, null)),
+            this.scene.physics.add.collider(bottle, this.ctx.world.level.breakableWalls, () => this.burst(bottle, null)),
+            this.scene.physics.add.overlap(bottle, this.ctx.groups.enemies, (_b, obj) => this.burst(bottle, obj as Enemy)),
+        ];
         if (this.ctx.bosses.current) {
-            this.scene.physics.add.overlap(bottle, this.ctx.bosses.current, (_b, obj) => this.burst(bottle, obj as Boss));
+            cols.push(this.scene.physics.add.overlap(bottle, this.ctx.bosses.current, (_b, obj) => this.burst(bottle, obj as Boss)));
         }
+        // come per i boss: i collider muoiono con la bottiglia, altrimenti la lista del mondo cresce a ogni lancio
+        bottle.once(Phaser.GameObjects.Events.DESTROY, () => {
+            for (const c of cols) if (c.world) c.destroy();
+        });
         this.scene.time.delayedCall(3000, () => bottle.active && this.burst(bottle, null));
     }
 

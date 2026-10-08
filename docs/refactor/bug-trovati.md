@@ -54,7 +54,7 @@ Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguir
 ### i collider delle bottiglie restano dopo lo scoppio
 - **nasce**: `Bottiglia.cast` crea tre o quattro collider per bottiglia (terreno, muri, nemici, boss) e non li distrugge quando la bottiglia scoppia. Phaser salta i collider di un oggetto distrutto, quindi il gioco non cambia, ma la lista dei collider cresce a ogni lancio.
 - **scenari**: `wave-*` con l'acqua tossica (diagnostica `colliders`).
-- **stato**: annotato, non nella lista dei bug decisi. Stessa cura dei boss: legarli al `DESTROY` della bottiglia.
+- **stato**: sistemato il 9 ottobre (deciso da Ema): i collider sono legati al `DESTROY` della bottiglia, come quelli dei boss. Nei 12 scenari `wave-*` cambia solo la diagnostica (per esempio in `wave-bus` al massimo 81 collider vivi invece di 89); il gioco è identico al bit.
 
 ### la fase 2 del nucleo non trova muri da raddrizzare (B13)
 - **dato**: l'arena del glitch è la stanza 22 (92×26 celle in fondo alla regione: pavimento, tre piattaforme a mezz'aria, nessun muro finto). L'unico muro finto `F` della regione è un blocco 2×4 tra la stanza 14 (pozzo) e la 29 (grotta), lontano dall'arena. La fase 2 (`NucleusStraightening.selectWalls`) cerca solo `F` dentro l'arena, quindi oggi resta visiva.
