@@ -127,6 +127,7 @@ export class FlashbackManager {
         const floorY = flat ? flat.y : player.y + 24;
         const ctx: Ctx = { cx: sx, floorY, tint: fb.tint };
         this.ensureTextures(scene);
+        this.ensurePipelines(scene);
 
         // sala buia a tutto schermo: sta ferma al centro dello schermo, niente buchi
         const dark = scene.add.rectangle(W / 2, H / 2, W * 2.2, H * 2.2, 0x030304, 0).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(150);
@@ -238,21 +239,7 @@ export class FlashbackManager {
         // inquadratura 1 dopo il nero del tornado
         later(ENTER, () => {
             if (vortexPipe) cam.removePostPipeline(vortexPipe);
-            // il ricordo ingiallisce: seppia sbiadita che sale in 700ms
-            cam.setPostPipeline(MemoryPipeline);
-            const got = cam.getPostPipeline(MemoryPipeline) as unknown;
-            memoryPipe = (Array.isArray(got) ? got[got.length - 1] : got) as MemoryPipeline | null;
-            if (memoryPipe) {
-                memoryPipe.tint = hexToTint(fb.tint);
-                memoryPipe.strength = 0;
-                const mp: { s: number } = { s: 0 };
-                scene.tweens.add({
-                    targets: mp, s: 1, duration: 700, ease: 'Quad.easeOut',
-                    onUpdate: () => {
-                        if (memoryPipe) memoryPipe.strength = mp.s;
-                    },
-                });
-            }
+            memoryPipe = this.memory(scene, fb.tint);
             cam.setZoom(zoomFrom);
             cam.rotateTo(0, true, 150);
             cutTo(0);
@@ -443,6 +430,15 @@ export class FlashbackManager {
         scope.timers.length = 0;
     }
 
+    /** passata come classe, phaser istanzia solo una pipeline post registrata: senza, vortice e seppia non partivano mai */
+    private ensurePipelines(scene: Phaser.Scene): void {
+        // in canvas non ci sono pipeline: restano le scie di ripiego
+        const pipelines = (scene.renderer as Phaser.Renderer.WebGL.WebGLRenderer).pipelines;
+        if (!pipelines) return;
+        pipelines.addPostPipeline('VortexPipeline', VortexPipeline);
+        pipelines.addPostPipeline('MemoryPipeline', MemoryPipeline);
+    }
+
     /** texture condivise: solo l'alone, il resto è il livello vero. una volta sola. */
     private ensureTextures(scene: Phaser.Scene): void {
         if (!scene.textures.exists('fb-glow')) {
@@ -570,6 +566,31 @@ export class FlashbackManager {
             });
             return pipe;
         } catch {
+            return null;
+        }
+    }
+
+    /** il ricordo ingiallisce: seppia sbiadita che sale in 700ms. null se lo shader non parte */
+    private memory(scene: Phaser.Scene, tint: number): MemoryPipeline | null {
+        // uno shader che non compila sulla scheda di chi gioca non deve fermare il film: resta il colore vero
+        try {
+            const cam = scene.cameras.main;
+            cam.setPostPipeline(MemoryPipeline);
+            const got = cam.getPostPipeline(MemoryPipeline) as unknown;
+            const pipe = (Array.isArray(got) ? got[got.length - 1] : got) as MemoryPipeline | undefined;
+            if (!pipe) return null;
+            pipe.tint = hexToTint(tint);
+            pipe.strength = 0;
+            const mp = { s: 0 };
+            scene.tweens.add({
+                targets: mp, s: 1, duration: 700, ease: 'Quad.easeOut',
+                onUpdate: () => {
+                    pipe.strength = mp.s;
+                },
+            });
+            return pipe;
+        } catch (e) {
+            softFail('film', e);
             return null;
         }
     }

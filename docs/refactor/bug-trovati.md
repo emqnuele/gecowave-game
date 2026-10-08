@@ -22,7 +22,7 @@ Per ognuno: cosa si vede, dove nasce, quale scenario lo mostra, stato.
 - **si vede**: l'ingresso e l'uscita dei film usano sempre le "scie" di ripiego (`warp`); il tornado sul frame (`VortexPipeline`) e la tinta del ricordo (`MemoryPipeline`) non si vedono mai.
 - **nasce**: `FlashbackManager.vortex` e il blocco della memoria (righe ~251 e ~599) chiamano `cam.setPostPipeline(Classe)`, ma in Phaser 3.90 una pipeline post passata come classe si istanzia solo se è registrata (`PipelineManager.getPostPipeline` controlla `postPipelineClasses.contains`). Nessuno chiama `renderer.pipelines.addPostPipeline` (né c'è `pipeline:` nella config del gioco): `getPostPipeline` torna vuoto e il codice ripiega in silenzio.
 - **prova**: la copertura del corpus non vede mai eseguiti i costruttori di `VortexPipeline` e `MemoryPipeline` (`docs/refactor/copertura.md`), in nessuno dei film guardati o saltati.
-- **stato**: da decidere con Ema. Sistemarlo cambia l'aspetto dei flashback (che il refactor non deve toccare): è una decisione di prodotto, insieme al ridisegno dei film.
+- **stato**: sistemato in B13 (deciso da Ema l'8 ottobre, anche se i film andranno rifatti). `FlashbackManager.ensurePipelines` registra le due classi la prima volta che parte un film: l'avvio del gioco non compila shader in più, e in canvas restano le scie. La seppia ha ora un ripiego come il vortice (`memory()`): uno shader che non compila sulla scheda di chi gioca lascia il colore vero invece di fermare la prima inquadratura.
 
 ### codice che i dati di oggi non raggiungono mai
 Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguirli perché le regioni generate non contengono più quei casi.
