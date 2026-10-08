@@ -19,7 +19,7 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | boss | campo | 170-170 |  | game/Bosses.current | portato |
 | | enemies | campo | 171-171 |  | game/groups.enemies (logica in game/Enemies) | portato |
 | | spawners | campo | 173-173 |  | game/groups.spawners | portato |
-| | spawnerToastShown | campo | 174-174 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | spawnerToastShown | campo | 174-174 |  | game/Enemies.spawnerToastShown (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | threatCache | campo | 176-176 |  | game/Enemies.threatCache | portato |
 | | playerProjectiles | campo | 177-177 |  | game/groups | portato |
 | | enemyProjectiles | campo | 178-178 |  | game/groups | portato |
@@ -30,7 +30,7 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | prompt | campo | 183-183 |  | game/Interactions | portato |
 | | promptTxt | campo | 184-184 |  | game/Interactions | portato |
 | | lastSafe | campo | 185-185 |  | game/SafeGround.lastSafe | portato |
-| | safeTimer | campo | 186-186 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | safeTimer | campo | 186-186 |  | game/SafeGround.safeTimer (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | exiting | campo | 187-187 |  | game/Progression.exiting | portato |
 | | checkpointSprites | campo | 188-188 |  | game/Travel.checkpointSprites | portato |
 | | propDressing | campo | 190-190 |  | game/Travel.propDressing | portato |
@@ -41,7 +41,7 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | ambience | campo | 195-195 |  | scene/GameScene (orchestratore) | portato |
 | | water | campo | 196-196 |  | scene/GameScene (orchestratore) | portato |
 | | clone | campo | 197-197 |  | game/abilities/Riflesso.clone | portato |
-| | cloneUntil | campo | 198-198 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | cloneUntil | campo | 198-198 |  | game/abilities/Riflesso.cloneUntil (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | cloneColliders | campo | 199-199 |  | game/abilities/Riflesso.colliders | portato |
 | | cloneTwin | campo | 200-200 |  | game/abilities/Riflesso (RiflessoFx.twin) | portato |
 | | cloneJitterAt | campo | 201-201 |  | game/abilities/Riflesso (RiflessoFx.jitterAt) | portato |
@@ -90,14 +90,14 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | busStops | campo | 254-254 |  | game/Travel.busStops | portato |
 | | homing | campo | 255-255 |  | game/Rewards.homing | portato |
 | | bossIntroShown | campo | 256-256 |  | game/Bosses.introShown | portato |
-| | exitLockToastAt | campo | 257-257 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | exitLockToastAt | campo | 257-257 |  | game/Progression.exitLockToastAt (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | lamettaCenter | campo | 259-259 |  | game/chapters/santuario.lamettaCenter | portato |
 | | lamettaActive | campo | 260-260 |  | game/chapters/santuario.lamettaActive | portato |
-| | lamettaFloorY | campo | 261-261 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | lamettaFloorY | campo | 261-261 |  | game/chapters/santuario.lamettaFloorY (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | smelaArena | campo | 262-262 |  | game/chapters/stabilimento.smelaArena | portato |
 | | acquaPuddles | campo | 263-263 |  | game/abilities/Bottiglia.puddles | portato |
-| | nextLametteAt | campo | 264-264 |  | carry (RestartCarry, sopravvive al restart) | portato |
-| | nextPitturaAt | campo | 265-265 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | nextLametteAt | campo | 264-264 |  | game/chapters/santuario.nextLametteAt (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
+| | nextPitturaAt | campo | 265-265 |  | game/chapters/santuario.nextPitturaAt (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | colorDropsTaken | campo | 266-266 |  | game/chapters/santuario.colorDropsTaken | portato |
 | | mirror | campo | 267-267 |  | game/chapters/santuario.mirror | portato |
 | | pedroChoiceShown | campo | 268-268 |  | game/chapters/nucleo.pedroChoiceShown | portato |
@@ -105,8 +105,8 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | nucleusStraightening | campo | 272-272 |  | game/chapters/nucleo.nucleusStraightening | portato |
 | | pattoActive | campo | 274-274 |  | game/chapters/nucleo.pattoActive | portato |
 | | finalGodsFight | campo | 277-277 |  | game/chapters/nucleo.finalGodsFight | portato |
-| | pattoDeiAt | campo | 278-278 |  | carry (RestartCarry, sopravvive al restart) | portato |
-| | pattoNextSpawnAt | campo | 279-279 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | pattoDeiAt | campo | 278-278 |  | game/chapters/nucleo.pattoDeiAt (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
+| | pattoNextSpawnAt | campo | 279-279 |  | game/chapters/nucleo.pattoNextSpawnAt (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | pattoWarned | campo | 280-280 |  | game/chapters/nucleo.pattoWarned | portato |
 | | scudoUntil | campo | 282-282 |  | game/abilities/Scudo.until | portato |
 | | scudoGfx | campo | 283-283 |  | tolto: sempre null (DEV_LOG_REFACTOR) | portato |
@@ -117,14 +117,14 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | acquaBottles | campo | 289-289 |  | tolto: scritto e mai letto (DEV_LOG_REFACTOR) | portato |
 | | poisoned | campo | 290-290 |  | game/abilities/Veleno.poisoned | portato |
 | | chaseSprite | campo | 292-292 |  | game/chapters/tana.chaseSprite | portato |
-| | chaseLastSeen | campo | 293-293 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | chaseLastSeen | campo | 293-293 |  | game/chapters/tana.chaseLastSeen (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | chaseWhisperAt | campo | 294-294 |  | game/chapters/tana.chaseWhisperAt | portato |
 | | chaseWhisperIdx | campo | 295-295 |  | game/chapters/tana.chaseWhisperIdx | portato |
 | | chaseTrail | campo | 296-296 |  | game/chapters/tana.chaseTrail | portato |
 | | chaseStarts | campo | 297-297 |  | game/chapters/tana.chaseStarts | portato |
 | | chaseEnds | campo | 298-298 |  | game/chapters/tana.chaseEnds | portato |
 | | chaseZoneIdx | campo | 299-299 |  | game/chapters/tana.chaseZoneIdx | portato |
-| | chaseStartedAt | campo | 300-300 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | chaseStartedAt | campo | 300-300 |  | game/chapters/tana.chaseStartedAt (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | chaseDone | campo | 301-301 |  | game/chapters/tana.chaseDone | portato |
 | | chaseNearSince | campo | 303-303 |  | game/chapters/tana.chaseNearSince | portato |
 | | chaseTiredUntil | campo | 304-304 |  | game/chapters/tana.chaseTiredUntil | portato |
@@ -133,7 +133,7 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | ivanSprite | campo | 309-309 |  | game/chapters/bus.ivanSprite | portato |
 | | ivanInArena | campo | 310-310 |  | game/chapters/bus.ivanInArena | portato |
 | | ivanBusy | campo | 311-311 |  | game/chapters/bus.ivanBusy | portato |
-| | nextIvanStrikeAt | campo | 312-312 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | nextIvanStrikeAt | campo | 312-312 |  | game/chapters/bus.nextIvanStrikeAt (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | ivanDead | campo | 313-313 |  | game/chapters/bus.ivanDead | portato |
 | | companion | campo | 315-315 |  | game/chapters/shared/WalkingGuide.sprite | portato |
 | | companionBaseY | campo | 316-316 |  | game/chapters/shared/WalkingGuide.baseY | portato |
@@ -151,12 +151,12 @@ Metodi eseguiti da almeno uno scenario: 186/186.
 | | replacedBossX | campo | 330-330 |  | game/Doomsday.replacedBossX | portato |
 | | replacedBossY | campo | 331-331 |  | game/Doomsday.replacedBossY | portato |
 | | nextWildGlitchAt | campo | 332-332 |  | game/Doomsday.nextWildGlitchAt | portato |
-| | parryUntil | campo | 334-334 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | parryUntil | campo | 334-334 |  | game/Combat.parryUntil (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | mechanic | campo | 336-336 |  | scene/GameScene (orchestratore) | portato |
 | | playerLightRef | campo | 337-337 |  | scene/GameScene (orchestratore) | portato |
 | | vignette | campo | 339-339 |  | scene/GameScene (facciata del film) | portato |
 | | quizAttempts | campo | 341-341 |  | game/chapters/mente.quizAttempts | portato |
-| | nextLessonCheck | campo | 342-342 |  | carry (RestartCarry, sopravvive al restart) | portato |
+| | nextLessonCheck | campo | 342-342 |  | game/Enemies.nextLessonCheck (B13: era in RestartCarry, ora rinasce a ogni vita) | portato |
 | | voice | campo | 344-344 |  | game/Bosses.voice | portato |
 | | ombraBrain | campo | 345-345 |  | game/Bosses.ombraBrain | portato |
 | | beatMs | campo | 347-347 |  | game/Bosses.beatMs | portato |

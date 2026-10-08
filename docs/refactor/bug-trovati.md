@@ -16,7 +16,7 @@ Per ognuno: cosa si vede, dove nasce, quale scenario lo mostra, stato.
 - **si vede**: niente a occhio. Il menu del fondale (`MenuScene`) riprende le sue animazioni (braci, parallasse) dal tempo che aveva la volta prima, invece che da zero.
 - **nasce**: il campo `t` di `MenuScene` non si azzera in `create()`. Phaser riusa la stessa istanza di scena a ogni restart (la stessa trappola di `GameScene`).
 - **trovato**: era una fonte di non determinismo nell'harness (il menu gira già durante il boot, che durava un numero variabile di fotogrammi). L'harness ora rende il boot deterministico, e il campo si porta dietro sempre lo stesso valore.
-- **stato**: innocuo; da sistemare dopo, insieme agli altri campi che sopravvivono al restart.
+- **stato**: sistemato in B13 con tutti gli altri: `MenuScene` azzera `t`, `ridge` e `dust` in `create()`, `GalleryScene` `t` e `sprites` (gli sprite della vita prima restavano nella lista animata), e i 14 campi di `GameScene` raccolti in `RestartCarry` sono tornati ciascuno nel sistema che li usa, che nasce nuovo a ogni vita. `RestartCarry` non esiste più.
 
 ### i shader dei flashback non partono mai (vortice e ricordo)
 - **si vede**: l'ingresso e l'uscita dei film usano sempre le "scie" di ripiego (`warp`); il tornado sul frame (`VortexPipeline`) e la tinta del ricordo (`MemoryPipeline`) non si vedono mai.

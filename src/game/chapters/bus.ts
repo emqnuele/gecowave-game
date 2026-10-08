@@ -10,6 +10,7 @@ import { waveOnce } from './shared/wave';
 
 /** il citelis: guggu nel loop, ivan maggini che si sacrifica, walter che dorme al palo */
 export class BusChapter extends Chapter {
+    private nextIvanStrikeAt = 0;
     // ivan maggini nello scontro con guggu
     private ivanSprite: Phaser.GameObjects.Sprite | null = null;
     private ivanInArena = false;
@@ -106,11 +107,11 @@ export class BusChapter extends Chapter {
                 duration: 1000,
                 ease: 'Quad.easeInOut',
             });
-            this.ctx.carry.nextIvanStrikeAt = time + 2600;
+            this.nextIvanStrikeAt = time + 2600;
             bus.emit('toast', { text: 'ivan maggini entra nel caos. la furia è carica.' });
             return;
         }
-        if (!this.ivanBusy && time >= this.ctx.carry.nextIvanStrikeAt) {
+        if (!this.ivanBusy && time >= this.nextIvanStrikeAt) {
             this.ivanStrike(boss);
         }
     }
@@ -203,7 +204,7 @@ export class BusChapter extends Chapter {
                             onComplete: () => {
                                 ivan.setFlipX(false);
                                 this.ivanBusy = false;
-                                this.ctx.carry.nextIvanStrikeAt = this.scene.time.now + 4200;
+                                this.nextIvanStrikeAt = this.scene.time.now + 4200;
                             },
                         });
                     });

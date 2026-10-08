@@ -13,6 +13,9 @@ import { rng } from '../../core/rng';
 
 /** il santuario: lametta presiede l'arena delle gocce di colore, poi lo specchio nero */
 export class SantuarioChapter extends Chapter {
+    private lamettaFloorY = 0;
+    private nextLametteAt = 0;
+    private nextPitturaAt = 0;
     private lamettaCenter: { x: number; y: number } | null = null;
     private lamettaActive = false;
     private colorDropsTaken = 0;
@@ -57,14 +60,14 @@ export class SantuarioChapter extends Chapter {
             if (Math.abs(this.ctx.player.x - c.x) < 380 && Math.abs(this.ctx.player.y - c.y) < 380 && !this.ctx.player.dead) {
                 this.lamettaActive = true;
                 // pavimento catturato col player a terra: le gocce successive nascono in aria
-                this.ctx.carry.lamettaFloorY = this.ctx.player.y;
+                this.lamettaFloorY = this.ctx.player.y;
                 music.playBoss('lametta-arena');
                 this.ctx.dialogues.start('lametta-incontro', () => {
                     this.ctx.bosses.silence();
                     this.ctx.bosses.voice = new BossVoice(this.scene, LAMETTA_BARKS);
                     this.ctx.bosses.voice.say('engage', true);
-                    this.ctx.carry.nextLametteAt = this.scene.time.now + 1500;
-                    this.ctx.carry.nextPitturaAt = this.scene.time.now + 4000;
+                    this.nextLametteAt = this.scene.time.now + 1500;
+                    this.nextPitturaAt = this.scene.time.now + 4000;
                     this.spawnColorDrop();
                 });
             }
@@ -72,13 +75,13 @@ export class SantuarioChapter extends Chapter {
         }
         if (this.mirror) return;
 
-        if (time >= this.ctx.carry.nextLametteAt) {
-            this.ctx.carry.nextLametteAt = time + 2600;
+        if (time >= this.nextLametteAt) {
+            this.nextLametteAt = time + 2600;
             const xs = [this.ctx.player.x - 70 + rng.logic.next() * 40, this.ctx.player.x + 40 + rng.logic.next() * 40];
             this.ctx.combat.onBossLamette({ xs, y: this.ctx.player.y });
         }
-        if (time >= this.ctx.carry.nextPitturaAt && this.ctx.enemies.awakeEnemies() < 5) {
-            this.ctx.carry.nextPitturaAt = time + 6500;
+        if (time >= this.nextPitturaAt && this.ctx.enemies.awakeEnemies() < 5) {
+            this.nextPitturaAt = time + 6500;
             const at = this.ctx.world.openSpotNear(c.x + (rng.logic.next() - 0.5) * 400, c.y - 60, 8);
             this.ctx.enemies.spawnEnemy('pittura-mini', at.x, at.y, { hunting: true });
         }
@@ -91,7 +94,7 @@ export class SantuarioChapter extends Chapter {
         const color = colors[this.colorDropsTaken % colors.length];
         const x = c.x + (rng.logic.next() - 0.5) * 620;
         // tetto a ~90px (sotto la soglia col double jump), ma fascia ampia: da quasi-terra in su
-        const y = this.ctx.carry.lamettaFloorY - 8 - rng.logic.next() * 82;
+        const y = this.lamettaFloorY - 8 - rng.logic.next() * 82;
         const drop = this.scene.physics.add.sprite(x, y, 'color-drop').setTint(color).setDepth(5);
         (drop.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.ctx.lighting.follow(drop, color, 140, 0.9);

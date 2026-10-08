@@ -18,6 +18,9 @@ export class GalleryScene extends Phaser.Scene {
     }
 
     create(): void {
+        // phaser riusa la stessa istanza a ogni restart: quello che non si riassegna qui passerebbe alla vita dopo
+        this.t = 0;
+        this.sprites = [];
         const params = new URLSearchParams(location.search);
         if (params.has('flashback')) {
             this.flashbackPreview(params.get('flashback') ?? 'all');

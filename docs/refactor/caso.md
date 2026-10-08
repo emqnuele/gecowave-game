@@ -171,10 +171,10 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 205 | Enemies.updateSpawners | rng.logic.next | `s.nextAt = time + s.intervalMs * (0.85 + rng.logic.next() * 0.3);` | logica |
-| 316 | Enemies.onEnemyDied | rng.logic.next | `const line = NOTINO_FUGHE[Math.floor(rng.logic.next() * NOTINO_FUGHE.length)];` | logica (testo) |
-| 333 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
-| 333 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
+| 207 | Enemies.updateSpawners | rng.logic.next | `s.nextAt = time + s.intervalMs * (0.85 + rng.logic.next() * 0.3);` | logica |
+| 318 | Enemies.onEnemyDied | rng.logic.next | `const line = NOTINO_FUGHE[Math.floor(rng.logic.next() * NOTINO_FUGHE.length)];` | logica (testo) |
+| 335 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
+| 335 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
 
 ## src/game/abilities/Bottiglia.ts
 
@@ -198,7 +198,7 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 138 | NucleoChapter.updatePatto | rng.logic.next | `const dir = rng.logic.next() > 0.5 ? 1 : -1;` | logica |
+| 140 | NucleoChapter.updatePatto | rng.logic.next | `const dir = rng.logic.next() > 0.5 ? 1 : -1;` | logica |
 
 ## src/game/chapters/piazza.ts
 
@@ -210,11 +210,11 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 77 | SantuarioChapter.updateLamettaArena | rng.logic.next | `const xs = [this.ctx.player.x - 70 + rng.logic.next() * 40, this.ctx.player.x + 40 + rng.logic.next() * 40];` | logica |
-| 77 | SantuarioChapter.updateLamettaArena | rng.logic.next | `const xs = [this.ctx.player.x - 70 + rng.logic.next() * 40, this.ctx.player.x + 40 + rng.logic.next() * 40];` | logica |
-| 82 | SantuarioChapter.updateLamettaArena | rng.logic.next | `const at = this.ctx.world.openSpotNear(c.x + (rng.logic.next() - 0.5) * 400, c.y - 60, 8);` | logica |
-| 92 | SantuarioChapter.spawnColorDrop | rng.logic.next | `const x = c.x + (rng.logic.next() - 0.5) * 620;` | logica |
-| 94 | SantuarioChapter.spawnColorDrop | rng.logic.next | `const y = this.ctx.carry.lamettaFloorY - 8 - rng.logic.next() * 82;` | logica |
+| 80 | SantuarioChapter.updateLamettaArena | rng.logic.next | `const xs = [this.ctx.player.x - 70 + rng.logic.next() * 40, this.ctx.player.x + 40 + rng.logic.next() * 40];` | logica |
+| 80 | SantuarioChapter.updateLamettaArena | rng.logic.next | `const xs = [this.ctx.player.x - 70 + rng.logic.next() * 40, this.ctx.player.x + 40 + rng.logic.next() * 40];` | logica |
+| 85 | SantuarioChapter.updateLamettaArena | rng.logic.next | `const at = this.ctx.world.openSpotNear(c.x + (rng.logic.next() - 0.5) * 400, c.y - 60, 8);` | logica |
+| 95 | SantuarioChapter.spawnColorDrop | rng.logic.next | `const x = c.x + (rng.logic.next() - 0.5) * 620;` | logica |
+| 97 | SantuarioChapter.spawnColorDrop | rng.logic.next | `const y = this.lamettaFloorY - 8 - rng.logic.next() * 82;` | logica |
 
 ## src/mechanics/HazardManager.ts
 
@@ -233,7 +233,7 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 638 | GameScene.update | rng.fx.next | `if (state.run.trenbolone && rng.fx.next() < 0.2) {` | cosmetico |
+| 636 | GameScene.update | rng.fx.next | `if (state.run.trenbolone && rng.fx.next() < 0.2) {` | cosmetico |
 
 ## src/stage/Atmosphere.ts
 

@@ -92,6 +92,7 @@ class RiflessoFx {
 
 /** il riflesso: un clone che combatte da solo per qualche secondo, e una volta sola ci si scambia di posto */
 export class Riflesso {
+    private cloneUntil = 0;
     private clone: Companion | null = null;
     private colliders: Phaser.Physics.Arcade.Collider[] = [];
     private waveAt = 0;
@@ -118,7 +119,7 @@ export class Riflesso {
         this.kill();
         const clone = new Companion(this.scene, x, y, facing < 0 ? -1 : 1);
         this.clone = clone;
-        this.ctx.carry.cloneUntil = this.scene.time.now + COMBAT.riflessoDurationMs;
+        this.cloneUntil = this.scene.time.now + COMBAT.riflessoDurationMs;
         this.swapUsed = false;
         this.ctx.player.riflessoSwapAvailable = true;
         this.waveAt = 0;
@@ -190,7 +191,7 @@ export class Riflesso {
     update(time: number, delta: number): void {
         const clone = this.clone;
         if (!clone || !clone.active) return;
-        if (time >= this.ctx.carry.cloneUntil) {
+        if (time >= this.cloneUntil) {
             this.kill();
             return;
         }

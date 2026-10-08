@@ -6,7 +6,6 @@ import type { TerrainRenderer } from '../stage/TerrainRenderer';
 import type { TrentatreMarks } from '../story/TrentatreMarks';
 import type { TrapManager } from '../mechanics/TrapManager';
 import type { Player } from '../entities/Player';
-import type { RestartCarry } from './carry';
 import type { Abilities } from './abilities';
 import type { Bosses } from './Bosses';
 import type { Arena } from './Arena';
@@ -53,7 +52,6 @@ export interface GameSystem {
 /** una vita di scena: ogni sistema ne prende con Pick solo quello che usa, così le dipendenze stanno nel tipo */
 export class GameContext {
     readonly scene: Phaser.Scene;
-    readonly carry: RestartCarry;
     /** questa istanza decide lo stato del mondo: in single sempre, in coop solo l'host (fase 3) */
     readonly simulates: boolean = true;
     world!: LevelWorld;
@@ -83,8 +81,7 @@ export class GameContext {
     challenges!: Challenges;
     doomsday!: Doomsday;
 
-    constructor(scene: Phaser.Scene, carry: RestartCarry) {
+    constructor(scene: Phaser.Scene) {
         this.scene = scene;
-        this.carry = carry;
     }
 }

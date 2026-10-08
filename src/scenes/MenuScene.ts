@@ -37,6 +37,10 @@ export class MenuScene extends Phaser.Scene {
     }
 
     create(data: { levelId?: string }): void {
+        // phaser riusa la stessa istanza a ogni restart: quello che non si riassegna qui passerebbe alla vita dopo
+        this.t = 0;
+        this.ridge = null;
+        this.dust = null;
         this.levelId = data.levelId && LEVELS[data.levelId] ? data.levelId : 'bus';
         const def = LEVELS[this.levelId];
         const biome = biomeFor(def);

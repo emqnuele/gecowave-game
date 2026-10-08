@@ -12,10 +12,11 @@ import { poisonMultiplier, risonanteStep } from '../rules/combat';
 import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../core/worldEvents';
 
-type CombatCtx = Pick<GameContext, 'simulates' | 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'enemies' | 'bosses' | 'abilities' | 'feel' | 'safe'>;
+type CombatCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'enemies' | 'bosses' | 'abilities' | 'feel' | 'safe'>;
 
 /** chi colpisce chi: collider, danni, proiettili, esplosioni, schianto */
 export class Combat implements GameSystem {
+    private parryUntil = 0;
     private readonly ctx: CombatCtx;
     private readonly scene: Phaser.Scene;
 
@@ -27,8 +28,8 @@ export class Combat implements GameSystem {
     /** lo scudo para: clang, rinculo, nessun flow */
     parry(enemy: Enemy): void {
         const now = this.scene.time.now;
-        if (now < this.ctx.carry.parryUntil) return;
-        this.ctx.carry.parryUntil = now + 350;
+        if (now < this.parryUntil) return;
+        this.parryUntil = now + 350;
         sfx.clang();
         const dir = Math.sign(this.ctx.player.x - enemy.x) || 1;
         (this.ctx.player.body as Phaser.Physics.Arcade.Body).setVelocityX(dir * 260);

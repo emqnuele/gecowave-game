@@ -38,7 +38,6 @@ import { TrentatreMarks } from '../story/TrentatreMarks';
 import { AbilitySeals } from '../mechanics/AbilitySeals';
 import { createMechanic, type Mechanic } from '../mechanics';
 import { Input } from '../input/Input';
-import { RestartCarry } from '../game/carry';
 import { GameContext } from '../game/context';
 import { LevelWorld } from '../game/world/LevelWorld';
 import { Dialogues } from '../game/Dialogues';
@@ -67,7 +66,6 @@ import { reseedRng, rng } from '../core/rng';
 const FALL_DEATH_MARGIN = 3000;
 
 export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
-    private readonly carry = new RestartCarry();
     private ctx!: GameContext;
     private world!: LevelWorld;
     private player!: Player;
@@ -122,7 +120,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
     init(data: SceneData): void {
         // ogni livello pesca da sequenze sue: quello che è successo prima non sposta la sua trama
         reseedRng();
-        this.ctx = new GameContext(this, this.carry);
+        this.ctx = new GameContext(this);
         const region = loadRegion(this, data.levelId);
         const def = region?.def ?? LEVELS[data.levelId];
         if (!def) throw new Error(`livello sconosciuto: ${data.levelId}`);

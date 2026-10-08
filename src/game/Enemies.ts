@@ -14,10 +14,12 @@ import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../core/worldEvents';
 import { rng } from '../core/rng';
 
-type EnemiesCtx = Pick<GameContext, 'simulates' | 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
+type EnemiesCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
 
 /** nemici e nidi: chi nasce, chi dorme lontano, chi muore e cosa lascia */
 export class Enemies implements GameSystem {
+    private spawnerToastShown = false;
+    private nextLessonCheck = 0;
     private readonly ctx: EnemiesCtx;
     private readonly scene: Phaser.Scene;
     /** riusato ogni frame per le minacce: niente array nuovi per il GC */
@@ -242,8 +244,8 @@ export class Enemies implements GameSystem {
         this.scene.time.delayedCall(800, () => burst.destroy());
         this.ctx.rewards.spawnBarrePickup(x, y - 20, 12);
         s.destroy();
-        if (!this.ctx.carry.spawnerToastShown) {
-            this.ctx.carry.spawnerToastShown = true;
+        if (!this.spawnerToastShown) {
+            this.spawnerToastShown = true;
             bus.emit('toast', { text: `nido di ${kind} distrutto. niente più spawn da qui.` });
         }
     }
@@ -352,8 +354,8 @@ export class Enemies implements GameSystem {
 
     /** la prima volta che vedi un nemico simbolo, markolino ti dice come si batte */
     updateLessons(time: number): void {
-        if (time < this.ctx.carry.nextLessonCheck || this.ctx.player.dead) return;
-        this.ctx.carry.nextLessonCheck = time + 300;
+        if (time < this.nextLessonCheck || this.ctx.player.dead) return;
+        this.nextLessonCheck = time + 300;
         for (const obj of this.ctx.groups.enemies.getChildren()) {
             const e = obj as Enemy;
             if (!e.active || e.dormant) continue;

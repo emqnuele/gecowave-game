@@ -12,6 +12,8 @@ import { rng } from '../../core/rng';
 
 /** il nucleo: pedro chiede una risposta, poi il patto, il giorno 30 o gli dei */
 export class NucleoChapter extends Chapter {
+    private pattoDeiAt = 0;
+    private pattoNextSpawnAt = 0;
     private pedroChoiceShown = false;
     /** pedro spento mentre combatti il suo glitch */
     private pedroShell: Boss | null = null;
@@ -124,8 +126,8 @@ export class NucleoChapter extends Chapter {
         this.ctx.dialogues.start('pedro-patto', () => {
             bus.emit('toast', { text: TOASTS.patto });
             this.pattoActive = true;
-            this.ctx.carry.pattoDeiAt = this.scene.time.now + 20000;
-            this.ctx.carry.pattoNextSpawnAt = this.scene.time.now + 2500;
+            this.pattoDeiAt = this.scene.time.now + 20000;
+            this.pattoNextSpawnAt = this.scene.time.now + 2500;
             this.pattoWarned = 0;
         });
     }
@@ -133,14 +135,14 @@ export class NucleoChapter extends Chapter {
     private updatePatto(time: number): void {
         if (!this.pattoActive || this.ctx.player.dead || this.ctx.bosses.current) return;
         // ondate di glitch per assaporare il potere rubato
-        if (time >= this.ctx.carry.pattoNextSpawnAt && this.ctx.enemies.awakeEnemies() < 7) {
-            this.ctx.carry.pattoNextSpawnAt = time + 3500;
+        if (time >= this.pattoNextSpawnAt && this.ctx.enemies.awakeEnemies() < 7) {
+            this.pattoNextSpawnAt = time + 3500;
             const dir = rng.logic.next() > 0.5 ? 1 : -1;
             const at = this.ctx.world.openSpotNear(this.ctx.player.x + dir * 420, this.ctx.player.y - 60, 10);
             const e = this.ctx.enemies.spawnEnemy('glitchetto', at.x, at.y, { hunting: true });
             this.scene.physics.add.collider(e, this.ctx.world.level.layer);
         }
-        const left = this.ctx.carry.pattoDeiAt - time;
+        const left = this.pattoDeiAt - time;
         if (left <= 12000 && this.pattoWarned < 1) {
             this.pattoWarned = 1;
             bus.emit('toast', { text: TOASTS.pattoAvviso1 });

@@ -20,6 +20,8 @@ const CHASE_LINES = [
 
 /** la tana di lochef: un capitolo horror per sottrazione, cacce e nascondigli */
 export class TanaChapter extends Chapter {
+    private chaseLastSeen = { x: 0, y: 0 };
+    private chaseStartedAt = 0;
     private readonly ambushes: Ambushes;
     // inseguimenti nella tana: lochef ci prova più di una volta
     private chaseSprite: Phaser.GameObjects.Sprite | null = null;
@@ -174,7 +176,7 @@ export class TanaChapter extends Chapter {
                 // fuori dalle luci: lochef si vede sempre, è lui la luce cattiva
                 const chef = this.scene.add.sprite(sx, this.ctx.player.y - 70, ensureCreature(this.scene, 'boss-lochef'), 0).setDepth(7).setScale(1.25 / creatureRes(this.scene, 'boss-lochef'));
                 this.chaseSprite = chef;
-                this.ctx.carry.chaseStartedAt = this.scene.time.now;
+                this.chaseStartedAt = this.scene.time.now;
                 this.chaseNearSince = 0;
                 this.chaseTiredUntil = 0;
                 this.ctx.lighting.follow(chef, 0xf87171, 300, 1.2);
@@ -208,7 +210,7 @@ export class TanaChapter extends Chapter {
 
         // fine corsa: lochef ti perde di vista. per ora. (o si stufa: nemmeno lui corre per sempre)
         const endP = this.chaseEnds[this.chaseZoneIdx] ?? Infinity;
-        if (this.ctx.world.progressAt(this.ctx.player.x, this.ctx.player.y) >= endP || this.scene.time.now - this.ctx.carry.chaseStartedAt > 50000) {
+        if (this.ctx.world.progressAt(this.ctx.player.x, this.ctx.player.y) >= endP || this.scene.time.now - this.chaseStartedAt > 50000) {
             this.chaseDone[this.chaseZoneIdx] = true;
             this.chaseSprite = null;
             this.chaseTrail?.destroy();
@@ -234,7 +236,7 @@ export class TanaChapter extends Chapter {
 
         // da nascosto lochef perde la traccia: punta l'ultimo punto visto, poi si allontana
         if (this.ctx.player.hidden) {
-            const ls = this.ctx.carry.chaseLastSeen;
+            const ls = this.chaseLastSeen;
             const hx = ls.x - chef.x;
             const hy = ls.y - 30 - chef.y;
             const hdist = Math.hypot(hx, hy) || 1;
@@ -258,7 +260,7 @@ export class TanaChapter extends Chapter {
             chef.setFrame(Math.floor(this.scene.time.now / 110) % creatureFrames(this.scene, 'boss-lochef'));
             return;
         }
-        this.ctx.carry.chaseLastSeen = { x: this.ctx.player.x, y: this.ctx.player.y };
+        this.chaseLastSeen = { x: this.ctx.player.x, y: this.ctx.player.y };
 
         // fluttua verso di te, ma fa i gradini: in verticale è lento,
         // sui dislivelli si pianta in orizzontale. a elastico: lontano corre,
@@ -268,7 +270,7 @@ export class TanaChapter extends Chapter {
         const dist = Math.hypot(dx, dy) || 1;
         let speed = dist > 620 ? 380 : dist > 320 ? 250 : 200;
         // partenza morbida: 1.5s per entrare in caccia, il salto iniziale non uccide
-        const ramp = Math.min(1, (this.scene.time.now - this.ctx.carry.chaseStartedAt) / 1500);
+        const ramp = Math.min(1, (this.scene.time.now - this.chaseStartedAt) / 1500);
         speed *= 0.4 + 0.6 * ramp;
         // fatica: dopo 8s a contatto (dist < 200) rallenta del 30% per 3s
         if (dist < 200) {

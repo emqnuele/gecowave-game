@@ -13,10 +13,11 @@ import { state } from '../core/state';
 import type { EndingId } from './chapters/ChapterScript';
 import type { Flow, GameContext, GameSystem, SceneData } from './context';
 
-type ProgressionCtx = Pick<GameContext, 'scene' | 'carry' | 'world' | 'player' | 'bosses' | 'chapter' | 'safe' | 'feel' | 'doomsday' | 'flow'>;
+type ProgressionCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'bosses' | 'chapter' | 'safe' | 'feel' | 'doomsday' | 'flow'>;
 
 /** il capitolo come percorso: uscite, riepiloghi, punteggi, morte e fine partita */
 export class Progression implements Flow, GameSystem {
+    private exitLockToastAt = 0;
     /** la scena sta per cambiare capitolo: niente più uscite, morti o ingaggi */
     exiting = false;
     private lastRoom = -1;
@@ -53,16 +54,16 @@ export class Progression implements Flow, GameSystem {
         if (!hit) return;
         // i boss non si superano scappando (quelli opzionali sì)
         if (this.ctx.bosses.current?.active && this.ctx.bosses.current.def.guardsExit !== false) {
-            if (this.scene.time.now > this.ctx.carry.exitLockToastAt) {
-                this.ctx.carry.exitLockToastAt = this.scene.time.now + 3000;
+            if (this.scene.time.now > this.exitLockToastAt) {
+                this.exitLockToastAt = this.scene.time.now + 3000;
                 bus.emit('toast', { text: `${this.ctx.bosses.current.def.name.split(',')[0]} ti sbarra ancora la strada. segui la freccia.` });
             }
             return;
         }
         const lock = this.ctx.chapter.exitLock?.();
         if (lock) {
-            if (this.scene.time.now > this.ctx.carry.exitLockToastAt) {
-                this.ctx.carry.exitLockToastAt = this.scene.time.now + 3000;
+            if (this.scene.time.now > this.exitLockToastAt) {
+                this.exitLockToastAt = this.scene.time.now + 3000;
                 bus.emit('toast', { text: lock });
             }
             return;

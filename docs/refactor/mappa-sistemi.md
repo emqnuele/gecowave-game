@@ -7,7 +7,6 @@ La bozza qui sotto è stata messa alla prova spostando il codice. Il risultato, 
 | sistema | file | cosa fa | note rispetto alla bozza |
 |---|---|---|---|
 | contesto | `src/game/context.ts` | `GameContext` (una vita di scena), `GameSystem`, `Flow`, `SceneData` | i sistemi prendono il contesto con `Pick` (ADR-051) |
-| campi che sopravvivono al restart | `src/game/carry.ts` | `RestartCarry`: i 14 campi che `create()` non azzerava | bug da chiudere in B13 |
 | mondo | `src/game/world/LevelWorld.ts` | definizione, layout, livello, nav, bioma; stanze, progresso, punti liberi, palco dei film, varchi | la costruzione (luci, terreno, fondali) resta nella scena: è composizione |
 | gruppi fisici | `src/game/groups.ts` | gli 8 gruppi nell'ordine di creazione di prima | nuovo: phaser processa i gruppi nell'ordine in cui nascono, e nemici, proiettili, porte e sbarre li toccano in tanti |
 | peso dei colpi | `src/game/Feel.ts` | scossa e hitstop | nuovo, prima erano due metodi usati ovunque |
