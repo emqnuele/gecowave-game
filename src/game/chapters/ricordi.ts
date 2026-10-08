@@ -1,4 +1,4 @@
-import { state } from '../../engine/state';
+import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter } from './ChapterScript';
 

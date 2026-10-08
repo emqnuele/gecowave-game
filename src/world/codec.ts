@@ -1,4 +1,4 @@
-import { hashString } from '../engine/art/ink';
+import { hashString } from '../rules/hash';
 import type { EntitySpec, LevelDef } from '../types';
 import type { RegionLayout } from './types';
 

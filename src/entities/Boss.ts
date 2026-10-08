@@ -1,15 +1,15 @@
 import Phaser from 'phaser';
 import { BOSSES, type BossAttack, type BossDef } from '../content/bosses';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import type { BossKind } from '../types';
 import { bossPhase, type BossPhase } from '../rules/combat';
-import { ensureCreature } from '../engine/art/creatures';
-import { acoustics } from '../engine/audio/acoustics';
-import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../engine/art/creatureKit';
-import { emitWorld } from '../engine/worldEvents';
-import { rng } from '../engine/rng';
+import { ensureCreature } from '../art/creatures';
+import { acoustics } from '../audio/acoustics';
+import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../art/creatureKit';
+import { emitWorld } from '../core/worldEvents';
+import { rng } from '../core/rng';
 
 type Phase = BossPhase;
 

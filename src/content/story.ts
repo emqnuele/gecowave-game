@@ -1,7 +1,7 @@
 import type { AbilityId, DialogueLine } from '../types';
 import { ARC_DIALOGUES } from './arcs';
 import { toneFor } from './tone';
-import { rng } from '../engine/rng';
+import { rng } from '../core/rng';
 
 /* la voce del realm: minuscolo, demenziale, mai tecnico.
    pedro parla glitchato, riba coi refusi, piema corretto da professore.

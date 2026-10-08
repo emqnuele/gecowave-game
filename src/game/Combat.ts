@@ -2,15 +2,15 @@ import Phaser from 'phaser';
 import { COMBAT, TILE } from '../config';
 import { hitMult, LESSONS } from '../content/lessons';
 import { TOASTS } from '../content/story';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import { Boss } from '../entities/Boss';
 import { Enemy } from '../entities/Enemy';
 import { Spawner } from '../entities/Spawner';
 import { poisonMultiplier, risonanteStep } from '../rules/combat';
 import type { GameContext, GameSystem } from './context';
-import { emitWorld } from '../engine/worldEvents';
+import { emitWorld } from '../core/worldEvents';
 
 type CombatCtx = Pick<GameContext, 'simulates' | 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'enemies' | 'bosses' | 'abilities' | 'feel' | 'safe'>;
 

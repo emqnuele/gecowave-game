@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import { COMBAT } from '../config';
-import { state } from '../engine/state';
+import { state } from '../core/state';
 
 /** il peso dei colpi: scossa di camera e fisica che si ferma un istante */
 export class Feel {

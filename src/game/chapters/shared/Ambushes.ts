@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
-import { sfx } from '../../../engine/sfx';
-import { state } from '../../../engine/state';
+import { sfx } from '../../../audio/sfx';
+import { state } from '../../../core/state';
 import type { Enemy } from '../../../entities/Enemy';
 import type { ChapterCtx } from '../ChapterScript';
 

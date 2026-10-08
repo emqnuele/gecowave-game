@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import { keyLabel } from '../engine/input/keyText';
+import { keyLabel } from '../input/keyText';
 import type { GameContext, GameSystem } from './context';
 
 /** qualcosa con cui si parla o si agisce premendo interagisci */

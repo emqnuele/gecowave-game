@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { ENEMIES, type EnemyArchetype } from '../content/enemies';
-import type { NavEdge, NavGraph } from '../engine/nav/NavGraph';
+import type { NavEdge, NavGraph } from '../world/NavGraph';
 import type { EnemyKind } from '../types';
-import { mix } from '../engine/art/ink';
-import { ensureCreature } from '../engine/art/creatures';
-import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
-import { emitWorld } from '../engine/worldEvents';
-import { rng } from '../engine/rng';
+import { mix } from '../art/ink';
+import { ensureCreature } from '../art/creatures';
+import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../art/creatureKit';
+import { emitWorld } from '../core/worldEvents';
+import { rng } from '../core/rng';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo

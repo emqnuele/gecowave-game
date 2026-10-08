@@ -1,7 +1,7 @@
 import { TOASTS, WAVESUNG } from '../../content/story';
-import { bus } from '../../engine/events';
-import { sfx } from '../../engine/sfx';
-import { state } from '../../engine/state';
+import { bus } from '../../core/events';
+import { sfx } from '../../audio/sfx';
+import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter, type ChapterCtx } from './ChapterScript';
 import { Ambushes } from './shared/Ambushes';

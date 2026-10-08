@@ -2,13 +2,13 @@ import { BASE_NOTCHES, NOTCH_PRICES } from '../../content/items';
 import { LEVEL_ORDER, LEVELS, TOTAL_FRAGMENTS } from '../../content/levels';
 import { QUESTS } from '../../content/quests';
 import { TILE } from '../../config';
-import { bus } from '../../engine/events';
-import { sfx } from '../../engine/sfx';
-import { state } from '../../engine/state';
+import { bus } from '../../core/events';
+import { sfx } from '../../audio/sfx';
+import { state } from '../../core/state';
 import type { DialogueLine } from '../../types';
 import { loadRegion } from '../../world/registry';
 import { Chapter } from './ChapterScript';
-import { rng } from '../../engine/rng';
+import { rng } from '../../core/rng';
 
 /** l'hub: chi torna in piazza, la bottega, la bacheca, l'oracolo e il bar */
 export class PiazzaChapter extends Chapter {

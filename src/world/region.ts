@@ -1,7 +1,7 @@
 import { biomeFor } from '../content/biomes';
 import { ENEMIES } from '../content/enemies';
 import { LEVEL_ORDER } from '../content/levels';
-import { hashString, mulberry32 } from '../engine/art/ink';
+import { hashString, mulberry32 } from '../rules/hash';
 import type { EntitySpec, LevelDef } from '../types';
 import { extractBeats, type Beat } from './beats';
 import { AIR, Grid, SOLID } from './grid';

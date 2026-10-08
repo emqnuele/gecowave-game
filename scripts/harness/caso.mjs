@@ -1,6 +1,6 @@
 // censimento delle estrazioni casuali di src/: ogni pescata dalle due sequenze (rng.logic, rng.fx) e ogni
 // Math.random o helper di phaser rimasto, con file, riga, funzione che lo contiene e il testo.
-// fuori dal seme in src/engine/rng.ts nessuno deve pescare da Math.random: se succede esce con errore.
+// fuori dal seme in src/core/rng.ts nessuno deve pescare da Math.random: se succede esce con errore.
 // uso: node scripts/harness/caso.mjs   -> docs/refactor/caso.md
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -66,14 +66,14 @@ if (existsSync(OUT)) {
 }
 const byFile = new Map();
 for (const r of rows) byFile.set(r.rel, [...(byFile.get(r.rel) ?? []), r]);
-const loose = rows.filter((r) => !STREAM.test(r.callee) && r.rel !== 'src/engine/rng.ts');
+const loose = rows.filter((r) => !STREAM.test(r.callee) && r.rel !== 'src/core/rng.ts');
 const count = (s) => rows.filter((r) => r.callee.startsWith(s)).length;
 const L = [
     '# il caso nel codice',
     '',
     `Generato da \`scripts/harness/caso.mjs\` su \`src/\`: ${rows.length} estrazioni casuali in ${byFile.size} file. ${count('rng.logic.')} dalla sequenza della logica, ${count('rng.fx.')} da quella cosmetica, ${rows.length - count('rng.')} da \`Math.random\` (solo il seme).`,
     '',
-    'Il gioco pesca da due sequenze con seme (`src/engine/rng.ts`, ripartono a ogni livello da semi pescati dal caso del browser): **logica** decide cosa succede, **cosmetico** solo cosa si vede o si sente. Così una particella in più non sposta più la trama. Il caso interno di phaser (particelle con valori `random`) resta su `Math.random` e non tocca nessuna delle due.',
+    'Il gioco pesca da due sequenze con seme (`src/core/rng.ts`, ripartono a ogni livello da semi pescati dal caso del browser): **logica** decide cosa succede, **cosmetico** solo cosa si vede o si sente. Così una particella in più non sposta più la trama. Il caso interno di phaser (particelle con valori `random`) resta su `Math.random` e non tocca nessuna delle due.',
     '',
     'La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la logica può dire di più, scritto a mano e conservato per testo della riga: **logica (testo)** sceglie una battuta o un testo, non cambia lo stato ma cambia la trama letta; **logica (dato salvato)** finisce nel salvataggio. Una pescata nuova sceglie la sequenza leggendo cosa cambia.',
     '',

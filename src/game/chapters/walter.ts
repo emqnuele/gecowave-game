@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { bus } from '../../engine/events';
-import { state } from '../../engine/state';
+import { bus } from '../../core/events';
+import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter, type ChapterCtx, type Target } from './ChapterScript';
 import { WalkingGuide } from './shared/WalkingGuide';

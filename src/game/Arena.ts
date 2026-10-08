@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { TILE } from '../config';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
 import type { Room } from '../world/types';
 import type { GameContext, GameSystem } from './context';
 

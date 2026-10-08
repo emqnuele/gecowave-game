@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { TILE } from '../../config';
 import type { BiomeDef } from '../../content/biomes';
-import type { LoadedLevel } from '../../engine/LevelLoader';
-import type { NavGraph } from '../../engine/nav/NavGraph';
+import type { LoadedLevel } from '../../stage/LevelLoader';
+import type { NavGraph } from '../../world/NavGraph';
 import type { LevelDef } from '../../types';
 import { oldXToProgress, type RegionLayout, type Room } from '../../world/types';
 import type { GameContext } from '../context';

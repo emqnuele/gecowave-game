@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 import { COMBAT } from '../../config';
 import { hitMult } from '../../content/lessons';
-import { FX } from '../../engine/art/abilityFx';
-import { sfx } from '../../engine/sfx';
+import { FX } from '../../art/abilityFx';
+import { sfx } from '../../audio/sfx';
 import { Enemy } from '../../entities/Enemy';
 import type { Boss } from '../../entities/Boss';
 import { puddleFloorY } from '../../rules/abilities';
 import { waveWorld, type AbilitiesCtx } from './shared';
 import type { Veleno } from './Veleno';
-import { rng } from '../../engine/rng';
+import { rng } from '../../core/rng';
 
 interface Puddle {
     img: Phaser.GameObjects.Image;

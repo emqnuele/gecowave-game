@@ -312,11 +312,28 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 ### ADR-052 — eventi tipati, caso su due sequenze, un solo `simulates`
 **Contesto**: gli eventi della scena erano 23 stringhe senza tipo: chi emetteva e chi ascoltava si accordavano a voce (e la scena li collegava con cast `as never`). Tutto il caso pescava da `Math.random`, anche le particelle: una scheggia in più spostava ogni estrazione di logica successiva, quindi un cambio grafico poteva cambiare la trama. Il coop futuro ha bisogno di sapere chi decide lo stato del mondo; sul branch `multiplayer-p2p` erano 101 controlli `coop.isHost` sparsi.
 **Decisione**:
-- **eventi del mondo** (`src/engine/worldEvents.ts`): una mappa tipata nome → dato sulla scena (`emitWorld`, `onWorld`, `offWorld`); muoiono con la scena. Il bus (`engine/events.ts`) resta il canale tra mondo e ui. Spawn, danno, morte, checkpoint sono eventi; inizio e fine dialogo lo erano già sul bus. Un evento senza dato non passa argomenti.
-- **caso** (`src/engine/rng.ts`, generatore in `src/rules/rng.ts`): `rng.logic` decide cosa succede, `rng.fx` solo cosa si vede e si sente. Ripartono a ogni livello da semi pescati da `Math.random`, che resta la sola sorgente esterna (e quella del caso interno di phaser). Il censimento (`docs/refactor/caso.md`, `scripts/harness/caso.mjs`) dice per ogni pescata da quale sequenza viene, e fallisce se qualcuno pesca da `Math.random` fuori dal seme.
+- **eventi del mondo** (`src/core/worldEvents.ts`): una mappa tipata nome → dato sulla scena (`emitWorld`, `onWorld`, `offWorld`); muoiono con la scena. Il bus (`core/events.ts`) resta il canale tra mondo e ui. Spawn, danno, morte, checkpoint sono eventi; inizio e fine dialogo lo erano già sul bus. Un evento senza dato non passa argomenti.
+- **caso** (`src/core/rng.ts`, generatore in `src/rules/rng.ts`): `rng.logic` decide cosa succede, `rng.fx` solo cosa si vede e si sente. Ripartono a ogni livello da semi pescati da `Math.random`, che resta la sola sorgente esterna (e quella del caso interno di phaser). Il censimento (`docs/refactor/caso.md`, `scripts/harness/caso.mjs`) dice per ogni pescata da quale sequenza viene, e fallisce se qualcuno pesca da `Math.random` fuori dal seme.
 - **`simulates`** (campo del `GameContext`): vero in single e sull'host, falso sul guest. Lo interrogano i punti dove si decide lo stato del mondo (ia, nidi, danni, spari, boss, doomsday, arena, sfide), non la presentazione.
 - **errori**: niente `catch {}` vuoti. Una chiamata che non può lanciare non si protegge; un confine attorno a codice arbitrario (i timer dei film, i predicati del riepilogo) scrive l'errore con `softFail`; restano i catch su errori che vengono da fuori (storage, json, gamepad, webaudio), con il perché accanto.
 **Conseguenze**: i cambi d'ordine (eventi, caso) hanno ognuno il suo riferimento nuovo in `docs/refactor/riferimenti.md`. Da qui una particella nuova non sposta più una battuta, un nemico o un drop. Il coop porterà `simulates` dalla sessione senza cercare dove serve.
+
+### ADR-053 — una cartella, un significato
+**Contesto**: `src/engine` era diventata il posto di tutto quello che non era una scena o un'entità: 39 file più sei sottocartelle, dal bus degli eventi all'ombra, dal terreno alle porte del bus. Per trovare dove sta una cosa bisognava già sapere dove stava.
+**Decisione**: `src/engine` non c'è più. Ogni cartella dice cosa contiene:
+- `core/` servizi senza scena usati da tutti: eventi, caso, stato e salvataggio, punteggi, trofei, zaino, completamento;
+- `rules/` logica pura senza phaser, con i test accanto (`*.test.ts`);
+- `content/` dati del gioco (testi, livelli, nemici, oggetti);
+- `world/` la regione come dato: generazione, griglia, simulatore, codec, grafo di navigazione (usata anche da editor e `scripts/world`);
+- `art/` come si disegna: inchiostro, creature, oggetti, shader, texture, pelli;
+- `audio/` musica, effetti, acustica, paesaggio sonoro;
+- `input/` azioni, tastiera, gamepad;
+- `stage/` la regione messa in scena: terreno, acqua, luce, cielo, aria, arredo, fondali, passanti, caricamento del livello;
+- `story/` la trama e chi la porta: storie, missioni, film, voce dei boss, ombra, pedro, i 33, nucleo, guida;
+- `mechanics/` le regole del posto: una meccanica per bioma (`index.ts` sceglie quale), trappole, pericoli, sigilli, corsa a tempo;
+- `entities/` geco, nemici, boss, nidi, compagno; `game/` i sistemi della scena di gioco (ADR-051) e gli script dei capitoli; `scenes/` le scene phaser; `ui/` l'interfaccia dom; `dev/` gli strumenti di sviluppo, caricati solo in sviluppo.
+`scripts/`: `harness/` (le prove del refactor), `world/` (banco del generatore), `playtest/` (il bot), `assets/` (icone e sprite).
+**Conseguenze**: lo spostamento è stato fatto con uno script che riscrive ogni import (relativi e alias `@game` dell'editor) e si ferma su ogni import che non sa risolvere. Le dipendenze scendono: `rules` usa solo dati (`config`, `content`); `world` solo dati e `rules`, per questo editor e banco del generatore lo usano senza phaser (`hashString` e `mulberry32` stavano in `art/ink` e trascinavano l'arte nel generatore: ora sono in `rules/hash`, e `ink` li riesporta ai moduli d'arte); `content` usa solo `core/rng`, per scegliere le battute. Due eccezioni, annotate: `core/inventory` suona l'effetto del boccone (`audio`), e il film scrive le bande nere nel dom (`story` → `ui`). `MindDoors` è uscita da `mechanics/index.ts`, che ora sceglie soltanto la meccanica. I documenti storici (parte A, `bug-trovati.md`, `copertura.md`) citano i percorsi di allora.
 
 ---
 

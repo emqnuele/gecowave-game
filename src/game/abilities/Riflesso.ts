@@ -1,16 +1,16 @@
 import Phaser from 'phaser';
 import { COMBAT } from '../../config';
 import { TOASTS } from '../../content/story';
-import { FX } from '../../engine/art/abilityFx';
-import { bus } from '../../engine/events';
-import { sfx } from '../../engine/sfx';
-import { state } from '../../engine/state';
+import { FX } from '../../art/abilityFx';
+import { bus } from '../../core/events';
+import { sfx } from '../../audio/sfx';
+import { state } from '../../core/state';
 import { Companion } from '../../entities/Companion';
 import type { Enemy } from '../../entities/Enemy';
 import type { Spawner } from '../../entities/Spawner';
 import { waveWorld, type AbilitiesCtx } from './shared';
-import { emitWorld } from '../../engine/worldEvents';
-import { rng } from '../../engine/rng';
+import { emitWorld } from '../../core/worldEvents';
+import { rng } from '../../core/rng';
 
 /** il vetro rotto del riflesso: gemello luminoso, crepe, schegge */
 class RiflessoFx {

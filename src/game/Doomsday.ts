@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 import { TOASTS } from '../content/story';
-import { bus } from '../engine/events';
-import { state } from '../engine/state';
+import { bus } from '../core/events';
+import { state } from '../core/state';
 import type { BossKind } from '../types';
 import { indiziRaccolti } from './chapters/caso';
 import type { GameContext, GameSystem } from './context';
-import { rng } from '../engine/rng';
+import { rng } from '../core/rng';
 
 type DoomsdayCtx = Pick<GameContext, 'simulates' | 'world' | 'player' | 'bosses' | 'chapter' | 'enemies' | 'combat' | 'dialogues' | 'feel' | 'flow'>;
 

@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
-import { FX } from '../engine/art/abilityFx';
-import { bus } from '../engine/events';
-import type { Input } from '../engine/input/Input';
-import { completeEat, eatProblem, pickSnack } from '../engine/inventory';
+import { FX } from '../art/abilityFx';
+import { bus } from '../core/events';
+import type { Input } from '../input/Input';
+import { completeEat, eatProblem, pickSnack } from '../core/inventory';
 import type { PlayerAct } from '../rules/ombra';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import type { AbilityId } from '../types';
-import { emitWorld } from '../engine/worldEvents';
+import { emitWorld } from '../core/worldEvents';
 
 export type AttackDir = 'side' | 'up' | 'down';
 

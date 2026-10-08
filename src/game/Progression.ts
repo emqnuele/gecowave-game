@@ -1,15 +1,15 @@
 import Phaser from 'phaser';
 import { REGION_COUNT } from '../content/achievements';
-import { acoustics } from '../engine/audio/acoustics';
-import { achievementsBlocked, checkAchievements, unlockAchievement } from '../engine/achievements';
-import { buildChapterSummary, buildFinalSummary, countsFor } from '../engine/ChapterCompletion';
-import { bus } from '../engine/events';
-import { music } from '../engine/music';
-import { regionView } from '../engine/regionView';
-import { pushBoard, runScore } from '../engine/score';
+import { acoustics } from '../audio/acoustics';
+import { achievementsBlocked, checkAchievements, unlockAchievement } from '../core/achievements';
+import { buildChapterSummary, buildFinalSummary, countsFor } from '../core/ChapterCompletion';
+import { bus } from '../core/events';
+import { music } from '../audio/music';
+import { regionView } from '../core/regionView';
+import { pushBoard, runScore } from '../core/score';
 import { chapterParts, ENDING_BONUS, sumParts } from '../rules/score';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import type { EndingId } from './chapters/ChapterScript';
 import type { Flow, GameContext, GameSystem, SceneData } from './context';
 

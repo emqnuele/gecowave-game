@@ -1,7 +1,7 @@
-import { expectCollectible } from '../../engine/ChapterCompletion';
-import { bus } from '../../engine/events';
-import { music } from '../../engine/music';
-import { state } from '../../engine/state';
+import { expectCollectible } from '../../core/ChapterCompletion';
+import { bus } from '../../core/events';
+import { music } from '../../audio/music';
+import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter } from './ChapterScript';
 

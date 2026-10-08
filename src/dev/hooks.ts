@@ -1,9 +1,9 @@
 import type Phaser from 'phaser';
-import { acoustics } from '../engine/audio/acoustics';
-import { bus } from '../engine/events';
-import { music } from '../engine/music';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { acoustics } from '../audio/acoustics';
+import { bus } from '../core/events';
+import { music } from '../audio/music';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 
 /* gli strumenti di sviluppo in un posto solo: main li chiama dietro import.meta.env.DEV,
    quindi il build di produzione non li contiene. harness e bot li usano da window */

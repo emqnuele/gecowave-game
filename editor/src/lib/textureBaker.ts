@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { ART_TILE } from '@game/config';
-import { generateBaseTextures } from '@game/engine/textures';
-import { ensureCreature } from '@game/engine/art/creatures';
+import { generateBaseTextures } from '@game/art/textures';
+import { ensureCreature } from '@game/art/creatures';
 import { catalogTextureKeys } from './catalog';
 
 /* cuoce le texture procedurali del gioco in immagini riutilizzabili.

@@ -2,18 +2,18 @@ import Phaser from 'phaser';
 import { TILE } from '../config';
 import { barksFor } from '../content/barks';
 import { TOASTS } from '../content/story';
-import { unlockAchievement } from '../engine/achievements';
-import { BossVoice } from '../engine/BossVoice';
-import { bus } from '../engine/events';
-import { OmbraBrain } from '../engine/OmbraBrain';
+import { unlockAchievement } from '../core/achievements';
+import { BossVoice } from '../story/BossVoice';
+import { bus } from '../core/events';
+import { OmbraBrain } from '../story/OmbraBrain';
 import type { OmbraInsight, PlayerAct } from '../rules/ombra';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import { Boss } from '../entities/Boss';
 import type { AbilityId, BossKind } from '../types';
 import type { GameContext, GameSystem } from './context';
-import { emitWorld } from '../engine/worldEvents';
-import { rng } from '../engine/rng';
+import { emitWorld } from '../core/worldEvents';
+import { rng } from '../core/rng';
 
 type BossesCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'rewards' | 'dialogues' | 'chapter' | 'doomsday' | 'flow'>;
 

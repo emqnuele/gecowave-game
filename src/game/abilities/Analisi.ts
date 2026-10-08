@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { COMBAT } from '../../config';
 import { hitMult } from '../../content/lessons';
-import { FX } from '../../engine/art/abilityFx';
-import { sfx } from '../../engine/sfx';
-import { state } from '../../engine/state';
+import { FX } from '../../art/abilityFx';
+import { sfx } from '../../audio/sfx';
+import { state } from '../../core/state';
 import type { Enemy } from '../../entities/Enemy';
 import { waveWorld, type AbilitiesCtx } from './shared';
 

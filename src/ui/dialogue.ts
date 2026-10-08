@@ -1,9 +1,9 @@
 import { ZONE_CSS } from '../config';
-import { bus } from '../engine/events';
-import { matchesAction } from '../engine/input/actions';
-import { formatKeys, keyLabel } from '../engine/input/keyText';
-import { music } from '../engine/music';
-import { sfx } from '../engine/sfx';
+import { bus } from '../core/events';
+import { matchesAction } from '../input/actions';
+import { formatKeys, keyLabel } from '../input/keyText';
+import { music } from '../audio/music';
+import { sfx } from '../audio/sfx';
 import type { DialogueLine } from '../types';
 import { el, ui } from './dom';
 

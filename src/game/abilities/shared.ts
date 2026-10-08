@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { GameContext } from '../context';
-import { emitWorld, type WaveName } from '../../engine/worldEvents';
+import { emitWorld, type WaveName } from '../../core/worldEvents';
 
 export type AbilitiesCtx = Pick<GameContext, 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'enemies' | 'bosses' | 'combat' | 'traps'>;
 

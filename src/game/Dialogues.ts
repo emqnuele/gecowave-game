@@ -1,8 +1,8 @@
 import { FLASHBACK_BEFORE, FLASHBACK_ONCE } from '../content/flashbacks';
 import { DIALOGUES } from '../content/story';
-import { bus } from '../engine/events';
-import { flashback, type FilmHost } from '../engine/FlashbackManager';
-import { state } from '../engine/state';
+import { bus } from '../core/events';
+import { flashback, type FilmHost } from '../story/FlashbackManager';
+import { state } from '../core/state';
 import type { DialogueLine } from '../types';
 import type { GameContext, GameSystem } from './context';
 

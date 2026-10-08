@@ -1,8 +1,8 @@
 import type Phaser from 'phaser';
 import { ZONE_HEX } from '../config';
-import { animateCreature, creatureRes } from '../engine/art/creatureKit';
-import { ensureCreature } from '../engine/art/creatures';
-import { npcTexture } from '../engine/npcTexture';
+import { animateCreature, creatureRes } from '../art/creatureKit';
+import { ensureCreature } from '../art/creatures';
+import { npcTexture } from '../art/npcTexture';
 import type { GameContext, GameSystem } from './context';
 import type { Interactable } from './Interactions';
 

@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { COMBAT } from '../../config';
 import { TOASTS } from '../../content/story';
-import { FX } from '../../engine/art/abilityFx';
-import { bus } from '../../engine/events';
-import { sfx } from '../../engine/sfx';
+import { FX } from '../../art/abilityFx';
+import { bus } from '../../core/events';
+import { sfx } from '../../audio/sfx';
 import type { AbilitiesCtx } from './shared';
 
 /** la bolla crt dello scudo, il rec rosso e la scritta del rimando perfetto */

@@ -11,7 +11,7 @@
     "test": "vitest run",
     "regions": "scripts/world/run.sh build-regions",
     "electron": "electron .",
-    "gen-icons": "node scripts/gen-icons.mjs",
+    "gen-icons": "node scripts/assets/gen-icons.mjs",
     "app:preview": "npm run build && electron .",
     "app:build": "npm run gen-icons && npm run build && electron-builder"
   },

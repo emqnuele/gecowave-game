@@ -1,15 +1,15 @@
 import Phaser from 'phaser';
 import { LAMETTA_BARKS } from '../../content/barks';
 import { TOASTS, WAVESUNG } from '../../content/story';
-import { BossVoice } from '../../engine/BossVoice';
-import { bus } from '../../engine/events';
-import { music } from '../../engine/music';
-import { sfx } from '../../engine/sfx';
-import { state } from '../../engine/state';
+import { BossVoice } from '../../story/BossVoice';
+import { bus } from '../../core/events';
+import { music } from '../../audio/music';
+import { sfx } from '../../audio/sfx';
+import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter } from './ChapterScript';
 import { waveOnce } from './shared/wave';
-import { rng } from '../../engine/rng';
+import { rng } from '../../core/rng';
 
 /** il santuario: lametta presiede l'arena delle gocce di colore, poi lo specchio nero */
 export class SantuarioChapter extends Chapter {

@@ -1,7 +1,7 @@
 import { ZONE_CSS } from '../config';
-import { bus, type GameEvents } from '../engine/events';
-import { formatKeys } from '../engine/input/keyText';
-import { sfx } from '../engine/sfx';
+import { bus, type GameEvents } from '../core/events';
+import { formatKeys } from '../input/keyText';
+import { sfx } from '../audio/sfx';
 import { el, ui } from './dom';
 import './subtitles.css';
 

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COMBAT } from '../../config';
-import { FX } from '../../engine/art/abilityFx';
+import { FX } from '../../art/abilityFx';
 import { waveLevel } from '../../rules/abilities';
 import type { AbilitiesCtx } from './shared';
 

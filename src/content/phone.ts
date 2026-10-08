@@ -1,5 +1,5 @@
 import type { ZoneColor } from '../types';
-import { rng } from '../engine/rng';
+import { rng } from '../core/rng';
 
 /* il wavesung galaxy del custode: obiettivi, contatti da chiamare,
    il feed di wavegram e la radio. tutto scritto nella voce del realm */

@@ -1,5 +1,5 @@
 import { WAVESUNG } from '../../content/story';
-import { state } from '../../engine/state';
+import { state } from '../../core/state';
 import { Chapter, type Target } from './ChapterScript';
 import { waveOnce } from './shared/wave';
 

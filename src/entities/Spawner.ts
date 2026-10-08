@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { ENEMIES } from '../content/enemies';
 import type { EnemyKind } from '../types';
-import { rng } from '../engine/rng';
+import { rng } from '../core/rng';
 
 export interface SpawnerOpts {
     kind: EnemyKind;

@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { ZONE_HEX } from '../config';
-import type { AbilitySeals } from '../engine/AbilitySeals';
-import { RegionGuide } from '../engine/RegionGuide';
-import { regionView } from '../engine/regionView';
-import { state } from '../engine/state';
+import type { AbilitySeals } from '../mechanics/AbilitySeals';
+import { RegionGuide } from '../story/RegionGuide';
+import { regionView } from '../core/regionView';
+import { state } from '../core/state';
 import type { Target } from './chapters/ChapterScript';
 import type { GameContext, GameSystem } from './context';
 

@@ -1,21 +1,20 @@
-/** un generatore con seme (mulberry32): stesso seme, stessa sequenza. le formule sono quelle di phaser */
+import { mulberry32, type SeededRandom } from './hash';
+
+/** un generatore con seme che si può far ripartire: stesso seme, stessa sequenza. le formule sono quelle di phaser */
 export class Rng {
-    private s: number;
+    private gen: SeededRandom;
 
     constructor(seed: number) {
-        this.s = seed >>> 0;
+        this.gen = mulberry32(seed >>> 0);
     }
 
     reseed(seed: number): void {
-        this.s = seed >>> 0;
+        this.gen = mulberry32(seed >>> 0);
     }
 
     /** in [0, 1), come Math.random */
     next(): number {
-        this.s = (this.s + 0x6d2b79f5) | 0;
-        let t = Math.imul(this.s ^ (this.s >>> 15), 1 | this.s);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        return this.gen();
     }
 
     /** intero tra min e max compresi, come Phaser.Math.Between */

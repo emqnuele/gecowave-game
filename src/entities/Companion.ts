@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
-import { FX } from '../engine/art/abilityFx';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
-import { rng } from '../engine/rng';
+import { FX } from '../art/abilityFx';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
+import { rng } from '../core/rng';
 
 type Hostile = Phaser.GameObjects.Sprite & { active: boolean };
 

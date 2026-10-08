@@ -1,5 +1,5 @@
 import { ui } from './dom';
-import { rng } from '../engine/rng';
+import { rng } from '../core/rng';
 
 /* fuochi e sangue dei titoli di coda: una tela sopra tutto, niente phaser.
    win = razzi che salgono e scoppiano in scie con gravità e crepitio;

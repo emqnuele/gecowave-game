@@ -1,16 +1,15 @@
 import Phaser from 'phaser';
 import { TOASTS, WAVESUNG } from '../content/story';
-import { TOTAL_FRAGMENTS } from '../content/levels';
+import { TOTAL_FRAGMENTS, TOTAL_MASCHERE } from '../content/levels';
 import { BOSS_CHARMS, ITEMS } from '../content/items';
-import { ensurePickupTextures } from '../engine/art/pickups';
-import { expectCollectible, expectLoreKey } from '../engine/ChapterCompletion';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { ensurePickupTextures } from '../art/pickups';
+import { expectCollectible, expectLoreKey } from '../core/ChapterCompletion';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import type { AbilityId, BossKind } from '../types';
 import type { GameContext, GameSystem } from './context';
 
-export const TOTAL_MASCHERE = 5;
 
 type RewardsCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'dialogues'>;
 

@@ -3,16 +3,16 @@ import { TILE } from '../config';
 import { ENEMIES } from '../content/enemies';
 import { LESSONS } from '../content/lessons';
 import { NOTINO_FUGHE } from '../content/story';
-import { hashString } from '../engine/art/ink';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { hashString } from '../rules/hash';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import { Enemy, type EnemyTrait } from '../entities/Enemy';
 import { Spawner } from '../entities/Spawner';
 import type { EnemyKind } from '../types';
 import type { GameContext, GameSystem } from './context';
-import { emitWorld } from '../engine/worldEvents';
-import { rng } from '../engine/rng';
+import { emitWorld } from '../core/worldEvents';
+import { rng } from '../core/rng';
 
 type EnemiesCtx = Pick<GameContext, 'simulates' | 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
 

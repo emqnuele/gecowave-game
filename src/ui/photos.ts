@@ -1,4 +1,4 @@
-import { rng } from '../engine/rng';
+import { rng } from '../core/rng';
 /* la camera oscura: sviluppo cinematografico degli scatti e rullino.
    gli scatti vivono in localStorage come jpeg, una ventina al massimo */
 

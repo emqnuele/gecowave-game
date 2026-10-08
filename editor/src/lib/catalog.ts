@@ -2,7 +2,7 @@ import type { EntitySpec, AbilityId } from '@game/types';
 import { ENEMIES } from '@game/content/enemies';
 import { BOSSES } from '@game/content/bosses';
 import { DIALOGUES, ABILITY_CARDS } from '@game/content/story';
-import { npcTexture } from '@game/engine/npcTexture';
+import { npcTexture } from '@game/art/npcTexture';
 
 /* un elemento piazzabile dalla palette: o un'entit� della legenda,
    o un glyph di tile fisso. la texture � una chiave bakata da phaser. */

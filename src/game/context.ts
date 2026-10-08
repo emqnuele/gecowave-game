@@ -1,10 +1,10 @@
 import type Phaser from 'phaser';
-import type { Input } from '../engine/input/Input';
-import type { LightingManager } from '../engine/LightingManager';
-import type { QuestManager } from '../engine/QuestManager';
-import type { TerrainRenderer } from '../engine/TerrainRenderer';
-import type { TrentatreMarks } from '../engine/TrentatreMarks';
-import type { TrapManager } from '../engine/TrapManager';
+import type { Input } from '../input/Input';
+import type { LightingManager } from '../stage/LightingManager';
+import type { QuestManager } from '../story/QuestManager';
+import type { TerrainRenderer } from '../stage/TerrainRenderer';
+import type { TrentatreMarks } from '../story/TrentatreMarks';
+import type { TrapManager } from '../mechanics/TrapManager';
 import type { Player } from '../entities/Player';
 import type { RestartCarry } from './carry';
 import type { Abilities } from './abilities';

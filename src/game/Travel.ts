@@ -2,13 +2,13 @@ import Phaser from 'phaser';
 import { TILE } from '../config';
 import { HUB_STOP, LEVEL_ORDER, LEVELS } from '../content/levels';
 import { TOASTS } from '../content/story';
-import { propArt } from '../engine/art/props';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { propArt } from '../art/props';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import type { GameContext, GameSystem, SceneData } from './context';
 import type { Interactable } from './Interactions';
-import { emitWorld } from '../engine/worldEvents';
+import { emitWorld } from '../core/worldEvents';
 
 type TravelCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'npcs' | 'bosses' | 'chapter' | 'flow'>;
 

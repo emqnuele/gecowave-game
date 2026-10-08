@@ -1,4 +1,4 @@
-import { sfx } from '../engine/sfx';
+import { sfx } from '../audio/sfx';
 import { el, ui } from './dom';
 import './chapterSummary.css';
 

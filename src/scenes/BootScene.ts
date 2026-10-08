@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { generateBaseTextures } from '../engine/textures';
-import { ensurePlayerSkin } from '../engine/playerSkin';
-import { state } from '../engine/state';
+import { generateBaseTextures } from '../art/textures';
+import { ensurePlayerSkin } from '../art/playerSkin';
+import { state } from '../core/state';
 import { LEVEL_ORDER, REGION_IDS } from '../content/levels';
 import { regionKey, regionUrl } from '../world/registry';
 

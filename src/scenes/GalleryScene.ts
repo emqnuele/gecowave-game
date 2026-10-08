@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
-import { CreatureGlow, creatureFrames, creatureRes } from '../engine/art/creatureKit';
-import { CREATURE_KEYS, ensureCreature } from '../engine/art/creatures';
+import { CreatureGlow, creatureFrames, creatureRes } from '../art/creatureKit';
+import { CREATURE_KEYS, ensureCreature } from '../art/creatures';
 import { FLASHBACKS } from '../content/flashbacks';
-import { flashback } from '../engine/FlashbackManager';
-import { sfx } from '../engine/sfx';
+import { flashback } from '../story/FlashbackManager';
+import { sfx } from '../audio/sfx';
 
 /* solo sviluppo (?gallery): tutto il cast vivo in griglia sotto una luce
    che segue il mouse, per controllare disegni, normal map e fotogrammi.

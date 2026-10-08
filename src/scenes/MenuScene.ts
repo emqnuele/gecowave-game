@@ -1,13 +1,14 @@
 import Phaser from 'phaser';
 import { LEVELS } from '../content/levels';
 import { biomeFor } from '../content/biomes';
-import { ParallaxManager } from '../engine/ParallaxManager';
-import { canvas, hex, mix, mulberry32, shade, smoothNoise1D } from '../engine/art/ink';
-import { animateCreature, creatureRes } from '../engine/art/creatureKit';
-import { CREATURE_KEYS, ensureCreature } from '../engine/art/creatures';
-import { generateFogTexture } from '../engine/textures';
-import { ensurePlayerSkin } from '../engine/playerSkin';
-import { state } from '../engine/state';
+import { ParallaxManager } from '../stage/ParallaxManager';
+import { canvas, hex, mix, shade, smoothNoise1D } from '../art/ink';
+import { mulberry32 } from '../rules/hash';
+import { animateCreature, creatureRes } from '../art/creatureKit';
+import { CREATURE_KEYS, ensureCreature } from '../art/creatures';
+import { generateFogTexture } from '../art/textures';
+import { ensurePlayerSkin } from '../art/playerSkin';
+import { state } from '../core/state';
 
 /* il titolo come un falò dei souls: il dipinto dell'ultimo capitolo
    raggiunto, le sagome del parallasse che scorrono piano, una cresta

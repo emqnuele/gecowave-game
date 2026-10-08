@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { bus } from '../../engine/events';
-import { state } from '../../engine/state';
+import { bus } from '../../core/events';
+import { state } from '../../core/state';
 import type { Boss } from '../../entities/Boss';
 import type { Companion } from '../../entities/Companion';
 import type { Enemy } from '../../entities/Enemy';

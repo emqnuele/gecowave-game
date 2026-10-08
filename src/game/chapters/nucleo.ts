@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 import { TILE } from '../../config';
 import { TOASTS, WAVESUNG } from '../../content/story';
-import { bus } from '../../engine/events';
-import { music } from '../../engine/music';
-import { NucleusStraightening } from '../../engine/NucleusStraightening';
-import { state } from '../../engine/state';
+import { bus } from '../../core/events';
+import { music } from '../../audio/music';
+import { NucleusStraightening } from '../../story/NucleusStraightening';
+import { state } from '../../core/state';
 import type { Boss } from '../../entities/Boss';
 import type { BossKind } from '../../types';
 import { Chapter, type EndingId } from './ChapterScript';
-import { rng } from '../../engine/rng';
+import { rng } from '../../core/rng';
 
 /** il nucleo: pedro chiede una risposta, poi il patto, il giorno 30 o gli dei */
 export class NucleoChapter extends Chapter {
