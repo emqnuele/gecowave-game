@@ -199,9 +199,10 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         if (this.def.glitchy) {
             if (this.scaleX !== this.baseScale) this.setScale(this.baseScale);
             // scatti, tremori, niente movimenti morbidi: deve fare paura
+            // l'origine di disegno sposta anche il corpo arcade: il tremore muove la hitbox, quindi pesca dalla logica
             this.setDisplayOrigin(
-                this.width / 2 + (rng.fx.next() > 0.85 ? (rng.fx.next() - 0.5) * 8 * this.res : 0),
-                this.height / 2 + (rng.fx.next() > 0.9 ? (rng.fx.next() - 0.5) * 6 * this.res : 0)
+                this.width / 2 + (rng.logic.next() > 0.85 ? (rng.logic.next() - 0.5) * 8 * this.res : 0),
+                this.height / 2 + (rng.logic.next() > 0.9 ? (rng.logic.next() - 0.5) * 6 * this.res : 0)
             );
             if (rng.fx.next() > 0.985) {
                 this.setTintFill(rng.fx.next() > 0.5 ? 0x22d3ee : 0xf87171);

@@ -1,6 +1,6 @@
 # il caso nel codice
 
-Generato da `scripts/harness/caso.mjs` su `src/`: 204 estrazioni casuali in 30 file. 65 dalla sequenza della logica, 138 da quella cosmetica, 1 da `Math.random` (solo il seme).
+Generato da `scripts/harness/caso.mjs` su `src/`: 204 estrazioni casuali in 30 file. 69 dalla sequenza della logica, 134 da quella cosmetica, 1 da `Math.random` (solo il seme).
 
 Il gioco pesca da due sequenze con seme (`src/core/rng.ts`, ripartono a ogni livello da semi pescati dal caso del browser): **logica** decide cosa succede, **cosmetico** solo cosa si vede o si sente. Così una particella in più non sposta più la trama. Il caso interno di phaser (particelle con valori `random`) resta su `Math.random` e non tocca nessuna delle due.
 
@@ -108,28 +108,28 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 203 | Boss.update | rng.fx.next | `this.width / 2 + (rng.fx.next() > 0.85 ? (rng.fx.next() - 0.5) * 8 * this.res : 0),` | cosmetico |
-| 203 | Boss.update | rng.fx.next | `this.width / 2 + (rng.fx.next() > 0.85 ? (rng.fx.next() - 0.5) * 8 * this.res : 0),` | cosmetico |
-| 204 | Boss.update | rng.fx.next | `this.height / 2 + (rng.fx.next() > 0.9 ? (rng.fx.next() - 0.5) * 6 * this.res : 0)` | cosmetico |
-| 204 | Boss.update | rng.fx.next | `this.height / 2 + (rng.fx.next() > 0.9 ? (rng.fx.next() - 0.5) * 6 * this.res : 0)` | cosmetico |
-| 206 | Boss.update | rng.fx.next | `if (rng.fx.next() > 0.985) {` | cosmetico |
-| 207 | Boss.update | rng.fx.next | `this.setTintFill(rng.fx.next() > 0.5 ? 0x22d3ee : 0xf87171);` | cosmetico |
-| 222 | Boss.update | rng.fx.next | `if ((this.def.glitchy \|\| this.def.move === 'orbit') && rng.fx.next() > 0.93) this.afterimage();` | cosmetico |
-| 259 | Boss.update | rng.logic.next | `this.nextHopAt = now + 900 + rng.logic.next() * 700;` | logica |
-| 260 | Boss.update | rng.logic.next | `this.hopX = this.anchorX + (rng.logic.next() - 0.5) * 360;` | logica |
-| 261 | Boss.update | rng.logic.next | `this.hopY = this.anchorY + (rng.logic.next() - 0.5) * 140;` | logica |
-| 312 | Boss.update | rng.logic.next | `this.execute(pool[Math.floor(rng.logic.next() * pool.length)], player, this.frenzy ? 3 : phase);` | logica |
-| 317 | Boss.execute | rng.fx.next | `if (rng.fx.next() < 0.55) sfx.bossVoice(this.def.texture);` | cosmetico |
-| 408 | Boss.radial | rng.logic.next | `const angle = (Math.PI * 2 * i) / count + rng.logic.next() * 0.2;` | logica |
-| 418 | Boss.rain | rng.logic.next | `const ox = (i - count / 2) * 70 + rng.logic.next() * 40;` | logica |
-| 430 | Boss.burst | rng.logic.next | `this.shot(this.x, this.y, player.x + (rng.logic.next() - 0.5) * 60, player.y + (rng.logic.next() - 0.5) * 40, ` | logica |
-| 430 | Boss.burst | rng.logic.next | `this.shot(this.x, this.y, player.x + (rng.logic.next() - 0.5) * 60, player.y + (rng.logic.next() - 0.5) * 40, ` | logica |
-| 447 | Boss.teleport | rng.logic.next | `const side = rng.logic.next() > 0.5 ? 1 : -1;` | logica |
-| 469 | Boss.lamette | rng.logic.next | `xs.push(player.x + (i - count / 2) * 64 + rng.logic.next() * 24);` | logica |
-| 478 | Boss.spiral | rng.logic.next | `const base = rng.logic.next() * Math.PI * 2;` | logica |
-| 588 | Boss.mines | rng.logic.next | `xs.push(player.x + lead + (i - (count - 1) / 2) * 72 + (rng.logic.next() - 0.5) * 20);` | logica |
-| 718 | Boss.die | rng.fx.next | `scene.add.particles(x + (rng.fx.next() - 0.5) * 140, y + (rng.fx.next() - 0.5) * 140, 'p-spark', {` | cosmetico |
-| 718 | Boss.die | rng.fx.next | `scene.add.particles(x + (rng.fx.next() - 0.5) * 140, y + (rng.fx.next() - 0.5) * 140, 'p-spark', {` | cosmetico |
+| 204 | Boss.update | rng.logic.next | `this.width / 2 + (rng.logic.next() > 0.85 ? (rng.logic.next() - 0.5) * 8 * this.res : 0),` | logica |
+| 204 | Boss.update | rng.logic.next | `this.width / 2 + (rng.logic.next() > 0.85 ? (rng.logic.next() - 0.5) * 8 * this.res : 0),` | logica |
+| 205 | Boss.update | rng.logic.next | `this.height / 2 + (rng.logic.next() > 0.9 ? (rng.logic.next() - 0.5) * 6 * this.res : 0)` | logica |
+| 205 | Boss.update | rng.logic.next | `this.height / 2 + (rng.logic.next() > 0.9 ? (rng.logic.next() - 0.5) * 6 * this.res : 0)` | logica |
+| 207 | Boss.update | rng.fx.next | `if (rng.fx.next() > 0.985) {` | cosmetico |
+| 208 | Boss.update | rng.fx.next | `this.setTintFill(rng.fx.next() > 0.5 ? 0x22d3ee : 0xf87171);` | cosmetico |
+| 223 | Boss.update | rng.fx.next | `if ((this.def.glitchy \|\| this.def.move === 'orbit') && rng.fx.next() > 0.93) this.afterimage();` | cosmetico |
+| 260 | Boss.update | rng.logic.next | `this.nextHopAt = now + 900 + rng.logic.next() * 700;` | logica |
+| 261 | Boss.update | rng.logic.next | `this.hopX = this.anchorX + (rng.logic.next() - 0.5) * 360;` | logica |
+| 262 | Boss.update | rng.logic.next | `this.hopY = this.anchorY + (rng.logic.next() - 0.5) * 140;` | logica |
+| 313 | Boss.update | rng.logic.next | `this.execute(pool[Math.floor(rng.logic.next() * pool.length)], player, this.frenzy ? 3 : phase);` | logica |
+| 318 | Boss.execute | rng.fx.next | `if (rng.fx.next() < 0.55) sfx.bossVoice(this.def.texture);` | cosmetico |
+| 409 | Boss.radial | rng.logic.next | `const angle = (Math.PI * 2 * i) / count + rng.logic.next() * 0.2;` | logica |
+| 419 | Boss.rain | rng.logic.next | `const ox = (i - count / 2) * 70 + rng.logic.next() * 40;` | logica |
+| 431 | Boss.burst | rng.logic.next | `this.shot(this.x, this.y, player.x + (rng.logic.next() - 0.5) * 60, player.y + (rng.logic.next() - 0.5) * 40, ` | logica |
+| 431 | Boss.burst | rng.logic.next | `this.shot(this.x, this.y, player.x + (rng.logic.next() - 0.5) * 60, player.y + (rng.logic.next() - 0.5) * 40, ` | logica |
+| 448 | Boss.teleport | rng.logic.next | `const side = rng.logic.next() > 0.5 ? 1 : -1;` | logica |
+| 470 | Boss.lamette | rng.logic.next | `xs.push(player.x + (i - count / 2) * 64 + rng.logic.next() * 24);` | logica |
+| 479 | Boss.spiral | rng.logic.next | `const base = rng.logic.next() * Math.PI * 2;` | logica |
+| 589 | Boss.mines | rng.logic.next | `xs.push(player.x + lead + (i - (count - 1) / 2) * 72 + (rng.logic.next() - 0.5) * 20);` | logica |
+| 719 | Boss.die | rng.fx.next | `scene.add.particles(x + (rng.fx.next() - 0.5) * 140, y + (rng.fx.next() - 0.5) * 140, 'p-spark', {` | cosmetico |
+| 719 | Boss.die | rng.fx.next | `scene.add.particles(x + (rng.fx.next() - 0.5) * 140, y + (rng.fx.next() - 0.5) * 140, 'p-spark', {` | cosmetico |
 
 ## src/entities/Companion.ts
 
