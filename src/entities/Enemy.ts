@@ -5,6 +5,7 @@ import type { EnemyKind } from '../types';
 import { mix } from '../engine/art/ink';
 import { ensureCreature } from '../engine/art/creatures';
 import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
+import { emitWorld } from '../engine/worldEvents';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo
@@ -244,7 +245,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
         if (this.trait === 'kamikaze' && this.mode === 'chase' && dist < 80) {
             this.fuseAt = now + FUSE_MS;
-            this.scene.events.emit('enemy-fuse', { x: this.x, y: this.y });
+            emitWorld(this.scene, 'enemy-fuse', { x: this.x, y: this.y });
             return;
         }
 
@@ -265,7 +266,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             case 'patrol':
                 if (sees) {
                     this.setMode('alert', 380);
-                    this.scene.events.emit('enemy-alert', { x: this.x, y: this.y, from: this });
+                    emitWorld(this.scene, 'enemy-alert', { x: this.x, y: this.y, from: this });
                     break;
                 }
                 this.patrol(body, now);
@@ -306,7 +307,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         // chi ha un'arma spara solo se ti vede: niente colpi attraverso la roccia
         if (this.arch.fireRateMs && sees && this.mode === 'chase' && now >= this.nextShotAt) {
             this.nextShotAt = now + this.arch.fireRateMs;
-            this.scene.events.emit('enemy-shoot', { x: this.x, y: this.y, tx: target.x, ty: target.y, color: this.arch.glowColor });
+            emitWorld(this.scene, 'enemy-shoot', { x: this.x, y: this.y, tx: target.x, ty: target.y, color: this.arch.glowColor });
             // la torretta che ha appena sparato resta scoperta: si vede dal colore caldo
             if (this.arch.behavior === 'turret') {
                 this.setTint(0xfde68a);
@@ -322,14 +323,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         body.setVelocityY(260);
         this.setFlipY(false);
         this.clearTint();
-        this.scene.events.emit('enemy-drop', { x: this.x, y: this.y });
+        emitWorld(this.scene, 'enemy-drop', { x: this.x, y: this.y });
         this.hunt();
     }
 
     /** il kamikaze: un lampo, un raggio, e paga lo stesso le sue barre */
     private explode(): void {
         if (!this.active) return;
-        this.scene.events.emit('enemy-explode', { x: this.x, y: this.y, r: BLAST_R, from: this });
+        emitWorld(this.scene, 'enemy-explode', { x: this.x, y: this.y, r: BLAST_R, from: this });
         this.hp = 0;
         this.die();
     }
@@ -337,7 +338,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private wake(): void {
         this.setMode('alert', 500);
         this.scene.tweens.add({ targets: this, y: this.y - 6, duration: 120, yoyo: true });
-        this.scene.events.emit('enemy-alert', { x: this.x, y: this.y, from: this });
+        emitWorld(this.scene, 'enemy-alert', { x: this.x, y: this.y, from: this });
     }
 
     /* ---------- pattuglia ---------- */
@@ -595,7 +596,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (this.mode === 'sleep' || this.mode === 'patrol' || this.mode === 'return') {
             this.lastSeenAt = this.scene.time.now;
             this.setMode('chase');
-            this.scene.events.emit('enemy-alert', { x: this.x, y: this.y, from: this });
+            emitWorld(this.scene, 'enemy-alert', { x: this.x, y: this.y, from: this });
         }
         if (this.hp <= 0) this.die();
     }
@@ -603,7 +604,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private die(): void {
         const [min, max] = this.arch.barre;
         const amount = Phaser.Math.Between(min, max);
-        this.scene.events.emit('enemy-died', {
+        emitWorld(this.scene, 'enemy-died', {
             x: this.x,
             y: this.y,
             kind: this.arch.kind,

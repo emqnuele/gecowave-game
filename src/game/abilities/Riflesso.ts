@@ -9,6 +9,7 @@ import { Companion } from '../../entities/Companion';
 import type { Enemy } from '../../entities/Enemy';
 import type { Spawner } from '../../entities/Spawner';
 import { waveWorld, type AbilitiesCtx } from './shared';
+import { emitWorld } from '../../engine/worldEvents';
 
 /** il vetro rotto del riflesso: gemello luminoso, crepe, schegge */
 class RiflessoFx {
@@ -181,7 +182,7 @@ export class Riflesso {
         body.setVelocity(0, 0);
         player.grantInvuln(300);
         sfx.mirrorSwap();
-        this.scene.events.emit('player-act', { act: 'wave', wave: 'riflesso' });
+        emitWorld(this.scene, 'player-act', { act: 'wave', wave: 'riflesso' });
         this.fx.shards([[player.x, player.y], [px, py]]);
     }
 

@@ -3,6 +3,7 @@ import type { Bark, BarkSet, BarkTrigger } from '../content/barks';
 import { bus } from './events';
 import type { PlayerAct } from '../rules/ombra';
 import { sfx } from './sfx';
+import { offWorld, onWorld } from './worldEvents';
 
 /* la voce di un boss durante lo scontro: decide quando parlare, così le
    battute restano un segnale e non diventano rumore di fondo */
@@ -51,8 +52,8 @@ export class BossVoice {
             this.healAt = now;
             this.say('heal');
         };
-        scene.events.on('player-act', onAct);
-        this.offs.push(() => scene.events.off('player-act', onAct));
+        onWorld(scene, 'player-act', onAct);
+        this.offs.push(() => offWorld(scene, 'player-act', onAct));
     }
 
     /** battuta per un momento standard; urgent scavalca la pausa tra una battuta e l'altra */

@@ -9,17 +9,12 @@ import { regionView, type RegionMarker } from './regionView';
 import { sfx } from './sfx';
 import { state } from './state';
 import type { AbilitySeal, RegionLayout, SealKind } from '../world/types';
+import { offWorld, onWorld, type WorldEvents } from './worldEvents';
 
 /* sigilli delle abilità: ogni wave apre il mondo nel suo modo. un solo
    manager ascolta l'evento di scena wave-world e non nove if in GameScene */
 
-export interface WaveWorldEvent {
-    wave: string;
-    x: number;
-    y: number;
-    area: Phaser.Geom.Circle | Phaser.Geom.Rectangle;
-    level?: number;
-}
+export type WaveWorldEvent = WorldEvents['wave-world'];
 
 export interface AbilitySealsContext {
     scene: Phaser.Scene;
@@ -101,7 +96,7 @@ export class AbilitySeals {
             if (state.hasFlag(`sigillo-${seal.id}`)) continue;
             this.live.push(this.build(seal));
         }
-        ctx.scene.events.on('wave-world', this.onWave, this);
+        onWorld(ctx.scene, 'wave-world', this.onWave, this);
     }
 
     markers(): RegionMarker[] {
@@ -154,7 +149,7 @@ export class AbilitySeals {
     }
 
     destroy(): void {
-        this.ctx.scene.events.off('wave-world', this.onWave, this);
+        offWorld(this.ctx.scene, 'wave-world', this.onWave, this);
         for (const l of this.live) {
             for (const z of l.barrier) z.destroy();
             for (const v of l.visuals) v.destroy();

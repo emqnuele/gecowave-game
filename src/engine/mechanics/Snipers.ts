@@ -2,6 +2,7 @@ import type Phaser from 'phaser';
 import { sfx } from '../sfx';
 import { state } from '../state';
 import { QUIET_ROOMS, type Mechanic, type MechanicCtx } from './types';
+import { emitWorld } from '../worldEvents';
 
 /* il server di notino ha un cecchino sulla torre radio: all'aperto un laser
    rosso ti cerca, si ferma, diventa bianco e spara dove eri. chi corre dritto
@@ -58,7 +59,7 @@ export class Snipers implements Mechanic {
             this.line.fillCircle(a.ox, a.oy, a.locked ? 5 : 3);
             if (t >= TRACK_MS + LOCK_MS) {
                 sfx.shoot();
-                this.ctx.scene.events.emit('enemy-shoot', { x: a.ox, y: a.oy, tx: a.lockX, ty: a.lockY, color: 0xef4444, speed: 980, size: 0.9 });
+                emitWorld(this.ctx.scene, 'enemy-shoot', { x: a.ox, y: a.oy, tx: a.lockX, ty: a.lockY, color: 0xef4444, speed: 980, size: 0.9 });
                 this.aim = null;
                 this.nextAt = time + 5200 + Math.random() * 2600;
             }

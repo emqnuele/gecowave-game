@@ -8,6 +8,7 @@ import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { GameContext, GameSystem, SceneData } from './context';
 import type { Interactable } from './Interactions';
+import { emitWorld } from '../engine/worldEvents';
 
 type TravelCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'npcs' | 'bosses' | 'chapter' | 'flow'>;
 
@@ -186,6 +187,7 @@ export class Travel implements GameSystem {
         state.save.checkpointId = id;
         state.persist();
         state.run.hp = state.maxHp;
+        emitWorld(this.scene, 'checkpoint', { id, levelId: this.ctx.world.def.id });
         sfx.checkpoint();
         this.ctx.interactions.remove(entry);
         this.checkpointSprites.forEach((m, mid) => {

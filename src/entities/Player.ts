@@ -8,6 +8,7 @@ import type { PlayerAct } from '../rules/ombra';
 import { sfx } from '../engine/sfx';
 import { state } from '../engine/state';
 import type { AbilityId } from '../types';
+import { emitWorld } from '../engine/worldEvents';
 
 export type AttackDir = 'side' | 'up' | 'down';
 
@@ -213,7 +214,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     /** una decisione, un evento: l'ombra legge le mosse, mai i tasti */
     private act(a: PlayerAct): void {
-        this.scene.events.emit('player-act', a);
+        emitWorld(this.scene, 'player-act', a);
     }
 
     update(_time: number, delta: number): void {
@@ -448,14 +449,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.controls.pressed('riflesso') && state.hasAbility('riflesso')) {
             // seconda pressione col clone vivo: scambio di posto, non un clone nuovo
             if (this.riflessoSwapAvailable && this.host.cloneAlive) {
-                this.scene.events.emit('player-riflesso-swap', {});
+                emitWorld(this.scene, 'player-riflesso-swap', {});
                 return;
             }
             if (now < this.riflessoReadyAt) return;
             if (this.spendFlow(COMBAT.riflessoCost * state.mods.abilityCost)) {
                 this.riflessoReadyAt = now + COMBAT.riflessoCooldownMs;
                 sfx.unlock();
-                this.scene.events.emit('player-riflesso', { x: this.x, y: this.y, facing: this.facing });
+                emitWorld(this.scene, 'player-riflesso', { x: this.x, y: this.y, facing: this.facing });
                 this.act({ act: 'wave', wave: 'riflesso' });
             }
         }
@@ -464,7 +465,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             if (this.spendFlow(COMBAT.scudoCost * state.mods.abilityCost)) {
                 this.scudoReadyAt = now + COMBAT.scudoCooldownMs;
                 sfx.unlock();
-                this.scene.events.emit('player-scudo', {});
+                emitWorld(this.scene, 'player-scudo', {});
                 this.act({ act: 'wave', wave: 'scudo' });
             }
         }
@@ -639,7 +640,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             if (this.spendFlow(COMBAT.analisiCost * state.mods.abilityCost)) {
                 this.analisiReadyAt = now + COMBAT.analisiCooldownMs;
                 sfx.unlock();
-                this.scene.events.emit('player-analisi', {});
+                emitWorld(this.scene, 'player-analisi', {});
                 this.act({ act: 'wave', wave: 'analisi' });
             }
         } else {
@@ -654,7 +655,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 sfx.unlock();
                 // in aria la lasci cadere sotto di te, a terra la lanci ad arco
                 const aim = !this.grounded ? 'drop' : 'lob';
-                this.scene.events.emit('player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
+                emitWorld(this.scene, 'player-acqua', { x: this.x, y: this.y, facing: this.facing, aim });
                 this.act({ act: 'wave', wave: 'acquatossica' });
             }
         } else {
@@ -671,7 +672,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         else if (level === 1) sfx.shoot();
         else sfx.shootEco();
         this.scene.cameras.main.flash(80, 168, 85, 247);
-        this.scene.events.emit('player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing, level });
+        emitWorld(this.scene, 'player-risonante', { x: this.x + this.facing * 26, y: this.y, dir: this.facing, level });
         this.act({ act: 'wave', wave: 'risonante', level });
     }
 
@@ -791,7 +792,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.chargeRing?.destroy();
             this.chargeRing = null;
             sfx.die();
-            this.scene.events.emit('player-dead');
+            emitWorld(this.scene, 'player-dead');
         }
         return true;
     }
@@ -808,7 +809,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.chargeRing?.destroy();
         this.chargeRing = null;
         sfx.die();
-        this.scene.events.emit('player-dead');
+        emitWorld(this.scene, 'player-dead');
     }
 
     stun(duration: number): void {

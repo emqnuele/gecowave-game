@@ -12,6 +12,7 @@ import { state } from '../engine/state';
 import { Boss } from '../entities/Boss';
 import type { AbilityId, BossKind } from '../types';
 import type { GameContext, GameSystem } from './context';
+import { emitWorld } from '../engine/worldEvents';
 
 type BossesCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'rewards' | 'dialogues' | 'chapter' | 'doomsday' | 'flow'>;
 
@@ -143,6 +144,7 @@ export class Bosses implements GameSystem {
         let by = floor - half - 70;
         if (by - half < ceil + 16) by = (floor + ceil) / 2;
         boss.relocate(x, by);
+        emitWorld(this.scene, 'boss-spawned', { boss });
         return boss;
     }
 

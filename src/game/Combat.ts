@@ -10,6 +10,7 @@ import { Enemy } from '../entities/Enemy';
 import { Spawner } from '../entities/Spawner';
 import { poisonMultiplier, risonanteStep } from '../rules/combat';
 import type { GameContext, GameSystem } from './context';
+import { emitWorld } from '../engine/worldEvents';
 
 type CombatCtx = Pick<GameContext, 'simulates' | 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'enemies' | 'bosses' | 'abilities' | 'feel' | 'safe'>;
 
@@ -315,9 +316,11 @@ export class Combat implements GameSystem {
         if (!this.ctx.simulates) return false;
         const poisoned = this.ctx.abilities.isPoisoned(target, this.scene.time.now);
         const mult = poisonMultiplier(poisoned, target instanceof Boss);
-        if (target instanceof Boss) return target.takeDamage(amount * mult, fromX, dir);
-        target.takeDamage(amount * mult, fromX);
-        return true;
+        let landed = true;
+        if (target instanceof Boss) landed = target.takeDamage(amount * mult, fromX, dir);
+        else target.takeDamage(amount * mult, fromX);
+        emitWorld(this.scene, 'damage', { target, amount: amount * mult, landed });
+        return landed;
     }
 
     onSpikes(): void {

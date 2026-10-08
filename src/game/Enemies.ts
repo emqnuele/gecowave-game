@@ -11,6 +11,7 @@ import { Enemy, type EnemyTrait } from '../entities/Enemy';
 import { Spawner } from '../entities/Spawner';
 import type { EnemyKind } from '../types';
 import type { GameContext, GameSystem } from './context';
+import { emitWorld } from '../engine/worldEvents';
 
 type EnemiesCtx = Pick<GameContext, 'simulates' | 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
 
@@ -75,6 +76,7 @@ export class Enemies implements GameSystem {
             const h = (e.body as Phaser.Physics.Arcade.Body).height;
             this.ctx.lighting.follow(e, e.trait === 'kamikaze' ? 0xef4444 : e.arch.glowColor, 120 + h, 0.6, -h * 0.9 - 8, -h * 0.35);
         }
+        emitWorld(this.scene, 'enemy-spawned', { enemy: e });
         return e;
     }
 
@@ -83,6 +85,7 @@ export class Enemies implements GameSystem {
         this.ctx.groups.spawners.add(s);
         this.scene.physics.add.collider(this.ctx.player, s);
         this.ctx.lighting.follow(s, s.glowColor, 190, 0.85, 0, -20);
+        emitWorld(this.scene, 'nest-spawned', { nest: s });
         return s;
     }
 

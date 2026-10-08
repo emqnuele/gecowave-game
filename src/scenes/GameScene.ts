@@ -33,7 +33,6 @@ import { ensurePlayerSkin } from '../engine/playerSkin';
 import { ensureAbilityFx } from '../engine/art/abilityFx';
 import { prewarmCreatures } from '../engine/art/creatures';
 import { Player, type PlayerHost } from '../entities/Player';
-import type { PlayerAct } from '../rules/ombra';
 import { PedroApparition } from '../engine/PedroApparition';
 import { TrentatreMarks } from '../engine/TrentatreMarks';
 import { AbilitySeals } from '../engine/AbilitySeals';
@@ -62,6 +61,7 @@ import { Npcs } from '../game/Npcs';
 import { createChapter, indiziRaccolti, type ChapterScript } from '../game/chapters';
 import { waveOnce } from '../game/chapters/shared/wave';
 import type { SceneData } from '../game/context';
+import { emitWorld, offWorld, onWorld, type WorldEvent, type WorldHandler } from '../engine/worldEvents';
 
 const FALL_DEATH_MARGIN = 3000;
 
@@ -499,36 +499,36 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
     /* ---------- eventi ---------- */
 
     private setupEvents(): void {
-        const on = (event: string, fn: (...args: never[]) => void, owner: object = this) => {
-            this.events.on(event, fn, owner);
-            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(event, fn, owner));
+        const on = <K extends WorldEvent>(event: K, fn: WorldHandler<K>, owner: object = this) => {
+            onWorld(this, event, fn, owner);
+            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offWorld(this, event, fn, owner));
         };
-        on('player-risonante', this.abilities.onRisonante as never, this.abilities);
-        on('player-riflesso', this.abilities.onRiflesso as never, this.abilities);
-        on('player-riflesso-swap', this.abilities.onRiflessoSwap as never, this.abilities);
-        on('player-analisi', this.abilities.onAnalisi as never, this.abilities);
-        on('player-scudo', this.abilities.onScudo as never, this.abilities);
-        on('player-acqua', this.abilities.onAcquaTossica as never, this.abilities);
-        on('enemy-shoot', this.combat.onEnemyShoot as never, this.combat);
-        on('enemy-died', this.enemies.onEnemyDied as never, this.enemies);
-        on('enemy-explode', this.combat.onEnemyExplode as never, this.combat);
-        on('enemy-fuse', (() => sfx.fuse()) as never);
-        on('enemy-drop', (() => sfx.shriek()) as never);
-        on('enemy-alert', this.enemies.onEnemyAlert as never, this.enemies);
-        on('player-dead', this.progression.onPlayerDead as never, this.progression);
-        on('boss-summon', this.enemies.onBossSummon as never, this.enemies);
-        on('boss-lamette', this.combat.onBossLamette as never, this.combat);
-        on('boss-defeated', this.bosses.onDefeated as never, this.bosses);
-        on('boss-engaged', this.bosses.onEngaged as never, this.bosses);
-        on('boss-dying', (() => this.bosses.silence()) as never);
+        on('player-risonante', this.abilities.onRisonante, this.abilities);
+        on('player-riflesso', this.abilities.onRiflesso, this.abilities);
+        on('player-riflesso-swap', this.abilities.onRiflessoSwap, this.abilities);
+        on('player-analisi', this.abilities.onAnalisi, this.abilities);
+        on('player-scudo', this.abilities.onScudo, this.abilities);
+        on('player-acqua', this.abilities.onAcquaTossica, this.abilities);
+        on('enemy-shoot', this.combat.onEnemyShoot, this.combat);
+        on('enemy-died', this.enemies.onEnemyDied, this.enemies);
+        on('enemy-explode', this.combat.onEnemyExplode, this.combat);
+        on('enemy-fuse', () => sfx.fuse());
+        on('enemy-drop', () => sfx.shriek());
+        on('enemy-alert', this.enemies.onEnemyAlert, this.enemies);
+        on('player-dead', this.progression.onPlayerDead, this.progression);
+        on('boss-summon', this.enemies.onBossSummon, this.enemies);
+        on('boss-lamette', this.combat.onBossLamette, this.combat);
+        on('boss-defeated', this.bosses.onDefeated, this.bosses);
+        on('boss-engaged', this.bosses.onEngaged, this.bosses);
+        on('boss-dying', () => this.bosses.silence());
         // ogni mossa del geco nutre il profilo: l'ombra lo leggerà alla fine
-        on('player-act', ((act: PlayerAct) => {
+        on('player-act', (act) => {
             state.observeOmbra(act);
             this.bosses.observe(act);
-        }) as never);
+        });
         // mangiare è un canale da interrompere: l'ombra legge inizio e fine
         const offHealed = bus.on('player-healed', () => {
-            this.events.emit('player-act', { act: 'heal' });
+            emitWorld(this, 'player-act', { act: 'heal' });
         });
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offHealed());
         // dal telefono si ordina, nel mondo si mangia: il boccone parte qui
@@ -537,7 +537,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
             if (msg) bus.emit('toast', { text: msg });
         });
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offEat());
-        on('boss-phase', (({ phase }: { phase: number }) => this.bosses.onPhase(phase)) as never);
+        on('boss-phase', (({ phase }: { phase: number }) => this.bosses.onPhase(phase)));
     }
 
     /* ---------- facciata per film e geco ---------- */
