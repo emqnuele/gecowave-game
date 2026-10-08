@@ -1,7 +1,10 @@
-import { BASE_NOTCHES, LEGACY_ITEMS, STARTING_ITEMS } from '../content/items';
+import { BASE_NOTCHES, STARTING_ITEMS } from '../content/items';
 import { DEFAULT_SKIN_ID, isValidSkinId } from '../content/skins';
 import type { SaveData } from '../types';
 import { defaultOmbraProfile, sanitizeOmbraProfile } from './ombra';
+
+/** vecchi consumabili tolti dall'economia: chi li aveva li ritrova in barre, al prezzo di wavezon */
+const LEGACY_ITEMS: Record<string, number> = { energetico: 22, 'caffe-mensa': 35, rubinetto: 10, santino: 50, 'brodo-lochef': 80 };
 
 /** il salvataggio di una partita nuova */
 export const defaultSave = (): SaveData => ({

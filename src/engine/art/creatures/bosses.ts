@@ -248,45 +248,6 @@ const ticummi: CreatureSpec = {
     },
 };
 
-const furgone: CreatureSpec = {
-    key: 'boss-furgone', w: 120, h: 70, faces: true,
-    draw(p, t) {
-        const y = sin(t, 2) * 0.6;
-        for (let k = 0; k < 3; k++) {
-            const u = (t + k / 3) % 1;
-            p.flat(p.ellipse(118 + u * 3, 48 - u * 14 + y, 2 + u * 4, 1.6 + u * 3), 0x64748b, 0.5 * (1 - u));
-        }
-        // cassone bianco e muso a sinistra
-        p.shape([{ x: 22, y: 6 + y }, { x: 114, y: 6 + y }, { x: 116, y: 10 + y }, { x: 116, y: 54 + y }, { x: 22, y: 54 + y }], 0xdfe6ea, {
-            hatch: 0.5,
-            detail: (pp) => {
-                // pubblicità: l'onda e la goccia di smela
-                pp.flat(pp.rect(30, 14, 78, 30).map((q) => ({ x: q.x, y: q.y + y })), 0x0e7490, 0.9, 0);
-                pp.line(pp.curve({ x: 34, y: 34 + y }, { x: 52, y: 20 + y }, { x: 70, y: 34 + y }, 10), 2, 0x67e8f9);
-                pp.line(pp.curve({ x: 70, y: 34 + y }, { x: 88, y: 46 + y }, { x: 104, y: 30 + y }, 10), 2, 0x67e8f9);
-                pp.ctx.font = 'bold 7px monospace';
-                pp.ctx.fillStyle = '#ecfeff';
-                pp.ctx.fillText('ACQUA', 46, 26 + y);
-                pp.ctx.fillText('SMELA', 66, 40 + y);
-                pp.flat(pp.rect(22, 48 + y, 94, 3), 0x0e7490, 0.8, 0);
-            },
-        });
-        p.shape([{ x: 4, y: 34 + y }, { x: 8, y: 22 + y }, { x: 22, y: 18 + y }, { x: 24, y: 54 + y }, { x: 3, y: 54 + y }], 0xd1d9de, { hatch: 0.45 });
-        // parabrezza con smela al volante, felice
-        p.lit([{ x: 7, y: 32 + y }, { x: 10, y: 24 + y }, { x: 21, y: 22 + y }, { x: 21, y: 33 + y }], 0x0f3b48, 0.95);
-        p.flat(p.ellipse(15, 30 + y, 4.2, 4), 0x56604f, 1, 0);
-        p.eye(13.6, 29 + y, 1.1, 0x22d3ee, { socket: false });
-        p.eye(16.4, 29 + y, 1.1, 0x22d3ee, { socket: false });
-        // faro e paraurti
-        p.eye(5, 40 + y, 2.6, 0x67e8f9, { socket: false, angry: -0.4 });
-        p.shape(p.rect(1, 47 + y, 23, 5), 0x52525b, { smooth: 0, hatch: 0 });
-        // goccia d'acqua che sgocciola dal cassone
-        p.lit(p.ellipse(96, 56 + y + (t % 1) * 6, 1.2, 1.8), 0x67e8f9, 0.9 * (1 - (t % 1)));
-        wheel(p, 22, 57, 10.5, t, 0x9ca3af);
-        wheel(p, 92, 57, 10.5, t, 0x9ca3af);
-    },
-};
-
 const danjilo: CreatureSpec = {
     key: 'boss-danjilo', w: 70, h: 84,
     draw(p, t) {
@@ -574,6 +535,6 @@ const glitch: CreatureSpec = {
 };
 
 export const BOSS_ART: CreatureSpec[] = [
-    guggu, breccio, notino, riba, lochef, ombra, ticummi, furgone, danjilo, smela, limite, teorema, pedrino, formicona, pedro, glitch,
+    guggu, breccio, notino, riba, lochef, ombra, ticummi, danjilo, smela, limite, teorema, pedrino, formicona, pedro, glitch,
     ...BOSS_ART_VOID,
 ];

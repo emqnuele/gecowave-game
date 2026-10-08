@@ -150,7 +150,7 @@ export class Progression implements Flow, GameSystem {
         state.save.levelId = next;
         state.save.checkpointId = null;
         state.persist();
-        sfx.stopPad();
+        sfx.stopBeds();
         this.scene.cameras.main.fadeOut(450, 0, 0, 0);
         this.scene.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
             this.scene.scene.restart({ levelId: next, checkpointId: null, spawnAt } satisfies SceneData);
@@ -322,7 +322,7 @@ export class Progression implements Flow, GameSystem {
         this.ctx.feel.shake(300, 0.01);
         this.ctx.player.setTint(0xf87171);
         this.scene.tweens.add({ targets: this.ctx.player, alpha: 0, angle: 180, duration: 600 });
-        sfx.stopPad();
+        sfx.stopBeds();
         music.tapeStop();
         acoustics.swell(1800, 0.8);
         this.scene.time.delayedCall(900, () => {

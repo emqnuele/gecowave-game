@@ -27,7 +27,6 @@ const BOSS_INTRO: Partial<Record<BossKind, string>> = {
     ticummi: 'ticummi-intro',
     formicona: 'formicona-intro',
     teorema: 'teorema-intro',
-    furgone: 'furgone-intro',
     danjilo: 'danjilo-intro',
     smela: 'smela-boss',
     limite: 'limite-intro',
@@ -121,7 +120,7 @@ export class Bosses implements GameSystem {
             state.setFlag('caso-risolto');
             this.ctx.rewards.spawnCuore(x, y + 50, 'cuore-limite', true);
         }
-        if (kind === 'furgone' || kind === 'smela') state.setFlag('stabilimento-chiuso');
+        if (kind === 'smela') state.setFlag('stabilimento-chiuso');
         if (kind === 'pedrino') state.setFlag('ricordi-visti');
     }
 

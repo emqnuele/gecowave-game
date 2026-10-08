@@ -327,7 +327,7 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 - **`GameScene.create` resetta a mano i campi**: ogni campo nuovo va azzerato lì.
 - **Rigenerazione regioni**: deterministica; dopo modifiche a generatore o simulatore rigenerare tutto e rifare le tappe del bot (`scripts/world/waypoints.ts`).
 - **Tempi**: `npm run regions` con cancelli e verifiche multiple richiede decine di minuti (parallelo su tutti i core).
-- **Dev hooks**: `window.__game`, `__bus`, `__state`, `__music` solo in sviluppo. Importare un modulo da `page.evaluate` crea un'istanza diversa: usare gli hook.
+- **Dev hooks** (`src/dev/hooks.ts`): `window.__game`, `__bus`, `__state`, `__music`, `__acoustics`, `__sfx`, `__meter`, `__startLevel`, solo in sviluppo. Importare un modulo da `page.evaluate` crea un'istanza diversa: usare gli hook.
 - **Editor** (`editor/`): usa i tipi del gioco, va tenuto compilabile (`cd editor && npx tsc -b --noEmit`).
 
 ---

@@ -201,8 +201,8 @@ class MusicManager {
         if (name.includes('riba')) {
             return "assets/music/Piema's OST 1.mp3";
         }
-        // arco consegne: danjilo, smela, il furgone
-        if (name.includes('furgone') || name.includes('smela') || name.includes('danjilo')) {
+        // arco consegne: danjilo e smela
+        if (name.includes('smela') || name.includes('danjilo')) {
             return "assets/music/Ivan Maggini's OST 2.mp3";
         }
         if (name.includes('lochef') || name.includes('7:40') || name.includes('settequaranta')) {

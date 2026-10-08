@@ -312,29 +312,6 @@ class Acoustics {
         this.apply(false);
     }
 
-    /** solo sviluppo: rms di musica ed effetti, per tarare i livelli */
-    meter(): { music: number; sfx: number } | null {
-        const ctx = this.ctx;
-        if (!ctx || !this.musicIn || !this.sfxIn) return null;
-        if (!this.meters) {
-            const m = ctx.createAnalyser();
-            const e = ctx.createAnalyser();
-            m.fftSize = e.fftSize = 2048;
-            this.musicIn.connect(m);
-            this.sfxIn.connect(e);
-            this.meters = { m, e };
-        }
-        const rms = (a: AnalyserNode) => {
-            const d = new Float32Array(a.fftSize);
-            a.getFloatTimeDomainData(d);
-            let s = 0;
-            for (const v of d) s += v * v;
-            return Math.sqrt(s / d.length);
-        };
-        return { music: rms(this.meters.m), sfx: rms(this.meters.e) };
-    }
-    private meters: { m: AnalyserNode; e: AnalyserNode } | null = null;
-
     get current(): Readonly<AcousticTarget> {
         return this.target;
     }

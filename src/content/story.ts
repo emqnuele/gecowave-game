@@ -349,15 +349,6 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'lore-cisterna': [
         { speaker: 'cisterna numero 3', color: 'cyan', text: '«livello: pieno. contenuto: ufficialmente "essenza di sorgente". fornitura elettrica intestata a Enercoop SpA, utenza morosa da 33 mesi. scritta a pennarello sotto: "rio merdone tale e quale, non dirlo a nessuno — s."»' },
     ],
-    'furgone-intro': [
-        { speaker: 'smela', color: 'cyan', text: 'EHI! tu non sei del tour!! sei venuto a chiudere lo stabilimento, vero? lo sapevo. nessuno apprezza più la libera impresa.' },
-        { speaker: 'smela', color: 'cyan', text: 'va bene. va benissimo. sali pure sul ring, amico: io salgo sul FURGONE. consegna espressa: TU, direttamente al creatore. senza rimborso.' },
-    ],
-    'furgone-sconfitto': [
-        { speaker: 'smela', color: 'cyan', text: 'il furgone... il leasing... ma che è, una moda?? prima la sedia di ticummi ora il mio furgone...' },
-        { speaker: 'smela', color: 'cyan', text: 'ok. ok!! chiudo lo stabilimento. mi reinvento. ho già un\'idea: TRENBOLONE ARTIGIANALE BIOLOGICO. no aspetta. aspetta!! era uno scherzo!! METTI GIÙ QUELLA SPADA!!' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che archivia la pratica*' },
-    ],
 
     'lore-formiche': [
         { speaker: 'cartello rosicchiato', color: 'orange', text: '«villaggio di formica (FR). i visitatori sono pregati di non calpestare. le formiche non sono pregate di non attaccare.»' },

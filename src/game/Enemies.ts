@@ -103,7 +103,7 @@ export class Enemies implements GameSystem {
             doorCount.set(d.b, (doorCount.get(d.b) ?? 0) + 1);
         }
         const poolKinds = [...new Set(
-            this.ctx.world.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'spawner')
+            this.ctx.world.level.entities.filter((e) => e.spec.type === 'enemy')
                 .map((e) => (e.spec as { kind: EnemyKind }).kind),
         )].filter((k) => {
             const b = ENEMIES[k]?.behavior;
@@ -130,13 +130,6 @@ export class Enemies implements GameSystem {
             const h = hashString(`${this.ctx.world.def.id}:spawner:${room.id}`);
             const chance = room.kind === 'secret' ? 80 : room.kind === 'cave' ? 70 : 60;
             if (h % 100 >= chance) continue;
-            // la stanza ha già un nido piazzato a mano: niente doppioni
-            const hasManual = this.ctx.world.level.entities.some((e) =>
-                e.spec.type === 'spawner'
-                && e.x >= room.rect.x * TILE && e.x < (room.rect.x + room.rect.w) * TILE
-                && e.y >= room.rect.y * TILE && e.y < (room.rect.y + room.rect.h) * TILE,
-            );
-            if (hasManual) continue;
             const kind = kinds[h % kinds.length];
             const spot = this.caveSpawnerSpot(room);
             if (!spot) continue;

@@ -101,7 +101,7 @@ export class Travel implements GameSystem {
         state.save.levelId = levelId;
         state.save.checkpointId = cpId;
         state.persist();
-        sfx.stopPad();
+        sfx.stopBeds();
         this.scene.cameras.main.fadeOut(450, 0, 0, 0);
         this.scene.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
             this.scene.scene.restart({ levelId, checkpointId: cpId, showCard: levelId !== this.ctx.world.def.id } satisfies SceneData);

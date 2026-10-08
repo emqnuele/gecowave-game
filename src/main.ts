@@ -29,6 +29,7 @@ import { initFinalSummary, isFinalSummaryOpen } from './ui/finalSummary';
 import { Hud } from './ui/hud';
 import { Screens, type GameController } from './ui/screens';
 import { ui } from './ui/dom';
+import { installDevHandles, installLevelHook } from './dev/hooks';
 
 async function boot(): Promise<void> {
     // i font devono esserci prima che il canvas li usi
@@ -68,8 +69,7 @@ async function boot(): Promise<void> {
         scene: [BootScene, GameScene, GalleryScene, MenuScene],
     });
 
-    // handle di debug in sviluppo, mai nel build
-    if (import.meta.env.DEV) Object.assign(window, { __game: game, __bus: bus, __state: state, __music: music, __acoustics: acoustics, __sfx: sfx });
+    if (import.meta.env.DEV) installDevHandles(game);
     // chiusura a sorpresa: meglio un write in più che due secondi persi
     window.addEventListener('beforeunload', () => state.flushPersist(true));
 
@@ -104,13 +104,10 @@ async function boot(): Promise<void> {
             game.scene.start('GameScene', { levelId, checkpointId, showCard });
         }
     };
-    // il bot di test avvia il livello a un istante preciso dell'orologio finto, come fa "continua"
     if (import.meta.env.DEV) {
-        Object.assign(window, {
-            __startLevel: (levelId: string, checkpointId: string | null = null) => {
-                screens.closeOverlay();
-                startLevel(levelId, checkpointId, false);
-            },
+        installLevelHook((levelId, checkpointId) => {
+            screens.closeOverlay();
+            startLevel(levelId, checkpointId, false);
         });
     }
 
@@ -140,7 +137,7 @@ async function boot(): Promise<void> {
         quitToMenu() {
             inGame = false;
             state.flushPersist(true);
-            sfx.stopPad();
+            sfx.stopBeds();
             acoustics.reset();
             game.scene.stop('GameScene');
             hud.hide();
@@ -189,7 +186,7 @@ async function boot(): Promise<void> {
         state.setFlag(`finale-${id}`);
         checkAchievements();
         if (phone.isOpen) phone.close();
-        sfx.stopPad();
+        sfx.stopBeds();
         acoustics.reset();
         music.playEnding();
         hud.hide();

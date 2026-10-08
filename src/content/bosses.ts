@@ -107,25 +107,6 @@ export const BOSSES: Record<BossKind, BossDef> = {
         move: 'erratic',
         signature: 'teletrasporti sbagliati + picchiate storte',
     },
-    // furgone consegne: pattuglia l'arena e semina mine (pacchi)
-    furgone: {
-        kind: 'furgone',
-        name: 'il furgone delle consegne (guida smela)',
-        texture: 'boss-furgone',
-        hp: 60,
-        glowColor: 0x22d3ee,
-        attacks: {
-            1: ['charge', 'mines'],
-            2: ['charge', 'mines', 'summon'],
-            3: ['charge', 'charge', 'mines', 'summon'],
-        },
-        cooldownMs: { 1: 2500, 2: 2000, 3: 1500 },
-        summonKind: 'bottiglia',
-        contactDamage: 1,
-        guardsExit: false,
-        move: 'stalk',
-        signature: 'ronde + pacchi-mina sul percorso',
-    },
     // fidanzato geloso: boxeur, solo corpo a corpo + schianti
     danjilo: {
         kind: 'danjilo',

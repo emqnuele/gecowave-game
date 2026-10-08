@@ -17,7 +17,6 @@ export class LightingManager {
     private tracked: TrackedLight[] = [];
     /** tremolii registrati: si congelano fuori vista, si uccidono alla rimozione */
     private anims: { light: Phaser.GameObjects.Light; tw: Phaser.Tweens.Tween }[] = [];
-    private torchCount = 0;
     private propCount = 0;
 
     constructor(scene: Phaser.Scene) {
@@ -54,26 +53,6 @@ export class LightingManager {
                 intensity: { from: intensity, to: intensity * 0.72 },
                 radius: { from: radius, to: radius * 0.86 },
                 duration: 500 + rng.fx.next() * 500,
-                yoyo: true,
-                repeat: -1,
-                ease: 'Sine.easeInOut',
-            }),
-        });
-        return light;
-    }
-
-    torch(x: number, y: number, color = 0xffaa33): Phaser.GameObjects.Light | null {
-        // troppe luci uccidono il framerate e il mistero
-        if (this.torchCount >= 9) return null;
-        this.torchCount++;
-        const light = this.scene.lights.addLight(x, y, 240, color, 1.0);
-        this.anims.push({
-            light,
-            tw: this.scene.tweens.add({
-                targets: light,
-                intensity: { from: 1.0, to: 0.78 },
-                radius: { from: 240, to: 215 },
-                duration: 120 + rng.fx.next() * 220,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut',

@@ -30,6 +30,7 @@ Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguir
 - `spawnItemPickup` ramo `LEGACY_ITEMS`: le regioni rigenerate (ADR-048) hanno solo crocchetta, panino e tacca.
 - boss `furgone`: nessuna regione lo contiene; `onBossDefeated` caso `'furgone'`, `recoverBossReward`, `BOSS_INTRO.furgone` restano senza strada.
 - `LightingManager.torch`, `acoustics.meter/rms` (strumento di sviluppo), `StoryManager.destroy` (mai chiamato; svuota solo un array), `Boss.delayAttack` (mai usato dall'ombra), `music.setVolume`, `sfx.startPad/stopPad` parzialmente (il pad non parte mai, `stopPad` sì).
+  - **esito (B12)**: tolti `torch`, `startPad` (con `stopPad`, che senza pad faceva solo `stopBeds`: i chiamanti ora chiamano quello) e `StoryManager.destroy`; `acoustics.meter` spostato in `src/dev/hooks.ts`. **Restano** `music.setVolume` e `Boss.delayAttack`: non sono codice morto, sono codice che il corpus non esegue. Il primo lo chiama il cursore del volume (schermo delle impostazioni e telefono), il secondo l'ombra quando alzi lo scudo vicino a lei (`OmbraBrain`, insight `wave-scudo`). Toglierli cambierebbe il gioco.
 - `TerrainRenderer.straightenFakeWalls/releaseStraightenedWalls` e `TrentatreMarks.extinguishWalls/restoreExtinguished`: la fase 2 del nucleo che si raddrizza non trova muri `F` nell'arena (ADR-041 lo dice già): restano pronti per una rigenerazione.
 
 ## già noti dalla revisione del remaster (ANALISI_REMASTER.md)

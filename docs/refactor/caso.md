@@ -1,6 +1,6 @@
 # il caso nel codice
 
-Generato da `scripts/harness/caso.mjs` su `src/`: 205 estrazioni casuali in 30 file. 65 dalla sequenza della logica, 139 da quella cosmetica, 1 da `Math.random` (solo il seme).
+Generato da `scripts/harness/caso.mjs` su `src/`: 204 estrazioni casuali in 30 file. 65 dalla sequenza della logica, 138 da quella cosmetica, 1 da `Math.random` (solo il seme).
 
 Il gioco pesca da due sequenze con seme (`src/engine/rng.ts`, ripartono a ogni livello da semi pescati dal caso del browser): **logica** decide cosa succede, **cosmetico** solo cosa si vede o si sente. Così una particella in più non sposta più la trama. Il caso interno di phaser (particelle con valori `random`) resta su `Math.random` e non tocca nessuna delle due.
 
@@ -19,11 +19,11 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 | src/engine/BossVoice.ts | 5 |
 | src/game/abilities/Bottiglia.ts | 5 |
 | src/game/chapters/santuario.ts | 5 |
-| src/engine/LightingManager.ts | 4 |
 | src/engine/audio/Soundscape.ts | 4 |
 | src/game/Enemies.ts | 4 |
 | src/ui/photos.ts | 4 |
 | src/content/story.ts | 3 |
+| src/engine/LightingManager.ts | 3 |
 | src/game/abilities/Riflesso.ts | 3 |
 | src/engine/mechanics/Snipers.ts | 2 |
 | src/game/Doomsday.ts | 2 |
@@ -124,10 +124,9 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 56 | LightingManager.follow | rng.fx.next | `duration: 500 + rng.fx.next() * 500,` | cosmetico |
-| 76 | LightingManager.torch | rng.fx.next | `duration: 120 + rng.fx.next() * 220,` | cosmetico |
-| 97 | LightingManager.prop | rng.fx.next | `duration: flame ? 110 + rng.fx.next() * 200 : 1400 + rng.fx.next() * 900,` | cosmetico |
-| 97 | LightingManager.prop | rng.fx.next | `duration: flame ? 110 + rng.fx.next() * 200 : 1400 + rng.fx.next() * 900,` | cosmetico |
+| 55 | LightingManager.follow | rng.fx.next | `duration: 500 + rng.fx.next() * 500,` | cosmetico |
+| 76 | LightingManager.prop | rng.fx.next | `duration: flame ? 110 + rng.fx.next() * 200 : 1400 + rng.fx.next() * 900,` | cosmetico |
+| 76 | LightingManager.prop | rng.fx.next | `duration: flame ? 110 + rng.fx.next() * 200 : 1400 + rng.fx.next() * 900,` | cosmetico |
 
 ## src/engine/PedroApparition.ts
 
@@ -178,31 +177,31 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 70 | Sfx.init | rng.fx.next | `for (let i = 0; i < len; i++) data[i] = rng.fx.next() * 2 - 1;` | cosmetico |
-| 76 | Sfx.init | rng.fx.next | `last = (last + 0.02 * (rng.fx.next() * 2 - 1)) / 1.02;` | cosmetico |
-| 139 | Sfx.noise | rng.fx.next | `const offset = rng.fx.next() * 1.5;` | cosmetico |
-| 186 | Sfx.barra | rng.fx.next | `barra(): void { this.tone(880 + rng.fx.next() * 220, 70, { type: 'triangle', vol: 0.05 }); }` | cosmetico |
-| 222 | Sfx.mirrorBirth | rng.fx.next | `const base = 1560 + rng.fx.next() * 200;` | cosmetico |
-| 317 | Sfx.death | rng.fx.next | `for (let k = 0; k < 6; k++) this.tone(2600 + rng.fx.next() * 2400, 160 + k * 40, { type: 'sine', vol: 0.025, d` | cosmetico |
-| 343 | Sfx.death | rng.fx.next | `for (let k = 0; k < 5; k++) this.tone(200 + rng.fx.next() * 2000, 40, { type: 'square', vol: 0.035, delayMs: k` | cosmetico |
-| 372 | Sfx.death | rng.fx.next | `this.tone(180 + rng.fx.next() * 60, 260, { type: 'sawtooth', to: 90, vol: 0.05, attackMs: 15 });` | cosmetico |
-| 386 | Sfx.bossVoice | rng.fx.next | `for (let i = 0; i < 6; i++) this.tone(120 + rng.fx.next() * 1800, 45, { type: 'square', vol: 0.03, delayMs: i ` | cosmetico |
-| 427 | Sfx.bossVoice | rng.fx.next | `for (let i = 0; i < 5; i++) this.tone(3000 + rng.fx.next() * 2000, 90, { type: 'triangle', vol: 0.02, delayMs:` | cosmetico |
-| 446 | Sfx.step | rng.fx.next | `const v = (0.8 + rng.fx.next() * 0.4) * heavy * 0.55;` | cosmetico |
-| 447 | Sfx.step | rng.fx.next | `const j = 0.9 + rng.fx.next() * 0.2;` | cosmetico |
-| 505 | Sfx.drip | rng.fx.next | `const f = 900 + rng.fx.next() * 900;` | cosmetico |
-| 511 | Sfx.clankFar | rng.fx.next | `const f = 300 + rng.fx.next() * 500;` | cosmetico |
-| 518 | Sfx.beep | rng.fx.next | `const f = [1320, 1760, 2093, 990][Math.floor(rng.fx.next() * 4)];` | cosmetico |
-| 520 | Sfx.beep | rng.fx.next | `if (rng.fx.next() < 0.5) this.tone(f * 1.5, 70, { type: 'square', vol: 0.01 * vol, pan, delayMs: 110 });` | cosmetico |
-| 524 | Sfx.cricket | rng.fx.next | `for (let k = 0; k < 3; k++) this.tone(4200 + rng.fx.next() * 300, 35, { type: 'sine', vol: 0.012 * vol, pan, d` | cosmetico |
-| 528 | Sfx.bird | rng.fx.next | `const f = 2400 + rng.fx.next() * 1200;` | cosmetico |
-| 529 | Sfx.bird | rng.fx.next | `const n = 2 + Math.floor(rng.fx.next() * 3);` | cosmetico |
-| 541 | Sfx.whisper | rng.fx.next | `const f = 1400 + rng.fx.next() * 1600;` | cosmetico |
-| 547 | Sfx.bubble | rng.fx.next | `const f = 300 + rng.fx.next() * 300;` | cosmetico |
-| 552 | Sfx.chime | rng.fx.next | `const base = [1568, 1760, 2093, 2349, 2637][Math.floor(rng.fx.next() * 5)];` | cosmetico |
-| 563 | Sfx.squeak | rng.fx.next | `this.tone(3200 + rng.fx.next() * 800, 60, { type: 'sine', to: 4400, vol: 0.012 * vol, pan });` | cosmetico |
-| 573 | Sfx.creak | rng.fx.next | `const f = 140 + rng.fx.next() * 120;` | cosmetico |
-| 666 | loop | rng.fx.next | `src.start(0, rng.fx.next() * 1.5);` | cosmetico |
+| 69 | Sfx.init | rng.fx.next | `for (let i = 0; i < len; i++) data[i] = rng.fx.next() * 2 - 1;` | cosmetico |
+| 75 | Sfx.init | rng.fx.next | `last = (last + 0.02 * (rng.fx.next() * 2 - 1)) / 1.02;` | cosmetico |
+| 138 | Sfx.noise | rng.fx.next | `const offset = rng.fx.next() * 1.5;` | cosmetico |
+| 185 | Sfx.barra | rng.fx.next | `barra(): void { this.tone(880 + rng.fx.next() * 220, 70, { type: 'triangle', vol: 0.05 }); }` | cosmetico |
+| 221 | Sfx.mirrorBirth | rng.fx.next | `const base = 1560 + rng.fx.next() * 200;` | cosmetico |
+| 316 | Sfx.death | rng.fx.next | `for (let k = 0; k < 6; k++) this.tone(2600 + rng.fx.next() * 2400, 160 + k * 40, { type: 'sine', vol: 0.025, d` | cosmetico |
+| 342 | Sfx.death | rng.fx.next | `for (let k = 0; k < 5; k++) this.tone(200 + rng.fx.next() * 2000, 40, { type: 'square', vol: 0.035, delayMs: k` | cosmetico |
+| 371 | Sfx.death | rng.fx.next | `this.tone(180 + rng.fx.next() * 60, 260, { type: 'sawtooth', to: 90, vol: 0.05, attackMs: 15 });` | cosmetico |
+| 385 | Sfx.bossVoice | rng.fx.next | `for (let i = 0; i < 6; i++) this.tone(120 + rng.fx.next() * 1800, 45, { type: 'square', vol: 0.03, delayMs: i ` | cosmetico |
+| 426 | Sfx.bossVoice | rng.fx.next | `for (let i = 0; i < 5; i++) this.tone(3000 + rng.fx.next() * 2000, 90, { type: 'triangle', vol: 0.02, delayMs:` | cosmetico |
+| 445 | Sfx.step | rng.fx.next | `const v = (0.8 + rng.fx.next() * 0.4) * heavy * 0.55;` | cosmetico |
+| 446 | Sfx.step | rng.fx.next | `const j = 0.9 + rng.fx.next() * 0.2;` | cosmetico |
+| 504 | Sfx.drip | rng.fx.next | `const f = 900 + rng.fx.next() * 900;` | cosmetico |
+| 510 | Sfx.clankFar | rng.fx.next | `const f = 300 + rng.fx.next() * 500;` | cosmetico |
+| 517 | Sfx.beep | rng.fx.next | `const f = [1320, 1760, 2093, 990][Math.floor(rng.fx.next() * 4)];` | cosmetico |
+| 519 | Sfx.beep | rng.fx.next | `if (rng.fx.next() < 0.5) this.tone(f * 1.5, 70, { type: 'square', vol: 0.01 * vol, pan, delayMs: 110 });` | cosmetico |
+| 523 | Sfx.cricket | rng.fx.next | `for (let k = 0; k < 3; k++) this.tone(4200 + rng.fx.next() * 300, 35, { type: 'sine', vol: 0.012 * vol, pan, d` | cosmetico |
+| 527 | Sfx.bird | rng.fx.next | `const f = 2400 + rng.fx.next() * 1200;` | cosmetico |
+| 528 | Sfx.bird | rng.fx.next | `const n = 2 + Math.floor(rng.fx.next() * 3);` | cosmetico |
+| 540 | Sfx.whisper | rng.fx.next | `const f = 1400 + rng.fx.next() * 1600;` | cosmetico |
+| 546 | Sfx.bubble | rng.fx.next | `const f = 300 + rng.fx.next() * 300;` | cosmetico |
+| 551 | Sfx.chime | rng.fx.next | `const base = [1568, 1760, 2093, 2349, 2637][Math.floor(rng.fx.next() * 5)];` | cosmetico |
+| 562 | Sfx.squeak | rng.fx.next | `this.tone(3200 + rng.fx.next() * 800, 60, { type: 'sine', to: 4400, vol: 0.012 * vol, pan });` | cosmetico |
+| 572 | Sfx.creak | rng.fx.next | `const f = 140 + rng.fx.next() * 120;` | cosmetico |
+| 665 | loop | rng.fx.next | `src.start(0, rng.fx.next() * 1.5);` | cosmetico |
 
 ## src/entities/Boss.ts
 
@@ -258,7 +257,7 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 211 | Bosses.onOmbraInsight | rng.logic.next | `else if ((a === 'wave-riflesso' \|\| a === 'wave-acquatossica') && rng.logic.next() < 0.3) bark = 'learn-shot'` | logica (testo) |
+| 210 | Bosses.onOmbraInsight | rng.logic.next | `else if ((a === 'wave-riflesso' \|\| a === 'wave-acquatossica') && rng.logic.next() < 0.3) bark = 'learn-shot'` | logica (testo) |
 
 ## src/game/Doomsday.ts
 
@@ -271,10 +270,10 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 212 | Enemies.updateSpawners | rng.logic.next | `s.nextAt = time + s.intervalMs * (0.85 + rng.logic.next() * 0.3);` | logica |
-| 323 | Enemies.onEnemyDied | rng.logic.next | `const line = NOTINO_FUGHE[Math.floor(rng.logic.next() * NOTINO_FUGHE.length)];` | logica (testo) |
-| 340 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
-| 340 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
+| 205 | Enemies.updateSpawners | rng.logic.next | `s.nextAt = time + s.intervalMs * (0.85 + rng.logic.next() * 0.3);` | logica |
+| 316 | Enemies.onEnemyDied | rng.logic.next | `const line = NOTINO_FUGHE[Math.floor(rng.logic.next() * NOTINO_FUGHE.length)];` | logica (testo) |
+| 333 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
+| 333 | Enemies.onEnemyDied | rng.logic.next | `note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);` | logica |
 
 ## src/game/abilities/Bottiglia.ts
 
@@ -320,7 +319,7 @@ La colonna **tipo** per la sequenza cosmetica è sempre **cosmetico**; per la lo
 
 | riga | funzione | chiamata | testo | tipo |
 |---|---|---|---|---|
-| 646 | GameScene.update | rng.fx.next | `if (state.run.trenbolone && rng.fx.next() < 0.2) {` | cosmetico |
+| 638 | GameScene.update | rng.fx.next | `if (state.run.trenbolone && rng.fx.next() < 0.2) {` | cosmetico |
 
 ## src/ui/endingFx.ts
 

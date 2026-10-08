@@ -229,7 +229,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
             biomeId: this.world.biome.id,
             eye: this.world.biome.accent,
             layout: this.world.layout,
-            avoid: this.world.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'spawner' || e.spec.type === 'boss').map((e) => ({ x: e.x, y: e.y })),
+            avoid: this.world.level.entities.filter((e) => e.spec.type === 'enemy' || e.spec.type === 'boss').map((e) => ({ x: e.x, y: e.y })),
             widthPx: this.world.level.widthPx,
             crowd: this.world.def.hub ? 18 : undefined,
         });
@@ -411,14 +411,6 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
                     const h = hashString(`${this.world.def.id}:${x}:${y}`);
                     const elite = this.enemies.isEliteSpot(x, y, h);
                     this.enemies.spawnEnemy(spec.kind, x, y, { sleeping: h % 100 < 35, elite, trait: elite ? null : this.enemies.traitFor(spec.kind, x, y, h) });
-                    break;
-                }
-                case 'spawner': {
-                    this.enemies.spawnSpawner(spec.kind, x, y, {
-                        maxAlive: spec.maxAlive ?? 3,
-                        intervalMs: spec.intervalMs ?? 3500,
-                        radius: spec.radius ?? 600,
-                    });
                     break;
                 }
                 case 'npc':

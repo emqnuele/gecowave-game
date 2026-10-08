@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { TOASTS, WAVESUNG } from '../content/story';
 import { TOTAL_FRAGMENTS } from '../content/levels';
-import { BOSS_CHARMS, ITEMS, LEGACY_ITEMS } from '../content/items';
+import { BOSS_CHARMS, ITEMS } from '../content/items';
 import { ensurePickupTextures } from '../engine/art/pickups';
 import { expectCollectible, expectLoreKey } from '../engine/ChapterCompletion';
 import { bus } from '../engine/events';
@@ -35,17 +35,11 @@ export class Rewards implements GameSystem {
     spawnItemPickup(x: number, y: number, item: string, amount: number, persistKey: string, loose = false): void {
         // il denominatore si registra prima del controllo: vale anche a oggetto già preso
         const kind = ITEMS[item]?.kind;
-        if (!LEGACY_ITEMS[item] && (kind === 'amuleto' || kind === 'potenziamento')) {
+        if (kind === 'amuleto' || kind === 'potenziamento') {
             const id = item;
             const key = persistKey;
             const charm = kind === 'amuleto';
             expectCollectible(this.ctx.world.def.id, key, 'thing', () => state.save.collectedLore.includes(key) || (charm && state.hasCharm(id)));
-        }
-        // le regioni già generate nascondono ancora i vecchi consumabili: diventano barre
-        if (LEGACY_ITEMS[item] && !state.save.collectedLore.includes(persistKey)) {
-            state.save.collectedLore.push(persistKey);
-            this.spawnBarrePickup(x, y, LEGACY_ITEMS[item]! * amount);
-            return;
         }
         if (!ITEMS[item] || state.save.collectedLore.includes(persistKey)) return;
         const isCharm = ITEMS[item].kind === 'amuleto';

@@ -214,7 +214,4 @@ export class StoryManager {
         g.destroy();
     }
 
-    destroy(): void {
-        this.talkables.length = 0;
-    }
 }

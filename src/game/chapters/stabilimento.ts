@@ -57,12 +57,6 @@ export class StabilimentoChapter extends Chapter {
 
     bossDefeated(kind: BossKind, x: number, y: number): void {
         switch (kind) {
-            case 'furgone':
-                this.ctx.dialogues.start('furgone-sconfitto', () => {
-                    state.setFlag('stabilimento-chiuso');
-                    this.scene.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.smelaRecensione));
-                });
-                break;
             case 'danjilo':
                 this.ctx.dialogues.start('danjilo-sconfitto');
                 break;

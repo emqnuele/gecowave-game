@@ -82,16 +82,6 @@ export const BOSS_BARKS: Partial<Record<BossKind, BarkSet>> = {
             idle: ['chi mi ha programato? io? MALE.'],
         },
     },
-    furgone: {
-        by: 'smela', color: 'cyan',
-        lines: {
-            engage: ['consegna espressa! firma qui. col sangue.'],
-            phase2: ['il navigatore dice: SOPRA DI TE. ricalcolo.'],
-            phase3: ['il leasing scade domani! devo FINIRE il giro!'],
-            hit: ['pacco consegnato! cinque stelle, grazie.'],
-            idle: ['clacson! CLACSON! spostati, pedone del realm!'],
-        },
-    },
     smela: {
         by: 'smela', color: 'cyan',
         lines: {

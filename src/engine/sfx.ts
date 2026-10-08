@@ -47,7 +47,6 @@ class Sfx {
     private noiseBuffer: AudioBuffer | null = null;
     private brownBuffer: AudioBuffer | null = null;
     private rain: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
-    private padNodes: { osc: OscillatorNode; gain: GainNode }[] = [];
     private beds = new Map<Bed, BedNodes>();
 
     /** va chiamato dopo un gesto utente per sbloccare l'audio */
@@ -378,7 +377,7 @@ class Sfx {
     bossVoice(texture: string): void {
         const k = texture.replace('boss-', '');
         switch (k) {
-            case 'guggu': case 'settequaranta': case 'furgone':
+            case 'guggu': case 'settequaranta':
                 this.tone(233, 700, { type: 'sawtooth', vol: 0.05, attackMs: 20 });
                 this.tone(294, 700, { type: 'sawtooth', vol: 0.04, attackMs: 20 });
                 break;
@@ -753,35 +752,6 @@ class Sfx {
             this.rain = { src, gain };
         }
         this.rain.gain.gain.setTargetAtTime(Math.max(0, Math.min(1, level)) * 0.06, this.ctx.currentTime, 0.8);
-    }
-
-    /** drone ambientale per zona, due oscillatori detunati */
-    startPad(baseFreq: number): void {
-        this.stopPad();
-        if (!this.ctx || !this.master) return;
-        [baseFreq, baseFreq * 1.5, baseFreq * 2.02].forEach((f, i) => {
-            const osc = this.ctx!.createOscillator();
-            const gain = this.ctx!.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = f;
-            osc.detune.value = i * 7;
-            gain.gain.value = 0;
-            gain.gain.linearRampToValueAtTime(0.028 / (i + 1), this.ctx!.currentTime + 2.5);
-            osc.connect(gain).connect(this.master!);
-            osc.start();
-            this.padNodes.push({ osc, gain });
-        });
-    }
-
-    stopPad(): void {
-        if (!this.ctx) return;
-        const t = this.ctx.currentTime;
-        this.padNodes.forEach(({ osc, gain }) => {
-            gain.gain.linearRampToValueAtTime(0, t + 1);
-            osc.stop(t + 1.2);
-        });
-        this.padNodes = [];
-        this.stopBeds();
     }
 }
 
