@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { ENEMIES } from '../content/enemies';
 import type { EnemyKind } from '../types';
+import { rng } from '../engine/rng';
 
 export interface SpawnerOpts {
     kind: EnemyKind;
@@ -54,7 +55,7 @@ export class Spawner extends Phaser.Physics.Arcade.Sprite {
             .setAlpha(0.25)
             .setScale(3)
             .setDepth(3.1);
-        this.nextAt = scene.time.now + 1200 + Math.random() * 1500;
+        this.nextAt = scene.time.now + 1200 + rng.logic.next() * 1500;
     }
 
     static ensureTexture(scene: Phaser.Scene): void {

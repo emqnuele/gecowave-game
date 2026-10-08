@@ -309,6 +309,15 @@ Ogni nemico simbolo ha una debolezza legata a una mossa e un consiglio di markol
 - **logica pura** in moduli senza phaser, accanto al sistema che la usa, con i test vitest (`npm test`).
 **Conseguenze**: i passi strutturali spostano codice senza cambiare l'ordine delle chiamate e si provano con tracce identiche al bit. Le cose che non si possono spostare senza cambiare l'ordine (eventi espliciti, caso centralizzato) vengono dopo, ognuna col suo riferimento dichiarato. Trovato costruendo lo scheletro: la sonda serializzava i campi privati della scena passata all'evento `create`, quindi togliere un campo dalla scena cambiava la traccia senza cambiare il gioco; ora una scena negli eventi si riduce al suo nome (`docs/refactor/riferimenti.md`).
 
+### ADR-052 — eventi tipati, caso su due sequenze, un solo `simulates`
+**Contesto**: gli eventi della scena erano 23 stringhe senza tipo: chi emetteva e chi ascoltava si accordavano a voce (e la scena li collegava con cast `as never`). Tutto il caso pescava da `Math.random`, anche le particelle: una scheggia in più spostava ogni estrazione di logica successiva, quindi un cambio grafico poteva cambiare la trama. Il coop futuro ha bisogno di sapere chi decide lo stato del mondo; sul branch `multiplayer-p2p` erano 101 controlli `coop.isHost` sparsi.
+**Decisione**:
+- **eventi del mondo** (`src/engine/worldEvents.ts`): una mappa tipata nome → dato sulla scena (`emitWorld`, `onWorld`, `offWorld`); muoiono con la scena. Il bus (`engine/events.ts`) resta il canale tra mondo e ui. Spawn, danno, morte, checkpoint sono eventi; inizio e fine dialogo lo erano già sul bus. Un evento senza dato non passa argomenti.
+- **caso** (`src/engine/rng.ts`, generatore in `src/rules/rng.ts`): `rng.logic` decide cosa succede, `rng.fx` solo cosa si vede e si sente. Ripartono a ogni livello da semi pescati da `Math.random`, che resta la sola sorgente esterna (e quella del caso interno di phaser). Il censimento (`docs/refactor/caso.md`, `scripts/harness/caso.mjs`) dice per ogni pescata da quale sequenza viene, e fallisce se qualcuno pesca da `Math.random` fuori dal seme.
+- **`simulates`** (campo del `GameContext`): vero in single e sull'host, falso sul guest. Lo interrogano i punti dove si decide lo stato del mondo (ia, nidi, danni, spari, boss, doomsday, arena, sfide), non la presentazione.
+- **errori**: niente `catch {}` vuoti. Una chiamata che non può lanciare non si protegge; un confine attorno a codice arbitrario (i timer dei film, i predicati del riepilogo) scrive l'errore con `softFail`; restano i catch su errori che vengono da fuori (storage, json, gamepad, webaudio), con il perché accanto.
+**Conseguenze**: i cambi d'ordine (eventi, caso) hanno ognuno il suo riferimento nuovo in `docs/refactor/riferimenti.md`. Da qui una particella nuova non sposta più una battuta, un nemico o un drop. Il coop porterà `simulates` dalla sessione senza cercare dove serve.
+
 ---
 
 ## 3. Vincoli e note tecniche

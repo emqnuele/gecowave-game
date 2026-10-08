@@ -11,6 +11,7 @@ import { ui } from '../ui/dom';
 import { ensureCreature } from './art/creatures';
 import { VortexPipeline, hexToTint } from './fx/VortexPipeline';
 import { MemoryPipeline } from './fx/MemoryPipeline';
+import { rng } from './rng';
 
 /* Flashback come mini-film, v5. Il palco è il livello vero: la camera
    inquadra un punto accanto al geco, il buio cala sul resto, gli attori
@@ -580,9 +581,9 @@ export class FlashbackManager {
         const cy = cam.height / 2;
         const maxR = Math.hypot(cam.width, cam.height) / 2;
         for (let i = 0; i < 14; i++) {
-            const a = (Math.PI * 2 * i) / 14 + Math.random() * 0.3;
-            const len = 60 + Math.random() * 80;
-            const r = scene.add.rectangle(0, 0, len, 2 + Math.random() * 2, i % 3 ? 0xffffff : tint, 0.55);
+            const a = (Math.PI * 2 * i) / 14 + rng.fx.next() * 0.3;
+            const len = 60 + rng.fx.next() * 80;
+            const r = scene.add.rectangle(0, 0, len, 2 + rng.fx.next() * 2, i % 3 ? 0xffffff : tint, 0.55);
             r.setScrollFactor(0).setDepth(189).setRotation(a);
             r.setBlendMode(Phaser.BlendModes.ADD);
             const r0 = dir === 'in' ? maxR : 40;
@@ -614,8 +615,8 @@ export class FlashbackManager {
         glowC.setBlendMode(Phaser.BlendModes.ADD);
         this.put(scope, glowC, 166);
         this.loop(scope, scene, 130, () => {
-            glowC.setAlpha(0.12 + Math.random() * 0.08);
-            bulb.setAlpha(0.75 + Math.random() * 0.25);
+            glowC.setAlpha(0.12 + rng.fx.next() * 0.08);
+            bulb.setAlpha(0.75 + rng.fx.next() * 0.25);
         });
         this.motes(scope, scene, ctx, lampX, lampY + 40, 220, 150, 0xffd98a);
     }
@@ -954,7 +955,7 @@ const SHOTS: Record<Gesture, ShotBuilder[]> = {
             const lamp = scene.add.circle(ctx.cx + 30, ctx.floorY - 26, 5, 0x554f45, 1);
             mgr['put'](scope, lamp, 166);
             mgr['loop'](scope, scene, 900, () => {
-                lamp.setAlpha(0.4 + Math.random() * 0.4);
+                lamp.setAlpha(0.4 + rng.fx.next() * 0.4);
             });
             const ivan = mgr['actor'](scope, scene, ctx, 'ivan', -190);
             mgr['enter'](scope, scene, ctx, ivan, -360, 1000);
@@ -1000,7 +1001,7 @@ const SHOTS: Record<Gesture, ShotBuilder[]> = {
             const win = scene.add.rectangle(ctx.cx + 200, ctx.floorY - 120, 26, 34, 0xffc46b, 0.85);
             mgr['put'](scope, win, 164);
             mgr['loop'](scope, scene, 700, () => {
-                win.setAlpha(0.6 + Math.random() * 0.35);
+                win.setAlpha(0.6 + rng.fx.next() * 0.35);
             });
             const geco = mgr['actor'](scope, scene, ctx, 'geco', -60);
             geco.setY(ctx.floorY - 21 - geco.displayHeight / 2);
@@ -1056,11 +1057,11 @@ const SHOTS: Record<Gesture, ShotBuilder[]> = {
                 const r = scene.add.rectangle(ctx.cx - 210 + (i % 3) * 120, ctx.floorY - (i < 3 ? 150 : 70), 104, 66, 0x101827, 1)
                     .setStrokeStyle(2, 0x22d3ee, 0.5);
                 mgr['put'](scope, r, 163);
-                cells.push({ r, seed: Math.random() * 900 });
+                cells.push({ r, seed: rng.fx.next() * 900 });
             }
             mgr['loop'](scope, scene, 420, () => {
                 for (const c of cells) {
-                    c.r.setAlpha(0.55 + Math.random() * 0.45);
+                    c.r.setAlpha(0.55 + rng.fx.next() * 0.45);
                 }
             });
             // in uno schermo piccolo: un geco che cammina avanti e indietro

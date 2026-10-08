@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import { BASE_NOTCHES, NOTCH_PRICES } from '../../content/items';
 import { LEVEL_ORDER, LEVELS, TOTAL_FRAGMENTS } from '../../content/levels';
 import { QUESTS } from '../../content/quests';
@@ -9,6 +8,7 @@ import { state } from '../../engine/state';
 import type { DialogueLine } from '../../types';
 import { loadRegion } from '../../world/registry';
 import { Chapter } from './ChapterScript';
+import { rng } from '../../engine/rng';
 
 /** l'hub: chi torna in piazza, la bottega, la bacheca, l'oracolo e il bar */
 export class PiazzaChapter extends Chapter {
@@ -127,7 +127,7 @@ export class PiazzaChapter extends Chapter {
         if (arene < 5) pool.push(`in ogni regione c'è un microfono rosso in una stanza fuori strada. ci sali e ti chiudono dentro con le bestie. paga bene. ne hai vinti ${arene}.`);
         pool.push('di notte nelle regioni girano bestie più grosse, con l\'aura. lasciano un sacco di barre. e un sacco di vedove.');
         pool.push('guastalla adesso sta seduto lì a guardare il citelis. da fuori. dice che è bellissimo. io ci credo poco.');
-        const pick = Phaser.Utils.Array.Shuffle([...pool]).slice(0, 2);
+        const pick = rng.logic.shuffle([...pool]).slice(0, 2);
         return pick.map(say);
     }
 

@@ -3,6 +3,7 @@ import { sfx } from '../sfx';
 import { state } from '../state';
 import { QUIET_ROOMS, type Mechanic, type MechanicCtx } from './types';
 import { emitWorld } from '../worldEvents';
+import { rng } from '../rng';
 
 /* il server di notino ha un cecchino sulla torre radio: all'aperto un laser
    rosso ti cerca, si ferma, diventa bianco e spara dove eri. chi corre dritto
@@ -61,13 +62,13 @@ export class Snipers implements Mechanic {
                 sfx.shoot();
                 emitWorld(this.ctx.scene, 'enemy-shoot', { x: a.ox, y: a.oy, tx: a.lockX, ty: a.lockY, color: 0xef4444, speed: 980, size: 0.9 });
                 this.aim = null;
-                this.nextAt = time + 5200 + Math.random() * 2600;
+                this.nextAt = time + 5200 + rng.logic.next() * 2600;
             }
             return;
         }
         if (time < this.nextAt || p.dead || !this.active()) return;
         // il cecchino sta in alto, di lato: se la roccia copre un lato prova l'altro
-        for (const side of Math.random() < 0.5 ? [1, -1] : [-1, 1]) {
+        for (const side of rng.logic.next() < 0.5 ? [1, -1] : [-1, 1]) {
             const ox = p.x + side * 440;
             const oy = p.y - 380;
             if (!this.ctx.nav.sight(ox, oy, p.x, p.y - 10)) continue;

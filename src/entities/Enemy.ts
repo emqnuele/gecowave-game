@@ -6,6 +6,7 @@ import { mix } from '../engine/art/ink';
 import { ensureCreature } from '../engine/art/creatures';
 import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
 import { emitWorld } from '../engine/worldEvents';
+import { rng } from '../engine/rng';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo
@@ -48,10 +49,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private nav: NavGraph | null;
     private homeX: number;
     private homeY: number;
-    private t = Math.random() * 1000;
+    private t = rng.logic.next() * 1000;
     private nextActionAt = 0;
     private nextShotAt = 0;
-    private facingDir: 1 | -1 = Math.random() < 0.5 ? -1 : 1;
+    private facingDir: 1 | -1 = rng.logic.next() < 0.5 ? -1 : 1;
     private chargingUntil = 0;
     private stunnedUntil = 0;
     /** sbandato: gli hai insegnato qualcosa, ora prende il doppio */
@@ -78,7 +79,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     /** occhi e luci della creatura, fuori dalla pipeline delle luci */
     private look: CreatureGlow;
     private frames: number;
-    private animT = Math.random() * 1000;
+    private animT = rng.fx.next() * 1000;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean; elite?: boolean; trait?: EnemyTrait | null } = {}) {
         super(scene, x, y, ensureCreature(scene, ENEMIES[kind].texture));
@@ -366,7 +367,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (b === 'hopper') {
             if (this.ground && now >= this.nextActionAt) {
                 body.setVelocity(this.facingDir * this.arch.speed * 0.5, -300);
-                this.nextActionAt = now + 1100 + Math.random() * 900;
+                this.nextActionAt = now + 1100 + rng.logic.next() * 900;
                 this.setFlipX(this.facingDir > 0);
             }
             if (this.ground) body.setVelocityX(body.velocity.x * 0.85);
@@ -480,7 +481,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (this.arch.behavior === 'hopper' && Math.abs(d) > 56) {
             if (now >= this.nextActionAt) {
                 body.setVelocity(dir * Math.min(speed, Math.abs(d) * 3 + 60), -320);
-                this.nextActionAt = now + 420 + Math.random() * 300;
+                this.nextActionAt = now + 420 + rng.logic.next() * 300;
             } else {
                 body.setVelocityX(body.velocity.x * 0.9);
             }
@@ -603,7 +604,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     private die(): void {
         const [min, max] = this.arch.barre;
-        const amount = Phaser.Math.Between(min, max);
+        const amount = rng.logic.between(min, max);
         emitWorld(this.scene, 'enemy-died', {
             x: this.x,
             y: this.y,

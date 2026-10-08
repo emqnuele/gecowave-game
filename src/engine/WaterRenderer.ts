@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import type { BiomeDef } from '../content/biomes';
 import { hex, mix, mulberry32, shade } from './art/ink';
 import type { LightingManager } from './LightingManager';
+import { rng } from './rng';
 
 /* l'acqua sta davanti al geco: ci entri dentro e ci sparisci a metà.
    corpo sfumato verso il fondo, pelo ondulato che scorre, riflessi */
@@ -32,7 +33,7 @@ export class WaterRenderer {
             body.setTileScale(1, Math.max(8, pool.height - 6) / 128);
             const surface = this.scene.add.tileSprite(pool.x, pool.y + 1, pool.width, 12, `water-surf-${biome.id}`)
                 .setOrigin(0, 0).setDepth(5).setBlendMode(Phaser.BlendModes.SCREEN);
-            this.pools.push({ surface, speed: 0.02 + Math.random() * 0.015 });
+            this.pools.push({ surface, speed: 0.02 + rng.fx.next() * 0.015 });
             lighting.static(pool.centerX, pool.y + 10, shade(biome.accent, 0.1), Math.min(420, 160 + pool.width * 0.3), 0.55);
             this.scene.add.particles(0, 0, 'p-dot', {
                 x: { min: pool.x, max: pool.right },

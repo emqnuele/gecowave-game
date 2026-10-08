@@ -12,6 +12,7 @@ import { Spawner } from '../entities/Spawner';
 import type { EnemyKind } from '../types';
 import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../engine/worldEvents';
+import { rng } from '../engine/rng';
 
 type EnemiesCtx = Pick<GameContext, 'simulates' | 'scene' | 'carry' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
 
@@ -208,7 +209,7 @@ export class Enemies implements GameSystem {
             }
             const at = this.ctx.world.openSpotNear(s.x, s.y - 30, 6);
             this.spawnEnemy(s.kind, at.x, at.y, { hunting: true });
-            s.nextAt = time + s.intervalMs * (0.85 + Math.random() * 0.3);
+            s.nextAt = time + s.intervalMs * (0.85 + rng.logic.next() * 0.3);
             sfx.crack();
             const puff = this.scene.add.particles(s.x, s.y - 14, 'p-spark', {
                 speed: { min: 40, max: 160 },
@@ -319,7 +320,7 @@ export class Enemies implements GameSystem {
         sfx.death(kind);
         // notino non muore: "si ritira strategicamente"
         if (kind === 'notino-mini') {
-            const line = NOTINO_FUGHE[Math.floor(Math.random() * NOTINO_FUGHE.length)];
+            const line = NOTINO_FUGHE[Math.floor(rng.logic.next() * NOTINO_FUGHE.length)];
             bus.emit('toast', { text: line });
         }
         if (splitsInto) {
@@ -336,7 +337,7 @@ export class Enemies implements GameSystem {
             const note = this.ctx.groups.barre.create(x, y, 'barra') as Phaser.Physics.Arcade.Sprite;
             note.setData('value', Math.round(total / pieces));
             note.setDepth(4);
-            note.setVelocity((Math.random() - 0.5) * 220, -150 - Math.random() * 130);
+            note.setVelocity((rng.logic.next() - 0.5) * 220, -150 - rng.logic.next() * 130);
             note.setBounce(0.5);
         }
     }

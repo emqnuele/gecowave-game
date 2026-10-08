@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { canvas, chaikinClosed, hashString, hatch, hex, mix, mulberry32, shade, tracePath, wobble, type Pt, type Rng } from './ink';
+import { rng } from '../rng';
 
 /* il cast vivo (nemici e boss) disegnato come il geco dei dipinti: forme
    piene a colori sporchi, ombra a tratteggio dal lato lontano dalla luce,
@@ -594,7 +595,7 @@ export function animateCreature(sprite: Phaser.GameObjects.Image, msPerFrame = 2
     const key = sprite.texture.key;
     const n = creatureFrames(scene, key);
     const glow = new CreatureGlow(sprite);
-    let t = Math.random() * 1000;
+    let t = rng.fx.next() * 1000;
     const tick = (_time: number, delta: number) => {
         if (!sprite.active) return;
         t += delta;

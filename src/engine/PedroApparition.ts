@@ -8,6 +8,7 @@ import { bus } from './events';
 import type { LightingManager } from './LightingManager';
 import { sfx } from './sfx';
 import { state } from './state';
+import { rng } from './rng';
 
 /* pedro sul percorso, a metà regione: si accende quando arrivi, dice due
    righe senza fermare il gioco e si sfalda. se gli corri addosso sparisce
@@ -81,10 +82,10 @@ export class PedroApparition {
         }
         // glitch: scatti e tremori, mai un movimento morbido
         sp.setFlipX(dx > 0);
-        sp.x = this.baseX + (Math.random() > 0.86 ? (Math.random() - 0.5) * 10 : 0);
-        sp.y = this.baseY + (Math.random() > 0.9 ? (Math.random() - 0.5) * 6 : 0);
-        if (Math.random() > 0.97) {
-            sp.setTintFill(Math.random() > 0.5 ? 0x22d3ee : 0xf87171);
+        sp.x = this.baseX + (rng.fx.next() > 0.86 ? (rng.fx.next() - 0.5) * 10 : 0);
+        sp.y = this.baseY + (rng.fx.next() > 0.9 ? (rng.fx.next() - 0.5) * 6 : 0);
+        if (rng.fx.next() > 0.97) {
+            sp.setTintFill(rng.fx.next() > 0.5 ? 0x22d3ee : 0xf87171);
             this.scene.time.delayedCall(50, () => sp.active && sp.clearTint());
         }
         if (Math.hypot(dx, dy) < TOO_CLOSE) this.vanish(true);

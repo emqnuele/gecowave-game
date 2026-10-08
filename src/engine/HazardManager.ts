@@ -4,6 +4,7 @@ import { mix, mulberry32, shade } from './art/ink';
 import type { NavGraph } from './nav/NavGraph';
 import { sfx } from './sfx';
 import type { RegionLayout, Room } from '../world/types';
+import { rng } from './rng';
 
 /* pericoli del terreno che non toccano la griglia verificata:
    - lastre che crollano sopra i pozzi: solide solo dall'alto, quindi aggiungono
@@ -258,7 +259,7 @@ export class HazardManager {
                     s.state = 2;
                     s.at = now;
                     (s.img.body as Phaser.Physics.Arcade.StaticBody).enable = false;
-                    this.scene.tweens.add({ targets: s.img, y: s.y + 90, alpha: 0, angle: (Math.random() - 0.5) * 40, duration: 420, ease: 'Quad.easeIn' });
+                    this.scene.tweens.add({ targets: s.img, y: s.y + 90, alpha: 0, angle: (rng.fx.next() - 0.5) * 40, duration: 420, ease: 'Quad.easeIn' });
                     if (Math.abs(s.x - player.x) < 700) sfx.crumble();
                     const dust = this.scene.add.particles(s.x, s.y, 'p-dot', {
                         speed: { min: 20, max: 80 }, angle: { min: 20, max: 160 }, scale: { start: 0.5, end: 0 },

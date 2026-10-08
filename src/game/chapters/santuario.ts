@@ -9,6 +9,7 @@ import { state } from '../../engine/state';
 import type { BossKind } from '../../types';
 import { Chapter } from './ChapterScript';
 import { waveOnce } from './shared/wave';
+import { rng } from '../../engine/rng';
 
 /** il santuario: lametta presiede l'arena delle gocce di colore, poi lo specchio nero */
 export class SantuarioChapter extends Chapter {
@@ -73,12 +74,12 @@ export class SantuarioChapter extends Chapter {
 
         if (time >= this.ctx.carry.nextLametteAt) {
             this.ctx.carry.nextLametteAt = time + 2600;
-            const xs = [this.ctx.player.x - 70 + Math.random() * 40, this.ctx.player.x + 40 + Math.random() * 40];
+            const xs = [this.ctx.player.x - 70 + rng.logic.next() * 40, this.ctx.player.x + 40 + rng.logic.next() * 40];
             this.ctx.combat.onBossLamette({ xs, y: this.ctx.player.y });
         }
         if (time >= this.ctx.carry.nextPitturaAt && this.ctx.enemies.awakeEnemies() < 5) {
             this.ctx.carry.nextPitturaAt = time + 6500;
-            const at = this.ctx.world.openSpotNear(c.x + (Math.random() - 0.5) * 400, c.y - 60, 8);
+            const at = this.ctx.world.openSpotNear(c.x + (rng.logic.next() - 0.5) * 400, c.y - 60, 8);
             this.ctx.enemies.spawnEnemy('pittura-mini', at.x, at.y, { hunting: true });
         }
     }
@@ -88,9 +89,9 @@ export class SantuarioChapter extends Chapter {
         const c = this.lamettaCenter;
         const colors = [0xf87171, 0x4ade80, 0x60a5fa, 0xfacc15, 0xc084fc];
         const color = colors[this.colorDropsTaken % colors.length];
-        const x = c.x + (Math.random() - 0.5) * 620;
+        const x = c.x + (rng.logic.next() - 0.5) * 620;
         // tetto a ~90px (sotto la soglia col double jump), ma fascia ampia: da quasi-terra in su
-        const y = this.ctx.carry.lamettaFloorY - 8 - Math.random() * 82;
+        const y = this.ctx.carry.lamettaFloorY - 8 - rng.logic.next() * 82;
         const drop = this.scene.physics.add.sprite(x, y, 'color-drop').setTint(color).setDepth(5);
         (drop.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.ctx.lighting.follow(drop, color, 140, 0.9);

@@ -5,6 +5,7 @@ import { state } from '../engine/state';
 import type { BossKind } from '../types';
 import { indiziRaccolti } from './chapters/caso';
 import type { GameContext, GameSystem } from './context';
+import { rng } from '../engine/rng';
 
 type DoomsdayCtx = Pick<GameContext, 'simulates' | 'world' | 'player' | 'bosses' | 'chapter' | 'enemies' | 'combat' | 'dialogues' | 'feel' | 'flow'>;
 
@@ -45,8 +46,8 @@ export class Doomsday implements GameSystem {
 
         // glitch selvaggi che infestano qualsiasi zona quando il doomsday avanza
         if (v >= 0.6 && !activeBoss && time >= this.nextWildGlitchAt) {
-            this.nextWildGlitchAt = time + Phaser.Math.Between(3500, 6500);
-            const side = Math.random() < 0.5 ? -1 : 1;
+            this.nextWildGlitchAt = time + rng.logic.between(3500, 6500);
+            const side = rng.logic.next() < 0.5 ? -1 : 1;
             const gx = Phaser.Math.Clamp(this.ctx.player.x + side * 420, 40, this.ctx.world.level.widthPx - 40);
             const at = this.ctx.world.openSpotNear(gx, this.ctx.player.y - 80);
             this.ctx.enemies.spawnEnemy('glitchetto', at.x, at.y, { hunting: true });

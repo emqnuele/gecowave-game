@@ -1,5 +1,6 @@
 import { state } from './state';
 import { acoustics } from './audio/acoustics';
+import { rng } from './rng';
 
 /** di cosa è fatto il pavimento sotto i piedi: decide il suono dei passi */
 export type StepMaterial = 'stone' | 'concrete' | 'metal' | 'crystal' | 'mud' | 'roots' | 'brick' | 'circuit' | 'void' | 'water';
@@ -66,13 +67,13 @@ class Sfx {
         const len = ctx.sampleRate * 2;
         this.noiseBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
         const data = this.noiseBuffer.getChannelData(0);
-        for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+        for (let i = 0; i < len; i++) data[i] = rng.fx.next() * 2 - 1;
         // rumore marrone: il fondo dei letti (vento, roccia, acqua) senza fruscio aspro
         this.brownBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
         const b = this.brownBuffer.getChannelData(0);
         let last = 0;
         for (let i = 0; i < len; i++) {
-            last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+            last = (last + 0.02 * (rng.fx.next() * 2 - 1)) / 1.02;
             b[i] = last * 3.5;
         }
 
@@ -135,7 +136,7 @@ class Sfx {
         const src = this.ctx.createBufferSource();
         src.buffer = this.noiseBuffer;
         // ogni colpo parte da un punto diverso del buffer: niente fruscio identico
-        const offset = Math.random() * 1.5;
+        const offset = rng.fx.next() * 1.5;
         const filter = this.ctx.createBiquadFilter();
         filter.type = opts.type ?? 'bandpass';
         filter.frequency.setValueAtTime(opts.freq ?? 1800, t0);
@@ -182,7 +183,7 @@ class Sfx {
         this.tone(660, 90, { type: 'square', vol: 0.06 });
         this.tone(990, 140, { type: 'square', vol: 0.06, delayMs: 70 });
     }
-    barra(): void { this.tone(880 + Math.random() * 220, 70, { type: 'triangle', vol: 0.05 }); }
+    barra(): void { this.tone(880 + rng.fx.next() * 220, 70, { type: 'triangle', vol: 0.05 }); }
     checkpoint(): void {
         [523, 659, 784, 1046].forEach((f, i) =>
             this.tone(f, 280, { type: 'triangle', vol: 0.07, delayMs: i * 90 })
@@ -218,7 +219,7 @@ class Sfx {
     }
     /** vetro che vibra: nasce il riflesso */
     mirrorBirth(): void {
-        const base = 1560 + Math.random() * 200;
+        const base = 1560 + rng.fx.next() * 200;
         for (let k = 0; k < 5; k++) this.tone(base + Math.sin(k) * 60, 120, { type: 'sine', vol: 0.03, delayMs: k * 70 });
         this.noise(300, { freq: 6000, q: 3, vol: 0.04 });
     }
@@ -313,7 +314,7 @@ class Sfx {
         switch (kind) {
             case 'specchietto':
                 // vetro che va in mille pezzi
-                for (let k = 0; k < 6; k++) this.tone(2600 + Math.random() * 2400, 160 + k * 40, { type: 'sine', vol: 0.025, delayMs: k * 28 });
+                for (let k = 0; k < 6; k++) this.tone(2600 + rng.fx.next() * 2400, 160 + k * 40, { type: 'sine', vol: 0.025, delayMs: k * 28 });
                 this.noise(220, { freq: 6000, q: 1.5, vol: 0.12 });
                 break;
             case 'bottiglia':
@@ -339,7 +340,7 @@ class Sfx {
                 this.tone(220, 400, { type: 'sawtooth', to: 60, vol: 0.05 });
                 break;
             case 'glitchetto':
-                for (let k = 0; k < 5; k++) this.tone(200 + Math.random() * 2000, 40, { type: 'square', vol: 0.035, delayMs: k * 45 });
+                for (let k = 0; k < 5; k++) this.tone(200 + rng.fx.next() * 2000, 40, { type: 'square', vol: 0.035, delayMs: k * 45 });
                 break;
             case 'pittura':
             case 'pittura-mini':
@@ -368,7 +369,7 @@ class Sfx {
                 break;
             default:
                 // carne: un lamento corto e il tonfo
-                this.tone(180 + Math.random() * 60, 260, { type: 'sawtooth', to: 90, vol: 0.05, attackMs: 15 });
+                this.tone(180 + rng.fx.next() * 60, 260, { type: 'sawtooth', to: 90, vol: 0.05, attackMs: 15 });
                 this.noise(140, { freq: 300, q: 0.7, vol: 0.12, type: 'lowpass', delayMs: 120 });
         }
     }
@@ -382,7 +383,7 @@ class Sfx {
                 this.tone(294, 700, { type: 'sawtooth', vol: 0.04, attackMs: 20 });
                 break;
             case 'pedro': case 'glitch': case 'ombra': case 'modello':
-                for (let i = 0; i < 6; i++) this.tone(120 + Math.random() * 1800, 45, { type: 'square', vol: 0.03, delayMs: i * 38 });
+                for (let i = 0; i < 6; i++) this.tone(120 + rng.fx.next() * 1800, 45, { type: 'square', vol: 0.03, delayMs: i * 38 });
                 this.noise(200, { freq: 3000, q: 0.6, vol: 0.05 });
                 break;
             case 'pedrino': case 'riba': case 'ticummi':
@@ -423,7 +424,7 @@ class Sfx {
                 this.tone(90, 120, { type: 'sine', to: 50, vol: 0.08 });
                 break;
             case 'walter':
-                for (let i = 0; i < 5; i++) this.tone(3000 + Math.random() * 2000, 90, { type: 'triangle', vol: 0.02, delayMs: i * 45 });
+                for (let i = 0; i < 5; i++) this.tone(3000 + rng.fx.next() * 2000, 90, { type: 'triangle', vol: 0.02, delayMs: i * 45 });
                 break;
             case 'breccio':
                 this.noise(220, { freq: 2200, q: 0.8, vol: 0.06, to: 800 });
@@ -442,8 +443,8 @@ class Sfx {
     /** un passo: il materiale decide il colore, un filo di caso il resto */
     step(m: StepMaterial, heavy = 1): void {
         // i passi stanno sotto i colpi: si sentono, non coprono
-        const v = (0.8 + Math.random() * 0.4) * heavy * 0.55;
-        const j = 0.9 + Math.random() * 0.2;
+        const v = (0.8 + rng.fx.next() * 0.4) * heavy * 0.55;
+        const j = 0.9 + rng.fx.next() * 0.2;
         switch (m) {
             case 'stone':
                 this.noise(55, { freq: 1100 * j, q: 1.1, vol: 0.07 * v });
@@ -501,31 +502,31 @@ class Sfx {
 
     /** goccia che cade nella pozza: in grotta si porta dietro l'eco */
     drip(pan = 0, vol = 1): void {
-        const f = 900 + Math.random() * 900;
+        const f = 900 + rng.fx.next() * 900;
         this.tone(f, 90, { type: 'sine', to: f * 2.2, vol: 0.05 * vol, pan });
         this.tone(f * 0.5, 60, { type: 'sine', to: f * 0.8, vol: 0.02 * vol, pan, delayMs: 10 });
     }
     /** metallo lontano che sbatte */
     clankFar(pan = 0, vol = 1): void {
-        const f = 300 + Math.random() * 500;
+        const f = 300 + rng.fx.next() * 500;
         this.tone(f, 700, { type: 'triangle', vol: 0.03 * vol, pan });
         this.tone(f * 2.76, 400, { type: 'sine', vol: 0.015 * vol, pan });
         this.noise(60, { freq: 2500, q: 2, vol: 0.05 * vol, pan });
     }
     /** bip di un server o di un macchinario */
     beep(pan = 0, vol = 1): void {
-        const f = [1320, 1760, 2093, 990][Math.floor(Math.random() * 4)];
+        const f = [1320, 1760, 2093, 990][Math.floor(rng.fx.next() * 4)];
         this.tone(f, 70, { type: 'square', vol: 0.012 * vol, pan });
-        if (Math.random() < 0.5) this.tone(f * 1.5, 70, { type: 'square', vol: 0.01 * vol, pan, delayMs: 110 });
+        if (rng.fx.next() < 0.5) this.tone(f * 1.5, 70, { type: 'square', vol: 0.01 * vol, pan, delayMs: 110 });
     }
     /** grillo della notte */
     cricket(pan = 0, vol = 1): void {
-        for (let k = 0; k < 3; k++) this.tone(4200 + Math.random() * 300, 35, { type: 'sine', vol: 0.012 * vol, pan, delayMs: k * 55 });
+        for (let k = 0; k < 3; k++) this.tone(4200 + rng.fx.next() * 300, 35, { type: 'sine', vol: 0.012 * vol, pan, delayMs: k * 55 });
     }
     /** cinguettio di giorno */
     bird(pan = 0, vol = 1): void {
-        const f = 2400 + Math.random() * 1200;
-        const n = 2 + Math.floor(Math.random() * 3);
+        const f = 2400 + rng.fx.next() * 1200;
+        const n = 2 + Math.floor(rng.fx.next() * 3);
         for (let k = 0; k < n; k++) this.tone(f, 80, { type: 'sine', to: f * 1.4, vol: 0.014 * vol, pan, delayMs: k * 120 });
     }
     /** corvo sopra il cratere */
@@ -537,18 +538,18 @@ class Sfx {
     }
     /** sussurro: rumore formantico che si apre e si chiude */
     whisper(pan = 0, vol = 1): void {
-        const f = 1400 + Math.random() * 1600;
+        const f = 1400 + rng.fx.next() * 1600;
         this.noise(700, { freq: f, q: 7, vol: 0.03 * vol, pan, to: f * 0.6, attackMs: 200 });
         this.noise(500, { freq: f * 1.6, q: 9, vol: 0.02 * vol, pan, to: f, attackMs: 150, delayMs: 180 });
     }
     /** bolla che sale e scoppia */
     bubble(pan = 0, vol = 1): void {
-        const f = 300 + Math.random() * 300;
+        const f = 300 + rng.fx.next() * 300;
         this.tone(f, 120, { type: 'sine', to: f * 3, vol: 0.03 * vol, pan });
     }
     /** cristallo che vibra da solo */
     chime(pan = 0, vol = 1): void {
-        const base = [1568, 1760, 2093, 2349, 2637][Math.floor(Math.random() * 5)];
+        const base = [1568, 1760, 2093, 2349, 2637][Math.floor(rng.fx.next() * 5)];
         this.tone(base, 1400, { type: 'sine', vol: 0.016 * vol, pan, attackMs: 5 });
         this.tone(base * 2.01, 900, { type: 'sine', vol: 0.006 * vol, pan, attackMs: 5 });
     }
@@ -559,7 +560,7 @@ class Sfx {
     }
     /** topo nella cantina */
     squeak(pan = 0, vol = 1): void {
-        this.tone(3200 + Math.random() * 800, 60, { type: 'sine', to: 4400, vol: 0.012 * vol, pan });
+        this.tone(3200 + rng.fx.next() * 800, 60, { type: 'sine', to: 4400, vol: 0.012 * vol, pan });
         this.tone(3600, 50, { type: 'sine', to: 3000, vol: 0.01 * vol, pan, delayMs: 90 });
     }
     /** macchina che passa in lontananza */
@@ -569,7 +570,7 @@ class Sfx {
     }
     /** legno o trave che scricchiola */
     creak(pan = 0, vol = 1): void {
-        const f = 140 + Math.random() * 120;
+        const f = 140 + rng.fx.next() * 120;
         this.tone(f, 500, { type: 'sawtooth', to: f * 1.5, vol: 0.012 * vol, pan, attackMs: 80 });
     }
     /** scarica elettrica di un cavo scoperto */
@@ -662,7 +663,7 @@ class Sfx {
                 o.start();
                 stops.push(() => o.stop());
             }
-            src.start(0, Math.random() * 1.5);
+            src.start(0, rng.fx.next() * 1.5);
             stops.push(() => src.stop());
         };
         const drone = (freqs: number[], type: OscillatorType, vol: number, wobble = 0) => {

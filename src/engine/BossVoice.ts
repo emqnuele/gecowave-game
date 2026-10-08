@@ -4,6 +4,7 @@ import { bus } from './events';
 import type { PlayerAct } from '../rules/ombra';
 import { sfx } from './sfx';
 import { offWorld, onWorld } from './worldEvents';
+import { rng } from './rng';
 
 /* la voce di un boss durante lo scontro: decide quando parlare, così le
    battute restano un segnale e non diventano rumore di fondo */
@@ -32,7 +33,7 @@ export class BossVoice {
         this.set = set;
         this.variant = opts.variant ?? '';
         this.texture = opts.texture ?? null;
-        this.nextIdleAt = scene.time.now + 9000 + Math.random() * 5000;
+        this.nextIdleAt = scene.time.now + 9000 + rng.logic.next() * 5000;
         this.offs.push(bus.on('hp-changed', ({ hp, hurt }) => {
             if (!hurt || !this.active) return;
             if (hp === 1 && !this.saidLow) {
@@ -41,14 +42,14 @@ export class BossVoice {
                 return;
             }
             const now = this.scene.time.now;
-            if (now - this.hitAt < HIT_COOLDOWN_MS || Math.random() > 0.45) return;
+            if (now - this.hitAt < HIT_COOLDOWN_MS || rng.logic.next() > 0.45) return;
             this.hitAt = now;
             this.say('hit');
         }));
         const onAct = ({ act }: PlayerAct) => {
             if (act !== 'heal' || !this.active) return;
             const now = this.scene.time.now;
-            if (now - this.healAt < HEAL_COOLDOWN_MS || Math.random() > 0.7) return;
+            if (now - this.healAt < HEAL_COOLDOWN_MS || rng.logic.next() > 0.7) return;
             this.healAt = now;
             this.say('heal');
         };
@@ -71,7 +72,7 @@ export class BossVoice {
         if (!this.active) return;
         const now = this.scene.time.now;
         if (now < this.nextIdleAt) return;
-        this.nextIdleAt = now + 11000 + Math.random() * 6000;
+        this.nextIdleAt = now + 11000 + rng.logic.next() * 6000;
         this.say('idle');
     }
 
@@ -80,7 +81,7 @@ export class BossVoice {
         const now = this.scene.time.now;
         if (!urgent && now - this.lastAt < GAP_MS) return false;
         // mai la stessa riga due volte di fila
-        let i = Math.floor(Math.random() * pool.length);
+        let i = Math.floor(rng.logic.next() * pool.length);
         if (pool.length > 1 && i === this.last.get(key)) i = (i + 1) % pool.length;
         this.last.set(key, i);
         this.lastAt = now;

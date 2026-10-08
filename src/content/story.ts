@@ -1,6 +1,7 @@
 import type { AbilityId, DialogueLine } from '../types';
 import { ARC_DIALOGUES } from './arcs';
 import { toneFor } from './tone';
+import { rng } from '../engine/rng';
 
 /* la voce del realm: minuscolo, demenziale, mai tecnico.
    pedro parla glitchato, riba coi refusi, piema corretto da professore.
@@ -62,11 +63,11 @@ export const DEATH_TANA = [
 /** una frase di morte col tono del capitolo in cui sei morto */
 export function deathPunchline(levelId: string): string {
     if (levelId === 'tana') {
-        return DEATH_TANA[Math.floor(Math.random() * DEATH_TANA.length)];
+        return DEATH_TANA[Math.floor(rng.logic.next() * DEATH_TANA.length)];
     }
     const pool = toneFor(levelId).deaths === 'serie' ? DEATH_LATE
-        : toneFor(levelId).deaths === 'miste' && Math.random() < 0.5 ? DEATH_LATE : DEATH_EARLY;
-    return pool[Math.floor(Math.random() * pool.length)];
+        : toneFor(levelId).deaths === 'miste' && rng.logic.next() < 0.5 ? DEATH_LATE : DEATH_EARLY;
+    return pool[Math.floor(rng.logic.next() * pool.length)];
 }
 
 export const DIALOGUES: Record<string, DialogueLine[]> = {

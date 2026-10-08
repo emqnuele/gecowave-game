@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import type { BiomeDef } from '../content/biomes';
 import { sfx } from './sfx';
 import { state } from './state';
+import { rng } from './rng';
 
 /* il cielo che cambia: un orologio del realm (un giorno ogni 12 minuti di gioco)
    che tinge il cielo, e un meteo per bioma che gira da solo. tutto ciò che cade
@@ -99,7 +100,7 @@ export class Atmosphere {
             for (const ch of seedKey) h = (h * 33 + ch.charCodeAt(0)) | 0;
             this.weather = this.pick((Math.abs(h) % 997) / 997 * 0.5 + dayPhase() * 0.5);
             this.amount = this.weather === 'sereno' ? 0 : 1;
-            this.changeAt = this.scene.time.now + 60000 + Math.random() * 60000;
+            this.changeAt = this.scene.time.now + 60000 + rng.logic.next() * 60000;
         }
         this.resize();
         const onResize = () => this.resize();
@@ -128,11 +129,11 @@ export class Atmosphere {
         el.height = 256;
         const ctx = el.getContext('2d')!;
         for (let i = 0; i < 70; i++) {
-            const a = Math.random();
+            const a = rng.fx.next();
             ctx.fillStyle = `rgba(230,240,255,${0.25 + a * 0.6})`;
             const r = a > 0.92 ? 1.6 : 0.8;
             ctx.beginPath();
-            ctx.arc(Math.random() * 256, Math.random() * 256, r, 0, Math.PI * 2);
+            ctx.arc(rng.fx.next() * 256, rng.fx.next() * 256, r, 0, Math.PI * 2);
             ctx.fill();
         }
         this.scene.textures.addCanvas(key, el);
@@ -154,8 +155,8 @@ export class Atmosphere {
         if (!this.climate.length) return;
         // cambio di tempo: il vecchio sfuma, il nuovo entra
         if (time >= this.changeAt) {
-            this.changeAt = time + 70000 + Math.random() * 70000;
-            this.next = this.pick(Math.random());
+            this.changeAt = time + 70000 + rng.logic.next() * 70000;
+            this.next = this.pick(rng.logic.next());
         }
         if (this.next !== this.weather) {
             this.amount = Math.max(0, this.amount - delta / 4000);
@@ -185,7 +186,7 @@ export class Atmosphere {
         this.fogBank.tilePositionX += delta * (windy ? 0.25 : 0.03);
         this.fogBank.tilePositionY = Math.sin(time / 5000) * 20;
         if (this.weather === 'temporale' && k > 0.5 && time >= this.nextBoltAt) {
-            this.nextBoltAt = time + 5000 + Math.random() * 9000;
+            this.nextBoltAt = time + 5000 + rng.fx.next() * 9000;
             this.bolt();
         }
     }
@@ -200,7 +201,7 @@ export class Atmosphere {
             yoyo: false,
             onComplete: () => this.scene.tweens.add({ targets: this.flash, fillAlpha: { from: a * 0.7, to: 0 }, duration: 380, delay: 70 }),
         });
-        this.scene.time.delayedCall(300 + Math.random() * 900, () => sfx.thunder());
+        this.scene.time.delayedCall(300 + rng.fx.next() * 900, () => sfx.thunder());
     }
 
     /** il cielo: blu profondo di notte, arancio al tramonto, niente di giorno */

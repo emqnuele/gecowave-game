@@ -8,6 +8,7 @@ import type { Boss } from '../../entities/Boss';
 import { puddleFloorY } from '../../rules/abilities';
 import { waveWorld, type AbilitiesCtx } from './shared';
 import type { Veleno } from './Veleno';
+import { rng } from '../../engine/rng';
 
 interface Puddle {
     img: Phaser.GameObjects.Image;
@@ -31,11 +32,11 @@ class BottigliaFx {
         sfx.bottleCrack();
         for (let i = 0; i < 7; i++) {
             const s = this.scene.add.image(x, y, FX.shard).setDepth(6);
-            const a = Math.random() * Math.PI * 2;
+            const a = rng.fx.next() * Math.PI * 2;
             this.scene.tweens.add({
                 targets: s,
-                x: x + Math.cos(a) * (30 + Math.random() * 50),
-                y: y + Math.sin(a) * (20 + Math.random() * 30),
+                x: x + Math.cos(a) * (30 + rng.fx.next() * 50),
+                y: y + Math.sin(a) * (20 + rng.fx.next() * 30),
                 angle: 260,
                 alpha: 0,
                 duration: 420,
@@ -54,8 +55,8 @@ class BottigliaFx {
 
     /** bolle che salgono e scoppiano */
     bubbles(p: Puddle): void {
-        if (Math.random() < 0.6) sfx.bubble();
-        const bubble = this.scene.add.particles(p.x + (Math.random() - 0.5) * 120, p.y, 'p-dot', {
+        if (rng.fx.next() < 0.6) sfx.bubble();
+        const bubble = this.scene.add.particles(p.x + (rng.fx.next() - 0.5) * 120, p.y, 'p-dot', {
             speed: { min: 20, max: 60 }, angle: { min: 250, max: 290 },
             scale: { start: 0.4, end: 0 }, tint: 0x99f6e4, lifespan: 500, quantity: 2, stopAfter: 2,
         });

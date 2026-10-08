@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { BiomeDef } from '../content/biomes';
+import { rng } from './rng';
 
 interface TrackedLight {
     light: Phaser.GameObjects.Light;
@@ -52,7 +53,7 @@ export class LightingManager {
                 targets: light,
                 intensity: { from: intensity, to: intensity * 0.72 },
                 radius: { from: radius, to: radius * 0.86 },
-                duration: 500 + Math.random() * 500,
+                duration: 500 + rng.fx.next() * 500,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut',
@@ -72,7 +73,7 @@ export class LightingManager {
                 targets: light,
                 intensity: { from: 1.0, to: 0.78 },
                 radius: { from: 240, to: 215 },
-                duration: 120 + Math.random() * 220,
+                duration: 120 + rng.fx.next() * 220,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut',
@@ -93,7 +94,7 @@ export class LightingManager {
                 targets: light,
                 intensity: flame ? { from: 1.05, to: 0.8 } : { from: 0.75, to: 0.55 },
                 radius: { from: radius, to: radius * 0.9 },
-                duration: flame ? 110 + Math.random() * 200 : 1400 + Math.random() * 900,
+                duration: flame ? 110 + rng.fx.next() * 200 : 1400 + rng.fx.next() * 900,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut',

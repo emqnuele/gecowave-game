@@ -13,6 +13,7 @@ import { Boss } from '../entities/Boss';
 import type { AbilityId, BossKind } from '../types';
 import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../engine/worldEvents';
+import { rng } from '../engine/rng';
 
 type BossesCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'rewards' | 'dialogues' | 'chapter' | 'doomsday' | 'flow'>;
 
@@ -207,7 +208,7 @@ export class Bosses implements GameSystem {
         else if (a === 'dash') bark = 'learn-dash';
         else if (a === 'heal-start' || a === 'heal-done') bark = 'learn-heal';
         else if (a === 'wave-risonante' || a === 'wave-analisi') bark = 'learn-shot';
-        else if ((a === 'wave-riflesso' || a === 'wave-acquatossica') && Math.random() < 0.3) bark = 'learn-shot';
+        else if ((a === 'wave-riflesso' || a === 'wave-acquatossica') && rng.logic.next() < 0.3) bark = 'learn-shot';
         if (bark) this.voice.event(bark);
         bus.emit('ombra-read', { label });
     }

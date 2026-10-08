@@ -62,6 +62,7 @@ import { createChapter, indiziRaccolti, type ChapterScript } from '../game/chapt
 import { waveOnce } from '../game/chapters/shared/wave';
 import type { SceneData } from '../game/context';
 import { emitWorld, offWorld, onWorld, type WorldEvent, type WorldHandler } from '../engine/worldEvents';
+import { reseedRng, rng } from '../engine/rng';
 
 const FALL_DEATH_MARGIN = 3000;
 
@@ -119,6 +120,8 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
     }
 
     init(data: SceneData): void {
+        // ogni livello pesca da sequenze sue: quello che è successo prima non sposta la sua trama
+        reseedRng();
         this.ctx = new GameContext(this, this.carry);
         const region = loadRegion(this, data.levelId);
         const def = region?.def ?? LEVELS[data.levelId];
@@ -640,7 +643,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
         this.doomsday.update(time, delta);
         this.bosses.updateRhythm(time);
 
-        if (state.run.trenbolone && Math.random() < 0.2) {
+        if (state.run.trenbolone && rng.fx.next() < 0.2) {
             this.feel.shake(60, 0.0006);
         }
     }

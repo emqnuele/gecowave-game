@@ -8,6 +8,7 @@ import { state } from '../../engine/state';
 import type { Boss } from '../../entities/Boss';
 import type { BossKind } from '../../types';
 import { Chapter, type EndingId } from './ChapterScript';
+import { rng } from '../../engine/rng';
 
 /** il nucleo: pedro chiede una risposta, poi il patto, il giorno 30 o gli dei */
 export class NucleoChapter extends Chapter {
@@ -134,7 +135,7 @@ export class NucleoChapter extends Chapter {
         // ondate di glitch per assaporare il potere rubato
         if (time >= this.ctx.carry.pattoNextSpawnAt && this.ctx.enemies.awakeEnemies() < 7) {
             this.ctx.carry.pattoNextSpawnAt = time + 3500;
-            const dir = Math.random() > 0.5 ? 1 : -1;
+            const dir = rng.logic.next() > 0.5 ? 1 : -1;
             const at = this.ctx.world.openSpotNear(this.ctx.player.x + dir * 420, this.ctx.player.y - 60, 10);
             const e = this.ctx.enemies.spawnEnemy('glitchetto', at.x, at.y, { hunting: true });
             this.scene.physics.add.collider(e, this.ctx.world.level.layer);

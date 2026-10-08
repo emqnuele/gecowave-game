@@ -6,6 +6,7 @@ import type { Player } from '../../entities/Player';
 import { bus } from '../events';
 import { sfx, type Bed, type StepMaterial } from '../sfx';
 import { acoustics, type Space } from './acoustics';
+import { rng } from '../rng';
 
 /* ascolta il posto in cui sta il geco: quanta roccia ha sopra la testa,
    quanto sono lontane le pareti, se è sott'acqua, se c'è un boss. da qui
@@ -104,7 +105,7 @@ export class Soundscape {
         }
         this.footsteps(p);
         if (time >= this.nextShotAt) {
-            this.nextShotAt = time + 1800 + Math.random() * 4200;
+            this.nextShotAt = time + 1800 + rng.fx.next() * 4200;
             this.oneShot(input.night);
         }
         // l'ultimo cuore batte in testa
@@ -205,12 +206,12 @@ export class Soundscape {
         const ok = list.filter(([, , when]) => !when || (when === 'night') === isNight);
         const total = ok.reduce((s, [, w]) => s + w, 0);
         if (!total) return;
-        let x = Math.random() * total;
+        let x = rng.fx.next() * total;
         for (const [name, w] of ok) {
             x -= w;
             if (x > 0) continue;
-            const pan = (Math.random() * 2 - 1) * 0.85;
-            const vol = 0.45 + Math.random() * 0.55;
+            const pan = (rng.fx.next() * 2 - 1) * 0.85;
+            const vol = 0.45 + rng.fx.next() * 0.55;
             sfx[name](pan, vol);
             return;
         }

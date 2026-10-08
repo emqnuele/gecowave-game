@@ -1,4 +1,5 @@
 import type { ZoneColor } from '../types';
+import { rng } from '../engine/rng';
 
 /* il wavesung galaxy del custode: obiettivi, contatti da chiamare,
    il feed di wavegram e la radio. tutto scritto nella voce del realm */
@@ -44,7 +45,7 @@ export interface CallContext {
 }
 
 const has = (ctx: CallContext, f: string) => ctx.flags.includes(f);
-const pickFrom = (lines: string[]) => lines[Math.floor(Math.random() * lines.length)];
+const pickFrom = (lines: string[]) => lines[Math.floor(rng.logic.next() * lines.length)];
 
 export const CONTACTS: Contact[] = [
     {

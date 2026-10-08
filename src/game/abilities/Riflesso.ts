@@ -10,6 +10,7 @@ import type { Enemy } from '../../entities/Enemy';
 import type { Spawner } from '../../entities/Spawner';
 import { waveWorld, type AbilitiesCtx } from './shared';
 import { emitWorld } from '../../engine/worldEvents';
+import { rng } from '../../engine/rng';
 
 /** il vetro rotto del riflesso: gemello luminoso, crepe, schegge */
 class RiflessoFx {
@@ -47,8 +48,8 @@ class RiflessoFx {
         if (!this.twin) return;
         this.twin.setPosition(clone.x, clone.y).setFrame(clone.frame.name).setFlipX(clone.flipX);
         if (time >= this.jitterAt) {
-            this.jitterAt = time + 80 + Math.random() * 60;
-            this.twin.x += Math.random() < 0.5 ? -2 : 2;
+            this.jitterAt = time + 80 + rng.fx.next() * 60;
+            this.twin.x += rng.fx.next() < 0.5 ? -2 : 2;
         }
     }
 
@@ -56,7 +57,7 @@ class RiflessoFx {
         for (const [sx, sy] of points) {
             for (let i = 0; i < 4; i++) {
                 const s = this.scene.add.image(sx, sy, FX.mirrorShard).setDepth(6);
-                const a = Math.random() * Math.PI * 2;
+                const a = rng.fx.next() * Math.PI * 2;
                 this.scene.tweens.add({
                     targets: s,
                     x: sx + Math.cos(a) * 60,

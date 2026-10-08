@@ -9,6 +9,7 @@ import type { NavGraph } from './nav/NavGraph';
 import { state } from './state';
 import type { DialogueLine } from '../types';
 import type { RegionLayout, Room } from '../world/types';
+import { rng } from './rng';
 
 /* i passanti: niente fisica, si muovono sui segmenti del grafo di navigazione
    (camminate, cadute, saltelli) e restano nella loro stanza. vivono solo
@@ -46,7 +47,7 @@ class Wanderer {
     bubble: Bubble | null = null;
     home: Room | null;
     air: { x0: number; y0: number; vx: number; vy: number; t: number; to: number } | null = null;
-    phase = Math.random() * 1000;
+    phase = rng.fx.next() * 1000;
 
     constructor(sprite: Phaser.GameObjects.Image, kind: FolkKind, seg: number, x: number, feet: number, home: Room | null, onTalk: (w: Wanderer) => void) {
         this.sprite = sprite;
@@ -133,16 +134,16 @@ export class FolkManager {
         const feet = (s.r + 1) * TILE;
         const sprite = folkImage(this.scene, x, feet + 1, kind.look, eye).setDepth(3.6);
         const w = new Wanderer(sprite, kind, seg, x, feet, home, (who) => this.converse(who));
-        w.facing = Math.random() < 0.5 ? -1 : 1;
+        w.facing = rng.logic.next() < 0.5 ? -1 : 1;
         this.folk.push(w);
     }
 
     /** due chiacchiere: battute del tipo, notizie del realm, e la paura di pedro quando serve */
     private converse(w: Wanderer): void {
-        const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
+        const pick = <T,>(a: T[]) => a[Math.floor(rng.logic.next() * a.length)];
         const lines: DialogueLine[] = pick(w.kind.talks).map((text) => ({ speaker: w.kind.name, color: w.kind.color, text }));
         const news = FOLK_AFTER.filter((n) => n.biome === this.biomeId && state.hasFlag(n.flag));
-        if (news.length && Math.random() < 0.6) lines.push({ speaker: w.kind.name, color: w.kind.color, text: pick(news).line });
+        if (news.length && rng.logic.next() < 0.6) lines.push({ speaker: w.kind.name, color: w.kind.color, text: pick(news).line });
         else if (state.save.doomsday > 0.4) lines.push({ speaker: w.kind.name, color: w.kind.color, text: pick(FOLK_PEDRO) });
         w.mode = 'face';
         w.until = this.scene.time.now + 2500;
@@ -165,7 +166,7 @@ export class FolkManager {
             }).setOrigin(0.5, 1).setDepth(8);
             w.bubble = { text: t, until: 0 };
         }
-        w.bubble.text.setText(text).setVisible(true).setAlpha(1).setRotation((Math.random() - 0.5) * 0.06);
+        w.bubble.text.setText(text).setVisible(true).setAlpha(1).setRotation((rng.fx.next() - 0.5) * 0.06);
         w.bubble.until = now + ms;
     }
 
@@ -223,7 +224,7 @@ export class FolkManager {
                 w.partner.partner = null;
                 w.partner = null;
             }
-            if (Math.random() < 0.7) this.say(w, FOLK_PANIC[Math.floor(Math.random() * FOLK_PANIC.length)], 1500);
+            if (rng.logic.next() < 0.7) this.say(w, FOLK_PANIC[Math.floor(rng.logic.next() * FOLK_PANIC.length)], 1500);
             return;
         }
         if (w.mode === 'flee') {
@@ -233,18 +234,18 @@ export class FolkManager {
         }
         // il custode passa: ci si gira e si dice la propria
         if (dP < 90 && now >= w.nextBarkAt && w.mode !== 'chat') {
-            w.nextBarkAt = now + 9000 + Math.random() * 6000;
+            w.nextBarkAt = now + 9000 + rng.logic.next() * 6000;
             w.mode = 'face';
             w.until = now + 1800;
             w.facing = px < w.x ? -1 : 1;
-            const pool = toneFor(state.save.levelId).folk === 'quieto' && Math.random() < 0.6 ? FOLK_QUIET
-                : state.save.doomsday > 0.45 && Math.random() < 0.4 ? FOLK_PEDRO : w.kind.barks;
-            this.say(w, pool[Math.floor(Math.random() * pool.length)]);
+            const pool = toneFor(state.save.levelId).folk === 'quieto' && rng.logic.next() < 0.6 ? FOLK_QUIET
+                : state.save.doomsday > 0.45 && rng.logic.next() < 0.4 ? FOLK_PEDRO : w.kind.barks;
+            this.say(w, pool[Math.floor(rng.logic.next() * pool.length)]);
             return;
         }
         if (now < w.until) return;
         // fine di uno stato: si sceglie cosa fare dopo
-        const roll = Math.random();
+        const roll = rng.logic.next();
         const mate = this.folk.find((o) => o !== w && !o.partner && o.mode !== 'flee' && o.mode !== 'air' && Math.abs(o.x - w.x) < 140 && Math.abs(o.feet - w.feet) < 8);
         if (mate && !w.partner && roll < 0.35) {
             w.partner = mate;
@@ -253,7 +254,7 @@ export class FolkManager {
             w.until = mate.until = now + 7000;
             w.facing = mate.x > w.x ? 1 : -1;
             mate.facing = (-w.facing) as 1 | -1;
-            const chat = FOLK_CHAT[Math.floor(Math.random() * FOLK_CHAT.length)];
+            const chat = FOLK_CHAT[Math.floor(rng.logic.next() * FOLK_CHAT.length)];
             chat.forEach((line, i) => {
                 const who = i % 2 === 0 ? w : mate;
                 this.scene.time.delayedCall(i * 2200, () => who.mode === 'chat' && this.say(who, line, 2000));
@@ -267,12 +268,12 @@ export class FolkManager {
         const seg = this.nav.segments[w.seg];
         if (roll < 0.55) {
             w.mode = 'walk';
-            w.targetX = (seg.c0 + 0.5 + Math.random() * (seg.c1 - seg.c0)) * TILE;
+            w.targetX = (seg.c0 + 0.5 + rng.logic.next() * (seg.c1 - seg.c0)) * TILE;
             w.until = now + 9000;
         } else if (roll < 0.75) {
             // un salto o un passo verso un pavimento vicino, senza uscire di casa
             const edges = this.nav.edges(w.seg).filter((e) => e.need <= 110 && this.inHome(w, e.to));
-            const e = edges[Math.floor(Math.random() * edges.length)];
+            const e = edges[Math.floor(rng.logic.next() * edges.length)];
             if (e) {
                 w.mode = 'walk';
                 w.targetX = e.fromC * TILE + TILE / 2;
@@ -281,11 +282,11 @@ export class FolkManager {
                 return;
             }
             w.mode = 'idle';
-            w.until = now + 1500 + Math.random() * 2500;
+            w.until = now + 1500 + rng.logic.next() * 2500;
         } else {
             w.mode = 'idle';
-            w.until = now + 1500 + Math.random() * 3500;
-            if (Math.random() < 0.4) w.facing = (-w.facing) as 1 | -1;
+            w.until = now + 1500 + rng.logic.next() * 3500;
+            if (rng.logic.next() < 0.4) w.facing = (-w.facing) as 1 | -1;
         }
     }
 
@@ -332,7 +333,7 @@ export class FolkManager {
                 }
                 if (w.mode === 'walk') {
                     w.mode = 'idle';
-                    w.until = now + 1200 + Math.random() * 2000;
+                    w.until = now + 1200 + rng.logic.next() * 2000;
                 }
                 return;
             }
