@@ -43,7 +43,7 @@ Non sono bug, ma vanno decisi (togliere o tenere): nessuno scenario può eseguir
 ### `startDialogue` riprova ogni 1,2 s se un film è in corso
 - **nasce**: niente coda esplicita, un `delayedCall` che si richiama.
 - **scenari**: `film-coda`.
-- **stato**: proposta per il sistema di cutscene.
+- **stato**: sistemato in B13 (`Dialogues`): una fila vera. Un film chiesto mentre un altro gira entra in fila e parte quando il precedente ha chiuso anche le sue righe, al primo fotogramma a scena viva (se le righe hanno aperto una scelta o un altro dialogo, aspetta anche quello). Prima il tentativo ogni 1,2 s poteva cadere nel fotogramma tra la fine del film e la pausa delle sue righe, e far partire il secondo film sopra il dialogo del primo. Un film in fila che nel frattempo è stato visto altrove passa alle sole righe, e la fila va avanti. **Prova**: lo scenario `film-coda` non la esercitava (arrivando all'indizio 2 parte l'agguato di notino e i tasti scorrevano il suo dialogo, nessun film partiva, né su main né dopo). Riscritto: chiude l'agguato, avvia il film dell'indizio 2 e mentre gira chiede l'indizio 3. Con il vecchio tentativo il secondo film non parte entro la fine dello scenario (main e `t11`: visto solo `fb-notte`); con la fila parte subito dopo le righe del primo (`t12`: `fb-notte` e `fb-ritratto`).
 
 ### la logica gira a ogni frame di render
 - **nasce**: niente limite agli fps; la fisica arcade ha passo fisso ma `update()` gira a ogni frame (su 120 Hz il doppio: per esempio i controlli casuali per frame del trenbolone).

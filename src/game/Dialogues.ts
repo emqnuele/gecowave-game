@@ -10,6 +10,9 @@ import type { GameContext, GameSystem } from './context';
 export class Dialogues implements GameSystem {
     private readonly ctx: Pick<GameContext, 'scene' | 'player'>;
     private readonly host: FilmHost;
+    /** i film in attesa: ognuno parte quando il precedente ha chiuso anche le sue righe */
+    private readonly queue: { id: string; onEnd?: () => void }[] = [];
+    private filming = false;
 
     constructor(ctx: Pick<GameContext, 'scene' | 'player'>, host: FilmHost) {
         this.ctx = ctx;
@@ -17,20 +20,46 @@ export class Dialogues implements GameSystem {
     }
 
     start(id: string, onEnd?: () => void): void {
-        // mostra invece di raccontare: prima il flashback filmico, poi 1-2 righe al max
+        if (!this.hasFilm(id)) {
+            this.lines(DIALOGUES[id], onEnd);
+            return;
+        }
+        if (this.filming) {
+            this.queue.push({ id, onEnd });
+            return;
+        }
+        this.playFilm(id, onEnd);
+    }
+
+    /** mostra invece di raccontare: prima il flashback filmico, poi 1-2 righe al max */
+    private hasFilm(id: string): boolean {
         const fbId = FLASHBACK_BEFORE[id];
         // certi flashback non si rigiocano: se visti altrove, solo le righe
-        const already = fbId !== undefined && FLASHBACK_ONCE.has(id) && state.save.seenDialogues.includes(`fb-${fbId}`);
-        if (fbId && !already && !flashback.isPlaying) {
-            flashback.play(this.ctx.scene, this.ctx.player, fbId, () => this.lines(DIALOGUES[id], onEnd), { host: this.host });
+        return fbId !== undefined && !(FLASHBACK_ONCE.has(id) && state.save.seenDialogues.includes(`fb-${fbId}`));
+    }
+
+    private playFilm(id: string, onEnd?: () => void): void {
+        this.filming = true;
+        const done = (): void => {
+            onEnd?.();
+            this.nextFilm();
+        };
+        // in fila può essere diventato già visto: restano le righe, e la fila va avanti lo stesso
+        if (!this.hasFilm(id)) {
+            this.lines(DIALOGUES[id], done);
             return;
         }
-        if (fbId && !already) {
-            // un film sta già girando: si aspetta il suo turno, mai sopra
-            this.ctx.scene.time.delayedCall(1200, () => this.start(id, onEnd));
+        flashback.play(this.ctx.scene, this.ctx.player, FLASHBACK_BEFORE[id]!, () => this.lines(DIALOGUES[id], done), { host: this.host });
+    }
+
+    private nextFilm(): void {
+        const next = this.queue.shift();
+        if (!next) {
+            this.filming = false;
             return;
         }
-        this.lines(DIALOGUES[id], onEnd);
+        // il primo fotogramma a scena viva: se le righe hanno aperto un altro dialogo, si aspetta anche quello
+        this.ctx.scene.time.delayedCall(0, () => this.playFilm(next.id, next.onEnd));
     }
 
     /** l'intro del capitolo, una volta per partita; chi comincia al buio apre gli occhi alla fine */
