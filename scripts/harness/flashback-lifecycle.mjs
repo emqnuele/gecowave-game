@@ -1,4 +1,4 @@
-// regressione dei bug dei flashback sistemati prima del merge (vedi ANALISI_REMASTER.md):
+// regressione dei bug dei flashback sistemati prima del merge (analisi del remaster, prima del refactor):
 // fine col salto (vignetta e zoom tornano uguali) e uscita al menu a metà film (niente stato globale appeso).
 // uso: node scripts/harness/flashback-lifecycle.mjs
 import { launch, openGame, startLevel, waitPlayer } from './game.mjs';

@@ -1,7 +1,7 @@
 // copertura del corpus sulla build di main: quali funzioni, righe e rami di src/ nessuno scenario esegue mai.
 // uso: node scripts/harness/coverage.mjs [--only a,b] [--jobs 4] [--reuse]
 //   --reuse: riusa la copertura grezza già raccolta per gli scenari che ce l'hanno
-// scrive docs/refactor/copertura.md (nella repo) e il report html in .harness/coverage/html
+// scrive docs/harness/copertura.md (nella repo) e il report html in .harness/coverage/html
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -193,10 +193,10 @@ function report(map, scenarios, index) {
 
 const ids = await collect();
 const { map, scenarios, index } = await build(ids);
-mkdirSync(join(ROOT, 'docs/refactor'), { recursive: true });
-writeFileSync(join(ROOT, 'docs/refactor/copertura.md'), `${report(map, scenarios, index)}\n`);
+mkdirSync(join(ROOT, 'docs/harness'), { recursive: true });
+writeFileSync(join(ROOT, 'docs/harness/copertura.md'), `${report(map, scenarios, index)}\n`);
 const ctx = libReport.createContext({ dir: join(ROOT, '.harness/coverage/html'), coverageMap: map, sourceFinder: (p) => readFileSync(resolve(REF_DIST, '../', p), 'utf8') });
 reports.create('html').execute(ctx);
 writeFileSync(join(ROOT, '.harness/coverage/coverage.json'), JSON.stringify(map.toJSON()));
 const s = map.getCoverageSummary();
-console.log(`copertura src: righe ${pct(s.lines)}%, rami ${pct(s.branches)}%, funzioni ${pct(s.functions)}% -> docs/refactor/copertura.md`);
+console.log(`copertura src: righe ${pct(s.lines)}%, rami ${pct(s.branches)}%, funzioni ${pct(s.functions)}% -> docs/harness/copertura.md`);

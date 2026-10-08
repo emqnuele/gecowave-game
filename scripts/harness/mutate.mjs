@@ -123,6 +123,6 @@ for (const r of rows) L.push(`| ${r.m.id} | ${r.m.kind} | ${r.m.file}:${r.line} 
 for (const r of rows.filter((x) => x.report)) {
     L.push('', `## ${r.m.id}`, '', '```', ...r.report, '```');
 }
-mkdirSync(join(ROOT, 'docs/refactor'), { recursive: true });
-writeFileSync(join(ROOT, 'docs/refactor/mutazioni.md'), `${L.join('\n')}\n`);
-console.log(`\n${rows.filter((r) => r.verdict === 'scoperta').length}/${rows.length} scoperte -> docs/refactor/mutazioni.md`);
+mkdirSync(join(ROOT, 'docs/harness'), { recursive: true });
+writeFileSync(join(ROOT, 'docs/harness/mutazioni.md'), `${L.join('\n')}\n`);
+console.log(`\n${rows.filter((r) => r.verdict === 'scoperta').length}/${rows.length} scoperte -> docs/harness/mutazioni.md`);

@@ -1,6 +1,6 @@
 {
  "commit": "fddd54ef9693141b4b4b983a763d28f33ac71c40",
- "note": "codice finale della parte B (branch refactor); ricalcolato dalle tracce del passo t16 con l'algoritmo del runner: docs/refactor/riferimenti.md",
+ "note": "codice finale della parte B (branch refactor); ricalcolato dalle tracce del passo t16 con l'algoritmo del runner: docs/harness/riferimenti.md",
  "scenarios": {
   "agguato-vendetta": {
    "strict": "7fb36a849934648a",

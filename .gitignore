@@ -43,3 +43,6 @@ dist-dev
 
 # tracce complete e report dell'harness
 .harness
+
+# cache di compilazione dell'editor
+editor/*.tsbuildinfo

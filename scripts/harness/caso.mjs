@@ -1,7 +1,7 @@
 // censimento delle estrazioni casuali di src/: ogni pescata dalle due sequenze (rng.logic, rng.fx) e ogni
 // Math.random o helper di phaser rimasto, con file, riga, funzione che lo contiene e il testo.
 // fuori dal seme in src/core/rng.ts nessuno deve pescare da Math.random: se succede esce con errore.
-// uso: node scripts/harness/caso.mjs   -> docs/refactor/caso.md
+// uso: node scripts/harness/caso.mjs   -> docs/harness/caso.md
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -55,7 +55,7 @@ for (const file of files.sort()) {
 
 // il tipo scritto a mano si conserva per testo della riga: sopravvive agli spostamenti del refactor
 const kept = new Map();
-const OUT = join(ROOT, 'docs/refactor/caso.md');
+const OUT = join(ROOT, 'docs/harness/caso.md');
 if (existsSync(OUT)) {
     for (const l of readFileSync(OUT, 'utf8').split('\n')) {
         const m = /^\| \d+ \| [^|]+ \| [^|]+ \| (.*) \|\s*([^|]*?)\s*\|$/.exec(l);
@@ -91,7 +91,7 @@ for (const [f, rs] of byFile) {
     }
 }
 writeFileSync(OUT, `${L.join('\n')}\n`);
-console.log(`${rows.length} estrazioni in ${byFile.size} file -> docs/refactor/caso.md`);
+console.log(`${rows.length} estrazioni in ${byFile.size} file -> docs/harness/caso.md`);
 if (loose.length) {
     for (const r of loose) console.error(`pesca da Math.random fuori dal seme: ${r.rel}:${r.line} ${r.callee}`);
     process.exit(1);
