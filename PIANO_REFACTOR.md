@@ -27,14 +27,14 @@ Obiettivo: GameScene (7.7k righe) fa solo da orchestratore. Ogni sistema ha la s
 - [x] Registro membro per membro di GameScene con le destinazioni proposte (`docs/refactor/ledger.md`)
 
 ### Parte B: il refactor (prompt in `PROMPT_REFACTOR_B.md`)
-- [~] Mappare i blocchi di GameScene e decidere i sistemi: bozza in `docs/refactor/mappa-sistemi.md`, da confermare spostando codice (bozza originale: Enemy, Boss, Trap/Hazard, Folk/NPC, Dialogue, Flashback, Doomsday, Atmosphere/Audio, Camera/World)
-- [ ] Estrarli uno alla volta, un commit per sistema, gioco giocabile dopo ogni commit
-- [ ] Logica (decide cosa succede) separata dalla presentazione (disegna e suona)
-- [ ] Eventi espliciti per le cose importanti: spawn, danno, morte, inizio/fine dialogo, checkpoint
-- [ ] RNG centralizzato e con seed al posto dei ~184 `Math.random` sparsi (almeno quelli di logica; il cosmetico può restare)
-- [ ] Un solo flag `simulates` (true in single e sull'host, false sul guest) al posto dei 101 controlli `coop.isHost` sparsi
-- [ ] Test vitest sui sistemi estratti
-- [ ] Il single deve comportarsi identico a prima
+- [x] Mappare i blocchi di GameScene e decidere i sistemi: `docs/refactor/mappa-sistemi.md`, confermata spostando il codice (bozza originale: Enemy, Boss, Trap/Hazard, Folk/NPC, Dialogue, Flashback, Doomsday, Atmosphere/Audio, Camera/World)
+- [x] Estrarli uno alla volta, gioco giocabile dopo ogni passo (verificato passo per passo; i sistemi in un commit solo, deciso con Ema, perché uguali a main al bit)
+- [x] Logica (decide cosa succede) separata dalla presentazione (disegna e suona)
+- [x] Eventi espliciti per le cose importanti: spawn, danno, morte, inizio/fine dialogo, checkpoint
+- [x] RNG centralizzato e con seed al posto dei ~184 `Math.random` sparsi (almeno quelli di logica; il cosmetico può restare)
+- [x] Un solo flag `simulates` (true in single e sull'host, false sul guest): su main i controlli `coop.isHost` non ci sono (vivono in `multiplayer-p2p`), il flag è pronto nei punti che decidono
+- [x] Test vitest sulle regole estratte (`src/rules/`)
+- [x] Il single deve comportarsi identico a prima, salvo i cambi approvati, ognuno spiegato (`docs/refactor/riferimenti.md`)
 
 ### Decisioni prese da Ema (8 ottobre 2026)
 **Autonomia**: struttura del codice, organizzazione della repo, test e prestazioni li decide Claude, senza chiedere, purché tutto sia verificato con gli strumenti della parte A. Si chiede solo quando cambia la storia o come funziona il gioco.

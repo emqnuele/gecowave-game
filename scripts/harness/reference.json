@@ -1,1205 +1,1205 @@
 {
- "commit": "a16f39c5d309d5d4e1a175d75bfb813eab686da9",
- "note": null,
+ "commit": "fddd54ef9693141b4b4b983a763d28f33ac71c40",
+ "note": "codice finale della parte B (branch refactor); ricalcolato dalle tracce del passo t16 con l'algoritmo del runner: docs/refactor/riferimenti.md",
  "scenarios": {
   "agguato-vendetta": {
-   "strict": "6f89e47e6e398fcb",
-   "diag": "c35b16a2a19b5d15",
+   "strict": "7fb36a849934648a",
+   "diag": "40b86200ce71f89a",
    "frames": 599,
    "failure": null
   },
   "arena-perduta": {
-   "strict": "b73cf61ce911e85c",
-   "diag": "871bdf2b1254386d",
-   "frames": 1646,
+   "strict": "ff9bf42108833414",
+   "diag": "658f06916db85dd4",
+   "frames": 1701,
    "failure": null
   },
   "arena-rio": {
-   "strict": "b2d7db1b39dc833d",
-   "diag": "022749a6426163c5",
-   "frames": 1816,
+   "strict": "c48f7c5a2aeaf378",
+   "diag": "44cf515e14529935",
+   "frames": 1173,
    "failure": null
   },
   "arena-ruhra": {
-   "strict": "b193f2ebef2d8f00",
-   "diag": "0519d51b7463f2cd",
-   "frames": 1684,
+   "strict": "43b998e559b216f8",
+   "diag": "5522e2a1e2294db9",
+   "frames": 1111,
    "failure": null
   },
   "caduta": {
-   "strict": "abbbe0b21c97e553",
+   "strict": "46f1f0b726256714",
    "diag": "1eb06c636a62c20e",
    "frames": 447,
    "failure": null
   },
   "campagna": {
-   "strict": "93c7f954f2362580",
-   "diag": "836a25ab9b19691f",
-   "frames": 100418,
+   "strict": "1b329ecdfa374a6d",
+   "diag": "bf528e9eb62d3473",
+   "frames": 89434,
    "failure": null
   },
   "cap-barrato": {
-   "strict": "72537ce67662f7ac",
-   "diag": "0382f9f132f85708",
-   "frames": 5854,
+   "strict": "cfb722c7e8e7baae",
+   "diag": "54b8b4e5649185cb",
+   "frames": 5756,
    "failure": null
   },
   "cap-bus": {
-   "strict": "22cee8532c365488",
-   "diag": "68055412111511c8",
-   "frames": 4586,
+   "strict": "a0c81a165a2dfd37",
+   "diag": "1e220f01c18c8e0c",
+   "frames": 4607,
    "failure": null
   },
   "cap-cantina": {
-   "strict": "cb036d345425baa3",
-   "diag": "9d0b512ac1bd0878",
-   "frames": 3297,
+   "strict": "cfa83b35e92f71e3",
+   "diag": "7f397424f28a12bb",
+   "frames": 3257,
    "failure": null
   },
   "cap-cantina-calpesta": {
-   "strict": "01f78d8321d0a1d6",
-   "diag": "9d0b512ac1bd0878",
-   "frames": 3297,
+   "strict": "5dacda568a03eb1b",
+   "diag": "7f397424f28a12bb",
+   "frames": 3257,
    "failure": null
   },
   "cap-cantina-cliente": {
-   "strict": "81d9c4b1788d7f65",
-   "diag": "35c9bcdad945f045",
+   "strict": "5c020dadafc05f89",
+   "diag": "9287c8a219b85931",
    "frames": 4170,
    "failure": null
   },
   "cap-caso": {
-   "strict": "a85a6a3dc36d42a5",
-   "diag": "039afdd3b756abd4",
-   "frames": 12274,
+   "strict": "3f67034f0b58e174",
+   "diag": "36fe8fb5905646b7",
+   "frames": 9168,
    "failure": null
   },
   "cap-custode": {
-   "strict": "53d7ce960f10972d",
-   "diag": "518cefc4f66ae829",
-   "frames": 5543,
+   "strict": "ca00390dd04e7cd0",
+   "diag": "01116b65ff6bd733",
+   "frames": 5112,
    "failure": null
   },
   "cap-mente": {
-   "strict": "3737a994d5f387a7",
-   "diag": "dd1aff95b8655159",
-   "frames": 2903,
+   "strict": "0e74a53c897009ff",
+   "diag": "b5dbfc03df00d30b",
+   "frames": 2889,
    "failure": null
   },
   "cap-perduta": {
-   "strict": "cb55b0c014b181f5",
-   "diag": "920bd14722793434",
+   "strict": "383533effaf1246e",
+   "diag": "62ba755e37718a21",
    "frames": 3291,
    "failure": null
   },
   "cap-ricordi": {
-   "strict": "d75d21a9c2bc41ac",
-   "diag": "3f0b199d49a124da",
-   "frames": 3196,
+   "strict": "bcfa6496bf5c4d1e",
+   "diag": "a21806e51da332cd",
+   "frames": 3236,
    "failure": null
   },
   "cap-rio": {
-   "strict": "02345591f0658040",
-   "diag": "749bd56ee1bbdcec",
-   "frames": 4201,
+   "strict": "1d67435e02dc90fa",
+   "diag": "05a3a6733da25a2f",
+   "frames": 3907,
    "failure": null
   },
   "cap-rio-acqua": {
-   "strict": "4e86175831264a26",
-   "diag": "f782e5216bc1d8cb",
-   "frames": 4161,
+   "strict": "cba9e04de5c2fd1b",
+   "diag": "07e3fdfb509cdb9f",
+   "frames": 3867,
    "failure": null
   },
   "cap-rio-povero": {
-   "strict": "4b52f809a92cc76c",
-   "diag": "4f255c2089490ea5",
-   "frames": 4376,
+   "strict": "52f621babe8e2142",
+   "diag": "93741deae7de3ce3",
+   "frames": 4063,
    "failure": null
   },
   "cap-rio-tommaso": {
-   "strict": "47f2c50046cff709",
-   "diag": "de40967baa52a02c",
-   "frames": 4081,
+   "strict": "1fcfbe5ca3bc174c",
+   "diag": "4bbd1e4f560ff033",
+   "frames": 4575,
    "failure": null
   },
   "cap-ruhra": {
-   "strict": "463c74f63efd986f",
-   "diag": "46eba4c90c6ba535",
-   "frames": 3349,
+   "strict": "227080f0770c58e2",
+   "diag": "54d37b8e40bcbdb9",
+   "frames": 3396,
    "failure": null
   },
   "cap-santuario": {
-   "strict": "d040677eb47187d6",
-   "diag": "8e0566d3091ae49c",
-   "frames": 3994,
+   "strict": "29a247d9ea236a50",
+   "diag": "24cfa57194f42999",
+   "frames": 4033,
    "failure": null
   },
   "cap-sorveglianza": {
-   "strict": "125f2e1fc256d11f",
-   "diag": "f78a9dd1884b2494",
-   "frames": 4019,
+   "strict": "56c55d1b9b905991",
+   "diag": "c490f6b78c8966eb",
+   "frames": 3945,
    "failure": null
   },
   "cap-sorveglianza-premium": {
-   "strict": "3cd165d5e0b7fb8d",
-   "diag": "03aea6409d3fd24a",
-   "frames": 4501,
+   "strict": "52da6aa5a798c516",
+   "diag": "e402163b4d3c8cac",
+   "frames": 4362,
    "failure": null
   },
   "cap-stabilimento": {
-   "strict": "47ac59df81568bb0",
-   "diag": "dad455a077bada6a",
-   "frames": 14033,
+   "strict": "7d7a72e469e015a9",
+   "diag": "b17b62eee482b686",
+   "frames": 15442,
    "failure": null
   },
   "cap-stabilimento-acqua": {
-   "strict": "c5ad9cdc0843355d",
-   "diag": "1f532a08ab7eb217",
-   "frames": 14864,
+   "strict": "ccfa6604f9273675",
+   "diag": "60e9b585ccfef597",
+   "frames": 15693,
    "failure": null
   },
   "cap-tana": {
-   "strict": "27e046a03f8d3575",
-   "diag": "18fc5de1a398fc97",
-   "frames": 4178,
+   "strict": "7214578a1bf271ea",
+   "diag": "00735399f26aed48",
+   "frames": 4592,
    "failure": null
   },
   "cap-tana-ospite": {
-   "strict": "0565e8bca07c690d",
-   "diag": "7ae27ec403d58c8f",
-   "frames": 4342,
+   "strict": "83ada727db629ec8",
+   "diag": "9c78b66bf9eacfee",
+   "frames": 4756,
    "failure": null
   },
   "cap-tecnokill": {
-   "strict": "d415f021afddb406",
-   "diag": "ec3da530182b4294",
-   "frames": 4395,
+   "strict": "827b45452b697208",
+   "diag": "82c1830ef67945df",
+   "frames": 4345,
    "failure": null
   },
   "cap-tecnokill-disarmato": {
-   "strict": "b37d74dc46657768",
-   "diag": "09a8568b9472eb8e",
-   "frames": 4389,
+   "strict": "d4d4e15154585657",
+   "diag": "7ea5b73d5b309860",
+   "frames": 4339,
    "failure": null
   },
   "cap-trenbolone": {
-   "strict": "75ddfb96f2a2a062",
-   "diag": "ce0da72f3147be91",
-   "frames": 1628,
+   "strict": "7971f61948e6c4fd",
+   "diag": "9d3eeff7fe7a58df",
+   "frames": 1514,
    "failure": null
   },
   "cap-trenbolone-rifiuta": {
-   "strict": "0bf46640a061b36c",
-   "diag": "187957f5e48515b1",
-   "frames": 3467,
+   "strict": "bdd92438d7e35344",
+   "diag": "35faf2b5b2fe25cc",
+   "frames": 3165,
    "failure": null
   },
   "cap-void": {
-   "strict": "351d0c709d1bab9c",
-   "diag": "9d16d3ad5739cc5e",
-   "frames": 9044,
+   "strict": "9f1739ccc270cbbc",
+   "diag": "d6be8d59acc2ec02",
+   "frames": 9759,
    "failure": null
   },
   "cap-void-33": {
-   "strict": "1525ad761d0330f3",
-   "diag": "295002867185206d",
-   "frames": 9730,
+   "strict": "46885b90c12e149e",
+   "diag": "be6926fbc5e44b4e",
+   "frames": 10294,
    "failure": null
   },
   "cap-void-garante-cancella": {
-   "strict": "56d45bf8c1c1e508",
-   "diag": "9d16d3ad5739cc5e",
-   "frames": 9044,
+   "strict": "36986b3db8fff0c2",
+   "diag": "d6be8d59acc2ec02",
+   "frames": 9759,
    "failure": null
   },
   "cap-void-garante-porta": {
-   "strict": "177358b64d72159d",
-   "diag": "9d16d3ad5739cc5e",
-   "frames": 9044,
+   "strict": "7dc58323daf3a826",
+   "diag": "d6be8d59acc2ec02",
+   "frames": 9759,
    "failure": null
   },
   "cap-walter": {
-   "strict": "c32a365a6d265b0c",
-   "diag": "8bf01acac48a5aed",
-   "frames": 21649,
+   "strict": "c4a5a9b1bdd5d3d6",
+   "diag": "4eb3b2be19445aeb",
+   "frames": 14255,
    "failure": null
   },
   "carica-corrotto": {
-   "strict": "24350a52a6331ca6",
+   "strict": "8e011d944ac3ea64",
    "diag": "e907f0153ec69ad9",
    "frames": 121,
    "failure": null
   },
   "carica-microfono": {
-   "strict": "7af88edbe6967b88",
+   "strict": "9f11bcfdc29ca0f7",
    "diag": "edc78357d0c94082",
    "frames": 401,
    "failure": null
   },
   "carica-vecchio": {
-   "strict": "9564b3578ba395a6",
+   "strict": "de58a71364202209",
    "diag": "eaa8af04aabda6d5",
    "frames": 395,
    "failure": null
   },
   "cibo": {
-   "strict": "5964e1a6696a38a4",
-   "diag": "9d07d65486b53179",
+   "strict": "85179c8911d50e7e",
+   "diag": "26cb3af4d45360cc",
    "frames": 538,
    "failure": null
   },
   "colpo-pausa": {
-   "strict": "05f6e6354154a7a3",
-   "diag": "58c52fbdd73d2eac",
+   "strict": "d119393b06543464",
+   "diag": "296e739dc9449ab6",
    "frames": 455,
    "failure": null
   },
   "corsa-persa": {
-   "strict": "21b1d05926aba591",
+   "strict": "34b1ca08e1e9b00c",
    "diag": "097417ad3dfb2d2c",
    "frames": 5089,
    "failure": null
   },
   "corsa-vinta": {
-   "strict": "e9744662e3fcd09f",
-   "diag": "7500bd031cd8626d",
+   "strict": "3616a36cbb0d6bca",
+   "diag": "4ba1461e8e24e3a8",
    "frames": 489,
    "failure": null
   },
   "doomsday-avvisi": {
-   "strict": "9671b93c34ce10f6",
-   "diag": "1e5ea40c5a9d5b64",
+   "strict": "2e8bda22a89f3c5f",
+   "diag": "4664eebf6ff63ff2",
    "frames": 4251,
    "failure": null
   },
   "doomsday-collasso": {
-   "strict": "892226eb1050ce42",
-   "diag": "6d32e1b8c55ef733",
-   "frames": 3473,
+   "strict": "7575e59a12398fae",
+   "diag": "f44265c76a993ad3",
+   "frames": 3487,
    "failure": null
   },
   "doomsday-respinto": {
-   "strict": "d05b9e627833826a",
-   "diag": "8819b9bc83449850",
-   "frames": 1601,
+   "strict": "237c0747c1d4063b",
+   "diag": "b1369dad830f583a",
+   "frames": 6623,
    "failure": null
   },
   "doomsday-senza-boss": {
-   "strict": "8ebb34c8e513138e",
-   "diag": "4b77b7a172ea2c0e",
+   "strict": "c88ec31e9c38ee57",
+   "diag": "0d5364c2ed886b3d",
    "frames": 2419,
    "failure": null
   },
   "doomsday-sollievo": {
-   "strict": "107b6289d748fd90",
-   "diag": "d6b0ae61afdcc646",
-   "frames": 1825,
+   "strict": "de17eb0432513536",
+   "diag": "fb5df915a2054b2e",
+   "frames": 1521,
    "failure": null
   },
   "esplora-barrato": {
-   "strict": "429ac204ee4772d4",
-   "diag": "d1995c459601da9d",
+   "strict": "8d0529525dd593ac",
+   "diag": "cee413429b3ee0cc",
    "frames": 3159,
    "failure": null
   },
   "esplora-bus": {
-   "strict": "22344e77ef422905",
-   "diag": "94d703eac719a009",
+   "strict": "79d9f3ebeb407553",
+   "diag": "2cd11e5b5d10d543",
    "frames": 3701,
    "failure": null
   },
   "esplora-cantina": {
-   "strict": "b7e0e79e437fece7",
-   "diag": "d7145b98f473150e",
+   "strict": "0a0e0938920f5229",
+   "diag": "82f0af9c5e24178d",
    "frames": 2917,
    "failure": null
   },
   "esplora-caso": {
-   "strict": "2cffc8dc61d2e7ba",
-   "diag": "53b54f451348946a",
-   "frames": 2667,
+   "strict": "66454eac2a8a9433",
+   "diag": "768951e7a263afec",
+   "frames": 2643,
    "failure": null
   },
   "esplora-custode": {
-   "strict": "00a336113b8a2a60",
-   "diag": "23dcc40d0c29fd80",
+   "strict": "549d4ef595566a61",
+   "diag": "009891bb36312ce4",
    "frames": 2609,
    "failure": null
   },
   "esplora-galliate": {
-   "strict": "91d5f9458717db44",
-   "diag": "b3f5a92d1056a321",
-   "frames": 2979,
+   "strict": "37f64f727c252c02",
+   "diag": "a6104f63a2079530",
+   "frames": 3015,
    "failure": null
   },
   "esplora-marcetti": {
-   "strict": "2a73ca6f667a3ea4",
-   "diag": "4572e98bfcc49917",
-   "frames": 3017,
+   "strict": "ba11e9bd5971048d",
+   "diag": "ab1a7d9058d73aff",
+   "frames": 3029,
    "failure": null
   },
   "esplora-mente": {
-   "strict": "d34fd8e8e4100109",
-   "diag": "9913b2d67d1bee32",
+   "strict": "35c2ff43932ed2a5",
+   "diag": "dedda6958ec02398",
    "frames": 2563,
    "failure": null
   },
   "esplora-mente-cancella": {
-   "strict": "d34fd8e8e4100109",
-   "diag": "9913b2d67d1bee32",
+   "strict": "35c2ff43932ed2a5",
+   "diag": "dedda6958ec02398",
    "frames": 2563,
    "failure": null
   },
   "esplora-mente-porta": {
-   "strict": "e92c590c1c35fa46",
-   "diag": "9913b2d67d1bee32",
+   "strict": "ce3d222bb0cdd4c5",
+   "diag": "dedda6958ec02398",
    "frames": 2563,
    "failure": null
   },
   "esplora-nucleo": {
-   "strict": "8368c8376acf274e",
-   "diag": "6aa779f9a97b2c8a",
+   "strict": "8a81fa61a3234b89",
+   "diag": "b8d46a7f1336b6bb",
    "frames": 3423,
    "failure": null
   },
   "esplora-perduta": {
-   "strict": "dda494cd885d61da",
-   "diag": "0addce639ade009e",
+   "strict": "e823db7351e757d7",
+   "diag": "a21f9d4ffdab5012",
    "frames": 3383,
    "failure": null
   },
   "esplora-ricordi": {
-   "strict": "2e603e9d2373d0c1",
-   "diag": "3e82ab5454d6c5f3",
+   "strict": "0bbe352ad5ff0c0c",
+   "diag": "2ef3d3cdeefe05d3",
    "frames": 2781,
    "failure": null
   },
   "esplora-rio": {
-   "strict": "307aa980139b5a80",
-   "diag": "8842793104afd4f1",
+   "strict": "52d51f6c34cbdd9e",
+   "diag": "bfa75f215244b2ab",
    "frames": 3763,
    "failure": null
   },
   "esplora-ruhra": {
-   "strict": "08aa69afbfed2117",
-   "diag": "c344354233ed9227",
+   "strict": "04143fe3801211ce",
+   "diag": "156b067b19104afd",
    "frames": 3571,
    "failure": null
   },
   "esplora-santuario": {
-   "strict": "90bce630f4991cec",
-   "diag": "8009ac589e9f3f39",
-   "frames": 3379,
+   "strict": "2f83e1f129ec584c",
+   "diag": "5131b852f8d4c285",
+   "frames": 3389,
    "failure": null
   },
   "esplora-sorveglianza": {
-   "strict": "dee70bfcda3a859d",
-   "diag": "896bd4a2f1a00d5a",
+   "strict": "205c8c69f2a713a6",
+   "diag": "0c6f1e54ff679843",
    "frames": 3729,
    "failure": null
   },
   "esplora-stabilimento": {
-   "strict": "8bee18d2cc52a75d",
-   "diag": "e2093b5d81075984",
+   "strict": "d10146ddef9c412a",
+   "diag": "25638a95440fb0ba",
    "frames": 2873,
    "failure": null
   },
   "esplora-tana": {
-   "strict": "72d80485f4651995",
-   "diag": "88a4a9d040a445a8",
-   "frames": 3661,
+   "strict": "6a6c0d8231f091f7",
+   "diag": "d50de6f72de85b32",
+   "frames": 3685,
    "failure": null
   },
   "esplora-tecnokill": {
-   "strict": "74c96ecd32692d32",
-   "diag": "a8799d0973d6af4f",
-   "frames": 3569,
+   "strict": "e612fa5a5ac988c3",
+   "diag": "e161e2ce20b85d03",
+   "frames": 3593,
    "failure": null
   },
   "esplora-trenbolone": {
-   "strict": "23a78df718934f4f",
-   "diag": "f1f57f1a70503734",
+   "strict": "5de2b96741f62033",
+   "diag": "17d96f184e18cd84",
    "frames": 2855,
    "failure": null
   },
   "esplora-void": {
-   "strict": "58ce93089382bb30",
-   "diag": "d68af64f797d611e",
-   "frames": 3759,
+   "strict": "886ee58f631b5c95",
+   "diag": "e018878b93e7e905",
+   "frames": 3723,
    "failure": null
   },
   "film-coda": {
-   "strict": "f83e6bb4bfe2fc9c",
-   "diag": "49a39edeed516807",
-   "frames": 1384,
+   "strict": "46a0ac56088a3077",
+   "diag": "75a6470127edfc94",
+   "frames": 2474,
    "failure": null
   },
   "film-uscita": {
-   "strict": "1a4b2d14c75114ba",
-   "diag": "ae5c87b5f0642990",
+   "strict": "9f6ccdfa7b7f8b2f",
+   "diag": "1a5164ebfd023378",
    "frames": 642,
    "failure": null
   },
   "finale-consegna": {
-   "strict": "f72b8f6e6f3f9a0a",
-   "diag": "a09d9a8040b4e0b6",
-   "frames": 4252,
+   "strict": "f598ef3493f5faf4",
+   "diag": "270da065c76ba7aa",
+   "frames": 4205,
    "failure": null
   },
   "finale-dei": {
-   "strict": "8c8f2856434e5351",
-   "diag": "a3b9abb5625296a1",
-   "frames": 5757,
+   "strict": "dfdc3351f68ecc7b",
+   "diag": "452af2191f2d9a2a",
+   "frames": 5369,
    "failure": null
   },
   "finale-giorno30-vuoto": {
-   "strict": "3db6382b902d699d",
-   "diag": "155bb9ad8029ab84",
-   "frames": 4637,
+   "strict": "f8c6549b3aa776a4",
+   "diag": "4780596b5593ab1c",
+   "frames": 4695,
    "failure": null
   },
   "finale-patto": {
-   "strict": "ff2c646625b67e75",
-   "diag": "24fe3d5ae38cc017",
-   "frames": 5004,
+   "strict": "f36dd8f58449486a",
+   "diag": "bb2d60253778849c",
+   "frames": 4920,
    "failure": null
   },
   "finale-quaderno": {
-   "strict": "06876e069196fc60",
-   "diag": "478de60f107ee682",
-   "frames": 5887,
+   "strict": "16c602040cd541a0",
+   "diag": "bbd30d1901bae8a3",
+   "frames": 5877,
    "failure": null
   },
   "finale-riscatto": {
-   "strict": "191bdb98d7252beb",
-   "diag": "cc559e9cde7414fa",
-   "frames": 6685,
+   "strict": "84bbcad26d2e25e4",
+   "diag": "8a08a056b96e22ad",
+   "frames": 6499,
    "failure": null
   },
   "finale-riscatto-senza-caso": {
-   "strict": "2623b00f6ce00580",
-   "diag": "6eb81330ec3704de",
-   "frames": 4749,
+   "strict": "fd4f64df424800f0",
+   "diag": "3e9c601b19c65a4b",
+   "frames": 4790,
    "failure": null
   },
   "finale-riscatto-solo": {
-   "strict": "e7a41df4ce2169e3",
-   "diag": "8e3f00fb43eb4c7f",
-   "frames": 5045,
+   "strict": "d824e9a1bdae58b1",
+   "diag": "c25fbc73a8f064f7",
+   "frames": 5086,
    "failure": null
   },
   "finale-sconfitta": {
-   "strict": "ed46b3ff0f87662b",
-   "diag": "9ff139812b80a394",
-   "frames": 7596,
+   "strict": "1ff1c534cd12a016",
+   "diag": "cb3a075b8eed9c25",
+   "frames": 7421,
    "failure": null
   },
   "flauto-fatto": {
-   "strict": "92a5457216efa755",
-   "diag": "b0d0639b1b57c9ef",
-   "frames": 774,
+   "strict": "c52e6baa838e15a9",
+   "diag": "d90adb0857e253a4",
+   "frames": 835,
    "failure": null
   },
   "gamepad": {
-   "strict": "03f6aa004554b61b",
+   "strict": "a749bec559fc6349",
    "diag": "2ca723af625f5a21",
    "frames": 330,
    "failure": null
   },
   "guggu-senza-ivan": {
-   "strict": "1d0f206c16f7f9ff",
-   "diag": "b514e8625242f524",
-   "frames": 521,
+   "strict": "945ff4890ca604ab",
+   "diag": "a59545e5a2ec87f0",
+   "frames": 569,
    "failure": null
   },
   "guida-perduta": {
-   "strict": "46098aa414592e0d",
-   "diag": "f164325023932aae",
+   "strict": "ee57dce0c9139ded",
+   "diag": "8d38c42612cc4444",
    "frames": 341,
    "failure": null
   },
   "guida-santuario": {
-   "strict": "ecc6f050853e11e9",
-   "diag": "1587e6b4c962e6c3",
+   "strict": "8a5aff1b34f33f6b",
+   "diag": "afb89e2bea507069",
    "frames": 369,
    "failure": null
   },
   "guida-void": {
-   "strict": "7d0d59f553b61f1f",
-   "diag": "4756ffbcd77a0140",
+   "strict": "36e8d18415ce3c38",
+   "diag": "69032a5f200705a6",
    "frames": 1393,
    "failure": null
   },
   "lametta-attesa": {
-   "strict": "5bef4d43ae1cb30b",
-   "diag": "26b9ba223138f709",
+   "strict": "cf29f49904db041f",
+   "diag": "ba0c1b4d2147b40c",
    "frames": 1059,
    "failure": null
   },
   "lastre-ricordi": {
-   "strict": "7e4cd0f645518b7f",
-   "diag": "45d1b3ffe61a8a7b",
+   "strict": "2949482de098b077",
+   "diag": "d6efed3ce57bfb2e",
    "frames": 669,
    "failure": null
   },
   "lastre-tana": {
-   "strict": "ccc8ec400f2a8aa0",
-   "diag": "9c5e5ddfe7e05611",
+   "strict": "7fc52c54acb7f076",
+   "diag": "d8b11a6844f5f639",
    "frames": 819,
    "failure": null
   },
   "livello-barrato": {
-   "strict": "b0be205c0e28a68c",
-   "diag": "1b6662ceb8117aed",
+   "strict": "2648c477acd3119b",
+   "diag": "24e11884b8d65796",
    "frames": 681,
    "failure": null
   },
   "livello-bus": {
-   "strict": "6069c2e82aa538ed",
+   "strict": "62e292d3bce0bc25",
    "diag": "06bafd01a2610f9e",
    "frames": 466,
    "failure": null
   },
   "livello-cantina": {
-   "strict": "3d54ec4d6e10badc",
+   "strict": "6d2ecef5678576bf",
    "diag": "52e9e88927757542",
    "frames": 952,
    "failure": null
   },
   "livello-caso": {
-   "strict": "b2ec49208d622af8",
-   "diag": "cf9682eaacc878de",
+   "strict": "e1990a8fc1dc56a3",
+   "diag": "422f1dcd84a0ef8a",
    "frames": 889,
    "failure": null
   },
   "livello-custode": {
-   "strict": "31d30c031a154383",
-   "diag": "206b13e7fd939f61",
+   "strict": "55784e73453002df",
+   "diag": "6ba8e06ff5657d75",
    "frames": 952,
    "failure": null
   },
   "livello-galliate": {
-   "strict": "4313e1f3133c3fdb",
+   "strict": "86ca49dc4f7009aa",
    "diag": "df30a348f0b9fed2",
    "frames": 482,
    "failure": null
   },
   "livello-marcetti": {
-   "strict": "697eeca2e8d19eea",
+   "strict": "160988032ecedef1",
    "diag": "a676d20fa2a4256a",
    "frames": 482,
    "failure": null
   },
   "livello-mente": {
-   "strict": "c92a0889e9be9e0f",
+   "strict": "4db1b33cc4726a91",
    "diag": "370c89331799a386",
    "frames": 745,
    "failure": null
   },
   "livello-nucleo": {
-   "strict": "29fae8d6b34fc927",
-   "diag": "11d4e068dc2d5324",
+   "strict": "a1901055d951796f",
+   "diag": "8de5737a401d2270",
    "frames": 952,
    "failure": null
   },
   "livello-perduta": {
-   "strict": "b4b3428d1b500e8b",
+   "strict": "d6c031af15134d4c",
    "diag": "62e13a9535417ed0",
    "frames": 462,
    "failure": null
   },
   "livello-piazza": {
-   "strict": "042c49fb9d10cd6e",
+   "strict": "0d57cda848e9a147",
    "diag": "391c4b4a9fbe601b",
    "frames": 681,
    "failure": null
   },
   "livello-ricordi": {
-   "strict": "ced348fff06f8368",
+   "strict": "5650a8d1dd0e0380",
    "diag": "b0862a2ce21c8bdf",
    "frames": 952,
    "failure": null
   },
   "livello-rio": {
-   "strict": "79ea5c05980b7cd7",
-   "diag": "c0bbfb7ea8e63999",
+   "strict": "3bd60c83c7a3e3a7",
+   "diag": "a423f8e6312531d3",
    "frames": 681,
    "failure": null
   },
   "livello-ruhra": {
-   "strict": "7e23807a8c408cf9",
+   "strict": "9068d6cbf8203c1d",
    "diag": "806e00d104102638",
    "frames": 745,
    "failure": null
   },
   "livello-santuario": {
-   "strict": "7aac66a43ebfdb78",
+   "strict": "510d327e7cabfa53",
    "diag": "da27df783d405afc",
    "frames": 482,
    "failure": null
   },
   "livello-sorveglianza": {
-   "strict": "b1edae933e64b71b",
-   "diag": "01b43bcf63e0509b",
+   "strict": "871667a45a9d2d1e",
+   "diag": "e7d28c5c81482276",
    "frames": 889,
    "failure": null
   },
   "livello-stabilimento": {
-   "strict": "64f9427b74a21d45",
+   "strict": "5be1ba71916fed26",
    "diag": "99346c0c066cf14b",
    "frames": 681,
    "failure": null
   },
   "livello-tana": {
-   "strict": "d5bbf4d1a94590de",
-   "diag": "37af4d67d6cc2c1a",
+   "strict": "2db4ede8cc6b1a8f",
+   "diag": "36f11cad67479658",
    "frames": 717,
    "failure": null
   },
   "livello-tecnokill": {
-   "strict": "6136f1dd93d266e4",
-   "diag": "69316025d2cb4761",
+   "strict": "058d94cb97b89ad0",
+   "diag": "d2625317f44cbae1",
    "frames": 548,
    "failure": null
   },
   "livello-trenbolone": {
-   "strict": "c749e8658cc151b1",
+   "strict": "32a06a56de7c271a",
    "diag": "d80b5e3a3fece10a",
    "frames": 681,
    "failure": null
   },
   "livello-void": {
-   "strict": "4d5e4e4a39191065",
+   "strict": "8bc5910c9ab5b109",
    "diag": "641d5ba07f971007",
    "frames": 952,
    "failure": null
   },
   "menu-nuova-partita": {
-   "strict": "473e9a02003fdc43",
+   "strict": "692eb79c7415e042",
    "diag": "50d01083ab3ec7c2",
    "frames": 881,
    "failure": null
   },
   "menu-schermate": {
-   "strict": "edaf42fd4b0c5b3a",
+   "strict": "c0db11958669fa4c",
    "diag": "204dace404019d71",
    "frames": 699,
    "failure": null
   },
   "morte-barre": {
-   "strict": "0fa9daaf2361c4ce",
+   "strict": "0d338e58ddab5032",
    "diag": "504c438e28b34a3e",
    "frames": 1502,
    "failure": null
   },
   "nastro-barrato": {
-   "strict": "f9367c8b89131e23",
-   "diag": "3b692673c357b135",
+   "strict": "ac37646361bd3485",
+   "diag": "6c65ddc5189dacf9",
    "frames": 2809,
    "failure": null
   },
   "nastro-bus": {
-   "strict": "f4b98bab6c7ed97d",
-   "diag": "5e4dd2f1ecb9da7a",
+   "strict": "ed72f4c8c7c3aa3e",
+   "diag": "569a8d9ba504a4b4",
    "frames": 2151,
    "failure": null
   },
   "nastro-cantina": {
-   "strict": "31a38890ac3470c4",
-   "diag": "1e9720ba639d5ac9",
+   "strict": "12ecf4781038e9ff",
+   "diag": "fe6a75eef6629bff",
    "frames": 3427,
    "failure": null
   },
   "nastro-caso": {
-   "strict": "c49177b8f9bc81b1",
-   "diag": "a3511b530ddba523",
+   "strict": "e312ceb8ea9f345e",
+   "diag": "271d9991fd1daa9f",
    "frames": 3188,
    "failure": null
   },
   "nastro-custode": {
-   "strict": "c6c40964d5cfc983",
-   "diag": "edc10cda155d028e",
+   "strict": "75422ce45d2326af",
+   "diag": "d714f5f435e13419",
    "frames": 3779,
    "failure": null
   },
   "nastro-galliate": {
-   "strict": "e76f3ef71928ba8f",
-   "diag": "554af72ab054e7d6",
+   "strict": "7f6efaab840f4210",
+   "diag": "fc8040f456c0d70d",
    "frames": 3165,
    "failure": null
   },
   "nastro-marcetti": {
-   "strict": "aa1e675e93396262",
+   "strict": "76c54395cd81e19e",
    "diag": "07f32541698afedb",
    "frames": 2880,
    "failure": null
   },
   "nastro-mente": {
-   "strict": "dd62072c7b78411c",
-   "diag": "0c67027950d7af7b",
+   "strict": "aa32818e147d3f28",
+   "diag": "df4ddca5810eed4b",
    "frames": 2586,
    "failure": null
   },
   "nastro-nucleo": {
-   "strict": "6a3ec05e4f701091",
-   "diag": "20667337033be398",
+   "strict": "2e976f93463f7eaf",
+   "diag": "f296afc7d634c9fc",
    "frames": 2637,
    "failure": null
   },
   "nastro-perduta": {
-   "strict": "6bb5dec8a0c357ec",
-   "diag": "d5d997990d59f18c",
+   "strict": "4a9bded14f82931c",
+   "diag": "b906a60316c9ed9b",
    "frames": 2579,
    "failure": null
   },
   "nastro-ricordi": {
-   "strict": "69beaf8dbc8e7427",
-   "diag": "5790a6203950fe39",
+   "strict": "7bf29dd46c9c0ea7",
+   "diag": "b8dd1cfec4b28b1e",
    "frames": 3125,
    "failure": null
   },
   "nastro-rio": {
-   "strict": "88738ef3b151f3a5",
-   "diag": "224e1352b4159c10",
+   "strict": "22befdd063b4a9cb",
+   "diag": "6b0d9b0609195c2a",
    "frames": 2622,
    "failure": null
   },
   "nastro-ruhra": {
-   "strict": "f141eab2943794c9",
-   "diag": "0d723c13051aecf8",
+   "strict": "ccc28ea6061f9bd5",
+   "diag": "c7d8a7a0ae1ed716",
    "frames": 2340,
    "failure": null
   },
   "nastro-santuario": {
-   "strict": "7f3b9c1e665e9976",
-   "diag": "3cab130f0c6ea9bf",
+   "strict": "a5ddb72176101375",
+   "diag": "5dfc7bb98d10647a",
    "frames": 2771,
    "failure": null
   },
   "nastro-sorveglianza": {
-   "strict": "2cee901dab8a6d68",
-   "diag": "314c71ec92242a0f",
+   "strict": "ee6ecc57f26bc16e",
+   "diag": "3c6f8099fd9cec6e",
    "frames": 3379,
    "failure": null
   },
   "nastro-stabilimento": {
-   "strict": "0ad391b325aed065",
-   "diag": "39dbc3fba3e72d5c",
+   "strict": "59b9af54e686fb3c",
+   "diag": "c523472f245497d1",
    "frames": 3478,
    "failure": null
   },
   "nastro-tana": {
-   "strict": "319ecabe98f797fa",
-   "diag": "1a2b1081fb074b89",
+   "strict": "b142071b109b0bb9",
+   "diag": "94565a3a6b8f2d14",
    "frames": 2666,
    "failure": null
   },
   "nastro-tecnokill": {
-   "strict": "c37dacfa01ca5694",
-   "diag": "072274844651f893",
+   "strict": "4bf7800da9c4f2f7",
+   "diag": "75ec5a98b22a6e9f",
    "frames": 3062,
    "failure": null
   },
   "nastro-trenbolone": {
-   "strict": "d4c4fdd0eb05aa6c",
-   "diag": "8cca6e5dddc0beee",
+   "strict": "11d721d026628041",
+   "diag": "bd100c3bbb15f36a",
    "frames": 2927,
    "failure": null
   },
   "nastro-void": {
-   "strict": "964fa5ddcdef31bc",
-   "diag": "9fb6f0b539f64200",
+   "strict": "7a8f8f3cc087eeb6",
+   "diag": "aa8049abfd1ab375",
    "frames": 3541,
    "failure": null
   },
   "nidi-cantina": {
-   "strict": "0ca381dd90e81669",
+   "strict": "1bb7e019e76dfc6b",
    "diag": "c3042d7889fe0428",
    "frames": 621,
    "failure": null
   },
   "nidi-rio": {
-   "strict": "42af061f9a5d0273",
+   "strict": "a0305d8b92715f94",
    "diag": "965757e1854f1228",
    "frames": 243,
    "failure": null
   },
   "nidi-stabilimento": {
-   "strict": "d587f20b259f31d1",
-   "diag": "71b3225100fc53c2",
+   "strict": "6135d1666a35a589",
+   "diag": "aa4dd13a01028710",
    "frames": 603,
    "failure": null
   },
   "npc-acqua-due-volte": {
-   "strict": "dfa3a0ad03948243",
-   "diag": "16af86c7bb752585",
+   "strict": "d200e6daa7184ad0",
+   "diag": "ba2113fb0dbd53cf",
    "frames": 415,
    "failure": null
   },
   "npc-ivan-dopo": {
-   "strict": "8ccf887e762e5848",
-   "diag": "c08ca51e6ff859fb",
+   "strict": "3ade22d52b776388",
+   "diag": "b929f07203624ba1",
    "frames": 385,
    "failure": null
   },
   "npc-lametta-libero": {
-   "strict": "1f8e6222580780e3",
+   "strict": "ce38737fa59ad527",
    "diag": "d54b9f52bc5e306a",
    "frames": 427,
    "failure": null
   },
   "npc-markolino-dono": {
-   "strict": "293667768277010f",
+   "strict": "171af297e1c1a37c",
    "diag": "f97057399da156f9",
    "frames": 397,
    "failure": null
   },
   "npc-piema-dopo": {
-   "strict": "c02ef0031cba68f5",
+   "strict": "9c981b60c6f01675",
    "diag": "761919a784931bbc",
    "frames": 391,
    "failure": null
   },
   "npc-piema-senza": {
-   "strict": "9913a0e5de28dcb7",
+   "strict": "2bf583b799621386",
    "diag": "385d6e5b6e413971",
    "frames": 439,
    "failure": null
   },
   "npc-romero-lochef": {
-   "strict": "c17bf552c11dc2c8",
+   "strict": "fc0d77574d9b3ea6",
    "diag": "62ae543ee90fce87",
    "frames": 409,
    "failure": null
   },
   "npc-samatt-libero": {
-   "strict": "16d60b7d45a9b887",
+   "strict": "b7ab2621c91b009f",
    "diag": "0ca5f2c9828f13d4",
    "frames": 433,
    "failure": null
   },
   "npc-smela-povero": {
-   "strict": "b259d31589f4da00",
+   "strict": "44f7efd55d37cf05",
    "diag": "b091abf637397f83",
    "frames": 427,
    "failure": null
   },
   "npc-spaccino-dopo-flauto": {
-   "strict": "4a0203b7cb84342f",
+   "strict": "0dc20f270d872cf0",
    "diag": "381ec7f2e3620eb5",
    "frames": 370,
    "failure": null
   },
   "npc-spaccino-fatto": {
-   "strict": "78c7f1bf3c3ecab1",
+   "strict": "0d2257825fb3581c",
    "diag": "3460910f89b77cf2",
    "frames": 373,
    "failure": null
   },
   "npc-walter-dopo": {
-   "strict": "2159e746fe2b6944",
+   "strict": "f6bda84b56fb0e3d",
    "diag": "91062f01db569479",
    "frames": 409,
    "failure": null
   },
   "npc-walter-dorme": {
-   "strict": "0b850b42af066ae6",
-   "diag": "6a1cebd52f96bbee",
+   "strict": "dfcb2f9f181ab54f",
+   "diag": "c4bea5502e323c00",
    "frames": 373,
    "failure": null
   },
   "ombra-beta": {
-   "strict": "eee420f548832a44",
-   "diag": "9113c0730e1a8190",
+   "strict": "61c7511a8c5cbd8c",
+   "diag": "09f9ddf14a20bba3",
    "frames": 2687,
    "failure": null
   },
   "ombra-premium": {
-   "strict": "d59dc2423372f29d",
-   "diag": "70870df98a9709e0",
-   "frames": 4990,
+   "strict": "f16bd3a3a76aa257",
+   "diag": "3feb4544a3fb1bcf",
+   "frames": 4792,
    "failure": null
   },
   "pausa": {
-   "strict": "002a1cdea67206bd",
+   "strict": "90e9081f1ae846a0",
    "diag": "582b737ce3c79778",
    "frames": 2837,
    "failure": null
   },
   "pedro-senza-ricordi": {
-   "strict": "d480f937ca22605a",
-   "diag": "c34d64e3b58b3c01",
-   "frames": 1405,
+   "strict": "fe6ffa036be9927a",
+   "diag": "58bbd66c73aebba4",
+   "frames": 1312,
    "failure": null
   },
   "piazza": {
-   "strict": "0e59f56aa1dbef7b",
-   "diag": "5a6426c7cf308d6d",
-   "frames": 1114,
+   "strict": "e866c612056a01c7",
+   "diag": "b403bdae6dd2bec5",
+   "frames": 1102,
    "failure": null
   },
   "piazza-fine": {
-   "strict": "1146dc5f1995cc05",
-   "diag": "589a4050b44003c5",
-   "frames": 903,
+   "strict": "5d94933ee6b46071",
+   "diag": "b7da22ce21759a2e",
+   "frames": 933,
    "failure": null
   },
   "piazza-inizio": {
-   "strict": "efa0ea8d485b1751",
-   "diag": "e4f2d6288fc13aca",
+   "strict": "e4ad3d5a3fdccd1c",
+   "diag": "b41b3d0d010556e7",
    "frames": 587,
    "failure": null
   },
   "piazza-meta": {
-   "strict": "7cfea05ae25a598d",
-   "diag": "f466b979b1b484fb",
-   "frames": 681,
+   "strict": "d5915a2f54f0137b",
+   "diag": "7a6f3ae7d799964e",
+   "frames": 657,
    "failure": null
   },
   "registrata-ema-bus": {
-   "strict": "93ecb8fb937d54b5",
-   "diag": "725a05e4faae1b38",
+   "strict": "85b4097c7c18d121",
+   "diag": "943e2ade821c33bf",
    "frames": 12841,
    "failure": null
   },
   "registrata-ema-rio": {
-   "strict": "c54c2d5f174820c9",
-   "diag": "98fb3f63e4d1702e",
+   "strict": "ac56f6e7d8db3c40",
+   "diag": "1b9dcd93bb0ccc3e",
    "frames": 23526,
    "failure": null
   },
   "ridimensiona": {
-   "strict": "c93a8219e95a8d90",
+   "strict": "26a6a1d5eb3e15cc",
    "diag": "1933699324aac953",
    "frames": 265,
    "failure": null
   },
   "riflesso-senza-flow": {
-   "strict": "981c226c8c0eb02b",
+   "strict": "d8a65a4fc714a6ab",
    "diag": "e82256f20494b081",
    "frames": 107,
    "failure": null
   },
   "rimando-nucleo": {
-   "strict": "7bcee0c1fc982187",
-   "diag": "cfeaf5abc2527310",
+   "strict": "b1f50a4d82b714c2",
+   "diag": "f22093239fcb9a36",
    "frames": 10957,
    "failure": null
   },
   "rimando-sorveglianza": {
-   "strict": "13720cd8a18a1886",
-   "diag": "d1c922d91ae76daf",
-   "frames": 7730,
+   "strict": "0a457abbafbc2df7",
+   "diag": "300b430958b2e73a",
+   "frames": 7723,
    "failure": null
   },
   "rimando-tecnokill": {
-   "strict": "2eb22811465532e3",
-   "diag": "0a07fcc56070e452",
-   "frames": 7967,
+   "strict": "8ec127044fcd002a",
+   "diag": "5e554ad9173c56f6",
+   "frames": 8000,
    "failure": null
   },
   "rio-cura": {
-   "strict": "006f6c33949aa99a",
+   "strict": "069410bff87a67be",
    "diag": "8c9a10e0d2afb7d5",
    "frames": 237,
    "failure": null
   },
   "schianto": {
-   "strict": "dc2ffa1b86fcc58f",
+   "strict": "83f5427e5e166f4b",
    "diag": "4fa0ce27f2d88efd",
    "frames": 619,
    "failure": null
   },
   "schianto-santuario": {
-   "strict": "b49f57393988f81e",
-   "diag": "058c23a8e7bf4a35",
+   "strict": "be54715d44621461",
+   "diag": "4bc839f36f8d2ccb",
    "frames": 367,
    "failure": null
   },
   "schianto-tana": {
-   "strict": "74f2e1ee8ad3bd15",
-   "diag": "cd0589f438554bdf",
+   "strict": "3061cd0cc891b5f2",
+   "diag": "1eb8f3298bc8fd5c",
    "frames": 303,
    "failure": null
   },
   "sigillo-bus-specchio": {
-   "strict": "efe3372bb2de70c9",
+   "strict": "0114f2538c141eec",
    "diag": "a8ae1843cd0b0e93",
    "frames": 391,
    "failure": null
   },
   "sigillo-perduta-camino": {
-   "strict": "6d6f5d498badce35",
-   "diag": "fb5334b5dc9fcc2c",
+   "strict": "06e4860a19968996",
+   "diag": "f8e60d35e953bd71",
    "frames": 245,
    "failure": null
   },
   "sigillo-perduta-cortina": {
-   "strict": "3d14f8654a07cc14",
-   "diag": "38ddc0a315ef610b",
+   "strict": "c6818b88d722b638",
+   "diag": "3bc8cb40d95bdc32",
    "frames": 279,
    "failure": null
   },
   "sigillo-perduta-rimbalzo": {
-   "strict": "ed8d6166009b9f79",
+   "strict": "d17f1784182379c1",
    "diag": "c9f40bae0ada90c1",
    "frames": 245,
    "failure": null
   },
   "sigillo-rio-resina": {
-   "strict": "44972589db5530c9",
-   "diag": "1557c86bbfdc9dc0",
+   "strict": "4ff89d907e3a7c7c",
+   "diag": "c4b2e7f8e8881352",
    "frames": 393,
    "failure": null
   },
   "sigillo-ruhra-teorema": {
-   "strict": "787d874214e9bc01",
-   "diag": "1a3c953584e8db15",
+   "strict": "3030e1ab0d4b0437",
+   "diag": "41ebe914aeafb545",
    "frames": 537,
    "failure": null
   },
   "sigillo-santuario-risonanza": {
-   "strict": "11035da800f632bf",
-   "diag": "50a5828748bd630c",
+   "strict": "e9ed5115fef972c5",
+   "diag": "dfdfdb992e8744fb",
    "frames": 481,
    "failure": null
   },
   "sigillo-sorveglianza-ricevitore": {
-   "strict": "374d666c30e6dc97",
-   "diag": "d6081ebd7beaf52f",
+   "strict": "5f86eafff5c85545",
+   "diag": "f7252e7b7bc9eb56",
    "frames": 979,
    "failure": null
   },
   "sigillo-trenbolone-miasma": {
-   "strict": "45d36f4362868c78",
-   "diag": "1e94557ef507d88a",
+   "strict": "37efb553e04ad350",
+   "diag": "2aa907eb59bf4b79",
    "frames": 393,
    "failure": null
   },
   "spine": {
-   "strict": "3e1762ac4aa3542c",
-   "diag": "9031a1f2eb3a4fea",
+   "strict": "72540eaffb491345",
+   "diag": "454f2f8e9493180d",
    "frames": 361,
    "failure": null
   },
   "tana-armadio": {
-   "strict": "0a867dc63288a14f",
-   "diag": "bd49bff7370e970f",
+   "strict": "e4c9088cee05eb4e",
+   "diag": "d68180b25ee07f6b",
    "frames": 927,
    "failure": null
   },
   "telefono": {
-   "strict": "fa60257e843cda21",
+   "strict": "4c56d6c9baf40a32",
    "diag": "a45fee9d64e53279",
    "frames": 1668,
    "failure": null
   },
   "trentatre": {
-   "strict": "0666878ddc9d3a40",
-   "diag": "fc1f5c704aaa353d",
-   "frames": 771,
+   "strict": "281900b4b0c83fc8",
+   "diag": "4c18d8bf5521091b",
+   "frames": 794,
    "failure": null
   },
   "uscita-chiusa-galliate": {
-   "strict": "e8f4fdef165563bd",
-   "diag": "787347698efdbd96",
+   "strict": "e61737d3e69451af",
+   "diag": "62e25dd0b6ad10e9",
    "frames": 649,
    "failure": null
   },
   "uscita-chiusa-ruhra": {
-   "strict": "6f5f67d423889d36",
-   "diag": "b0cf4aa76c3e5c22",
+   "strict": "f930f197cad5e16a",
+   "diag": "730ca43cab091793",
    "frames": 661,
    "failure": null
   },
   "uscita-chiusa-trenbolone": {
-   "strict": "0742207c02a5990c",
+   "strict": "88c537ae7831161b",
    "diag": "80b47f1626e7f311",
    "frames": 631,
    "failure": null
   },
   "uscita-chiusa-void": {
-   "strict": "4377fc14bb857c35",
-   "diag": "a7cabe4df31224cf",
+   "strict": "22313faec8f81f91",
+   "diag": "92b8c150d9c6a4f1",
    "frames": 831,
    "failure": null
   },
   "viaggio": {
-   "strict": "916b4aa6bea1689d",
-   "diag": "7c4f2cc2e77a24d1",
+   "strict": "2d48b6b6c57e1360",
+   "diag": "2d32e5d0595f9f6e",
    "frames": 373,
    "failure": null
   },
   "wave-boss-breccio": {
-   "strict": "26eddf09680448b3",
-   "diag": "e687756b3606b7d2",
+   "strict": "1a0ff2f576822691",
+   "diag": "811a37f9a949b032",
    "frames": 1477,
    "failure": null
   },
   "wave-boss-guggu": {
-   "strict": "a57a6a603d7d3299",
-   "diag": "0e7d662c7fbf2be0",
-   "frames": 2693,
+   "strict": "a28dabd9e8c7d3f0",
+   "diag": "2852eb4277c63599",
+   "frames": 3545,
    "failure": null
   },
   "wave-boss-limite": {
-   "strict": "80a7c1216a1453ac",
-   "diag": "cc9b81c7301247b7",
-   "frames": 3621,
+   "strict": "c4dbda6ffaf2d3e6",
+   "diag": "d31be36a1e6268bc",
+   "frames": 3402,
    "failure": null
   },
   "wave-boss-ombra": {
-   "strict": "4783f401fccf122e",
-   "diag": "c434e0ba4cb43563",
-   "frames": 3055,
+   "strict": "688e7156e7107c75",
+   "diag": "d67f557c5e3af2b6",
+   "frames": 3054,
    "failure": null
   },
   "wave-boss-ticummi": {
-   "strict": "cbde25c554920564",
-   "diag": "df91975045f1c0f2",
+   "strict": "bf25354622aa737a",
+   "diag": "461839a6001dee14",
    "frames": 1483,
    "failure": null
   },
   "wave-bus": {
-   "strict": "9743445f06e465c0",
-   "diag": "943ebbbac4113019",
-   "frames": 4074,
+   "strict": "b814b9375b86469e",
+   "diag": "137dbc7ba2497496",
+   "frames": 3584,
    "failure": null
   },
   "wave-cantina": {
-   "strict": "eaed08620d5acd2a",
-   "diag": "66717da3645eb54a",
-   "frames": 3297,
+   "strict": "8a95c92ed75b2994",
+   "diag": "2d591ddf4ab4ef0e",
+   "frames": 3817,
    "failure": null
   },
   "wave-caso": {
-   "strict": "235e4e825d335f3b",
-   "diag": "a6bf01fe216d4a20",
-   "frames": 3776,
+   "strict": "188b30676a0d77bf",
+   "diag": "61061c0f436670d5",
+   "frames": 3878,
    "failure": null
   },
   "wave-rio": {
-   "strict": "6edd7d9b81a3d5bf",
-   "diag": "6de39c34e2bc9fdd",
-   "frames": 3103,
+   "strict": "78c2d0a6c3249bb0",
+   "diag": "e413f185516e69e4",
+   "frames": 3310,
    "failure": null
   },
   "wave-stabilimento": {
-   "strict": "be61eda90fc5af4e",
-   "diag": "105f659a6e7a31e6",
-   "frames": 3192,
+   "strict": "3918622be116276f",
+   "diag": "9c0d231ae2f6f7a5",
+   "frames": 3725,
    "failure": null
   },
   "wave-tecnokill": {
-   "strict": "4ebd9d9e5cebed5c",
-   "diag": "90f4a154435710c9",
-   "frames": 3796,
+   "strict": "b235e7670dcbbda3",
+   "diag": "5a7de042ecbfb07b",
+   "frames": 3776,
    "failure": null
   },
   "wave-void": {
-   "strict": "392502be705cee43",
-   "diag": "07e8477830f2c09a",
-   "frames": 4495,
+   "strict": "92e6028b19342fd2",
+   "diag": "656761596880224c",
+   "frames": 3323,
    "failure": null
   }
  }
