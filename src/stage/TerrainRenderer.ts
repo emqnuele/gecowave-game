@@ -617,7 +617,8 @@ export class TerrainRenderer {
 
     private addTexture(key: string, el: HTMLCanvasElement): void {
         if (this.scene.textures.exists(key)) this.scene.textures.remove(key);
-        this.scene.textures.addCanvas(key, el);
+        // addCanvas crea un CanvasTexture che rilegge tutti i pixel dalla gpu (getImageData): qui nessuno li legge mai
+        this.scene.textures.addImage(key, el as unknown as HTMLImageElement);
         this.textureKeys.push(key);
     }
 
