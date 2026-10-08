@@ -73,6 +73,8 @@
         if (t !== 'object') return String(v);
         if (depth > 6) return '…';
         if (typeof Node !== 'undefined' && v instanceof Node) return `<${v.nodeName}>`;
+        // phaser passa la scena stessa all'evento create: i suoi campi privati sono implementazione, non comportamento
+        if (v.sys?.scene === v && typeof v.sys.settings?.key === 'string') return { scene: v.sys.settings.key };
         if (v.scene && typeof v.type === 'string' && 'x' in v) return { go: v.type, cls: ctorName(v), tex: v.texture?.key ?? null, x: v.x, y: v.y };
         if (Array.isArray(v) || ArrayBuffer.isView(v)) return Array.from(v).slice(0, 200).map((x) => reduce(x, depth + 1));
         if (v instanceof Set) return [...v].slice(0, 200).map((x) => reduce(x, depth + 1));
@@ -127,6 +129,15 @@
     }
     window.addEventListener('error', (e) => H.log.con.push(['pageerror', [String(e.message)]]));
     window.addEventListener('unhandledrejection', (e) => H.log.con.push(['rejection', [String(e.reason?.message ?? e.reason)]]));
+
+    // a cursore fermo chromium manda mouseover e mousemove sintetici quando il dom cambia sotto di lui, con un timer in tempo reale:
+    // passano solo i movimenti che lo scenario rigioca (mouseGate), così l'hover cambia a fotogrammi decisi dal nastro
+    H.mouseGate = false;
+    if (!perf) {
+        for (const type of ['mouseover', 'mouseout', 'mouseenter', 'mouseleave', 'mousemove', 'pointerover', 'pointerout', 'pointerenter', 'pointerleave', 'pointermove']) {
+            window.addEventListener(type, (e) => { if (!H.mouseGate) e.stopImmediatePropagation(); }, true);
+        }
+    }
 
     const ls = Storage.prototype;
     const setItem = ls.setItem;
