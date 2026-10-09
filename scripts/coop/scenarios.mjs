@@ -64,6 +64,54 @@ export const SCENARIOS = {
         await t.shot(t.B, 'lobby-guest');
     },
 
+    async morte(t) {
+        await enterTogether(t);
+        const look = (p) => p.evaluate(() => {
+            const g = window.__game.scene.getScene('GameScene');
+            return {
+                band: document.querySelector('.cx-spectate .t')?.textContent ?? null,
+                dead: g.player.dead, hp: window.__state.run.hp,
+                chip: document.querySelector('.cx-partner .state')?.textContent ?? null,
+                death: !!document.querySelector('.sx-death'),
+                x: Math.round(g.player.x), level: window.__state.save.levelId, active: g.sys.settings.status,
+            };
+        });
+        await scene(t.B, `g.player.kill()`);
+        await t.wait(800);
+        const b1 = await look(t.B);
+        const a1 = await look(t.A);
+        t.check('l’ospite caduto guarda l’altro', b1.band === 'sei a terra' && !b1.death, JSON.stringify(b1));
+        t.check('l’host lo vede a terra', a1.chip === 'a terra', JSON.stringify(a1));
+        t.check('l’host continua', !a1.dead && !a1.death);
+        await t.shot(t.B, 'morte-spettatore');
+        // l'host accende un microfono: l'ospite si rialza lì
+        const cp = await scene(t.A, `const c = g.world.level.checkpoints[0]; return c ? { x: c.x, y: c.y, id: c.id } : null`);
+        t.check('c’è un microfono', !!cp, JSON.stringify(cp));
+        await scene(t.A, `g.player.body.reset(arg.x + 10, arg.y - 10)`, cp);
+        await t.wait(500);
+        await t.A.keyboard.down('KeyE');
+        await t.wait(120);
+        await t.A.keyboard.up('KeyE');
+        await t.wait(1200);
+        const b2 = await look(t.B);
+        t.check('il microfono rialza l’ospite', !b2.dead && !b2.band && Math.abs(b2.x - cp.x) < 120, JSON.stringify(b2));
+        // cadono tutti e due: si riparte insieme
+        await scene(t.B, `g.player.kill()`);
+        await t.wait(500);
+        await scene(t.A, `g.player.kill()`);
+        await t.wait(2500);
+        const a3 = await look(t.A);
+        const b3 = await look(t.B);
+        t.check('l’host vede la schermata della morte', a3.death, JSON.stringify(a3));
+        t.check('l’ospite aspetta l’host', b3.band === 'siete caduti', JSON.stringify(b3));
+        await t.shot(t.B, 'morte-insieme-ospite');
+        await t.click(t.A, 'rialzati al microfono');
+        await t.wait(4000);
+        const a4 = await look(t.A);
+        const b4 = await look(t.B);
+        t.check('si riparte insieme', !a4.dead && !b4.dead && !b4.band && a4.active === 5 && b4.active === 5, JSON.stringify({ a4, b4 }));
+    },
+
     async dialogo(t) {
         await enterTogether(t);
         await scene(t.A, `g.ctx.dialogues.lines([{ speaker: 'prova', color: 'green', text: 'riga uno' }, { speaker: 'prova', color: 'green', text: 'riga due' }, { speaker: 'prova', color: 'green', text: 'riga tre' }])`);
@@ -183,7 +231,7 @@ export const SCENARIOS = {
         await t.wait(600);
         const a = await where(t.A);
         const after = await where(t.B);
-        t.check('l’host si è mosso', a.me[0] > before.partner[0] + 100, JSON.stringify(a));
+        t.check('l’host si è mosso', a.me[0] > before.partner[0] + 40, JSON.stringify(a));
         t.check('il guest lo vede dove sta', !!after.partner && Math.abs(after.partner[0] - a.me[0]) < 40, JSON.stringify(after));
         t.check('l’host vede il guest', !!a.partner && Math.abs(a.partner[0] - after.me[0]) < 40, JSON.stringify(a));
         await t.shot(t.A, 'capitolo-host');

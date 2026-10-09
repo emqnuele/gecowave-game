@@ -314,7 +314,7 @@ export class CoopRules {
         t.textContent = 'sei a terra';
         const s = document.createElement('div');
         s.className = 's';
-        s.textContent = `${name} ti rialza al prossimo microfono. se cade anche lui, si riparte insieme.`;
+        s.textContent = `${name} ti rialza al prossimo microfono. se cade anche ${name}, si riparte insieme.`;
         band.append(t, s);
         document.getElementById('ui')?.append(band);
         this.band = band;

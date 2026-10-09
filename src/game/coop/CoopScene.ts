@@ -15,6 +15,8 @@ import { SaveLink } from './SaveLink';
 import { WorldHost } from './WorldHost';
 import { WorldMirror } from './WorldMirror';
 import { CoopRules } from './CoopRules';
+import { CoopHud } from './CoopHud';
+import { RemoteFx } from './RemoteFx';
 import type { PickupSpawn } from '../../coop/protocol';
 import type { Spawner } from '../../entities/Spawner';
 import type { Room } from '../../world/types';
@@ -45,6 +47,8 @@ export class CoopScene implements GameSystem {
     readonly host: WorldHost | null;
     readonly mirror: WorldMirror | null;
     readonly rules: CoopRules;
+    private readonly hud = new CoopHud();
+    private readonly fx: RemoteFx;
     /** l'esca del riflesso del compagno: i nemici dell'host la inseguono come la mia */
     private partnerDecoy: Phaser.GameObjects.Zone | null = null;
     private readonly aim = new WeakMap<object, object>();
@@ -104,8 +108,13 @@ export class CoopScene implements GameSystem {
                 bus.emit('ending', m as GameEvents['ending']);
             }));
         }
+        this.hud.setLink(coop.link);
         this.offs.push(coop.listen((e) => {
-            if (e.type === 'partner' && !e.char) this.dropPartner();
+            if (e.type === 'link') this.hud.setLink(e.link);
+            if (e.type === 'partner' && !e.char) {
+                this.dropPartner();
+                bus.emit('toast', { text: 'l’altro giocatore è uscito. la partita continua: può rientrare col codice.' });
+            }
         }));
         this.offs.push(session.onFast(FAST_PLAYER, (r, sentAt) => {
             const got = readGeco(r);
@@ -114,10 +123,29 @@ export class CoopScene implements GameSystem {
             this.delay.arrived(now);
             this.track.push({ t: session.toLocal(sentAt), x: got.s.x, y: got.s.y, vx: got.s.vx, vy: got.s.vy, s: got.s });
         }));
-        this.offs.push(session.on('act', (a) => this.partner?.act(a)));
+        this.fx = new RemoteFx(this.scene);
+        this.offs.push(session.on('act', (a) => {
+            const p = this.partner;
+            if (!p?.visible) return;
+            if (a.a === 'risonante' || a.a === 'riflesso' || a.a === 'riflesso-swap' || a.a === 'scudo' || a.a === 'analisi' || a.a === 'acqua') this.fx.play(a, p);
+            else p.act(a);
+        }));
         const onAct = (a: PlayerAct) => this.onLocalAct(a);
         onWorld(this.scene, 'player-act', onAct, this);
         this.offs.push(() => offWorld(this.scene, 'player-act', onAct, this));
+        // le mie wave: l'altro le vede partire da dove le lancio
+        const waves: [Parameters<typeof onWorld>[1], (e: never) => void][] = [
+            ['player-risonante', (e: { x: number; y: number; dir: number; level?: number }) => this.session.send('act', { a: 'risonante', x: e.x, y: e.y, dir: e.dir, level: e.level ?? 1 })],
+            ['player-riflesso', (e: { x: number; y: number; facing: number }) => this.session.send('act', { a: 'riflesso', x: e.x, y: e.y, facing: e.facing })],
+            ['player-riflesso-swap', () => this.session.send('act', { a: 'riflesso-swap' })],
+            ['player-scudo', () => this.session.send('act', { a: 'scudo' })],
+            ['player-analisi', () => this.session.send('act', { a: 'analisi' })],
+            ['player-acqua', (e: { x: number; y: number; facing: number; aim: 'lob' | 'drop' }) => this.session.send('act', { a: 'acqua', x: e.x, y: e.y, facing: e.facing, aim: e.aim })],
+        ];
+        for (const [ev, fn] of waves) {
+            this.scene.events.on(ev, fn, this);
+            this.offs.push(() => this.scene.events.off(ev, fn, this));
+        }
     }
 
     /** il compagno entra in scena col suo personaggio, dove sta adesso */
@@ -309,6 +337,8 @@ export class CoopScene implements GameSystem {
     /** a ogni fotogramma disegnato: l'altro un poco nel passato, tra due stati veri */
     present(delta: number): void {
         this.mirror?.present(delta);
+        this.hud.update(this.partner, this.scene.cameras.main);
+        this.fx.update(this.partner, this.scene.time.now);
         if (!this.track.size) return;
         const partner = this.ensurePartner();
         if (!partner) return;
@@ -324,6 +354,8 @@ export class CoopScene implements GameSystem {
         this.offs.length = 0;
         this.saves.destroy();
         this.rules.destroy();
+        this.hud.destroy();
+        this.fx.destroy();
         this.host?.destroy();
         this.mirror?.destroy();
         this.dropPartner();
