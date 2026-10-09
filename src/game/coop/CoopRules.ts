@@ -55,8 +55,8 @@ export class CoopRules {
         this.offs.push(s.on('film', (m) => this.followFilm(m.id)));
         this.offs.push(s.on('film-end', () => this.endFollowedFilm()));
         this.offs.push(s.on('interact', (m) => this.remoteInteract(m.x, m.y)));
-        this.offs.push(s.on('down', (m) => this.partnerDown(m.down)));
-        this.offs.push(s.on('died', () => this.teamDied()));
+        // la fine la decide l'host leggendo il compagno, al passo dopo: vedi tick
+        this.offs.push(s.on('died', (m) => this.teamDied(m)));
         coopHooks.choice = (p) => this.routeChoice(p);
         if (coop.isHost) {
             coopHooks.filmEnded = () => this.session.send('film-end', { token: 0 });
@@ -284,8 +284,7 @@ export class CoopRules {
             this.goDown();
             return true;
         }
-        // l'host cade per ultimo: si ricomincia insieme, e l'ospite lo sa subito
-        if (coop.isHost && coop.together) this.session.send('died', { lost: state.save.barre, score: null });
+        // l'host cade per ultimo: la fine la annuncia la progressione, col punteggio vero
         return false;
     }
 
@@ -350,9 +349,20 @@ export class CoopRules {
         if (coop.together) this.session.send('cmd', { c: 'revive', x: cp.x - 30, y: cp.y - 8 });
     }
 
-    private partnerDown(down: boolean): void {
-        void down;
-        // la fine la decide l'host, al passo dopo: vedi tick
+    /** a terra tutti e due: il mio geco o quello del compagno, chiunque sia caduto per ultimo */
+    isWipe(): boolean {
+        if (!coop.isHost || !coop.together) return false;
+        const me = this.ctx.player;
+        const partner = this.cs.partner;
+        const meDown = me.dead || this.down;
+        const partnerDown = !partner || !partner.last || partner.last.dead || partner.last.down;
+        return meDown && partnerDown;
+    }
+
+    /** l'host annuncia la fine a tutti e due, col punteggio che vede anche lui */
+    announceWipe(lost: number, score: number | null): void {
+        if (!coop.isHost || !coop.together) return;
+        this.session.send('died', { lost, score });
     }
 
     /** host: se siamo a terra tutti e due si riparte dal microfono, come da soli */
@@ -368,27 +378,18 @@ export class CoopRules {
             this.band = null;
             coopHooks.spectating = false;
             this.down = false;
-            if (coop.together) this.session.send('died', { lost: state.save.barre, score: null });
+            // la schermata e l'annuncio all'ospite li fa la progressione, col punteggio vero
             this.ctx.flow.playerDied();
         }
     }
 
-    /** ospite: siamo caduti tutti e due. si aspetta che l'host faccia ripartire il capitolo */
-    private teamDied(): void {
+    /** ospite: siamo caduti tutti e due. stessa schermata dell'host, a rialzare tocca a lui */
+    private teamDied(m: { lost: number; score: number | null }): void {
         if (!coop.isGuest) return;
         this.band?.remove();
+        this.band = null;
         const name = coop.partner?.name.toLowerCase() ?? 'l’host';
-        const band = document.createElement('div');
-        band.className = 'cx-spectate';
-        const t = document.createElement('div');
-        t.className = 't';
-        t.textContent = 'a terra tutti e due';
-        const s = document.createElement('div');
-        s.className = 's';
-        s.textContent = `${name} vi rialza al microfono.`;
-        band.append(t, s);
-        document.getElementById('ui')?.append(band);
-        this.band = band;
+        bus.emit('coop-death-show', { lost: m.lost, score: m.score, host: name });
     }
 
     /** la partita è passata a un altro capitolo o si è chiusa: niente resta appeso */

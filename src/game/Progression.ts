@@ -339,7 +339,10 @@ export class Progression implements Flow, GameSystem {
             if (ending) {
                 this.endGame(ending);
             } else {
-                bus.emit('player-died', { lost, score: runScore(this.liveChapterScore()) });
+                const score = runScore(this.liveChapterScore());
+                // in due, a terra tutti e due: l'ospite vede la stessa schermata
+                this.ctx.coop?.rules.announceWipe(lost, score);
+                bus.emit('player-died', { lost, score });
             }
         });
     }

@@ -14,6 +14,8 @@ export interface GameEvents {
     /** in due: chi segue il dialogo dell'altro passa alla riga che l'altro ha raggiunto */
     'dialogue-step': { index: number };
     'player-died': { lost: number; score: number | null };
+    /** in due, a terra tutti e due: anche l'ospite vede la schermata, ma a rialzare tocca all'host */
+    'coop-death-show': { lost: number; score: number | null; host: string };
     'toast': { text: string };
     'wavesung': { sender: string; text: string };
     'ability-unlocked': { ability: AbilityId };

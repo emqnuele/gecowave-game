@@ -109,6 +109,7 @@ export class Screens {
         bus.on('toast', ({ text }) => this.toast(text));
         bus.on('wavesung', ({ sender, text }) => this.wavesung(sender, text));
         bus.on('player-died', ({ lost, score }) => this.showDeath(lost, score));
+        bus.on('coop-death-show', ({ lost, score, host }) => this.showDeath(lost, score, host));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('charm-found', ({ id }) => this.charmCard(id));
         bus.on('achievement', ({ id }) => this.trophy(id));
@@ -736,7 +737,7 @@ export class Screens {
 
     /* ---------- morte ---------- */
 
-    private showDeath(lost: number, score: number | null): void {
+    private showDeath(lost: number, score: number | null, guestOf?: string): void {
         const s = this.openOverlay('screen sx sx-death');
         const band = el('div', 'sx-death-band');
         band.append(el('h1', 'sx-death-title', 'sei morto'));
@@ -749,10 +750,20 @@ export class Screens {
             band.append(loss);
         }
         band.append(this.scoreBadge(score, 'punteggio della partita'));
-        band.append(this.menu([
-            { label: 'rialzati al microfono', onPick: () => { this.closeOverlay(); this.controller.retry(); } },
-            { label: 'esci al menu', back: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
-        ], 'row'));
+        if (guestOf) {
+            // l'ospite guarda la stessa schermata, ma il microfono lo preme l'host
+            const note = el('div', 'sx-note');
+            note.textContent = `${guestOf} vi rialza al microfono.`;
+            band.append(note);
+            band.append(this.menu([
+                { label: 'esci al menu', back: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
+            ], 'row'));
+        } else {
+            band.append(this.menu([
+                { label: 'rialzati al microfono', onPick: () => { this.closeOverlay(); this.controller.retry(); } },
+                { label: 'esci al menu', back: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
+            ], 'row'));
+        }
         s.append(band);
         // le scelte arrivano dopo il titolo: prima si incassa
         setTimeout(() => { if (this.overlay === s) this.bindNav(band); }, 2400);
