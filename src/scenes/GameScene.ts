@@ -137,6 +137,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
 
     create(data: SceneData): void {
         this.sim = new FixedStep(LOGIC_STEP_MS);
+        this.createCoop();
         this.progression = this.ctx.flow = new Progression(this.ctx);
         this.bosses = this.ctx.bosses = new Bosses(this.ctx);
         this.arena = this.ctx.arena = new Arena(this.ctx);
@@ -420,17 +421,22 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.setupCoop(data);
     }
 
+    /** la partita in due nasce prima dei sistemi: chi nasce durante il caricamento si conta già */
+    private createCoop(): void {
+        const session = coop.session;
+        if (!coop.active || !session) return;
+        this.ctx.coop = new CoopScene(this.ctx, session);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.ctx.coop?.destroy();
+            this.ctx.coop = null;
+        });
+    }
+
     /** la partita in due: l'host annuncia il capitolo, l'ospite dice che è arrivato */
     private setupCoop(data: SceneData): void {
         const session = coop.session;
         if (!coop.active) return;
-        if (session) {
-            this.ctx.coop = new CoopScene(this.ctx, session);
-            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-                this.ctx.coop?.destroy();
-                this.ctx.coop = null;
-            });
-        }
+        this.ctx.coop?.loaded();
         if (coop.isHost) coop.hostEnteredLevel(this.world.def.id, data.checkpointId ?? null, { x: this.player.x, y: this.player.y }, data.showCard !== false);
         else session?.send('ready', { seq: coop.levelSeq });
     }
@@ -441,6 +447,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         for (const { spec, x, y } of this.world.level.entities) {
             switch (spec.type) {
                 case 'enemy': {
+                    // l'ospite li riceve dall'host, già vivi o già morti
+                    if (!this.ctx.simulates) break;
                     // una parte dei nemici dorme: si passa piano, o si sveglia tutto
                     const h = hashString(`${this.world.def.id}:${x}:${y}`);
                     const elite = this.enemies.isEliteSpot(x, y, h);
@@ -479,6 +487,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
                         this.bosses.recoverReward(spec.kind, x, y);
                         break;
                     }
+                    if (!this.ctx.simulates) break;
                     // l'ombra senza abbonamento è addestrata su poco footage
                     const hpOverride = spec.kind === 'ombra' && !state.hasFlag('tommasorveglianza') ? 34 : undefined;
                     this.bosses.current = this.bosses.make(x, y, spec.kind, hpOverride);
@@ -588,7 +597,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         for (let i = 0; i < n; i++) this.tick(time - (n - 1 - i) * this.sim.dt, this.sim.dt);
         // senza passo il mondo è fermo, ma la camera si è mossa: quello che si vede la segue
         if (n === 0) this.present(time);
-        this.ctx.coop?.present();
+        this.ctx.coop?.present(delta);
         this.lens.update(this.player);
     }
 
@@ -633,7 +642,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         if (!film) {
             this.enemies.updateEnemies(time, delta, target);
             this.enemies.updateSpawners(time);
-            if (this.ctx.simulates) this.bosses.current?.update(time, delta, target);
+            if (this.ctx.simulates && this.bosses.current) this.bosses.current.update(time, delta, this.ctx.coop ? this.ctx.coop.targetFor(this.bosses.current, target) : target);
             this.chapter.updateFoes?.(time);
             this.bosses.updateVoices(time);
         }

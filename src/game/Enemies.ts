@@ -14,7 +14,7 @@ import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../core/worldEvents';
 import { rng } from '../core/rng';
 
-type EnemiesCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
+type EnemiesCtx = Pick<GameContext, 'simulates' | 'coop' | 'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
 
 /** nemici e nidi: chi nasce, chi dorme lontano, chi muore e cosa lascia */
 export class Enemies implements GameSystem {
@@ -172,11 +172,12 @@ export class Enemies implements GameSystem {
         if (this.awakeEnemies() >= 40) return;
         const px = this.ctx.player.x;
         const py = this.ctx.player.y;
+        const q = this.ctx.coop?.partnerSpot() ?? null;
         for (const child of this.ctx.groups.spawners.getChildren()) {
             const s = child as Spawner;
             if (!s.active || s.broken) continue;
-            const dx = Math.abs(s.x - px);
-            const dy = Math.abs(s.y - py);
+            const dx = q ? Math.min(Math.abs(s.x - px), Math.abs(s.x - q.x)) : Math.abs(s.x - px);
+            const dy = q ? Math.min(Math.abs(s.y - py), Math.abs(s.y - q.y)) : Math.abs(s.y - py);
             if (s.dormant) {
                 if (dx < 1500 && dy < 1000) s.setDormant(false);
                 else continue;
@@ -185,8 +186,8 @@ export class Enemies implements GameSystem {
                 continue;
             }
             s.syncAura();
-            const dist = Math.hypot(s.x - px, s.y - py);
-            const armed = dist < s.radius && !this.ctx.player.dead;
+            const dist = q ? Math.min(Math.hypot(s.x - px, s.y - py), Math.hypot(s.x - q.x, s.y - q.y)) : Math.hypot(s.x - px, s.y - py);
+            const armed = dist < s.radius && (!this.ctx.player.dead || !!q);
             s.setArmed(armed);
             if (!armed || time < s.nextAt) continue;
             let alive = 0;
@@ -219,7 +220,14 @@ export class Enemies implements GameSystem {
     }
 
     damageSpawner(s: Spawner, amount: number): void {
-        if (!this.ctx.simulates) return;
+        if (!this.ctx.simulates) {
+            // l'ospite lo chiede all'host e intanto sente il colpo
+            if (!this.ctx.coop?.nestHit(s, amount) || !s.active) return;
+            sfx.hit();
+            this.ctx.player.onAttackHit();
+            this.ctx.feel.hitstop();
+            return;
+        }
         if (!s.active || s.broken) return;
         if (s.takeDamage(amount)) this.breakSpawner(s);
         else {
@@ -229,7 +237,7 @@ export class Enemies implements GameSystem {
         }
     }
 
-    private breakSpawner(s: Spawner): void {
+    breakSpawner(s: Spawner): void {
         const { x, y, glowColor, kind } = s;
         sfx.crumble();
         this.ctx.feel.shake(200, 0.008);
@@ -242,9 +250,10 @@ export class Enemies implements GameSystem {
             stopAfter: 18,
         }).setDepth(6);
         this.scene.time.delayedCall(800, () => burst.destroy());
-        this.ctx.rewards.spawnBarrePickup(x, y - 20, 12);
+        // le barre e il toast li decide chi tiene il mondo: all'ospite arrivano da lì
+        if (this.ctx.simulates) this.ctx.rewards.spawnBarrePickup(x, y - 20, 12);
         s.destroy();
-        if (!this.spawnerToastShown) {
+        if (this.ctx.simulates && !this.spawnerToastShown) {
             this.spawnerToastShown = true;
             bus.emit('toast', { text: `nido di ${kind} distrutto. niente più spawn da qui.` });
         }
@@ -266,17 +275,20 @@ export class Enemies implements GameSystem {
         if (!this.ctx.simulates) return;
         const px = this.ctx.player.x;
         const py = this.ctx.player.y;
+        const coop = this.ctx.coop;
+        // in due chi dorme si sveglia vicino a uno qualsiasi dei gechi, e insegue il più vicino
+        const q = coop?.partnerSpot() ?? null;
         for (const child of this.ctx.groups.enemies.getChildren()) {
             const e = child as Enemy;
             if (!e.active) continue;
-            const dx = Math.abs(e.x - px);
-            const dy = Math.abs(e.y - py);
+            const dx = q ? Math.min(Math.abs(e.x - px), Math.abs(e.x - q.x)) : Math.abs(e.x - px);
+            const dy = q ? Math.min(Math.abs(e.y - py), Math.abs(e.y - q.y)) : Math.abs(e.y - py);
             if (e.dormant) {
                 if (dx < 1500 && dy < 1000) e.setDormant(false);
             } else if (dx > 1800 || dy > 1250) {
                 e.setDormant(true);
             }
-            if (!e.dormant) e.update(time, delta, target);
+            if (!e.dormant) e.update(time, delta, coop ? coop.targetFor(e, target) : target);
         }
     }
 

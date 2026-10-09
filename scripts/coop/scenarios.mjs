@@ -29,6 +29,29 @@ async function hostAndJoin(t, { hostName = 'Ospite', guestName = 'Entra' } = {})
     return code;
 }
 
+async function enterTogether(t) {
+    await hostAndJoin(t);
+    await t.click(t.A, 'inizia');
+    for (let i = 0; i < 40; i++) {
+        const inA = await t.A.evaluate(() => !!window.__game.scene.getScene('GameScene')?.sys.isActive());
+        const inB = await t.B.evaluate(() => !!window.__game.scene.getScene('GameScene')?.sys.isActive());
+        if (inA && inB) break;
+        for (const p of [t.A, t.B]) await p.keyboard.press('Enter');
+        await t.wait(400);
+    }
+    await t.wait(3000);
+    // i dialoghi d'ingresso si chiudono a invio
+    for (let i = 0; i < 12; i++) {
+        for (const p of [t.A, t.B]) await p.keyboard.press('Enter');
+        await t.wait(250);
+    }
+}
+
+const scene = (p, fn, arg) => p.evaluate(([src, arg]) => {
+    const g = window.__game.scene.getScene('GameScene');
+    return new Function('g', 'arg', src)(g, arg);
+}, [fn, arg]);
+
 export const SCENARIOS = {
     async lobby(t) {
         const code = await hostAndJoin(t);
@@ -39,6 +62,38 @@ export const SCENARIOS = {
         t.check('il guest vede l’host', b?.role === 'guest' && b.partner === 'Ospite', JSON.stringify(b));
         await t.shot(t.A, 'lobby-host');
         await t.shot(t.B, 'lobby-guest');
+    },
+
+    async mondo(t) {
+        await enterTogether(t);
+        const host = await scene(t.A, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`);
+        const guest = await scene(t.B, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`);
+        t.check('i nemici dell’host arrivano all’ospite', host > 0 && host === guest, `host ${host}, ospite ${guest}`);
+        // l'ospite colpisce a morte il nemico più vicino: deve morire dall'host e sparire dall'ospite
+        const victim = await scene(t.B, `
+            const p = g.player;
+            const list = g.ctx.groups.enemies.getChildren().filter((e) => e.active);
+            list.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y));
+            const e = list[0];
+            g.ctx.combat.dmgTo(e, 999, p.x);
+            return { x: Math.round(e.x), y: Math.round(e.y) };`);
+        await t.wait(800);
+        const host2 = await scene(t.A, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`);
+        const guest2 = await scene(t.B, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`);
+        t.check('il colpo dell’ospite uccide dall’host', host2 === host - 1, `prima ${host}, dopo ${host2}`);
+        t.check('e il nemico sparisce anche dall’ospite', guest2 === host2, `ospite ${guest2}`);
+        const notes = await scene(t.A, `return g.ctx.groups.barre.getChildren().length`);
+        const notesB = await scene(t.B, `return g.ctx.groups.barre.getChildren().length`);
+        t.check('le note cadute arrivano all’ospite', notes === notesB, `host ${notes}, ospite ${notesB}`);
+        // l'ospite raccoglie le note: le barre sono di tutti e due
+        const barreBefore = await t.A.evaluate(() => window.__state.save.barre);
+        await scene(t.B, `for (const n of g.ctx.groups.barre.getChildren()) g.player.setPosition(n.x, n.y);`);
+        await scene(t.B, `const n = g.ctx.groups.barre.getChildren()[0]; if (n) { g.player.body.reset(n.x, n.y); }`);
+        await t.wait(1500);
+        const barreA = await t.A.evaluate(() => window.__state.save.barre);
+        const barreB = await t.B.evaluate(() => window.__state.save.barre);
+        t.check('le barre raccolte dall’ospite vanno all’host', barreA >= barreBefore && barreA === barreB, `prima ${barreBefore}, host ${barreA}, ospite ${barreB}, vittima ${JSON.stringify(victim)}`);
+        await t.shot(t.B, 'mondo-ospite');
     },
 
     async start(t) {

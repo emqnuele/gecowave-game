@@ -76,9 +76,9 @@ export interface WorldDump {
 
 /** chi colpisce cosa: il guest lo chiede, l'host lo applica */
 export type Hit =
-    | { on: 'enemy'; id: number; amount: number; fromX: number; stun?: number; stagger?: number; parried?: boolean; knock?: { vx: number; vy: number } }
-    | { on: 'boss'; id: number; amount: number; fromX: number; dir?: 'side' | 'up' | 'down' | 'shot' }
-    | { on: 'nest'; id: number; amount: number };
+    | { on: 'enemy'; id: number; k: 'dmg' | 'stun' | 'stagger' | 'parry'; v: number; fromX: number }
+    | { on: 'boss'; id: number; v: number; fromX: number; dir?: 'side' | 'up' | 'down' | 'shot' }
+    | { on: 'nest'; id: number; v: number };
 
 /** un gesto del geco che l'altro deve vedere: le wave e i colpi, non i tasti */
 export type Act =
@@ -128,7 +128,11 @@ export interface CoopMsgs {
     'boss': BossSpawn;
     'boss-fx': { id: number; fx: string; tx?: number; ty?: number; n?: number; dir?: number; xs?: number[]; phase?: number };
     'boss-gone': { id: number; kind: BossKind; x: number; y: number };
-    'shoot': { id: number; x: number; y: number; vx: number; vy: number; color: number; size: number; needle: boolean };
+    'shoot': { id: number; x: number; y: number; tx: number; ty: number; color?: number; speed?: number; size?: number };
+    'boom': { x: number; y: number; r: number };
+    /** una comparsa della trama che l'ospite deve vedere (lochef che insegue, ivan, le guide) */
+    'actor': { id: number; texture: string; frame: number; x: number; y: number; depth: number; scale: number; originX: number; originY: number; light: number | null; hostile: number; pipeline: boolean };
+    'actor-gone': { id: number };
     'lamette': { xs: number[]; y: number };
     'proj-gone': { id: number };
 
@@ -143,8 +147,8 @@ export interface CoopMsgs {
     'take': { key: string };
     'break': { cell: number };
     'interact': { key: string };
-    'explore': { room: number };
-    'flag': { flag: string };
+    /** le scoperte dell'ospite (fermate, stanze, dialoghi letti, flag) da unire al salvataggio */
+    'merge': { flags?: string[]; abilities?: string[]; seenDialogues?: string[]; collectedLore?: string[]; charms?: string[]; stops?: string[]; explored?: Record<string, number[]> };
 
     // --- i gechi ---
     'act': Act;

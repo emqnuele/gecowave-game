@@ -54,6 +54,8 @@ type Handler<T> = (payload: T) => void;
 
 class EventBus {
     private handlers = new Map<string, Set<Handler<unknown>>>();
+    /** chi ascolta tutto: l'host del coop gira all'altro quello che conta per entrambi */
+    tap: (<K extends keyof GameEvents>(event: K, payload: GameEvents[K]) => void) | null = null;
 
     on<K extends keyof GameEvents>(event: K, handler: Handler<GameEvents[K]>): () => void {
         if (!this.handlers.has(event)) this.handlers.set(event, new Set());
@@ -62,6 +64,7 @@ class EventBus {
     }
 
     emit<K extends keyof GameEvents>(event: K, payload: GameEvents[K]): void {
+        this.tap?.(event, payload);
         this.handlers.get(event)?.forEach((h) => h(payload));
     }
 }

@@ -11,7 +11,7 @@ import type { AbilityId, BossKind } from '../types';
 import type { GameContext, GameSystem } from './context';
 
 
-type RewardsCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'dialogues'>;
+type RewardsCtx = Pick<GameContext, 'coop' | 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'dialogues'>;
 
 /** tutto quello che si raccoglie: oggetti, frammenti, cuori, maschere, barre, note */
 export class Rewards implements GameSystem {
@@ -61,7 +61,7 @@ export class Rewards implements GameSystem {
                 bus.emit('toast', { text: `${ITEMS[item].icon} ${ITEMS[item].name}${amount > 1 ? ` ×${amount}` : ''} nello zaino` });
                 bus.emit('inventory-changed', {});
             }
-        });
+        });        this.ctx.coop?.pickupSpawned({ kind: 'item', key: persistKey, x, y, item, amount, loose }, pickup);
     }
 
     /** ogni boss lascia il suo amuleto, una volta sola */
@@ -120,7 +120,7 @@ export class Rewards implements GameSystem {
                 state.setFlag('sigilli-spiegati');
                 this.scene.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.markolinoSigilli));
             }
-        });
+        });        this.ctx.coop?.pickupSpawned({ kind: 'fragment', key: `frammento-${ability}-${Math.round(x)}-${Math.round(y)}`, x, y, ability, loose }, shard);
     }
 
     spawnLore(id: string, x: number, y: number): void {
@@ -155,7 +155,7 @@ export class Rewards implements GameSystem {
             sfx.pickup();
             bus.emit('barre-changed', { barre: state.save.barre, gained: true });
             bus.emit('toast', { text: TOASTS.barreRecovered });
-        });
+        });        this.ctx.coop?.pickupSpawned({ kind: 'barre', key: 'barre-perse', x: drop.x, y: drop.y, amount: drop.amount }, ghost, true);
     }
 
     spawnBarrePickup(x: number, y: number, amount: number, persistKey?: string): void {
@@ -173,6 +173,7 @@ export class Rewards implements GameSystem {
             sfx.pickup();
             bus.emit('barre-changed', { barre: state.save.barre, gained: true });
         });
+        this.ctx.coop?.pickupSpawned({ kind: 'barre', key, x, y, amount }, note);
     }
 
     /** cuore del realm: +1 vita massima, per sempre */
@@ -196,7 +197,7 @@ export class Rewards implements GameSystem {
             this.scene.cameras.main.flash(180, 248, 113, 113);
             bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
             bus.emit('toast', { text: TOASTS.cuore });
-        });
+        });        this.ctx.coop?.pickupSpawned({ kind: 'cuore', key: persistKey, x, y, loose }, heart);
     }
 
     private maschereCount(): number {
@@ -231,7 +232,7 @@ export class Rewards implements GameSystem {
                 bus.emit('wavesung', WAVESUNG.markolinoMaschere10);
                 bus.emit('toast', { text: TOASTS.mascheraCompleta });
             }
-        });
+        });        this.ctx.coop?.pickupSpawned({ kind: 'barre', key: persistKey, x, y, amount: 25 }, mask);
     }
 
     /** frammento della wave ancora a terra in questo capitolo, il più vicino: la freccia ci porta prima qui */

@@ -9,6 +9,7 @@ import { emitWorld } from '../core/worldEvents';
 import { rng } from '../core/rng';
 import { state } from '../core/state';
 import { SHIELD_TOMMASO, shieldBarksFor } from '../content/barks';
+import { coopHooks } from '../coop/hooks';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo
@@ -235,6 +236,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     /** una parata: lo scudo trema, lui si vanta, e alla terza di fila gli cade */
     parried(): void {
+        if (coopHooks.puppets.has(this)) {
+            coopHooks.puppetEnemy?.parried(this);
+            return;
+        }
         if (!this.shield) return;
         const now = this.scene.time.now;
         this.guardHits = now - this.guardAt < GUARD_WINDOW_MS ? this.guardHits + 1 : 1;
@@ -262,6 +267,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     /** la battuta sopra la testa, come quelle dei passanti */
     private say(text: string, ms = 2200): void {
+        coopHooks.hostEnemy?.say(this, text, ms);
+        this.speak(text, ms);
+    }
+
+    /** la battuta si mostra: chi la pensa e il fantoccio che la riceve */
+    speak(text: string, ms: number): void {
         const now = this.scene.time.now;
         if (!this.speech) {
             this.speech = this.scene.add.text(this.x, this.y, '', {
@@ -333,15 +344,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.setMode('alert', 350);
     }
 
-    /** target = giocatore, o il suo riflesso distorto se attivo */
-    update(_time: number, delta: number, target: Phaser.GameObjects.Sprite): void {
-        if (!this.active) return;
+    /** marchio, alone, scudo e battuta seguono il corpo: lo fa anche il fantoccio dell'ospite, che non pensa */
+    dress(body: Phaser.Physics.Arcade.Body, now: number, delta: number): void {
         this.t += delta;
-        const body = this.body as Phaser.Physics.Arcade.Body;
-        const now = this.scene.time.now;
-        const dx = target.x - this.x;
-        const dy = target.y - this.y;
-        const dist = Math.hypot(dx, dy);
         this.mark?.setPosition(this.x, this.y - body.height / 2 - 16 + Math.sin(this.t / 300) * 2);
         this.aura?.setPosition(this.x, this.y);
         if (this.shield) {
@@ -361,6 +366,17 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             if (left <= 0) this.speech.setVisible(false);
             else if (left < 400) this.speech.setAlpha(left / 400);
         }
+    }
+
+    /** target = giocatore, o il suo riflesso distorto se attivo */
+    update(_time: number, delta: number, target: Phaser.GameObjects.Sprite): void {
+        if (!this.active) return;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        const now = this.scene.time.now;
+        this.dress(body, now, delta);
+        const dx = target.x - this.x;
+        const dy = target.y - this.y;
+        const dist = Math.hypot(dx, dy);
 
         if (this.hanging) {
             // passa sotto e ti cade addosso: lo si vede solo se lo si cerca
@@ -714,6 +730,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     takeDamage(amount: number, fromX: number): void {
         if (!this.active) return;
+        if (coopHooks.puppets.has(this)) {
+            coopHooks.puppetEnemy?.damage(this, amount, fromX);
+            this.setTintFill(0xffffff);
+            this.scene.time.delayedCall(70, () => this.active && this.clearTint());
+            return;
+        }
         // chi è appeso e viene colpito molla la presa
         if (this.hanging) this.drop();
         this.hp -= this.staggered ? amount * 2 : amount;
@@ -800,6 +822,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     /** la lezione riuscita: fermo, storditi i sensi, il doppio dei danni */
     stagger(ms: number): void {
+        if (coopHooks.puppets.has(this)) {
+            coopHooks.puppetEnemy?.stagger(this, ms);
+            return;
+        }
         this.chargingUntil = 0;
         this.staggeredUntil = this.scene.time.now + ms;
         this.stun(ms);
@@ -815,8 +841,22 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     stun(duration: number): void {
+        if (coopHooks.puppets.has(this)) {
+            coopHooks.puppetEnemy?.stun(this, duration);
+            return;
+        }
         this.stunnedUntil = this.scene.time.now + duration;
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.setVelocity(0, 0);
+    }
+
+    /** il fantoccio dell'ospite mostra lo stato che l'host gli manda: marchio compreso */
+    puppetMode(mode: EnemyMode): void {
+        if (mode !== this.mode) this.setMode(mode);
+    }
+
+    /** stordito per davvero sull'host: lo scudo del fantoccio cade storto */
+    puppetStun(until: number): void {
+        this.stunnedUntil = until;
     }
 }

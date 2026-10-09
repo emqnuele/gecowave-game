@@ -12,7 +12,7 @@ import { poisonMultiplier, risonanteStep } from '../rules/combat';
 import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../core/worldEvents';
 
-type CombatCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'enemies' | 'bosses' | 'abilities' | 'feel' | 'safe'>;
+type CombatCtx = Pick<GameContext, 'simulates' | 'coop' | 'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'enemies' | 'bosses' | 'abilities' | 'feel' | 'safe'>;
 
 /** chi colpisce chi: collider, danni, proiettili, esplosioni, schianto */
 export class Combat implements GameSystem {
@@ -44,7 +44,7 @@ export class Combat implements GameSystem {
         this.scene.time.delayedCall(400, () => sparks.destroy());
     }
 
-    onEnemyExplode({ x, y, r, from }: { x: number; y: number; r: number; from: Enemy }): void {
+    onEnemyExplode({ x, y, r, from }: { x: number; y: number; r: number; from: Enemy | null }): void {
         sfx.crumble();
         sfx.hit();
         this.ctx.feel.shake(220, 0.01);
@@ -56,6 +56,7 @@ export class Combat implements GameSystem {
         const flash = this.ctx.lighting.static(x, y, 0xf97316, 200, 1.4);
         this.scene.time.delayedCall(260, () => this.ctx.lighting.remove(flash));
         if (Math.hypot(this.ctx.player.x - x, this.ctx.player.y - y) < r) this.ctx.player.hurt(1, x);
+        if (!this.ctx.simulates) return;
         // lo scoppio non guarda in faccia nessuno: anche i compagni si fanno male
         for (const obj of this.ctx.groups.enemies.getChildren()) {
             const e = obj as Enemy;
@@ -66,18 +67,20 @@ export class Combat implements GameSystem {
     setupColliders(): void {
         const layer = this.ctx.world.level.layer;
         this.scene.physics.add.collider(this.ctx.player, layer);
-        this.scene.physics.add.collider(this.ctx.groups.enemies, layer);
+        if (this.ctx.simulates) this.scene.physics.add.collider(this.ctx.groups.enemies, layer);
         this.scene.physics.add.collider(this.ctx.groups.barre, layer);
         this.scene.physics.add.collider(this.ctx.groups.playerProjectiles, layer, (proj) => this.popProjectile(proj as Phaser.Physics.Arcade.Sprite));
         this.scene.physics.add.collider(this.ctx.groups.enemyProjectiles, layer, (proj) => this.popProjectile(proj as Phaser.Physics.Arcade.Sprite));
 
         this.scene.physics.add.collider(this.ctx.player, this.ctx.groups.doors);
         this.scene.physics.add.collider(this.ctx.player, this.ctx.groups.arenaBars);
-        this.scene.physics.add.collider(this.ctx.groups.enemies, this.ctx.groups.arenaBars);
-        this.scene.physics.add.collider(this.ctx.groups.enemies, this.ctx.groups.doors);
+        if (this.ctx.simulates) {
+            this.scene.physics.add.collider(this.ctx.groups.enemies, this.ctx.groups.arenaBars);
+            this.scene.physics.add.collider(this.ctx.groups.enemies, this.ctx.groups.doors);
+        }
 
         this.scene.physics.add.collider(this.ctx.player, this.ctx.world.level.breakableWalls);
-        this.scene.physics.add.collider(this.ctx.groups.enemies, this.ctx.world.level.breakableWalls);
+        if (this.ctx.simulates) this.scene.physics.add.collider(this.ctx.groups.enemies, this.ctx.world.level.breakableWalls);
         this.scene.physics.add.collider(this.ctx.groups.barre, this.ctx.world.level.breakableWalls);
         this.scene.physics.add.collider(this.ctx.groups.playerProjectiles, this.ctx.world.level.breakableWalls, (proj) => {
             this.popProjectile(proj as Phaser.Physics.Arcade.Sprite);
@@ -209,6 +212,7 @@ export class Combat implements GameSystem {
                 return;
             }
             if (this.ctx.player.hurt(1, proj.x)) {
+                this.ctx.coop?.projectileSpent(proj);
                 this.popProjectile(proj);
             }
         });
@@ -284,6 +288,7 @@ export class Combat implements GameSystem {
         });
         this.scene.time.delayedCall(800, () => burst.destroy());
         this.ctx.world.nav.open(Math.floor(wall.x / TILE), Math.floor(wall.y / TILE));
+        this.ctx.coop?.wallBroken(wall);
         wall.destroy();
     }
 
@@ -319,7 +324,8 @@ export class Combat implements GameSystem {
 
     /** danno del geco con l'avvelenamento: +30%, +15% sui boss */
     dmgTo(target: Enemy | Boss, amount: number, fromX: number, dir?: 'side' | 'up' | 'down' | 'shot'): boolean {
-        if (!this.ctx.simulates) return false;
+        // l'ospite colpisce i fantocci: il danno lo chiede all'host, qui resta solo quello che si sente
+        if (!this.ctx.simulates && !this.ctx.coop) return false;
         const poisoned = this.ctx.abilities.isPoisoned(target, this.scene.time.now);
         const mult = poisonMultiplier(poisoned, target instanceof Boss);
         let landed = true;
@@ -340,8 +346,14 @@ export class Combat implements GameSystem {
         });
     }
 
-    onEnemyShoot({ x, y, tx, ty, color, speed, size }: { x: number; y: number; tx: number; ty: number; color?: number; speed?: number; size?: number }): void {
+    onEnemyShoot(shot: { x: number; y: number; tx: number; ty: number; color?: number; speed?: number; size?: number }): void {
         if (!this.ctx.simulates) return;
+        const proj = this.shootProjectile(shot);
+        this.ctx.coop?.shot(proj, shot);
+    }
+
+    /** il colpo nemico in volo: lo spara l'host, e l'ospite lo rifà uguale da quello che riceve */
+    shootProjectile({ x, y, tx, ty, color, speed, size }: { x: number; y: number; tx: number; ty: number; color?: number; speed?: number; size?: number }): Phaser.Physics.Arcade.Sprite {
         const proj = this.ctx.groups.enemyProjectiles.create(x, y, 'proj-ball') as Phaser.Physics.Arcade.Sprite;
         proj.setDepth(5);
         proj.setTint(color ?? 0xf87171);
@@ -375,10 +387,17 @@ export class Combat implements GameSystem {
         pop.setDepth(4);
         this.scene.time.delayedCall(400, () => pop.destroy());
         this.scene.time.delayedCall(3200, () => proj.active && this.popProjectile(proj));
+        return proj;
     }
 
-    onBossLamette({ xs, y }: { xs: number[]; y: number }): void {
+    onBossLamette(e: { xs: number[]; y: number }): void {
         if (!this.ctx.simulates) return;
+        this.lamette(e);
+        this.ctx.coop?.lamette(e);
+    }
+
+    /** le lame dal suolo: le alza l'host, l'ospite le rifà uguali */
+    lamette({ xs, y }: { xs: number[]; y: number }): void {
         for (const x of xs) {
             // telegrafo a terra prima della lama
             const tele = this.scene.add.particles(x, y + 40, 'p-dot', {
