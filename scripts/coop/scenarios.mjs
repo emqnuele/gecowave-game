@@ -56,6 +56,22 @@ export const SCENARIOS = {
         const lv = (p) => p.evaluate(() => window.__game.scene.getScene('GameScene')?.sys.isActive() ? window.__state.save.levelId : null);
         t.check('host nel capitolo', (await lv(t.A)) === 'perduta');
         t.check('guest nel capitolo', (await lv(t.B)) === 'perduta');
+        const where = (p) => p.evaluate(() => {
+            const g = window.__game.scene.getScene('GameScene');
+            const q = g.ctx.coop?.partner;
+            return { me: [Math.round(g.player.x), Math.round(g.player.y)], partner: q?.visible ? [Math.round(q.x), Math.round(q.y)] : null };
+        });
+        const before = await where(t.B);
+        t.check('il guest vede l’host', !!before.partner, JSON.stringify(before));
+        await t.A.keyboard.down('KeyD');
+        await t.wait(1200);
+        await t.A.keyboard.up('KeyD');
+        await t.wait(600);
+        const a = await where(t.A);
+        const after = await where(t.B);
+        t.check('l’host si è mosso', a.me[0] > before.partner[0] + 100, JSON.stringify(a));
+        t.check('il guest lo vede dove sta', !!after.partner && Math.abs(after.partner[0] - a.me[0]) < 40, JSON.stringify(after));
+        t.check('l’host vede il guest', !!a.partner && Math.abs(a.partner[0] - after.me[0]) < 40, JSON.stringify(a));
         await t.shot(t.A, 'capitolo-host');
         await t.shot(t.B, 'capitolo-guest');
     },

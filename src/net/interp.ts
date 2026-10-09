@@ -15,7 +15,7 @@ const KEEP = 12;
 const MAX_EXTRAPOLATE_MS = 120;
 
 /** gli stati di un corpo, in ordine di tempo */
-export class Track<S extends Sample = Sample> {
+export class NetTrack<S extends Sample = Sample> {
     private samples: S[] = [];
 
     push(s: S): void {

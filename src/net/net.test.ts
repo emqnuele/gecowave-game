@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ByteReader, ByteWriter, seqNewer } from './codec';
-import { InterpDelay, Track } from './interp';
+import { InterpDelay, NetTrack } from './interp';
 import { makeCode, normalizeCode, CODE_LENGTH } from './rooms';
 import { FAST_GAME, NetSession } from './session';
 import { MemoryTransport } from './transport';
@@ -157,7 +157,7 @@ describe('sessione', () => {
 
 describe('interpolazione', () => {
     it('sta tra due stati e non inventa oltre il dovuto', () => {
-        const tr = new Track();
+        const tr = new NetTrack();
         tr.push({ t: 0, x: 0, y: 0, vx: 100, vy: 0 });
         tr.push({ t: 100, x: 10, y: 0, vx: 100, vy: 0 });
         tr.push({ t: 50, x: 999, y: 999, vx: 0, vy: 0 });
@@ -169,7 +169,7 @@ describe('interpolazione', () => {
     });
 
     it('un salto enorme non si spalma: si teletrasporta', () => {
-        const tr = new Track();
+        const tr = new NetTrack();
         tr.push({ t: 0, x: 0, y: 0, vx: 0, vy: 0 });
         tr.push({ t: 100, x: 5000, y: 0, vx: 0, vy: 0 });
         const out = { x: 0, y: 0, vx: 0, vy: 0 };

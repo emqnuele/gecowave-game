@@ -66,6 +66,8 @@ import type { SceneData } from '../game/context';
 import { emitWorld, offWorld, onWorld, type WorldEvent, type WorldHandler } from '../core/worldEvents';
 import { reseedRng, rng } from '../core/rng';
 import { FixedStep } from '../rules/fixedStep';
+import { coop } from '../coop/runtime';
+import { CoopScene } from '../game/coop/CoopScene';
 
 const FALL_DEATH_MARGIN = 3000;
 
@@ -125,7 +127,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     init(data: SceneData): void {
         // ogni livello pesca da sequenze sue: quello che è successo prima non sposta la sua trama
         reseedRng();
-        this.ctx = new GameContext(this);
+        this.ctx = new GameContext(this, !coop.isGuest);
         const region = loadRegion(this, data.levelId);
         const def = region?.def ?? LEVELS[data.levelId];
         if (!def) throw new Error(`livello sconosciuto: ${data.levelId}`);
@@ -415,6 +417,22 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.dialogues.playIntro(introId, !!this.chapter.startsInDark?.());
 
         this.setupScript();
+        this.setupCoop(data);
+    }
+
+    /** la partita in due: l'host annuncia il capitolo, l'ospite dice che è arrivato */
+    private setupCoop(data: SceneData): void {
+        const session = coop.session;
+        if (!coop.active) return;
+        if (session) {
+            this.ctx.coop = new CoopScene(this.ctx, session);
+            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+                this.ctx.coop?.destroy();
+                this.ctx.coop = null;
+            });
+        }
+        if (coop.isHost) coop.hostEnteredLevel(this.world.def.id, data.checkpointId ?? null, { x: this.player.x, y: this.player.y }, data.showCard !== false);
+        else session?.send('ready', { seq: coop.levelSeq });
     }
 
     /* ---------- costruzione ---------- */
@@ -570,6 +588,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         for (let i = 0; i < n; i++) this.tick(time - (n - 1 - i) * this.sim.dt, this.sim.dt);
         // senza passo il mondo è fermo, ma la camera si è mossa: quello che si vede la segue
         if (n === 0) this.present(time);
+        this.ctx.coop?.present();
         this.lens.update(this.player);
     }
 
@@ -601,6 +620,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         }
         if (this.controls.pressed('pause')) bus.emit('request-pause', {});
         this.player.update(time, delta);
+        this.ctx.coop?.tick(delta);
         this.mechanic?.update(time, delta);
 
         if (!this.player.dead && this.player.y > this.world.level.heightPx + FALL_DEATH_MARGIN) {
