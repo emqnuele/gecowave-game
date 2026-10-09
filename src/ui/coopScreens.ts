@@ -221,7 +221,7 @@ export class CoopScreens {
         let code = '';
         const startItem: MenuItem = {
             label: 'inizia',
-            sub: 'chi non è ancora entrato potrà farlo anche dopo',
+            sub: 'chi deve ancora entrare potrà farlo anche dopo',
             onPick: () => {
                 if (!code) return;
                 this.stopListening();
@@ -249,7 +249,7 @@ export class CoopScreens {
         this.off = coop.listen((e) => {
             if (e.type === 'partner') {
                 paintParty();
-                status.textContent = e.char ? `${e.char.name.toLowerCase()} è pronto.` : '';
+                status.textContent = e.char ? `${e.char.name.toLowerCase()} ha forgiato il suo geco.` : '';
             } else if (e.type === 'room-lost') {
                 status.textContent = 'la stanza non accetta più ingressi. annulla e riaprila.';
             }
@@ -396,7 +396,7 @@ export class CoopScreens {
         this.stopListening();
         const s = this.ui.openOverlay('screen sx menu-screen cx-lobby');
         const page = el('div', 'sx-page');
-        page.append(el('div', 'sx-kick', 'pronto'));
+        page.append(el('div', 'sx-kick', 'tutto pronto'));
         const name = coop.partner?.name.toLowerCase() ?? 'l’host';
         page.append(...this.ui.heading(coop.info?.playing ? 'entri nel capitolo…' : `aspetti ${name}`, coop.info?.playing ? undefined : `${name} dà il via quando vuole.`));
         const party = el('div', 'cx-party');

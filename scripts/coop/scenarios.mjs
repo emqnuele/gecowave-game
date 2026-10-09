@@ -103,7 +103,7 @@ export const SCENARIOS = {
         const a3 = await look(t.A);
         const b3 = await look(t.B);
         t.check('l’host vede la schermata della morte', a3.death, JSON.stringify(a3));
-        t.check('l’ospite aspetta l’host', b3.band === 'siete caduti', JSON.stringify(b3));
+        t.check('l’ospite aspetta l’host', b3.band === 'a terra tutti e due', JSON.stringify(b3));
         await t.shot(t.B, 'morte-insieme-ospite');
         await t.click(t.A, 'rialzati al microfono');
         await t.wait(4000);

@@ -112,8 +112,9 @@ export class CoopScene implements GameSystem {
         this.offs.push(coop.listen((e) => {
             if (e.type === 'link') this.hud.setLink(e.link);
             if (e.type === 'partner' && !e.char) {
+                const who = this.partner?.char.name.toLowerCase();
                 this.dropPartner();
-                bus.emit('toast', { text: 'l’altro giocatore è uscito. la partita continua: può rientrare col codice.' });
+                bus.emit('toast', { text: `${who ?? 'il compagno'} ha lasciato la partita. si continua: col codice si rientra quando si vuole.` });
             }
         }));
         this.offs.push(session.onFast(FAST_PLAYER, (r, sentAt) => {

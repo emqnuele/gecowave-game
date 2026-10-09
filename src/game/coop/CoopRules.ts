@@ -382,7 +382,7 @@ export class CoopRules {
         band.className = 'cx-spectate';
         const t = document.createElement('div');
         t.className = 't';
-        t.textContent = 'siete caduti';
+        t.textContent = 'a terra tutti e due';
         const s = document.createElement('div');
         s.className = 's';
         s.textContent = `${name} vi rialza al microfono.`;

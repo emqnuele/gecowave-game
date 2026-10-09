@@ -357,7 +357,7 @@ class CoopRuntime {
         this.session = null;
         this.clearSessionHandlers();
         if (s?.open) {
-            s.send('leave', { reason: this.isHost ? 'l’host ha chiuso la partita' : 'l’altro giocatore è uscito' });
+            s.send('leave', { reason: this.isHost ? 'l’host ha chiuso la partita' : `${this.me?.name.toLowerCase() ?? 'l’ospite'} ha lasciato la partita` });
             s.close(reason ?? 'chiusa');
         }
         this.room?.close();
