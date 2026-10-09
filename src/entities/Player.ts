@@ -354,6 +354,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.controls.pressed('jump')) {
             this.jumpBufferedUntil = now + PHYSICS.jumpBufferMs;
         }
+        // sott'acqua basta tenere premuto: una bracciata dopo l'altra
+        if (this.deep && !this.grounded && this.controls.down('jump') && now >= this.nextStrokeAt) {
+            this.jumpBufferedUntil = now + PHYSICS.jumpBufferMs;
+        }
         if (now < this.jumpBufferedUntil) {
             if (this.grounded || now < this.coyoteUntil) {
                 body.setVelocityY(-PHYSICS.jumpVelocity);
@@ -409,7 +413,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         }
         // salto variabile: rilascio = taglio della spinta
-        if (!this.controls.down('jump') && body.velocity.y < 0) {
+        if (!this.controls.down('jump') && body.velocity.y < 0 && !this.deep) {
             body.setVelocityY(body.velocity.y * (1 - (1 - PHYSICS.jumpCutFactor) * (delta / 100)));
         }
 

@@ -246,7 +246,8 @@ export class CameraLens {
         const low = !p.dead && hp > 0 && (hp <= 1 || hp / max <= 0.25);
         if (low) this.hold('vita', { pulse: 0.24 * heartbeat(now, 900), desat: 0.15 }, 1, 2);
         else this.release('vita', 2);
-        if (state.run.trenbolone) this.hold('trenbolone', { chroma: 0.35, desat: -0.35, wave: 0.2, angle: Math.sin(now / 900) * 0.006 }, 1, 1);
+        // dura due capitoli, fino al fiume: un'ombra di troppo colore, niente che ondeggi
+        if (state.run.trenbolone) this.hold('trenbolone', { chroma: 0.15, desat: -0.2 }, 1, 1);
         else this.release('trenbolone', 1);
         if (state.run.patto) this.hold('patto', { chroma: 0.45, desat: -0.3, glitch: 0.08 + 0.08 * Math.max(0, Math.sin(now / 430)) }, 1, 1);
         else this.release('patto', 1);
