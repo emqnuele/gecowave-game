@@ -1,6 +1,7 @@
 import type { AbilityId, DialogueLine } from '../types';
 import { ARC_DIALOGUES } from './arcs';
 import { toneFor } from './tone';
+import { rng } from '../core/rng';
 
 /* la voce del realm: minuscolo, demenziale, mai tecnico.
    pedro parla glitchato, riba coi refusi, piema corretto da professore.
@@ -62,11 +63,11 @@ export const DEATH_TANA = [
 /** una frase di morte col tono del capitolo in cui sei morto */
 export function deathPunchline(levelId: string): string {
     if (levelId === 'tana') {
-        return DEATH_TANA[Math.floor(Math.random() * DEATH_TANA.length)];
+        return DEATH_TANA[Math.floor(rng.logic.next() * DEATH_TANA.length)];
     }
     const pool = toneFor(levelId).deaths === 'serie' ? DEATH_LATE
-        : toneFor(levelId).deaths === 'miste' && Math.random() < 0.5 ? DEATH_LATE : DEATH_EARLY;
-    return pool[Math.floor(Math.random() * pool.length)];
+        : toneFor(levelId).deaths === 'miste' && rng.logic.next() < 0.5 ? DEATH_LATE : DEATH_EARLY;
+    return pool[Math.floor(rng.logic.next() * pool.length)];
 }
 
 export const DIALOGUES: Record<string, DialogueLine[]> = {
@@ -347,15 +348,6 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     ],
     'lore-cisterna': [
         { speaker: 'cisterna numero 3', color: 'cyan', text: '«livello: pieno. contenuto: ufficialmente "essenza di sorgente". fornitura elettrica intestata a Enercoop SpA, utenza morosa da 33 mesi. scritta a pennarello sotto: "rio merdone tale e quale, non dirlo a nessuno — s."»' },
-    ],
-    'furgone-intro': [
-        { speaker: 'smela', color: 'cyan', text: 'EHI! tu non sei del tour!! sei venuto a chiudere lo stabilimento, vero? lo sapevo. nessuno apprezza più la libera impresa.' },
-        { speaker: 'smela', color: 'cyan', text: 'va bene. va benissimo. sali pure sul ring, amico: io salgo sul FURGONE. consegna espressa: TU, direttamente al creatore. senza rimborso.' },
-    ],
-    'furgone-sconfitto': [
-        { speaker: 'smela', color: 'cyan', text: 'il furgone... il leasing... ma che è, una moda?? prima la sedia di ticummi ora il mio furgone...' },
-        { speaker: 'smela', color: 'cyan', text: 'ok. ok!! chiudo lo stabilimento. mi reinvento. ho già un\'idea: TRENBOLONE ARTIGIANALE BIOLOGICO. no aspetta. aspetta!! era uno scherzo!! METTI GIÙ QUELLA SPADA!!' },
-        { speaker: 'il geco', color: 'green', text: '*verso di geco che archivia la pratica*' },
     ],
 
     'lore-formiche': [

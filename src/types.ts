@@ -37,7 +37,7 @@ export type EnemyKind =
     | 'fiattipo';
 
 export type BossKind =
-    | 'guggu' | 'breccio' | 'notino' | 'riba' | 'furgone' | 'limite' | 'glitchpedro'
+    | 'guggu' | 'breccio' | 'notino' | 'riba' | 'limite' | 'glitchpedro'
     | 'lochef' | 'ombra' | 'ticummi' | 'formicona' | 'teorema' | 'pedrino' | 'pedro' | 'dei' | 'flauto'
     | 'danjilo' | 'smela' | 'settequaranta' | 'custode'
     | 'delegato' | 'notturno' | 'modello' | 'revisore' | 'garante'
@@ -46,10 +46,6 @@ export type BossKind =
 
 export type EntitySpec =
     | { type: 'enemy'; kind: EnemyKind }
-    /** nido di mostri stile minecraft: spawna `kind` finché non lo rompi.
-        maxAlive = vivi contemporanei attorno al nido, intervalMs = attesa
-        tra uno spawn e l'altro, radius = distanza di attivazione in px */
-    | { type: 'spawner'; kind: EnemyKind; maxAlive?: number; intervalMs?: number; radius?: number }
     | { type: 'npc'; id: string }
     | { type: 'ability'; ability: AbilityId }
     | { type: 'lore'; id: string }
@@ -136,7 +132,7 @@ export interface SaveData {
     flags: string[];
     endingSeen: string | null;
     playerName: string;
-    /** pelle del geco scelta alla forgia: id di SKIN_PRESETS (engine/playerSkin) */
+    /** pelle del geco scelta alla forgia: id di SKIN_PRESETS (content/skins) */
     skin: string;
     /** modalità doomsday: il realm si sgretola se perdi tempo, scelta alla forgia */
     doomsdayMode: boolean;

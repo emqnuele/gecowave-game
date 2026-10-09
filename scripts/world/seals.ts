@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { hashString } from '../../src/engine/art/ink';
+import { hashString } from '../../src/rules/hash';
 import { decodeGrid, type RegionFile } from '../../src/world/codec';
 import type { AbilitySeal, DoorKind, RegionLayout, Room, SealKind, SealReward } from '../../src/world/types';
 import type { AbilityId } from '../../src/types';

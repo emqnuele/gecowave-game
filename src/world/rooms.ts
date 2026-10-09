@@ -1,4 +1,4 @@
-import { mulberry32 } from '../engine/art/ink';
+import { mulberry32 } from '../rules/hash';
 import { AIR, Grid, SOLID, WATER } from './grid';
 import type { Door, Moves, Rect, Room } from './types';
 

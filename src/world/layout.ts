@@ -1,4 +1,4 @@
-import { mulberry32 } from '../engine/art/ink';
+import { mulberry32 } from '../rules/hash';
 import type { Door, DoorKind, Room, RoomKind } from './types';
 
 /* la macro-griglia della regione: un percorso critico di stanze che

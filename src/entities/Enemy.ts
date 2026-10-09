@@ -1,10 +1,12 @@
 import Phaser from 'phaser';
 import { ENEMIES, type EnemyArchetype } from '../content/enemies';
-import type { NavEdge, NavGraph } from '../engine/nav/NavGraph';
+import type { NavEdge, NavGraph } from '../world/NavGraph';
 import type { EnemyKind } from '../types';
-import { mix } from '../engine/art/ink';
-import { ensureCreature } from '../engine/art/creatures';
-import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../engine/art/creatureKit';
+import { mix } from '../art/ink';
+import { ensureCreature } from '../art/creatures';
+import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../art/creatureKit';
+import { emitWorld } from '../core/worldEvents';
+import { rng } from '../core/rng';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo
@@ -47,10 +49,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private nav: NavGraph | null;
     private homeX: number;
     private homeY: number;
-    private t = Math.random() * 1000;
+    private t = rng.logic.next() * 1000;
     private nextActionAt = 0;
     private nextShotAt = 0;
-    private facingDir: 1 | -1 = Math.random() < 0.5 ? -1 : 1;
+    private facingDir: 1 | -1 = rng.logic.next() < 0.5 ? -1 : 1;
     private chargingUntil = 0;
     private stunnedUntil = 0;
     /** sbandato: gli hai insegnato qualcosa, ora prende il doppio */
@@ -77,7 +79,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     /** occhi e luci della creatura, fuori dalla pipeline delle luci */
     private look: CreatureGlow;
     private frames: number;
-    private animT = Math.random() * 1000;
+    private animT = rng.fx.next() * 1000;
 
     constructor(scene: Phaser.Scene, x: number, y: number, kind: EnemyKind, nav: NavGraph | null = null, opts: { sleeping?: boolean; elite?: boolean; trait?: EnemyTrait | null } = {}) {
         super(scene, x, y, ensureCreature(scene, ENEMIES[kind].texture));
@@ -244,7 +246,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
         if (this.trait === 'kamikaze' && this.mode === 'chase' && dist < 80) {
             this.fuseAt = now + FUSE_MS;
-            this.scene.events.emit('enemy-fuse', { x: this.x, y: this.y });
+            emitWorld(this.scene, 'enemy-fuse', { x: this.x, y: this.y });
             return;
         }
 
@@ -265,7 +267,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             case 'patrol':
                 if (sees) {
                     this.setMode('alert', 380);
-                    this.scene.events.emit('enemy-alert', { x: this.x, y: this.y, from: this });
+                    emitWorld(this.scene, 'enemy-alert', { x: this.x, y: this.y, from: this });
                     break;
                 }
                 this.patrol(body, now);
@@ -306,7 +308,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         // chi ha un'arma spara solo se ti vede: niente colpi attraverso la roccia
         if (this.arch.fireRateMs && sees && this.mode === 'chase' && now >= this.nextShotAt) {
             this.nextShotAt = now + this.arch.fireRateMs;
-            this.scene.events.emit('enemy-shoot', { x: this.x, y: this.y, tx: target.x, ty: target.y, color: this.arch.glowColor });
+            emitWorld(this.scene, 'enemy-shoot', { x: this.x, y: this.y, tx: target.x, ty: target.y, color: this.arch.glowColor });
             // la torretta che ha appena sparato resta scoperta: si vede dal colore caldo
             if (this.arch.behavior === 'turret') {
                 this.setTint(0xfde68a);
@@ -322,14 +324,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         body.setVelocityY(260);
         this.setFlipY(false);
         this.clearTint();
-        this.scene.events.emit('enemy-drop', { x: this.x, y: this.y });
+        emitWorld(this.scene, 'enemy-drop', { x: this.x, y: this.y });
         this.hunt();
     }
 
     /** il kamikaze: un lampo, un raggio, e paga lo stesso le sue barre */
     private explode(): void {
         if (!this.active) return;
-        this.scene.events.emit('enemy-explode', { x: this.x, y: this.y, r: BLAST_R, from: this });
+        emitWorld(this.scene, 'enemy-explode', { x: this.x, y: this.y, r: BLAST_R, from: this });
         this.hp = 0;
         this.die();
     }
@@ -337,7 +339,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private wake(): void {
         this.setMode('alert', 500);
         this.scene.tweens.add({ targets: this, y: this.y - 6, duration: 120, yoyo: true });
-        this.scene.events.emit('enemy-alert', { x: this.x, y: this.y, from: this });
+        emitWorld(this.scene, 'enemy-alert', { x: this.x, y: this.y, from: this });
     }
 
     /* ---------- pattuglia ---------- */
@@ -365,7 +367,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (b === 'hopper') {
             if (this.ground && now >= this.nextActionAt) {
                 body.setVelocity(this.facingDir * this.arch.speed * 0.5, -300);
-                this.nextActionAt = now + 1100 + Math.random() * 900;
+                this.nextActionAt = now + 1100 + rng.logic.next() * 900;
                 this.setFlipX(this.facingDir > 0);
             }
             if (this.ground) body.setVelocityX(body.velocity.x * 0.85);
@@ -479,7 +481,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (this.arch.behavior === 'hopper' && Math.abs(d) > 56) {
             if (now >= this.nextActionAt) {
                 body.setVelocity(dir * Math.min(speed, Math.abs(d) * 3 + 60), -320);
-                this.nextActionAt = now + 420 + Math.random() * 300;
+                this.nextActionAt = now + 420 + rng.logic.next() * 300;
             } else {
                 body.setVelocityX(body.velocity.x * 0.9);
             }
@@ -595,15 +597,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         if (this.mode === 'sleep' || this.mode === 'patrol' || this.mode === 'return') {
             this.lastSeenAt = this.scene.time.now;
             this.setMode('chase');
-            this.scene.events.emit('enemy-alert', { x: this.x, y: this.y, from: this });
+            emitWorld(this.scene, 'enemy-alert', { x: this.x, y: this.y, from: this });
         }
         if (this.hp <= 0) this.die();
     }
 
     private die(): void {
         const [min, max] = this.arch.barre;
-        const amount = Phaser.Math.Between(min, max);
-        this.scene.events.emit('enemy-died', {
+        const amount = rng.logic.between(min, max);
+        emitWorld(this.scene, 'enemy-died', {
             x: this.x,
             y: this.y,
             kind: this.arch.kind,

@@ -1,4 +1,5 @@
 import { ui } from './dom';
+import { rng } from '../core/rng';
 
 /* fuochi e sangue dei titoli di coda: una tela sopra tutto, niente phaser.
    win = razzi che salgono e scoppiano in scie con gravità e crepitio;
@@ -140,17 +141,17 @@ export class EndingFx {
         const ctx = this.ctx;
         if (!ctx) return;
         if (t * 1000 >= this.nextLaunch && this.rockets.length < 3) {
-            this.nextLaunch = t * 1000 + 380 + Math.random() * 480;
+            this.nextLaunch = t * 1000 + 380 + rng.fx.next() * 480;
             const kinds: Rocket['kind'][] = ['peony', 'peony', 'ring', 'willow'];
-            const kind = kinds[Math.floor(Math.random() * kinds.length)];
-            const x = this.w * (0.12 + Math.random() * 0.76);
+            const kind = kinds[Math.floor(rng.fx.next() * kinds.length)];
+            const x = this.w * (0.12 + rng.fx.next() * 0.76);
             this.rockets.push({
                 x, y: this.h + 8,
-                vx: (Math.random() - 0.5) * 30,
-                vy: -(this.h * (0.52 + Math.random() * 0.2)),
-                fuse: 0.9 + Math.random() * 0.6,
-                palette: PALETTES[Math.floor(Math.random() * PALETTES.length)],
-                power: Math.min(this.w, this.h) * (0.16 + Math.random() * 0.1),
+                vx: (rng.fx.next() - 0.5) * 30,
+                vy: -(this.h * (0.52 + rng.fx.next() * 0.2)),
+                fuse: 0.9 + rng.fx.next() * 0.6,
+                palette: PALETTES[Math.floor(rng.fx.next() * PALETTES.length)],
+                power: Math.min(this.w, this.h) * (0.16 + rng.fx.next() * 0.1),
                 kind,
             });
         }
@@ -166,10 +167,10 @@ export class EndingFx {
             // scia di brace mentre sale
             for (let k = 0; k < 2; k++) {
                 this.sparks.push({
-                    x: r.x + (Math.random() - 0.5) * 3, y: r.y + Math.random() * 6,
+                    x: r.x + (rng.fx.next() - 0.5) * 3, y: r.y + rng.fx.next() * 6,
                     px: r.x, py: r.y + 8,
-                    vx: (Math.random() - 0.5) * 40, vy: 60 + Math.random() * 60,
-                    life: 0.35, max: 0.35, size: 1.1, color: '#ffb347', seed: Math.random() * 10,
+                    vx: (rng.fx.next() - 0.5) * 40, vy: 60 + rng.fx.next() * 60,
+                    life: 0.35, max: 0.35, size: 1.1, color: '#ffb347', seed: rng.fx.next() * 10,
                 });
             }
             ctx.fillStyle = '#fff7e0';
@@ -203,22 +204,22 @@ export class EndingFx {
 
     private explode(r: Rocket): void {
         this.flashes.push({ x: r.x, y: r.y, r: r.power * 0.9, a: 0.6 });
-        const n = r.kind === 'willow' ? 55 : 90 + Math.floor(Math.random() * 50);
+        const n = r.kind === 'willow' ? 55 : 90 + Math.floor(rng.fx.next() * 50);
         for (let i = 0; i < n; i++) {
             const a = r.kind === 'ring'
-                ? (Math.PI * 2 * i) / n + (Math.random() - 0.5) * 0.1
-                : Math.random() * Math.PI * 2;
+                ? (Math.PI * 2 * i) / n + (rng.fx.next() - 0.5) * 0.1
+                : rng.fx.next() * Math.PI * 2;
             const sp = r.kind === 'ring'
-                ? r.power * (0.95 + Math.random() * 0.1)
-                : r.power * (0.35 + Math.pow(Math.random(), 0.6) * 0.75);
-            const life = r.kind === 'willow' ? 2 + Math.random() * 0.9 : 1.1 + Math.random() * 0.9;
+                ? r.power * (0.95 + rng.fx.next() * 0.1)
+                : r.power * (0.35 + Math.pow(rng.fx.next(), 0.6) * 0.75);
+            const life = r.kind === 'willow' ? 2 + rng.fx.next() * 0.9 : 1.1 + rng.fx.next() * 0.9;
             this.sparks.push({
                 x: r.x, y: r.y, px: r.x, py: r.y,
                 vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
                 life, max: life,
-                size: 1 + Math.random() * 1.6,
-                color: r.palette[Math.floor(Math.random() * r.palette.length)],
-                seed: Math.random() * 10,
+                size: 1 + rng.fx.next() * 1.6,
+                color: r.palette[Math.floor(rng.fx.next() * r.palette.length)],
+                seed: rng.fx.next() * 10,
             });
         }
         if (this.sparks.length > 800) this.sparks.splice(0, this.sparks.length - 800);
@@ -253,11 +254,11 @@ export class EndingFx {
             ctx.lineTo(s.x, s.y);
             ctx.stroke();
             // crepitio finale: microscintille bianche
-            if (k < 0.4 && Math.random() < 0.1 && this.sparks.length < 800) {
+            if (k < 0.4 && rng.fx.next() < 0.1 && this.sparks.length < 800) {
                 this.sparks.push({
                     x: s.x, y: s.y, px: s.x, py: s.y,
-                    vx: (Math.random() - 0.5) * 90, vy: (Math.random() - 0.5) * 90,
-                    life: 0.3, max: 0.3, size: 0.9, color: '#ffffff', seed: Math.random() * 10,
+                    vx: (rng.fx.next() - 0.5) * 90, vy: (rng.fx.next() - 0.5) * 90,
+                    life: 0.3, max: 0.3, size: 0.9, color: '#ffffff', seed: rng.fx.next() * 10,
                 });
             }
         }
@@ -277,12 +278,12 @@ export class EndingFx {
         const cx = side / 2;
         const cy = side / 2;
         // filamenti: dita lunghe e sottili in tutte le direzioni
-        const spikes = 14 + Math.floor(Math.random() * 8);
+        const spikes = 14 + Math.floor(rng.fx.next() * 8);
         g.fillStyle = '#c1121f';
         for (let i = 0; i < spikes; i++) {
-            const a = (Math.PI * 2 * i) / spikes + (Math.random() - 0.5) * 0.5;
-            const len = radius * (0.7 + Math.random() * 0.9);
-            const wdt = 1.5 + Math.random() * (radius * 0.09);
+            const a = (Math.PI * 2 * i) / spikes + (rng.fx.next() - 0.5) * 0.5;
+            const len = radius * (0.7 + rng.fx.next() * 0.9);
+            const wdt = 1.5 + rng.fx.next() * (radius * 0.09);
             const tipX = cx + Math.cos(a) * len;
             const tipY = cy + Math.sin(a) * len;
             g.strokeStyle = '#c1121f';
@@ -293,7 +294,7 @@ export class EndingFx {
             g.lineTo(tipX, tipY);
             g.stroke();
             // perlina in punta a metà dei filamenti
-            if (Math.random() < 0.5) {
+            if (rng.fx.next() < 0.5) {
                 g.fillStyle = '#e5383b';
                 g.beginPath();
                 g.arc(tipX, tipY, wdt * 0.8, 0, Math.PI * 2);
@@ -302,12 +303,12 @@ export class EndingFx {
             }
         }
         // corpo: stella irregolare rosso vivo
-        const lobes = 9 + Math.floor(Math.random() * 5);
+        const lobes = 9 + Math.floor(rng.fx.next() * 5);
         g.fillStyle = '#c1121f';
         g.beginPath();
         for (let i = 0; i <= lobes; i++) {
             const a = (Math.PI * 2 * i) / lobes;
-            const rr = radius * (0.55 + Math.random() * 0.5);
+            const rr = radius * (0.55 + rng.fx.next() * 0.5);
             const x = cx + Math.cos(a) * rr;
             const y = cy + Math.sin(a) * rr;
             if (i === 0) g.moveTo(x, y);
@@ -325,38 +326,38 @@ export class EndingFx {
         g.arc(cx, cy, core, 0, Math.PI * 2);
         g.fill();
         // coli: 2-4 rigagnoli che scendono con la perlina in fondo
-        const drips = 2 + Math.floor(Math.random() * 3);
+        const drips = 2 + Math.floor(rng.fx.next() * 3);
         for (let i = 0; i < drips; i++) {
-            const dx = cx + (Math.random() - 0.5) * radius;
-            const len = radius * (0.5 + Math.random() * 0.8);
+            const dx = cx + (rng.fx.next() - 0.5) * radius;
+            const len = radius * (0.5 + rng.fx.next() * 0.8);
             g.strokeStyle = '#b30f0f';
-            g.lineWidth = 2 + Math.random() * 2;
+            g.lineWidth = 2 + rng.fx.next() * 2;
             g.lineCap = 'round';
             g.beginPath();
             g.moveTo(dx, cy + radius * 0.4);
-            g.lineTo(dx + (Math.random() - 0.5) * 8, cy + radius * 0.4 + len);
+            g.lineTo(dx + (rng.fx.next() - 0.5) * 8, cy + radius * 0.4 + len);
             g.stroke();
             g.fillStyle = '#e5383b';
             g.beginPath();
-            g.arc(dx, cy + radius * 0.4 + len, 2.5 + Math.random() * 2, 0, Math.PI * 2);
+            g.arc(dx, cy + radius * 0.4 + len, 2.5 + rng.fx.next() * 2, 0, Math.PI * 2);
             g.fill();
         }
         // nebbiolina: puntini fitti attorno
         for (let i = 0; i < 46; i++) {
-            const a = Math.random() * Math.PI * 2;
-            const d = radius * (0.9 + Math.random() * 0.7);
-            g.fillStyle = Math.random() < 0.7 ? '#c1121f' : '#e5383b';
+            const a = rng.fx.next() * Math.PI * 2;
+            const d = radius * (0.9 + rng.fx.next() * 0.7);
+            g.fillStyle = rng.fx.next() < 0.7 ? '#c1121f' : '#e5383b';
             g.beginPath();
-            g.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0.6 + Math.random() * 1.4, 0, Math.PI * 2);
+            g.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0.6 + rng.fx.next() * 1.4, 0, Math.PI * 2);
             g.fill();
         }
         // riflessi bagnati sui lobi in alto a sinistra
         g.fillStyle = 'rgba(255,150,150,0.5)';
         for (let i = 0; i < 4; i++) {
-            const a = Math.PI * (0.9 + Math.random() * 0.5);
-            const d = radius * (0.2 + Math.random() * 0.35);
+            const a = Math.PI * (0.9 + rng.fx.next() * 0.5);
+            const d = radius * (0.2 + rng.fx.next() * 0.35);
             g.beginPath();
-            g.ellipse(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 3 + Math.random() * 4, 1.5 + Math.random() * 2, -0.5, 0, Math.PI * 2);
+            g.ellipse(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 3 + rng.fx.next() * 4, 1.5 + rng.fx.next() * 2, -0.5, 0, Math.PI * 2);
             g.fill();
         }
         return c;
@@ -386,29 +387,29 @@ export class EndingFx {
     private scheduleHits(): void {
         const now = performance.now();
         // uno per fascia orizzontale: copre l'obiettivo senza impastare il centro
-        const zones = [0.2, 0.5, 0.8].sort(() => Math.random() - 0.5);
+        const zones = [0.2, 0.5, 0.8].sort(() => rng.fx.next() - 0.5);
         const delays = [350, 2100, 3900];
         for (let i = 0; i < 3; i++) {
             this.pending.push({
                 at: now + delays[i],
-                x: this.w * (zones[i] + (Math.random() - 0.5) * 0.12),
-                y: this.h * (0.2 + Math.random() * 0.45),
-                radius: Math.min(this.w, this.h) * (0.09 + Math.random() * 0.08),
+                x: this.w * (zones[i] + (rng.fx.next() - 0.5) * 0.12),
+                y: this.h * (0.2 + rng.fx.next() * 0.45),
+                radius: Math.min(this.w, this.h) * (0.09 + rng.fx.next() * 0.08),
             });
         }
     }
 
     private strike(p: { x: number; y: number; radius: number }): void {
         const sprite = this.makeSplat(p.radius);
-        this.baked.push({ sprite, x: p.x, y: p.y, scale: 0.01, rot: Math.random() * Math.PI * 2, born: performance.now(), stored: false });
+        this.baked.push({ sprite, x: p.x, y: p.y, scale: 0.01, rot: rng.fx.next() * Math.PI * 2, born: performance.now(), stored: false });
         for (let i = 0; i < 12; i++) {
-            const a = Math.random() * Math.PI * 2;
-            const sp = 200 + Math.random() * 320;
+            const a = rng.fx.next() * Math.PI * 2;
+            const sp = 200 + rng.fx.next() * 320;
             this.droplets.push({
                 x: p.x, y: p.y, px: p.x, py: p.y,
                 vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80,
-                life: 0.3 + Math.random() * 0.25,
-                r: 1.5 + Math.random() * 2.5,
+                life: 0.3 + rng.fx.next() * 0.25,
+                r: 1.5 + rng.fx.next() * 2.5,
             });
         }
         this.lastActive = performance.now();
@@ -456,7 +457,7 @@ export class EndingFx {
             d.x += d.vx * _dt;
             d.y += d.vy * _dt;
             if (d.life <= 0) {
-                this.bakeDot(d.x, d.y, d.r, Math.random() < 0.4);
+                this.bakeDot(d.x, d.y, d.r, rng.fx.next() < 0.4);
                 this.droplets.splice(i, 1);
                 continue;
             }

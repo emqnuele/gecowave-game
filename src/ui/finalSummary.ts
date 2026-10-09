@@ -1,7 +1,7 @@
 import { ZONE_CSS } from '../config';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
-import type { FinalSummary } from '../engine/ChapterCompletion';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
+import type { FinalSummary } from '../core/ChapterCompletion';
 import { Cine, fmt, heartIcon, isCinematicOpen } from './cine';
 import { el } from './dom';
 

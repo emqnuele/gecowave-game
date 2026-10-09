@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { COMBAT, PHYSICS, PLAYER_SPRITE } from '../config';
-import { FX } from '../engine/art/abilityFx';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { FX } from '../art/abilityFx';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
+import { rng } from '../core/rng';
 
 type Hostile = Phaser.GameObjects.Sprite & { active: boolean };
 
@@ -118,7 +119,7 @@ export class Companion extends Phaser.Physics.Arcade.Sprite {
             // passi corti avanti/indietro, sguardo sempre al bersaglio
             if (now >= this.strafeFlipAt) {
                 this.strafeDir = (this.strafeDir * -1) as 1 | -1;
-                this.strafeFlipAt = now + 180 + Math.random() * 160;
+                this.strafeFlipAt = now + 180 + rng.logic.next() * 160;
             }
             this.facing = dx < 0 ? -1 : 1;
             this.setFlipX(this.facing < 0);

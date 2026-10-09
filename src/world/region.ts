@@ -1,7 +1,7 @@
 import { biomeFor } from '../content/biomes';
 import { ENEMIES } from '../content/enemies';
 import { LEVEL_ORDER } from '../content/levels';
-import { hashString, mulberry32 } from '../engine/art/ink';
+import { hashString, mulberry32 } from '../rules/hash';
 import type { EntitySpec, LevelDef } from '../types';
 import { extractBeats, type Beat } from './beats';
 import { AIR, Grid, SOLID } from './grid';
@@ -341,7 +341,7 @@ function attemptRegion(def: LevelDef, attempt: number): Region & { report: Regio
             for (let k = 0; k < count && cand.length; k++) {
                 const ch = pickWeighted(rnd, pool.map((p) => ({ spec: p.ch, w: p.weight })));
                 const spec = def.entities[ch];
-                const kind = spec.type === 'enemy' || spec.type === 'spawner' ? (spec as { kind: keyof typeof ENEMIES }).kind : null;
+                const kind = spec.type === 'enemy' ? spec.kind : null;
                 const flyer = kind ? ENEMIES[kind].behavior === 'flyer' : false;
                 const cell = cand[Math.floor(rnd() * cand.length)];
                 if (!far(cell, 5)) continue;

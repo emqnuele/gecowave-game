@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
-import { CreatureGlow, creatureFrames, creatureRes } from '../engine/art/creatureKit';
-import { CREATURE_KEYS, ensureCreature } from '../engine/art/creatures';
+import { CreatureGlow, creatureFrames, creatureRes } from '../art/creatureKit';
+import { CREATURE_KEYS, ensureCreature } from '../art/creatures';
 import { FLASHBACKS } from '../content/flashbacks';
-import { flashback } from '../engine/FlashbackManager';
-import { sfx } from '../engine/sfx';
+import { flashback } from '../story/FlashbackManager';
+import { sfx } from '../audio/sfx';
 
 /* solo sviluppo (?gallery): tutto il cast vivo in griglia sotto una luce
    che segue il mouse, per controllare disegni, normal map e fotogrammi.
@@ -18,6 +18,9 @@ export class GalleryScene extends Phaser.Scene {
     }
 
     create(): void {
+        // phaser riusa la stessa istanza a ogni restart: quello che non si riassegna qui passerebbe alla vita dopo
+        this.t = 0;
+        this.sprites = [];
         const params = new URLSearchParams(location.search);
         if (params.has('flashback')) {
             this.flashbackPreview(params.get('flashback') ?? 'all');
@@ -81,7 +84,7 @@ export class GalleryScene extends Phaser.Scene {
             b.textContent = `${i + 1} ${id.replace('fb-', '')}`;
             b.onclick = () => {
                 if (flashback.isPlaying) return;
-                try { sfx.init(); } catch { /* anteprima senza audio */ }
+                sfx.init();
                 idx = i;
                 sequence = false;
                 this.playOne(dummy, ids[idx]!, () => this.idleNext(dummy, ids, () => idx, (v) => { idx = v; }, sequence));
@@ -94,7 +97,7 @@ export class GalleryScene extends Phaser.Scene {
         all.textContent = '▶ tutti';
         all.onclick = () => {
             if (flashback.isPlaying) return;
-            try { sfx.init(); } catch { /* anteprima senza audio */ }
+            sfx.init();
             sequence = true;
             this.playOne(dummy, ids[idx]!, () => this.idleNext(dummy, ids, () => idx, (v) => { idx = v; }, sequence));
         };
@@ -112,7 +115,7 @@ export class GalleryScene extends Phaser.Scene {
         const go = document.createElement('button');
         go.textContent = '▶ guarda i ricordi (attiva l\u2019audio)';
         go.onclick = () => {
-            try { sfx.init(); } catch { /* anteprima senza audio */ }
+            sfx.init();
             gate.remove();
             this.playOne(dummy, ids[idx]!, () => this.idleNext(dummy, ids, () => idx, (v) => { idx = v; }, sequence));
         };

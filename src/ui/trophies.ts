@@ -1,9 +1,9 @@
 import { ACHIEVEMENTS, type AchievementDef } from '../content/achievements';
 import { LEVELS, LEVEL_ORDER } from '../content/levels';
-import { achievementsBlocked } from '../engine/achievements';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
-import { loadBoard } from '../engine/score';
+import { achievementsBlocked } from '../core/achievements';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
+import { loadBoard } from '../core/score';
 import { el } from './dom';
 import './trophies.css';
 

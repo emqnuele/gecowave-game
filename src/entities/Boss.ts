@@ -1,14 +1,17 @@
 import Phaser from 'phaser';
 import { BOSSES, type BossAttack, type BossDef } from '../content/bosses';
-import { bus } from '../engine/events';
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { bus } from '../core/events';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import type { BossKind } from '../types';
-import { ensureCreature } from '../engine/art/creatures';
-import { acoustics } from '../engine/audio/acoustics';
-import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../engine/art/creatureKit';
+import { bossPhase, type BossPhase } from '../rules/combat';
+import { ensureCreature } from '../art/creatures';
+import { acoustics } from '../audio/acoustics';
+import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../art/creatureKit';
+import { emitWorld } from '../core/worldEvents';
+import { rng } from '../core/rng';
 
-type Phase = 1 | 2 | 3;
+type Phase = BossPhase;
 
 /** da dove arriva un colpo: serve a chi para una direzione sola (l'ombra che impara) */
 export type HitDir = 'side' | 'up' | 'down' | 'shot';
@@ -88,9 +91,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     get phase(): Phase {
-        if (this.hp > this.maxHp * 0.66) return 1;
-        if (this.hp > this.maxHp * 0.33) return 2;
-        return 3;
+        return bossPhase(this.hp, this.maxHp);
     }
 
     engage(): void {
@@ -126,7 +127,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         }
         sfx.bossRoar();
         bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
-        this.scene.events.emit('boss-engaged', this);
+        emitWorld(this.scene, 'boss-engaged', this);
     }
 
     /** più robusto prima che lo scontro entri nel vivo (l'ombra nutrita dalle telecamere) */
@@ -198,12 +199,13 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         if (this.def.glitchy) {
             if (this.scaleX !== this.baseScale) this.setScale(this.baseScale);
             // scatti, tremori, niente movimenti morbidi: deve fare paura
+            // l'origine di disegno sposta anche il corpo arcade: il tremore muove la hitbox, quindi pesca dalla logica
             this.setDisplayOrigin(
-                this.width / 2 + (Math.random() > 0.85 ? (Math.random() - 0.5) * 8 * this.res : 0),
-                this.height / 2 + (Math.random() > 0.9 ? (Math.random() - 0.5) * 6 * this.res : 0)
+                this.width / 2 + (rng.logic.next() > 0.85 ? (rng.logic.next() - 0.5) * 8 * this.res : 0),
+                this.height / 2 + (rng.logic.next() > 0.9 ? (rng.logic.next() - 0.5) * 6 * this.res : 0)
             );
-            if (Math.random() > 0.985) {
-                this.setTintFill(Math.random() > 0.5 ? 0x22d3ee : 0xf87171);
+            if (rng.fx.next() > 0.985) {
+                this.setTintFill(rng.fx.next() > 0.5 ? 0x22d3ee : 0xf87171);
                 this.scene.time.delayedCall(60, () => this.active && !this.busy && this.clearTint());
             }
         } else {
@@ -218,7 +220,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         // scia viva: chi orbita o glitcha lascia afterimage, chi carica alza polvere
         if (this.engaged && !this.busy) {
             const spd = Math.abs(body.velocity.x) + Math.abs(body.velocity.y);
-            if ((this.def.glitchy || this.def.move === 'orbit') && Math.random() > 0.93) this.afterimage();
+            if ((this.def.glitchy || this.def.move === 'orbit') && rng.fx.next() > 0.93) this.afterimage();
             if (spd > 420 && this.t - (this.lastDustAt ?? 0) > 320) {
                 this.lastDustAt = this.t;
                 this.dust(3);
@@ -255,9 +257,9 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
                 case 'erratic':
                     // scatti casuali ogni ~1.2s
                     if (!this.nextHopAt || now > this.nextHopAt) {
-                        this.nextHopAt = now + 900 + Math.random() * 700;
-                        this.hopX = this.anchorX + (Math.random() - 0.5) * 360;
-                        this.hopY = this.anchorY + (Math.random() - 0.5) * 140;
+                        this.nextHopAt = now + 900 + rng.logic.next() * 700;
+                        this.hopX = this.anchorX + (rng.logic.next() - 0.5) * 360;
+                        this.hopY = this.anchorY + (rng.logic.next() - 0.5) * 140;
                     }
                     if (this.hopX !== undefined) {
                         this.anchorX += (this.hopX - this.anchorX) * 0.06 * k;
@@ -301,19 +303,19 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         const summonKind = this.summonOverride ?? this.def.summonKind;
         if (summonKind && phase >= 2 && this.summonedAtPhase < phase) {
             this.summonedAtPhase = phase;
-            this.scene.events.emit('boss-summon', { x: this.anchorX - 180, y: this.anchorY, kind: summonKind });
-            this.scene.events.emit('boss-summon', { x: this.anchorX + 180, y: this.anchorY, kind: summonKind });
+            emitWorld(this.scene, 'boss-summon', { x: this.anchorX - 180, y: this.anchorY, kind: summonKind });
+            emitWorld(this.scene, 'boss-summon', { x: this.anchorX + 180, y: this.anchorY, kind: summonKind });
             sfx.bossRoar();
             return;
         }
 
         const pool = this.def.attacks[this.frenzy ? 3 : phase];
-        this.execute(pool[Math.floor(Math.random() * pool.length)], player, this.frenzy ? 3 : phase);
+        this.execute(pool[Math.floor(rng.logic.next() * pool.length)], player, this.frenzy ? 3 : phase);
     }
 
     private execute(attack: BossAttack, player: Phaser.GameObjects.Sprite, phase: Phase): void {
         // non a ogni colpo: la voce resta un segnale, non un rumore di fondo
-        if (Math.random() < 0.55) sfx.bossVoice(this.def.texture);
+        if (rng.fx.next() < 0.55) sfx.bossVoice(this.def.texture);
         switch (attack) {
             case 'dive': return this.dive(player, 700);
             case 'charge': return this.charge(player);
@@ -330,7 +332,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             case 'summon': {
                 const kind = this.summonOverride ?? this.def.summonKind;
                 if (kind) {
-                    this.scene.events.emit('boss-summon', { x: this.x, y: this.y, kind });
+                    emitWorld(this.scene, 'boss-summon', { x: this.x, y: this.y, kind });
                 }
                 return;
             }
@@ -404,7 +406,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         this.anticipate(140);
         sfx.shoot();
         for (let i = 0; i < count; i++) {
-            const angle = (Math.PI * 2 * i) / count + Math.random() * 0.2;
+            const angle = (Math.PI * 2 * i) / count + rng.logic.next() * 0.2;
             this.shot(this.x, this.y, this.x + Math.cos(angle) * 100, this.y + Math.sin(angle) * 100, { speed: 220, size: 1 });
         }
     }
@@ -414,7 +416,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         this.anticipate(140);
         sfx.shoot();
         for (let i = 0; i < count; i++) {
-            const ox = (i - count / 2) * 70 + Math.random() * 40;
+            const ox = (i - count / 2) * 70 + rng.logic.next() * 40;
             this.shot(this.anchorX + ox, this.anchorY - 260, this.anchorX + ox, this.anchorY + 240, { speed: 300, size: 0.95 });
         }
     }
@@ -426,7 +428,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             this.scene.time.delayedCall(i * 130, () => {
                 if (!this.active || !player.active) return;
                 sfx.shoot();
-                this.shot(this.x, this.y, player.x + (Math.random() - 0.5) * 60, player.y + (Math.random() - 0.5) * 40, { speed: 390, size: 0.8 });
+                this.shot(this.x, this.y, player.x + (rng.logic.next() - 0.5) * 60, player.y + (rng.logic.next() - 0.5) * 40, { speed: 390, size: 0.8 });
             });
         }
     }
@@ -443,7 +445,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             duration: 160,
             onComplete: () => {
                 if (!this.active) return;
-                const side = Math.random() > 0.5 ? 1 : -1;
+                const side = rng.logic.next() > 0.5 ? 1 : -1;
                 this.setPosition(player.x + side * 130, player.y - 80);
                 this.scene.cameras.main.flash(60, 34, 211, 238);
                 this.afterimage();
@@ -465,16 +467,16 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     private lamette(player: Phaser.GameObjects.Sprite, count: number): void {
         const xs: number[] = [];
         for (let i = 0; i < count; i++) {
-            xs.push(player.x + (i - count / 2) * 64 + Math.random() * 24);
+            xs.push(player.x + (i - count / 2) * 64 + rng.logic.next() * 24);
         }
-        this.scene.events.emit('boss-lamette', { xs, y: player.y });
+        emitWorld(this.scene, 'boss-lamette', { xs, y: player.y });
     }
 
     /** spirale rotante: 2-3 ventagli sfasati, firma dei boss glitch/divini */
     private spiral(waves: number): void {
         this.anticipate(160);
         sfx.shoot();
-        const base = Math.random() * Math.PI * 2;
+        const base = rng.logic.next() * Math.PI * 2;
         for (let w = 0; w < waves; w++) {
             this.scene.time.delayedCall(w * 260, () => {
                 if (!this.active) return;
@@ -519,7 +521,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             gfx.destroy();
             if (!this.active || !player.active) return;
             sfx.shoot();
-            this.scene.events.emit('enemy-shoot', {
+            emitWorld(this.scene, 'enemy-shoot', {
                 x: this.x,
                 y: this.y,
                 tx: player.x,
@@ -584,21 +586,21 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         const lead = Phaser.Math.Clamp(vx * 0.45, -220, 220);
         const xs: number[] = [];
         for (let i = 0; i < count; i++) {
-            xs.push(player.x + lead + (i - (count - 1) / 2) * 72 + (Math.random() - 0.5) * 20);
+            xs.push(player.x + lead + (i - (count - 1) / 2) * 72 + (rng.logic.next() - 0.5) * 20);
         }
         // doppio tick: prima le esterne, poi il centro (costringe a muoversi)
-        this.scene.events.emit('boss-lamette', { xs, y: player.y });
+        emitWorld(this.scene, 'boss-lamette', { xs, y: player.y });
         if (count >= 4) {
             this.scene.time.delayedCall(420, () => {
                 if (!this.active || !player.active) return;
-                this.scene.events.emit('boss-lamette', { xs: [player.x + lead * 0.5], y: player.y });
+                emitWorld(this.scene, 'boss-lamette', { xs: [player.x + lead * 0.5], y: player.y });
             });
         }
     }
 
     /** proiettile firmato: ogni attacco ha la sua velocità e taglia */
     private shot(x: number, y: number, tx: number, ty: number, opts: { speed: number; size: number }): void {
-        this.scene.events.emit('enemy-shoot', {
+        emitWorld(this.scene, 'enemy-shoot', {
             x, y, tx, ty, color: this.def.glowColor, speed: opts.speed, size: opts.size,
         });
     }
@@ -617,15 +619,13 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     /** polvere ai piedi: peso e attrito */
     private dust(n: number): void {
         if (!this.active) return;
-        try {
-            const p = this.scene.add.particles(this.x, this.y + 30, 'p-dot', {
-                speed: { min: 40, max: 160 }, angle: { min: 200, max: 340 },
-                scale: { start: 0.7, end: 0 }, alpha: { start: 0.5, end: 0 },
-                tint: 0xd6d3d1, lifespan: 450, quantity: n, stopAfter: n,
-            });
-            p.setDepth(4);
-            this.scene.time.delayedCall(600, () => p.destroy());
-        } catch { /* test */ }
+        const p = this.scene.add.particles(this.x, this.y + 30, 'p-dot', {
+            speed: { min: 40, max: 160 }, angle: { min: 200, max: 340 },
+            scale: { start: 0.7, end: 0 }, alpha: { start: 0.5, end: 0 },
+            tint: 0xd6d3d1, lifespan: 450, quantity: n, stopAfter: n,
+        });
+        p.setDepth(4);
+        this.scene.time.delayedCall(600, () => p.destroy());
     }
 
     /** onda d'urto ad anello: fasi, slam, engage. si sente. */
@@ -649,17 +649,15 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     /** afterimage: scia per chi si muove da glitch */
     private afterimage(): void {
         if (!this.active) return;
-        try {
-            const ghost = this.scene.add.image(this.x, this.y, this.texture.key, this.frame.name)
-                .setDepth(4).setScale(this.scaleX).setAlpha(0.35).setTint(this.def.glowColor);
-            this.scene.tweens.add({ targets: ghost, alpha: 0, duration: 320, onComplete: () => ghost.destroy() });
-        } catch { /* test */ }
+        const ghost = this.scene.add.image(this.x, this.y, this.texture.key, this.frame.name)
+            .setDepth(4).setScale(this.scaleX).setAlpha(0.35).setTint(this.def.glowColor);
+        this.scene.tweens.add({ targets: ghost, alpha: 0, duration: 320, onComplete: () => ghost.destroy() });
     }
 
     takeDamage(amount: number, fromX: number, dir?: HitDir): boolean {
         if (!this.active) return false;
         if (dir && dir === this.guarding) {
-            this.scene.events.emit('boss-parried', { dir });
+            emitWorld(this.scene, 'boss-parried', { dir });
             this.ringShock(this.x + Math.sign(fromX - this.x) * 30, this.y, 0xffffff);
             sfx.clang();
             return false;
@@ -686,19 +684,17 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         else if (this.phase !== this.heardPhase) {
             // cambio di fase: la stanza trattiene il fiato e il boss cambia pelle
             this.heardPhase = this.phase;
-            this.scene.events.emit('boss-phase', { phase: this.phase });
+            emitWorld(this.scene, 'boss-phase', { phase: this.phase });
             sfx.bossRoar();
             acoustics.swell(1300, 0.7);
             this.scene.cameras.main.shake(350, 0.008);
             this.ringShock(this.x, this.y, this.def.glowColor);
             this.dust(10);
             // punch della camera: dentro e fuori in 300ms
-            try {
-                const cam = this.scene.cameras.main;
-                const z = cam.zoom;
-                cam.zoomTo(z * 1.05, 140);
-                this.scene.time.delayedCall(160, () => cam.zoomTo(z, 220));
-            } catch { /* camera test finta */ }
+            const cam = this.scene.cameras.main;
+            const z = cam.zoom;
+            cam.zoomTo(z * 1.05, 140);
+            this.scene.time.delayedCall(160, () => cam.zoomTo(z, 220));
             // l'aura si scalda: più rabbia, più luce
             this.setTintFill(0xffffff);
             this.scene.time.delayedCall(140, () => this.active && this.clearTint());
@@ -715,12 +711,12 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         const { x, y } = this;
         const scene = this.scene;
         const kind = this.def.kind;
-        scene.events.emit('boss-dying', { kind });
+        emitWorld(scene, 'boss-dying', { kind });
         this.destroy();
         sfx.bossRoar();
         for (let i = 0; i < 5; i++) {
             scene.time.delayedCall(i * 180, () => {
-                scene.add.particles(x + (Math.random() - 0.5) * 140, y + (Math.random() - 0.5) * 140, 'p-spark', {
+                scene.add.particles(x + (rng.fx.next() - 0.5) * 140, y + (rng.fx.next() - 0.5) * 140, 'p-spark', {
                     speed: { min: 150, max: 400 },
                     scale: { start: 1.4, end: 0 },
                     tint: [this.def.glowColor, 0xffffff],
@@ -731,7 +727,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             });
         }
         scene.cameras.main.shake(800, 0.012);
-        scene.time.delayedCall(1300, () => scene.events.emit('boss-defeated', { kind, x, y }));
+        scene.time.delayedCall(1300, () => emitWorld(scene, 'boss-defeated', { kind, x, y }));
     }
 
     private animT = 0;

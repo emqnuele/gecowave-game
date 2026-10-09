@@ -1,3 +1,4 @@
+import { rng } from '../core/rng';
 /* la camera oscura: sviluppo cinematografico degli scatti e rullino.
    gli scatti vivono in localStorage come jpeg, una ventina al massimo */
 
@@ -51,8 +52,8 @@ export function processPhoto(img: HTMLImageElement, o: { filter: PhotoFilter; le
     ctx.fillRect(0, 0, W, H);
     // grana della pellicola
     for (let i = 0; i < 1200; i++) {
-        ctx.fillStyle = `rgba(255,255,255,${(Math.random() * 0.05).toFixed(3)})`;
-        ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
+        ctx.fillStyle = `rgba(255,255,255,${(rng.fx.next() * 0.05).toFixed(3)})`;
+        ctx.fillRect(rng.fx.next() * W, rng.fx.next() * H, 1, 1);
     }
     const bar = Math.round(H * 0.11);
     if (o.letterbox) {
@@ -85,7 +86,7 @@ export function listPhotos(): Photo[] {
 }
 
 export function savePhoto(p: Omit<Photo, 'id' | 'at'>): Photo | null {
-    const photo: Photo = { ...p, id: `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`, at: Date.now() };
+    const photo: Photo = { ...p, id: `${Date.now().toString(36)}${Math.floor(rng.logic.next() * 1e4).toString(36)}`, at: Date.now() };
     let arr = [photo, ...listPhotos()].slice(0, MAX);
     try {
         localStorage.setItem(KEY, JSON.stringify(arr));

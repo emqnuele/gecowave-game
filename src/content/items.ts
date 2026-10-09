@@ -152,9 +152,6 @@ export const ITEMS: Record<string, ItemDef> = {
     },
 };
 
-/** vecchi consumabili tolti dall'economia: chi li aveva li ritrova in barre, al prezzo di wavezon */
-export const LEGACY_ITEMS: Record<string, number> = { energetico: 22, 'caffe-mensa': 35, rubinetto: 10, santino: 50, 'brodo-lochef': 80 };
-
 /** prezzi crescenti delle tacche extra su wavezon */
 export const NOTCH_PRICES = [120, 280, 520];
 export const BASE_NOTCHES = 3;

@@ -1,8 +1,8 @@
 import { COMBAT, ZONE_CSS } from '../config';
 import { ABILITY_CARDS } from '../content/story';
-import { bus } from '../engine/events';
-import { formatKeys, keyLabel } from '../engine/input/keyText';
-import { state } from '../engine/state';
+import { bus } from '../core/events';
+import { formatKeys, keyLabel } from '../input/keyText';
+import { state } from '../core/state';
 import type { AbilityId, ZoneColor } from '../types';
 import { el } from './dom';
 

@@ -12,36 +12,41 @@ npm run build    # typecheck + build di produzione
 
 ## Com'è fatto
 
-- **Phaser 3 + TypeScript + Vite.** Canvas trasparente sopra uno sfondo DOM; la UI (menu, HUD, dialoghi, scelte) è interamente DOM in stile "Acid Glass" (`design_system.md` del sito).
-- **Asset dipinti** (in `public/assets/`): sprite sheet del protagonista, sfondi `background.png`/`background2.png`, colonne gotiche, atlante dei props, tileset in pietra a 160px scalato 0.2. Tutto il resto del cast (nemici, npc, boss, oggetti) è generato proceduralmente in `src/engine/textures.ts`.
-- **Atmosfera**: luci dinamiche Light2D (ambiente quasi nero tinto di zona, soul-glow sul geco, lanterne tremolanti, glow sui nemici), parallax a 4-5 strati con **nebbia davanti al giocatore**, decorazioni procedurali piazzate leggendo la griglia del livello, vignette sulla camera.
-- **Souls-like**: i microfoni sono i bonfire (premi E), alla morte lasci le barre a terra e torni a riprendertele, i boss bloccano l'uscita.
+- **Phaser 3 + TypeScript + Vite.** Canvas trasparente sopra uno sfondo DOM; la UI (menu, HUD, dialoghi, scelte, telefono) è interamente DOM in stile "Acid Glass" (`docs/design-system.md`).
+- **Il mondo a regioni**: i capitoli in `src/content/levels/` sono la sorgente della trama; un generatore offline (`npm run regions`) li trasforma in regioni a stanze, verificate da un simulatore a fisica vera, in `public/regions/<id>.json`.
+- **Il cast a inchiostro**: sfondi dipinti in `public/assets/`; nemici, boss, personaggi, passanti e oggetti sono disegnati dal codice (`src/art/`), animati, con normal map per le luci vere.
+- **Atmosfera**: luci dinamiche Light2D, parallasse a strati con nebbia davanti al geco, terreno e arredo disegnati dalla griglia, acustica che prende la forma del posto, musica ovattata di notte.
+- **Souls-like**: i microfoni sono i bonfire (premi E), alla morte lasci le barre a terra e torni a riprendertele, i boss chiudono la stanza.
 - **Movimento HK**: coyote time, jump buffer, salto variabile, pogo (S+J in aria), scivolata con i-frames, combo a 3 colpi.
+- **Uguale a ogni schermo**: la logica va a passi fissi da 1/60 di secondo, a 60, 120 o 144 Hz il gioco è lo stesso.
 
 ## Struttura
 
 ```
 src/
-  config.ts                  costanti di fisica, combat, colori di zona
-  types.ts                   tipi condivisi (LevelDef, EntitySpec, ...)
-  content/
-    levels/                  un file per capitolo + index.ts (registro)
-    story.ts                 dialoghi, intro, finali, quiz, wavesung, card abilità
-    enemies.ts               archetipi nemici (comportamento, hp, barre, glow)
-    bosses.ts                definizioni boss (fasi, attacchi, cooldown)
-  engine/
-    LevelLoader.ts           griglia ascii -> tilemap, spine, acqua, entità
-    LightingManager.ts       luci 2d (player, torce, nemici)
-    ParallaxManager.ts       strati dipinti + skyline + nebbia frontale
-    DecorationManager.ts     props procedurali dalle superfici della griglia
-    textures.ts              cast procedurale + skyline + nebbia
-    state.ts                 salvataggio (localStorage), run, flag di storia
-    events.ts                bus tipato phaser <-> dom
-    sfx.ts                   synth webaudio (zero file audio)
-  entities/                  Player, Enemy, Boss
-  scenes/                    BootScene (preload), GameScene (tutto il gioco)
-  ui/                        hud, dialoghi, schermate dom
+  scenes/        le scene phaser: boot, menu, galleria, gioco. GameScene compone i sistemi e li chiama nell'ordine giusto
+  game/          i sistemi della partita (nemici, combattimento, abilità, boss, arena, dialoghi, ricompense,
+                 progressione, viaggio, guida, sfide, doomsday) e gli script dei capitoli (chapters/)
+  entities/      geco, nemici, boss, nidi, compagno
+  rules/         logica pura senza phaser, con i test accanto (npm test): danni, punteggi, salvataggio, caso, passo fisso
+  core/          servizi usati da tutti: stato e salvataggio, eventi, caso a due sequenze (logica e grafica), trofei
+  content/       i dati del gioco: capitoli, storia e dialoghi, nemici, boss, oggetti, flashback
+  world/         la regione come dato: generatore, simulatore, griglia, navigazione (anche per editor e scripts/world)
+  stage/         la regione in scena: terreno, acqua, luci, cielo, arredo, passanti, caricamento
+  story/         chi porta la trama: i ricordi girati come film (film/), missioni, voce dei boss, ombra, pedro, nucleo
+  mechanics/     le regole del posto: una meccanica per bioma, trappole, pericoli, sigilli, corse
+  art/ audio/ input/ ui/ dev/    disegno, suono, comandi, interfaccia dom, strumenti di sviluppo
+editor/          editor delle regioni (usa i tipi del gioco: va tenuto compilabile)
+scripts/
+  harness/       le prove: il gioco in chromium headless, ripetibile al fotogramma (vedi il suo README)
+  world/         banco del generatore delle regioni
+  assets/        icone e sprite
+docs/            design system, coop, resoconti dell'harness (copertura, prestazioni, riferimenti)
 ```
+
+## Verificare una modifica
+
+`npm test` per le regole. Per il gioco intero c'è l'harness (`scripts/harness/README.md`): fa giocare 200 scenari (la campagna col bot, ogni capitolo, ogni finale, nastri di tasti, partite registrate) e dice se qualcosa è cambiato, al fotogramma. Una modifica che non deve cambiare il gioco deve dare tracce identiche al riferimento.
 
 ## Aggiungere un livello
 
@@ -50,15 +55,21 @@ src/
    - `#` terreno · `^` spine · `~` acqua · `P` spawn · `C` microfono · `X` uscita
    - qualsiasi altra lettera è un'entità definita nella mappa `entities` del livello: nemico, npc (id = dialogo), frammento, lore, barre, boss.
    - il player per muoversi, camminare ecc.. occupa 2 tile (2x2)
-3. Registralo in `levels/index.ts` e collegalo con `next` dal livello precedente.
+3. Registralo in `levels/index.ts` e collegalo con `next` dal livello precedente, poi rigenera le regioni (`npm run regions`, decine di minuti): il gioco carica la regione, non la griglia.
 4. Regole di salto (per non creare passaggi impossibili): salto singolo ≈ 3 tile in alto / 5 in largo; col rimbalzo ≈ 5-6 in alto / 8 in largo; con la scivolata +4 in largo.
 
 Lo stesso vale per la storia: i dialoghi vivono in `story.ts` (`DIALOGUES['mio-id']`) e un npc con `id: 'mio-id'` li recita da solo. La voce: minuscolo, demenziale; pedro glitcha, la riba sbaglia le doppie, piema è l'unico che scrive corretto.
 
 ## Aggiungere un nemico o un boss
 
-- Nemico: una texture in `textures.ts`, un archetipo in `enemies.ts` (comportamenti pronti: `walker`, `flyer`, `hopper`, `turret`, `chaser`, `charger`, più `splitsInto` per quelli che si dividono), e una lettera nella legenda del livello.
-- Boss: una entry in `bosses.ts` con gli attacchi per fase (`dive`, `charge`, `radial`, `rain`, `burst`, `teleport`, `lamette`, `summon`) e l'eventuale ricompensa in `GameScene.onBossDefeated`.
+- Nemico: un disegno in `src/art/creatures/`, un archetipo in `enemies.ts` (comportamenti pronti: `walker`, `flyer`, `hopper`, `turret`, `chaser`, `charger`, più `splitsInto` per quelli che si dividono), e una lettera nella legenda del livello.
+- Boss: una entry in `bosses.ts` con gli attacchi per fase (`dive`, `charge`, `radial`, `rain`, `burst`, `teleport`, `lamette`, `summon`) e l'eventuale ricompensa nell'aggancio `bossDefeated` dello script del capitolo (`src/game/chapters/`).
+
+## I ricordi (flashback)
+
+I ricordi sono piccoli film girati dal motore: il gioco si ferma come sotto un dialogo e il film gira in una scena sua (`src/story/film/FilmScene.ts`), con le bande nere, la seppia d'epoca, la grana e le ombre degli attori proiettate sul muro. Niente didascalie: si sente solo quello che i personaggi si dicono. Si saltano con invio, salto, attacco o interagisci.
+
+Un film è un copione in `src/content/films.ts`: il set (studio, bottega, atelier, deserto, piazza, sala monitor, cantina dei server, archivio, aula), l'ora (notte, mattina, pomeriggio, neon), il cast con le posizioni, gli oggetti di scena e le inquadrature. Ogni inquadratura ha una durata, dove guarda la macchina (centro e zoom, con un movimento facoltativo e lo sfondo fuori fuoco nei primi piani) e i gesti con il loro istante: camminare, girarsi, annuire, piegarsi, tremare, salire, passarsi un oggetto, dire una battuta, accendere uno schermo, abbassare una luce, far scendere la notte. Il ricordo prima di quale dialogo lo dice `src/content/flashbacks.ts`. I provini si fanno senza schermo con l'harness, catturando i fotogrammi.
 
 ## I frammenti della GecoWave
 
@@ -97,7 +108,7 @@ La **formicona, sindaco di formica (FR)** — la formica che morse un dio — ri
 
 ## Note di design
 
-- Capitoli (14): la wave perduta → l'invasione dei bus (Guggu, ivan, la metro e il capolinea fantasma) → il santuario polarizzante (Breccio, il labirinto, la galleria dei futuri, poi Lametta: 5 gocce di colore e lo specchio nero) → Notino e la tecnokill (campo failrp, torre radio, dune) → il rio merdone (trenbolone, agguati, il villaggio di formica col sindaco sottoterra, la gola) → **lo stabilimento di Smela** (la catena dell'acqua "premium"; boss: il furgone delle consegne) → la Ruhra (Riba, biblioteca, torre di analisi, mensa, archivi) → **il caso analisi 1** (Romero: 3 indizi in 3 scene del crimine, poi l'arresto del limite notevole — invulnerabile senza il fascicolo completo) → la tana di lochef85 (**due** inseguimenti e il giardino delle statue) → la tommasorveglianza (archivio clienti, la sala dove l'ombra si è allenata, il condotto dati, il clone) → la cantina di Ticummi (laboratorio del trenbolone, il caveau degli 0,09, la scelta) → **i ricordi di Pedro** (il backup dei giorni 1-42; boss: l'ultimo pedro pulito, che cambia il dialogo del finale) → **il void dei rimpianti** (Romero ti guida tra 5 persone-ricordo del passato; ogni rimpianto sconfitto rivela una verità su lametta e piema, poi markolino irrompe: pedro sta eseguendo l'ordine) → Pedro il traditore (il patto o lo scontro; poi gli dei).
+- Capitoli (14): la wave perduta → l'invasione dei bus (Guggu, ivan, la metro e il capolinea fantasma) → il santuario polarizzante (Breccio, il labirinto, la galleria dei futuri, poi Lametta: 5 gocce di colore e lo specchio nero) → Notino e la tecnokill (campo failrp, torre radio, dune) → il rio merdone (trenbolone, agguati, il villaggio di formica col sindaco sottoterra, la gola) → **lo stabilimento di Smela** (la catena dell'acqua "premium") → la Ruhra (Riba, biblioteca, torre di analisi, mensa, archivi) → **il caso analisi 1** (Romero: 3 indizi in 3 scene del crimine, poi l'arresto del limite notevole — invulnerabile senza il fascicolo completo) → la tana di lochef85 (**due** inseguimenti e il giardino delle statue) → la tommasorveglianza (archivio clienti, la sala dove l'ombra si è allenata, il condotto dati, il clone) → la cantina di Ticummi (laboratorio del trenbolone, il caveau degli 0,09, la scelta) → **i ricordi di Pedro** (il backup dei giorni 1-42; boss: l'ultimo pedro pulito, che cambia il dialogo del finale) → **il void dei rimpianti** (Romero ti guida tra 5 persone-ricordo del passato; ogni rimpianto sconfitto rivela una verità su lametta e piema, poi markolino irrompe: pedro sta eseguendo l'ordine) → Pedro il traditore (il patto o lo scontro; poi gli dei).
 - Script di capitolo (`LevelScript`): `bus`, `lametta`, `trenbolone`, `caso` (indizi → sblocco del boss), `ruhra`, `tana` (inseguimenti delimitati da coppie di marker `caccia-inizio`/`caccia-fine`), `sorveglianza`, `cantina`, `ricordi`, `indagine` (il void: romero guida + 5 miniboss-rimpianto in sequenza, ognuno sblocca una verità), `pedro`.
 - Dal menu, **capitoli** permette di tornare in qualsiasi zona già visitata: serve per recuperare maschere, cuori e miniboss opzionali persi per strada.
 - Dopo un finale buono il salvataggio riparte dal capitolo 1 con tutte le wave: NG+ (boss e agguati tornano).

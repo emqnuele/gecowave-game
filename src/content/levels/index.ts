@@ -53,3 +53,5 @@ export const LEVEL_ORDER: string[] = all.map((l) => l.id);
 export const FIRST_LEVEL = perduta.id;
 
 export const TOTAL_FRAGMENTS = ALL_ABILITIES.length;
+/** le maschere del primo custode sparse nei capitoli */
+export const TOTAL_MASCHERE = 5;

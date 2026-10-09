@@ -1,5 +1,5 @@
-import { sfx } from '../engine/sfx';
-import { state } from '../engine/state';
+import { sfx } from '../audio/sfx';
+import { state } from '../core/state';
 import { el } from './dom';
 
 /* l'interruttore della freccia guida, uguale ovunque: accenderla durante una
