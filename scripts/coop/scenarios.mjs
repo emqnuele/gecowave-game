@@ -390,4 +390,154 @@ export const SCENARIOS = {
         await t.shot(t.A, 'capitolo-host');
         await t.shot(t.B, 'capitolo-guest');
     },
+
+    async dispensa(t) {
+        await enterTogether(t);
+        const { A, B } = t;
+        // l'ospite compra dalla cassa comune: paga davvero, oggetto davvero
+        await A.evaluate(() => { window.__state.save.barre = 100; window.__state.persist(); });
+        await t.wait(1200);
+        const hb0 = await A.evaluate(() => window.__state.save.barre);
+        const hc0 = await A.evaluate(() => window.__state.save.inventory.crocchetta ?? 0);
+        await B.evaluate(() => window.__coop.session.send('shop-buy', { id: 'crocchetta' }));
+        await t.wait(1500);
+        const shop = await A.evaluate(() => ({ barre: window.__state.save.barre, croc: window.__state.save.inventory.crocchetta ?? 0 }));
+        const shopB = await B.evaluate(() => ({ barre: window.__state.save.barre, croc: window.__state.save.inventory.crocchetta ?? 0 }));
+        t.check('l’oste addebita la cassa comune', shop.barre === hb0 - 25 && shop.croc === hc0 + 1, JSON.stringify({ shop, hb0, hc0 }));
+        t.check('l’ospite vede acquisto e resto', shopB.barre === shop.barre && shopB.croc === shop.croc, JSON.stringify(shopB));
+        // l'ospite mangia: il boccone esce dallo zaino, la cura arriva a lui
+        await B.evaluate(() => { window.__state.run.hp = 2; });
+        await B.evaluate(() => window.__coop.session.send('eat-use', { id: 'crocchetta', amount: 1 }));
+        await t.wait(1500);
+        const eat = await B.evaluate(() => ({ hp: window.__state.run.hp, croc: window.__state.save.inventory.crocchetta ?? 0 }));
+        const eatA = await A.evaluate(() => window.__state.save.inventory.crocchetta ?? 0);
+        t.check('il boccone cura l’ospite', eat.hp === 3, JSON.stringify(eat));
+        t.check('e sparisce dallo zaino comune', eat.croc === hc0 && eatA === hc0, JSON.stringify({ eat, eatA, hc0 }));
+        // mente: la porta chiede a chi bussa; chi sbaglia paga lui, chi indovina la abbatte a tutti
+        await scene(A, `g.ctx.flow.gotoLevel('mente')`);
+        await t.until(A, () => window.__game.scene.getScene('GameScene')?.sys.isActive() && window.__state.save.levelId === 'mente', null, 30000);
+        await t.until(B, () => window.__game.scene.getScene('GameScene')?.sys.isActive() && window.__state.save.levelId === 'mente', null, 30000);
+        await t.wait(2500);
+        // l'intro di mente è un dialogo condiviso: si manda avanti prima di bussare
+        for (let i = 0; i < 15; i++) {
+            const open = await B.evaluate(() => !!document.getElementById('dialogue'));
+            if (!open) break;
+            for (const p of [A, B]) await p.keyboard.press('Enter');
+            await t.wait(300);
+        }
+        const door = await scene(B, `const d = g.ctx.groups.doors.getChildren()[0]; return d ? { x: Math.round(d.x), y: Math.round(d.y) } : null`);
+        t.check('c’è una porta-quiz in mente', !!door, JSON.stringify(door));
+        if (!door) return;
+        await scene(B, `g.player.body.reset(arg.x, arg.y + 40)`, door);
+        await t.wait(400);
+        let wrongOk = false;
+        let rightOk = false;
+        // la risposta giusta dipende dal tentativo: si azzera e si provano le opzioni in ordine, stessa porta
+        for (let d = 0; d < 4 && !(wrongOk && rightOk); d++) {
+            const hasDoor = await scene(B, `return g.ctx.groups.doors.getChildren().length > 0`);
+            if (!hasDoor) break;
+            for (let opt = 0; opt < 3 && !(wrongOk && rightOk); opt++) {
+                await scene(A, `g.ctx.chapter.quizAttempts.clear()`);
+                await B.evaluate(() => { window.__state.run.hp = window.__state.maxHp; });
+                await scene(A, `for (const e of g.ctx.groups.enemies.getChildren()) { try { g.ctx.combat.dmgTo(e, 9999, e.x - 10); } catch {} }`);
+                await t.wait(400);
+                const near = await scene(B, `const ds = g.ctx.groups.doors.getChildren(); let best = null, bd = 1e9; for (const x of ds) { const d = Math.hypot(x.x - g.player.x, x.y - g.player.y); if (d < bd) { bd = d; best = { x: Math.round(x.x), y: Math.round(x.y) }; } } return best`);
+                if (!near) break;
+                await scene(B, `g.player.body.reset(arg.x, arg.y + 40)`, near);
+                await t.wait(400);
+                await B.keyboard.down('KeyE');
+                await t.wait(150);
+                await B.keyboard.up('KeyE');
+                try {
+                    await t.until(B, () => [...document.querySelectorAll('.sx-page button')].filter((b) => b.offsetParent !== null).length >= 2, null, 8000);
+                } catch {
+                    break;
+                }
+                const hpA0 = await A.evaluate(() => window.__state.run.hp);
+                const hpB0 = await B.evaluate(() => window.__state.run.hp);
+                await B.evaluate((o) => {
+                    const btns = [...document.querySelectorAll('.sx-page button')].filter((b) => b.offsetParent !== null);
+                    btns[Math.min(o, btns.length - 1)].click();
+                }, opt);
+                await t.wait(1500);
+                const hurtB = await B.evaluate(() => window.__state.run.hp);
+                const hurtA = await A.evaluate(() => window.__state.run.hp);
+                const leftB = await scene(B, `return g.ctx.groups.doors.getChildren().length`);
+                const leftA = await scene(A, `return g.ctx.groups.doors.getChildren().length`);
+                if (leftB === 0 && leftA === 0) rightOk = true;
+                else if (hurtB < hpB0 && hurtA === hpA0) wrongOk = true;
+            }
+        }
+        t.check('chi sbaglia paga lui, host intatto', wrongOk);
+        t.check('chi indovina abbatte a tutti', rightOk);
+        await t.shot(B, 'dispensa-ospite');
+    },
+
+    async corsa(t) {
+        await enterTogether(t);
+        const { A, B } = t;
+        // palo con orario: se perduta non ce l'ha si va al bus
+        let post = await scene(B, `return g.ctx.challenges.trial?.post ?? null`);
+        if (!post) {
+            await scene(A, `g.ctx.flow.gotoLevel('bus')`);
+            await t.until(A, () => window.__game.scene.getScene('GameScene')?.sys.isActive() && window.__state.save.levelId === 'bus', null, 30000);
+            await t.until(B, () => window.__game.scene.getScene('GameScene')?.sys.isActive() && window.__state.save.levelId === 'bus', null, 30000);
+            await t.wait(2500);
+            post = await scene(B, `return g.ctx.challenges.trial?.post ?? null`);
+        }
+        t.check('c’è un palo del trial', !!post, JSON.stringify(post));
+        if (!post) return;
+        // corre l'ospite: la scelta apre a lui, il cronometro parte dall'host
+        await scene(B, `g.player.body.reset(arg.x - 20, arg.y)`, post);
+        await t.wait(400);
+        await B.keyboard.down('KeyE');
+        await t.wait(150);
+        await B.keyboard.up('KeyE');
+        await t.until(B, () => [...document.querySelectorAll('.sx-page button')].filter((b) => b.offsetParent !== null).some((b) => /corri/i.test(b.textContent || '')), null, 10000);
+        await B.evaluate(() => {
+            [...document.querySelectorAll('.sx-page button')].find((b) => b.offsetParent !== null && /corri/i.test(b.textContent || '')).click();
+        });
+        await t.wait(1200);
+        const run = await scene(A, `const r = g.ctx.challenges.trial?.run; return r ? { runner: r.runner, to: { x: Math.round(r.to.x), y: Math.round(r.to.y) } } : null`);
+        t.check('la corsa parte per l’ospite', run?.runner === 'guest', JSON.stringify(run));
+        const seen = await scene(B, `return !!g.ctx.challenges.trial?.run`);
+        t.check('l’ospite vede boa e cronometro', seen);
+        if (!run) return;
+        // l'host al traguardo non chiude la corsa dell'altro
+        await scene(A, `g.player.body.reset(arg.x, arg.y)`, run.to);
+        await t.wait(1500);
+        const early = await scene(A, `return window.__state.save.trials[window.__state.save.levelId] ?? null`);
+        t.check('il traguardo dell’host non vale', early === null || early === undefined, String(early));
+        // l'ospite al traguardo: vince davvero
+        await scene(B, `g.player.body.reset(arg.x, arg.y)`, run.to);
+        await t.wait(2000);
+        const record = await scene(A, `return window.__state.save.trials[window.__state.save.levelId] ?? null`);
+        t.check('l’ospite chiude la sua corsa', typeof record === 'number', String(record));
+        await t.shot(B, 'corsa-ospite');
+    },
+
+    async finale(t) {        await enterTogether(t);
+        const { A, B } = t;
+        // sconfitta diretta: riepilogo, titoli e menu su entrambi (l'ospite al titolo, non in lobby)
+        await scene(A, `g.ctx.flow.endGame('sconfitta')`);
+        for (let i = 0; i < 120; i++) {
+            const aMenu = await A.evaluate(() => !!window.__game.scene.isActive('MenuScene'));
+            const bMenu = await B.evaluate(() => !!window.__game.scene.isActive('MenuScene'));
+            if (aMenu && bMenu) break;
+            for (const p of [A, B]) await p.keyboard.press('Enter');
+            for (const p of [A, B]) {
+                await p.evaluate(() => {
+                    const b = [...document.querySelectorAll('.sx-page button, .credits-screen button')].find((x) => x.offsetParent !== null && /torna al menu|consegna le wave|continua|avanti|chiudi|rialzati/i.test(x.textContent || ''));
+                    if (b) b.click();
+                }).catch(() => {});
+            }
+            await t.wait(1000);
+        }
+        const aMenu = await A.evaluate(() => !!window.__game.scene.isActive('MenuScene'));
+        const bMenu = await B.evaluate(() => !!window.__game.scene.isActive('MenuScene'));
+        t.check('titoli finiti, menu su entrambi', aMenu && bMenu, `A=${aMenu} B=${bMenu}`);
+        t.check('nessuno resta in lobby', !(await B.evaluate(() => !!document.querySelector('.cx-lobby'))), '');
+        await t.shot(A, 'finale-host');
+        await t.shot(B, 'finale-guest');
+    },
 };

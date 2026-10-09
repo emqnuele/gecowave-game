@@ -254,7 +254,7 @@ class CoopRuntime {
     }
 
     sharedRun(): SharedRun {
-        return { patto: state.run.patto, smela: state.run.smela };
+        return { patto: state.run.patto, smela: state.run.smela, trenbolone: state.run.trenbolone };
     }
 
     /** l'host lascia il capitolo per il menu: il guest torna in attesa */
@@ -325,6 +325,7 @@ class CoopRuntime {
         }
         state.run.patto = m.run.patto;
         state.run.smela = m.run.smela;
+        state.run.trenbolone = m.run.trenbolone;
         this.app?.startLevel(m.levelId, m.checkpointId, m.showCard, m.spawn);
     }
 
@@ -362,14 +363,15 @@ class CoopRuntime {
         this.emit({ type: 'partner', char: null });
     }
 
-    /** chiude tutto. con toMenu il gioco torna al menu e dice il perché */
-    end(reason: string | null, toMenu: boolean): void {
+    /** chiude tutto. con toMenu il gioco torna al menu e dice il perché.
+        senza announce non saluta l'altro: per chi se ne va avendo già finito */
+    end(reason: string | null, toMenu: boolean, announce = true): void {
         const wasActive = this.active;
         const s = this.session;
         this.session = null;
         this.clearSessionHandlers();
         if (s?.open) {
-            s.send('leave', { reason: this.isHost ? 'l’host ha chiuso la partita' : `${this.me?.name.toLowerCase() ?? 'l’ospite'} ha lasciato la partita` });
+            if (announce) s.send('leave', { reason: this.isHost ? 'l’host ha chiuso la partita' : `${this.me?.name.toLowerCase() ?? 'l’ospite'} ha lasciato la partita` });
             s.close(reason ?? 'chiusa');
         }
         this.room?.close();

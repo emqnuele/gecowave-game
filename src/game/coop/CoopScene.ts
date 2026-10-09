@@ -20,6 +20,8 @@ import { RemoteFx } from './RemoteFx';
 import type { PickupSpawn } from '../../coop/protocol';
 import type { Spawner } from '../../entities/Spawner';
 import type { Room } from '../../world/types';
+import { eatProblem, healFor, pickSnack } from '../../core/inventory';
+import { sfx } from '../../audio/sfx';
 
 /** gli eventi della ui che l'host gira all'ospite: la trama, i premi, il boss. il resto è di chi lo vive */
 const SHARED_UI = new Set<keyof GameEvents>(['toast', 'wavesung', 'bark', 'bark-clear', 'boss-hp', 'charm-found', 'ability-unlocked', 'doomsday-changed', 'ombra-read', 'chapter-score', 'trial-timer']);
@@ -63,6 +65,7 @@ export class CoopScene implements GameSystem {
         this.mirror = coop.isGuest ? new WorldMirror(ctx, session) : null;
         this.rules = new CoopRules(this);
         coopHooks.partnerName = () => (this.partner?.alive ? this.partner.char.name.toLowerCase() : null);
+        coopHooks.requestEat = (id) => this.requestEat(id);
         coopHooks.joinPartner = () => {
             const p = this.partner;
             if (!p?.alive || this.rules.down || this.ctx.player.dead) return;
@@ -147,6 +150,26 @@ export class CoopScene implements GameSystem {
             this.scene.events.on(ev, fn, this);
             this.offs.push(() => this.scene.events.off(ev, fn, this));
         }
+    }
+
+    /** il boccone dell'ospite: lo mastica qui, lo paga la dispensa dell'host */
+    private requestEat(id: string | null): boolean {
+        if (!coop.isGuest || !coop.together) return false;
+        const snack = id ?? pickSnack();
+        if (!snack) {
+            bus.emit('toast', { text: 'niente da mangiare nello zaino. wavezon consegna ovunque.' });
+            return true;
+        }
+        const problem = eatProblem(snack);
+        if (problem) {
+            bus.emit('toast', { text: problem });
+            return true;
+        }
+        const amount = Math.max(0, Math.min(20, healFor(snack) + state.mods.foodHeal));
+        this.session.send('eat-use', { id: snack, amount });
+        this.session.send('act', { a: 'eat' });
+        sfx.eat();
+        return true;
     }
 
     /** il compagno entra in scena col suo personaggio, dove sta adesso */
@@ -251,8 +274,7 @@ export class CoopScene implements GameSystem {
     }
 
     /** il mio geco cambia posto senza camminare: una nuvola dove sparisce e dove riappare */
-    teleportSelf(x: number, y: number, why?: string): void {
-        const p = this.ctx.player;
+    teleportSelf(x: number, y: number, why?: string): void {        const p = this.ctx.player;
         const puff = (px: number, py: number) => {
             const e = this.scene.add.particles(px, py, 'p-dot', { speed: { min: 40, max: 160 }, scale: { start: 0.7, end: 0 }, alpha: { start: 0.7, end: 0 }, tint: 0x0b0c10, lifespan: 420, quantity: 16, stopAfter: 16 }).setDepth(6);
             this.scene.time.delayedCall(800, () => e.destroy());
@@ -312,6 +334,7 @@ export class CoopScene implements GameSystem {
         else if (m.c === 'hurt') p.hurt(Math.max(0, Math.min(10, m.amount)), m.fromX);
         else if (m.c === 'kill') p.kill();
         else if (m.c === 'revive') this.rules.revive(m.x, m.y);
+        else if (m.c === 'flash') this.scene.cameras.main.flash(240, m.r, m.g, m.b);
     }
 
     /** quello che fa il mio geco è mio: i suoi toast non vanno all'altro */

@@ -8,6 +8,11 @@ import { state } from './state';
 
 const HEALS: Record<string, number> = { crocchetta: 1, 'panino-nonna': 3 };
 
+/** quanto cura un boccone, prima dei modificatori: serve anche a chi mangia dall'altra parte */
+export function healFor(id: string): number {
+    return HEALS[id] ?? 0;
+}
+
 function emitVitals(): void {
     bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
     bus.emit('flow-changed', { flow: state.run.flow, maxFlow: state.maxFlow });

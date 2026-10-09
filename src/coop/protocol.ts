@@ -9,10 +9,11 @@ import type { Character, GameInfo, SharedSave } from './types';
 export const FAST_PLAYER = FAST_GAME;
 export const FAST_WORLD = FAST_GAME + 1;
 
-/** stati della run che la trama cambia per entrambi (patto, smela) */
+/** stati della run che la trama cambia per entrambi (patto, smela, droga) */
 export interface SharedRun {
     patto: boolean;
     smela: boolean;
+    trenbolone: boolean;
 }
 
 export interface Spot {
@@ -148,6 +149,19 @@ export interface CoopMsgs {
     /** il tabellone del citelis chiesto dall'ospite: lo vede lui, il viaggio lo fa l'host */
     'travel-open': { token: number; stops: { key: string; levelId: string; label: string }[]; current: string };
     'travel-pick': { token: number; key: string };
+    /** la corsa è partita (o finita): l'ospite vede boa e conto alla rovescia, il traguardo lo giudica l'host */
+    'trial-run': { on: boolean; limitMs: number };
+    /** la dispensa dell'host: acquisti e bocconi dell'ospite passano da qui */
+    'shop-buy': { id: string };
+    'eat-use': { id: string; amount: number };
+    /** scottatura guarita e boccone: la vita resta di chi la perde */
+    'heal': { amount: number };
+    /** porta-quiz caduta: l'ospite toglie la sua copia */
+    'quiz-gone': { x: number; y: number };
+    /** un trofeo dell'ospite vale anche per la partita */
+    'achieve': { id: string };
+    /** titoli di coda finiti anche dall'altra parte: si chiude insieme */
+    'ending-done': Record<string, never>;
 
     // --- richieste del guest ---
     'hit': Hit;
@@ -160,7 +174,7 @@ export interface CoopMsgs {
     // --- i gechi ---
     'act': Act;
     /** l'host comanda al geco del guest: la trama lo ferma, lo sposta, lo ferisce */
-    'cmd': { c: 'stun'; ms: number } | { c: 'teleport'; x: number; y: number } | { c: 'hurt'; amount: number; fromX?: number } | { c: 'kill' } | { c: 'revive'; x: number; y: number };
+    'cmd': { c: 'stun'; ms: number } | { c: 'teleport'; x: number; y: number } | { c: 'hurt'; amount: number; fromX?: number } | { c: 'kill' } | { c: 'revive'; x: number; y: number } | { c: 'flash'; r: number; g: number; b: number };
     /** il mio geco è caduto o si è rialzato */
     'down': { down: boolean };
 

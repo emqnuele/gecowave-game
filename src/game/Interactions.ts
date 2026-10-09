@@ -33,6 +33,11 @@ export class Interactions implements GameSystem {
         this.list = this.list.filter((it) => it !== item);
     }
 
+    /** via quello che sta qui intorno: porte cadute anche dall'altra parte */
+    removeNear(x: number, y: number, r: number): void {
+        this.list = this.list.filter((it) => Math.hypot(it.x - x, it.y - y) > r);
+    }
+
     /** dove sta già qualcosa, per chi deve piazzare altro senza coprirlo */
     points(): { x: number; y: number }[] {
         return this.list.map((it) => ({ x: it.x, y: it.y }));

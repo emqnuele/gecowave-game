@@ -12,7 +12,7 @@ import type { EnemyKind } from '../types';
 import type { Room } from '../world/types';
 import type { GameContext, GameSystem } from './context';
 
-type ChallengesCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'npcs' | 'groups' | 'enemies' | 'bosses' | 'arena' | 'feel' | 'travel'>;
+type ChallengesCtx = Pick<GameContext, 'simulates' | 'coop' | 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'npcs' | 'groups' | 'enemies' | 'bosses' | 'arena' | 'feel' | 'travel'>;
 
 /** le sfide fuori strada: il microfono rosso a ondate e la corsa contro il citelis */
 export class Challenges implements GameSystem {
@@ -95,6 +95,8 @@ export class Challenges implements GameSystem {
                 if (i !== 0) return;
                 this.challenge = { room: spot.room, wave: 0, enemies: [], nextAt: this.scene.time.now + 900, x: spot.x, y: spot.y };
                 this.ctx.arena.lock(spot.room);
+                // in due le sbarre le vede anche l'altro: chi è fuori finisce dentro
+                this.ctx.coop?.arenaLocked(spot.room, (p) => this.ctx.arena.contains(spot.room, p.x, p.y));
                 bus.emit('toast', { text: 'sfida accettata. prima ondata.' });
             },
         });

@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import { bus } from '../../core/events';
 import { state } from '../../core/state';
+import { unlockAchievement } from '../../core/achievements';
+import { ITEMS, NOTCH_PRICES, BASE_NOTCHES } from '../../content/items';
+import { healFor } from '../../core/inventory';
+import { sfx } from '../../audio/sfx';
 import { coop } from '../../coop/runtime';
 import { coopHooks } from '../../coop/hooks';
 import type { CoopMsgs } from '../../coop/protocol';
@@ -56,6 +60,26 @@ export class CoopRules {
         this.offs.push(s.on('choice-pick', (m) => this.picked(m.token, m.index)));
         this.offs.push(s.on('travel-open', (m) => this.travelFromHost(m)));
         this.offs.push(s.on('travel-pick', (m) => this.travelPicked(m.token, m.key)));
+        this.offs.push(s.on('quiz-gone', (m) => {
+            if (!coop.isGuest || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
+            for (const c of [...this.ctx.groups.doors.getChildren()]) {
+                const s = c as Phaser.GameObjects.Sprite;
+                if (Math.hypot(s.x - m.x, s.y - m.y) < 80) s.destroy();
+            }
+            this.ctx.interactions.removeNear(m.x, m.y, 90);
+        }));
+        this.offs.push(s.on('shop-buy', (m) => this.shopBuy(m.id)));
+        this.offs.push(s.on('eat-use', (m) => this.eatUse(m.id, m.amount)));
+        this.offs.push(s.on('heal', (m) => this.gotHeal(m.amount)));
+        this.offs.push(s.on('achieve', (m) => {
+            if (!coop.isHost || typeof m.id !== 'string') return;
+            unlockAchievement(m.id);
+        }));
+        this.offs.push(s.on('trial-run', (m) => {
+            if (!coop.isGuest) return;
+            if (m.on) this.ctx.challenges.trial?.visualRun(m.limitMs);
+            else this.ctx.challenges.trial?.stop();
+        }));
         this.offs.push(s.on('film', (m) => this.followFilm(m.id)));
         this.offs.push(s.on('film-end', () => this.endFollowedFilm()));
         this.offs.push(s.on('interact', (m) => this.remoteInteract(m.x, m.y)));
@@ -74,10 +98,12 @@ export class CoopRules {
     private runAs(actor: Actor | null, fn: () => void): void {
         const prev = this.actor;
         this.actor = actor;
+        coopHooks.actorKind = actor;
         try {
             fn();
         } finally {
             this.actor = prev;
+            coopHooks.actorKind = prev;
         }
     }
 
@@ -284,6 +310,58 @@ export class CoopRules {
         this.travelToken = 0;
         if (this.ctx.flow.exiting) return;
         this.ctx.travel.travelTo(key);
+    }
+
+    /* ---------- dispensa condivisa ---------- */
+
+    /** l'ospite compra: soldi e zaino sono dell'host, per tutti e due */
+    private shopBuy(id: string): void {
+        if (!coop.isHost || typeof id !== 'string') return;
+        const fail = (text: string) => bus.emit('toast', { text });
+        if (id === 'tacca') {
+            const bought = state.save.notches - BASE_NOTCHES;
+            if (bought >= NOTCH_PRICES.length) return;
+            const price = NOTCH_PRICES[bought]!;
+            if (state.save.barre < price) return fail('barre insufficienti. il realm non fa credito.');
+            state.save.barre -= price;
+            state.addItem('tacca');
+        } else {
+            const it = ITEMS[id];
+            if (!it?.price) return;
+            if (it.kind === 'amuleto' && state.hasCharm(id)) return fail('ce l’hai già addosso.');
+            if (state.save.barre < it.price) return fail('barre insufficienti. il realm non fa credito.');
+            state.save.barre -= it.price;
+            state.addItem(id);
+        }
+        state.persist();
+        sfx.barra();
+        bus.emit('barre-changed', { barre: state.save.barre, gained: false });
+        bus.emit('toast', { text: 'consegnato nello zaino.' });
+    }
+
+    /** l'ospite mangia: il boccone esce dallo zaino comune, la cura arriva a lui */
+    private eatUse(id: string, amount: number): void {
+        if (!coop.isHost || typeof id !== 'string') return;
+        if (!healFor(id) || state.count(id) <= 0) {
+            bus.emit('toast', { text: 'niente da mangiare nello zaino. wavezon consegna ovunque.' });
+            return;
+        }
+        if (!state.removeItem(id)) return;
+        state.persist();
+        const heal = Math.max(0, Math.min(20, Number.isFinite(amount) ? amount : 0));
+        sfx.heal();
+        bus.emit('toast', { text: `${ITEMS[id]?.name ?? id}: fatto.` });
+        this.session.send('heal', { amount: heal });
+    }
+
+    private gotHeal(amount: number): void {
+        if (!coop.isGuest) return;
+        const p = this.ctx.player;
+        if (p.dead || this.down) return;
+        state.run.hp = Math.min(state.maxHp, state.run.hp + Math.max(0, Math.min(20, amount)));
+        sfx.heal();
+        bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
+        bus.emit('player-healed', {});
     }
 
     /* ---------- film ---------- */

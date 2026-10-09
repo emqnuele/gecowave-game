@@ -592,6 +592,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offHealed());
         // dal telefono si ordina, nel mondo si mangia: il boccone parte qui
         const offEat = bus.on('eat-requested', ({ id }) => {
+            if (coopHooks.requestEat?.(id ?? null)) return;
             const msg = this.player.startEat(id);
             if (msg) bus.emit('toast', { text: msg });
         });
@@ -709,7 +710,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         });
         this.traps.update(time, delta, this.player, this.ctx.coop?.partnerSpot() ?? null);
         this.hazards.update(time, delta, this.player);
-        this.challenges.trial?.update(this.player);
+        this.challenges.trial?.update(this.player, this.ctx.coop?.partnerSpot() ?? null);
         this.updateArenaLock(time);
         this.progression.updateExplore();
         this.travel.updateBusStops();

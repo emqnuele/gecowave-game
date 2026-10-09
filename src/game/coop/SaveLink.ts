@@ -43,10 +43,7 @@ export class SaveLink {
             for (const [k, v] of Object.entries(state.save)) if (!personal.has(k)) this.host.set(k, structuredClone(v));
             this.offs.push(session.on('save', (m) => this.receive(m.keys)));
             this.offs.push(session.on('grant', (g) => this.grant(g)));
-            this.offs.push(session.on('run', (r) => {
-                state.run.patto = r.patto;
-                state.run.smela = r.smela;
-            }));
+            this.offs.push(session.on('run', (r) => this.receiveRun(r)));
         }
     }
 
@@ -54,11 +51,27 @@ export class SaveLink {
         this.acc += delta;
         if (this.acc < SYNC_MS) return;
         this.acc = 0;
-        if (coop.isHost) this.sendChanges(delta);
-        else this.sendAdditions();
+        if (coop.isHost) {
+            this.sendChanges(delta);
+            this.sendRun();
+        } else this.sendAdditions();
     }
 
     /* ---------- host ---------- */
+
+    /** patto, smela e droga cambiano di rado: viaggiano quando cambiano */
+    private lastRun = '';
+
+    private sendRun(): void {
+        if (!coop.together) {
+            this.lastRun = '';
+            return;
+        }
+        const run = JSON.stringify(coop.sharedRun());
+        if (run === this.lastRun) return;
+        this.lastRun = run;
+        this.session.send('run', coop.sharedRun());
+    }
 
     private sendChanges(_delta: number): void {
         // senza nessuno dall'altra parte non si manda niente: chi entra riceve il salvataggio intero
@@ -164,8 +177,13 @@ export class SaveLink {
         if (any) this.session.send('merge', fresh);
     }
 
-    private receive(keys: Partial<SharedSave>): void {
-        const save = state.save as unknown as Record<string, unknown>;
+    private receiveRun(r: CoopMsgs['run']): void {
+        state.run.patto = !!r.patto;
+        state.run.smela = !!r.smela;
+        state.run.trenbolone = !!r.trenbolone;
+    }
+
+    private receive(keys: Partial<SharedSave>): void {        const save = state.save as unknown as Record<string, unknown>;
         const before = { barre: state.save.barre, abilities: state.save.abilities.length, inv: JSON.stringify(state.save.inventory) };
         for (const [k, v] of Object.entries(keys)) {
             if (personal.has(k)) continue;

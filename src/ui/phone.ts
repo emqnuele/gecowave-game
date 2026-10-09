@@ -12,6 +12,7 @@ import { matchesAction } from '../input/actions';
 import { haptics } from '../input/haptics';
 import { formatKeys, keyLabel } from '../input/keyText';
 import { eatProblem } from '../core/inventory';
+import { coop } from '../coop/runtime';
 import { music } from '../audio/music';
 import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
@@ -845,7 +846,13 @@ export class Phone {
         root.append(text('div', 'wallet sticker glass-acid-yellow', `♪ ${state.save.barre} barre`));
         if (message) root.append(text('div', `phone-note ${message.ok ? 'good' : 'bad'}`, message.text));
 
-        const buy = (label: string, price: number, give: () => void) => {
+        const buy = (id: string, label: string, price: number, give: () => void) => {
+            // in due la cassa è una sola: compra l'host, per tutti e due
+            if (coop.isGuest && coop.active) {
+                coop.session?.send('shop-buy', { id });
+                sfx.barra();
+                return;
+            }
             if (state.save.barre < price) {
                 this.renderShop(root, { text: 'barre insufficienti. il realm non fa credito.', ok: false });
                 return;
@@ -875,7 +882,7 @@ export class Phone {
             main.append(text('div', 'name', it.name), text('div', 'preview', it.desc));
             row.append(main, text('span', 'price', owned ? 'già tuo' : `♪ ${it.price}`));
             if (owned) row.setAttribute('disabled', '');
-            else row.addEventListener('click', () => buy(it.name, it.price!, () => state.addItem(id)));
+            else row.addEventListener('click', () => buy(id, it.name, it.price!, () => state.addItem(id)));
             root.append(row);
         }
 
@@ -888,7 +895,7 @@ export class Phone {
             const main = el('div', 'main');
             main.append(text('div', 'name', ITEMS.tacca.name), text('div', 'preview', ITEMS.tacca.desc));
             row.append(main, text('span', 'price', `♪ ${price}`));
-            row.addEventListener('click', () => buy('tacca', price, () => state.addItem('tacca')));
+            row.addEventListener('click', () => buy('tacca', 'tacca', price, () => state.addItem('tacca')));
             root.append(row);
         }
     }

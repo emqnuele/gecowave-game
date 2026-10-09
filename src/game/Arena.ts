@@ -73,6 +73,15 @@ export class Arena implements GameSystem {
         return this.room;
     }
 
+    /** dentro la stanza e lontano dalle soglie: chi è qui dentro ci resta */
+    contains(room: Room, x: number, y: number): boolean {
+        if (this.ctx.world.roomAt(x, y) !== room) return false;
+        const R = room.rect;
+        const c = x / TILE;
+        const r = y / TILE;
+        return !(c < R.x + 4 || c > R.x + R.w - 4 || r < R.y + 2 || r > R.y + R.h - 2);
+    }
+
     unlock(quiet = false): void {
         this.ctx.groups.arenaBars.clear(true, true);
         this.gfx?.destroy();

@@ -9,6 +9,11 @@
 * **salvataggio**: slot `coop` sull'host, copia `ospite` sul guest. L'host invia i campi condivisi, il guest rimanda solo scoperte (flag, fermate, stanze, dialoghi letti). Statistiche e abilità: ognuno tiene le sue; i premi corazza/forza dell'host passano anche al guest.
 * **difficoltà in due** (`src/game/coop/scaling.ts`): hp nemici e boss ×1,7, élite ×1,8, nidi +1 vivo e ×0,72 intervallo. I danni restano a cuori interi.
 * **join a partita iniziata**: chi entra appare accanto all'host col mondo intero; uscire e rientrare col codice riusa il geco ricordato.
+* **trappole in fase**: l'host simula anche vicino al compagno e manda la fase; l'ospite rifà le posizioni ma i danni sono i suoi.
+* **npc di trama**: nati mid-capitolo arrivano all'ospite (spawn e sparizione).
+* **citelis, scelte, quiz, trial**: il tabellone e le scelte aprono a chi ha bussato; la corsa la giudica chi corre; la porta morde chi sbaglia.
+* **dispensa comune**: shop ed eat dell'ospite passano dall'host (soldi e zaino condivisi, cura a chi mangia).
+* **doppio KO e finale**: SEI MORTO su entrambi, titoli coordinati (l'host aspetta i credits dell'ospite).
 
 ## regole decise e implementate
 

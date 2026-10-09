@@ -470,6 +470,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.updateRisonante(now);
 
         if (this.controls.pressed('eat')) {
+            if (coopHooks.requestEat?.(null)) return;
             const msg = this.startEat(null);
             if (msg) bus.emit('toast', { text: msg });
         }

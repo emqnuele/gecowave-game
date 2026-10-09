@@ -336,11 +336,32 @@ async function boot(): Promise<void> {
             gameEl.style.visibility = 'visible';
             game.scale.refresh();
             music.playMenu();
-            if (coop.active || state.saveSlot !== 'single') {
+            const wasCoop = coop.active || state.saveSlot !== 'single';
+            if (coop.isGuest && wasCoop) {
+                // titoli finiti anche qui: si saluta in silenzio, la stanza la chiude l'host
+                coop.session?.send('ending-done', {});
+                coop.inEnding = false;
+                coop.end(null, false, false);
+            } else if (coop.isHost && coop.together) {
+                // l'ospite finisce i titoli al suo ritmo: la stanza cade quando ha finito (o dopo un po')
+                const s = coop.session;
+                let done = false;
+                const close = (): void => {
+                    if (done) return;
+                    done = true;
+                    coop.inEnding = false;
+                    coop.end(null, false);
+                };
+                const off = s?.on('ending-done', close);
+                window.setTimeout(() => {
+                    off?.();
+                    close();
+                }, 120000);
+            } else if (wasCoop) {
                 coop.inEnding = false;
                 coop.end(null, false);
-                state.useSlot('single');
             }
+            if (wasCoop) state.useSlot('single');
             screens.showMenu();
         });
     });
