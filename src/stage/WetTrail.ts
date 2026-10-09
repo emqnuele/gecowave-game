@@ -63,7 +63,8 @@ export class WetTrail {
     }
 
     private print(x: number, y: number, k: number): void {
-        const img = this.scene.add.image(x, y - 1, 'wet-print').setDepth(3.5).setAlpha(0.5 * k + 0.15);
+        // sopra l'erba del bordo del terreno, se no sparisce sotto
+        const img = this.scene.add.image(x, y - 2, 'wet-print').setDepth(5.5).setAlpha(0.45 * k + 0.2);
         this.scene.tweens.add({ targets: img, alpha: 0, duration: PRINT_FADE_MS, ease: 'Sine.easeIn', onComplete: () => img.destroy() });
     }
 
@@ -76,10 +77,12 @@ export class WetTrail {
             g.destroy();
         }
         if (!this.scene.textures.exists('wet-print')) {
-            // l'impronta è più scura del suolo: inchiostro bagnato
+            // sul suolo a inchiostro il bagnato si vede come un riflesso, non come una macchia
             const g = this.scene.add.graphics();
-            g.fillStyle(0x05060a, 0.8);
+            g.fillStyle(0xbfe3f0, 0.55);
             g.fillEllipse(6, 2, 11, 3);
+            g.fillStyle(0xe8f6ff, 0.8);
+            g.fillEllipse(5, 1.5, 5, 1.2);
             g.generateTexture('wet-print', 12, 4);
             g.destroy();
         }
