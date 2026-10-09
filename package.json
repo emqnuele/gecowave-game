@@ -2,6 +2,13 @@
   "name": "gecowave-flux-of-cosenza",
   "private": true,
   "version": "0.2.3",
+  "description": "action-platformer 2D ambientato nel GecoRealm, sviluppato per gecowave",
+  "author": "emqnuele (https://emanuelefaraci.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emqnuele/gecowave-game.git"
+  },
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
