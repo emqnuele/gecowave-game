@@ -31,7 +31,7 @@ check(mid.bars && mid.line, 'bande nere e riga dei sottotitoli in scena');
 await page.keyboard.down('Escape'); await step(2); await page.keyboard.up('Escape'); await step(4);
 check(!(await page.$('#ui > .screen')), 'a film in corso il menu di pausa non si apre');
 await page.keyboard.press('Enter');
-await step(90);
+await step(130);
 for (let i = 0; i < 40 && (await page.$('#dialogue')); i++) { await page.keyboard.press('KeyE'); await step(6); }
 await step(30);
 const after = await snap();

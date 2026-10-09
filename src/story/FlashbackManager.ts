@@ -11,8 +11,8 @@ import type { FilmData } from './film/FilmScene';
 
 // il mondo si ferma come sotto un dialogo: il film gira in una scena sua e alla fine si riparte da dov'era
 
-const ENTER = 1100;
-const EXIT = 700;
+const ENTER = 2600;
+const EXIT = 1800;
 
 export class FlashbackManager {
     private playing = false;
@@ -41,7 +41,7 @@ export class FlashbackManager {
         cam.rotateTo(0.2, false, ENTER, 'Quad.easeIn');
         sfx.death('eco');
         sfx.rumble();
-        scene.time.delayedCall(ENTER - 160, () => cam.fadeOut(160, 0, 0, 0));
+        scene.time.delayedCall(ENTER - 300, () => cam.fadeOut(300, 0, 0, 0));
         // la scena se ne va a metà ingresso (uscita al menu): niente film appeso
         const onShutdown = (): void => {
             this.playing = false;
