@@ -7,7 +7,7 @@ import { rng } from '../core/rng';
 /** obiettivo principale mostrato nel diario, per capitolo */
 export const OBJECTIVES: Record<string, string> = {
     perduta: 'esplora il cratere: la mappa (qui nel telefono) si disegna mentre giri, la ✶ segna l\'obiettivo. trova il primo frammento della wave. e dove vedi un 33 dipinto, guarda dietro.',
-    bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea. romero ti cerca: parlargli non è opzionale, è utile.',
+    bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea. c\'è un commissario che ti cerca.',
     santuario: 'attraversa il santuario polarizzante. breccio custodisce un riflesso, lametta il resto. cerca il ritratto con gli occhi storti: romero lo vuole.',
     tecnokill: 'sopravvivi al server di notino. torre radio, dune, e poi lui. armato di "BUM". pedro ti guarda già: senti la statica?',
     trenbolone: 'la via per il rio è sbarrata. per passare ti serve il trenbolone. purtroppo.',
@@ -56,8 +56,8 @@ export const CONTACTS: Contact[] = [
                 bus: 'ivan è l\'unico che può tagliare guggu. senza di lui il capolinea non lo vedi neanche col binocolo. e se vedi romero, parlagli: indaga sul glitch da prima di te.',
                 santuario: 'gli specchi mentono, ma alcuni sono porte. e lametta dipinge con rabbia: schiva i colori. cerca il ritratto con gli occhi storti.',
                 tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI. carica {k:wave} da lontano invece di andare sotto.',
-                trenbolone: 'ticummi vende sicurezza a 0,09€. non ho mai capito cosa venda davvero. fai tu.',
-                rio: 'il rio rigenera chi non si droga. se hai preso il trenbolone... auguri. lo stabilimento dopo è opzionale: attraversalo pure senza fermarti.',
+                trenbolone: 'la via per il rio la apre solo il trenbolone. lo spaccino te lo regala. le cose regalate costano sempre qualcosa.',
+                rio: 'il rio rigenera chi non si droga. e se ticummi ti vende sicurezza a 0,09€... non ho mai capito cosa venda davvero. fai tu.',
                 stabilimento: 'smela? puoi tirare dritto, l\'uscita resta aperta. se ti fermi, alla sorgente c\'è qualcosa che ti spetta.',
                 sorveglianza: 'là dentro è tutto telecamere. muoviti come se nessuno ti guardasse. tanto ti guardano lo stesso.',
                 mente: 'in fondo alla testa di piema c\'è un pensiero sepolto. quello che ne fai resta. pensaci prima.',

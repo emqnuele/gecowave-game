@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COMBAT, TILE } from '../config';
 import { hitMult, LESSONS } from '../content/lessons';
-import { TOASTS } from '../content/story';
+import { DIALOGUES, TOASTS } from '../content/story';
 import { bus } from '../core/events';
 import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
@@ -16,6 +16,9 @@ type CombatCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 
 
 /** chi colpisce chi: collider, danni, proiettili, esplosioni, schianto */
 export class Combat implements GameSystem {
+    /** guggu pieno: la prima volta lo dice lui, poi basta il promemoria */
+    private gugguTaunted = false;
+
     private parryUntil = 0;
     private readonly ctx: CombatCtx;
     private readonly scene: Phaser.Scene;
@@ -236,7 +239,7 @@ export class Combat implements GameSystem {
                     this.ctx.player.onAttackHit();
                     this.ctx.feel.hitstop();
                 } else if (this.ctx.bosses.current.def.kind === 'guggu') {
-                    bus.emit('toast', { text: TOASTS.gugguDoor });
+                    this.gugguBlocked();
                 } else if (this.ctx.bosses.current.def.kind === 'limite') {
                     bus.emit('toast', { text: TOASTS.limiteScudo });
                 }
@@ -471,4 +474,14 @@ export class Combat implements GameSystem {
     }
 
     destroy(): void {}
+
+    private gugguBlocked(): void {
+        const line = DIALOGUES['guggu-senza-ivan']?.[0];
+        if (this.gugguTaunted || !line) {
+            bus.emit('toast', { text: TOASTS.gugguDoor });
+            return;
+        }
+        this.gugguTaunted = true;
+        bus.emit('bark', { speaker: line.speaker, color: line.color, text: line.text, urgent: true });
+    }
 }

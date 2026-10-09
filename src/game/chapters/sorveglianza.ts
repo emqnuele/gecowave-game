@@ -32,7 +32,7 @@ export class SorveglianzaChapter extends Chapter {
         this.ambushes.update();
         // il consiglio di markolino arriva solo dopo che l'ombra si è mostrata: prima il geco non sa niente
         const boss = this.ctx.bosses.current;
-        if (boss?.def.kind === 'ombra' && boss.engaged) waveOnce(this.scene, 'tutorial-ombra-visto', WAVESUNG.markolinoOmbra, 4000);
+        if (boss?.def.kind === 'ombra' && boss.engaged) waveOnce(this.scene, 'tutorial-ombra-in-scontro', WAVESUNG.markolinoOmbra, 4000);
     }
 
     bossDefeated(kind: BossKind, x: number, y: number): void {

@@ -1,8 +1,10 @@
+import { WAVESUNG } from '../../content/story';
 import { bus } from '../../core/events';
 import { sfx } from '../../audio/sfx';
 import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter, type Target } from './ChapterScript';
+import { waveOnce } from './shared/wave';
 
 /** il trenbolone: senza la dose dello spaccino la via per il rio resta sbarrata */
 export class TrenboloneChapter extends Chapter {
@@ -21,6 +23,8 @@ export class TrenboloneChapter extends Chapter {
                         state.run.trenbolone = true;
                         state.setFlag('trenbolone-attivo');
                         bus.emit('toast', { text: 'ti sei fatto di trenbolone. ti senti una bestia ma lo schermo gira.' });
+                        // ticummi vede sempre tutto: la pubblicità arriva prima del venditore
+                        waveOnce(this.scene, 'ticummi-promo', WAVESUNG.ticummiPromo, 9000);
                         sfx.pickup();
                         bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
 
