@@ -73,6 +73,11 @@ export class NucleusStraightening {
         this.gridOverlay = ctx.scene.add.graphics().setDepth(6);
     }
 
+    /** fin dove l'ordine ha raddrizzato il nucleo; null se è già andato in pezzi */
+    get straightened(): StraightPhase | null {
+        return this.shattered ? null : this.phase;
+    }
+
     update(time: number, boss: Boss | null): void {
         if (this.shattered) return;
         if (!boss || boss.def.kind !== 'glitchpedro' || !boss.active || !boss.engaged) {

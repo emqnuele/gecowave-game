@@ -106,6 +106,8 @@ export class RioChapter extends Chapter {
         state.removeFlag('trenbolone-attivo');
         sfx.heal();
         this.scene.cameras.main.flash(200, 74, 222, 128);
+        this.ctx.lens.shockwave(this.ctx.player.x, this.ctx.player.y, 0.8, 900);
+        this.ctx.lens.kick({ tint: 0.14, tintColor: 0x4ade80, desat: -0.25 }, 150, 300, 1200);
         // refresh hud when player gets cured in the river
         bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
         if (!state.hasFlag('rio-curato')) {

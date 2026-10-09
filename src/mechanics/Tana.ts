@@ -123,7 +123,12 @@ export class Tana implements Mechanic {
             if (now >= this.nextBeatAt) {
                 this.nextBeatAt = now + 880;
                 sfx.heartbeat(0.8);
+                // il cuore batte anche negli occhi
+                this.ctx.lens.kick({ zoom: 0.022, chroma: 0.25 }, 40, 30, 300);
             }
+            // dalla serratura: più resti dentro, più il buio stringe
+            const k = Math.min(1, (now - this.hiddenSince) / HIDE_MAX_MS);
+            this.ctx.lens.hold('armadio', { keyhole: 1, desat: 0.55, dark: 0.2 + 0.45 * k }, 1, 5);
             if (p.movePressed) this.unhide(false);
             else if (now - this.hiddenSince > HIDE_MAX_MS) this.unhide(true);
             return;
@@ -163,11 +168,14 @@ export class Tana implements Mechanic {
             p.hidden = false;
         }
         music.setGraveDuck(false);
+        this.ctx.lens.release('armadio', 4);
         if (wh) wh.sprite.setTexture(wh.used ? 'tana-armadio-aperto' : 'tana-armadio');
         // dopo un'uscita la voce aspetta: niente sussurro addosso
         this.nextWhisperAt = Math.max(this.nextWhisperAt, this.ctx.scene.time.now + 15000);
         // oltre i sei secondi la casa ti sente: fuori, un danno, e lui è già lì
         if (found) {
+            // le ante si spalancano: l'occhio si piega
+            this.ctx.lens.kick({ barrel: 0.25, chroma: 1.2, angle: 0.03 }, 40, 120, 800);
             p.hurt(1);
             bus.emit('tana-sniffed', {});
         }
@@ -183,6 +191,8 @@ export class Tana implements Mechanic {
         bus.emit('bark', { speaker: 'lochef85', color: 'red', text: typeof raw === 'string' ? raw : raw.text });
         sfx.whisper(-0.4, 0.8);
         sfx.growlFar(0.4, 0.7);
+        // la casa respira: le pareti si gonfiano piano
+        this.ctx.lens.kick({ barrel: 0.06, angle: 0.012, desat: 0.2 }, 1300, 700, 2000);
     }
 
     /** un respiro della casa, senza sottotitoli: passa nel riverbero del posto */
@@ -191,7 +201,10 @@ export class Tana implements Mechanic {
         let i = Math.floor(this.rnd() * names.length);
         if (names.length > 1 && i === this.lastRumble) i = (i + 1) % names.length;
         this.lastRumble = i;
-        sfx[names[i]!]((this.rnd() * 2 - 1) * 0.8, 0.3 + this.rnd() * 0.3);
+        const pan = (this.rnd() * 2 - 1) * 0.8;
+        sfx[names[i]!](pan, 0.3 + this.rnd() * 0.3);
+        // la stanza si inclina verso il rumore
+        this.ctx.lens.kick({ angle: pan * 0.018, barrel: 0.03 }, 500, 300, 1400);
     }
 
     /** il buio della tana: la luce la porti tu, e ne porti poca */

@@ -65,6 +65,8 @@ export class RuhraChapter extends Chapter {
         }
         this.ctx.dialogues.start('piema-folle', () => {
             this.scene.cameras.main.flash(500, 96, 165, 250);
+            // si entra nella sua testa: l'immagine viene risucchiata verso il centro
+            this.ctx.lens.kick({ barrel: -0.3, chroma: 1.2, wave: 0.8 }, 500, 2000, 300);
             this.ctx.flow.gotoLevel('mente');
         });
     }

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { Player } from '../entities/Player';
+import type { CameraLens } from '../stage/CameraLens';
 import type { EnemyKind } from '../types';
 import type { Door, RegionLayout, Room } from '../world/types';
 import type { LightingManager } from '../stage/LightingManager';
@@ -19,6 +20,7 @@ export interface MechanicCtx {
     lighting: LightingManager;
     playerLight: Phaser.GameObjects.Light;
     player: Player;
+    lens: CameraLens;
     /** punti dove non mettere niente: microfoni, fermate, npc */
     avoid: { x: number; y: number }[];
     /** i nemici della regione, per gli allarmi */

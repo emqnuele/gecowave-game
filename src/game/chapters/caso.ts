@@ -59,6 +59,8 @@ export class CasoChapter extends Chapter {
         this.ctx.dialogues.start(id, () => {
             if (!state.hasFlag(id)) {
                 state.setFlag(id);
+                // la foto per il fascicolo: un istante in bianco e nero
+                this.ctx.lens.kick({ desat: 1, zoom: 0.02, dark: 0.25 }, 10, 380, 800);
                 const n = indiziRaccolti();
                 bus.emit('toast', { text: `indizio acquisito al fascicolo (${n}/3).` });
                 if (n >= 3) {

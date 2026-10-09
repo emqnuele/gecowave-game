@@ -128,6 +128,8 @@ export class SantuarioChapter extends Chapter {
         this.scene.physics.add.overlap(this.ctx.player, zone, () => {
             if (this.ctx.flow.exiting || !this.ctx.world.def.next) return;
             this.ctx.flow.exiting = true;
+            // lo specchio nero ti tira dentro
+            this.ctx.lens.kick({ barrel: -0.28, chroma: 1.1, desat: 0.4 }, 0, 3000, 400);
             this.ctx.dialogues.start('lametta-uscita', () => {
                 this.ctx.flow.exiting = false;
                 this.ctx.flow.gotoLevel(this.ctx.world.def.next!);

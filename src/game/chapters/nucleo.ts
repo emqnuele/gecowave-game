@@ -35,6 +35,23 @@ export class NucleoChapter extends Chapter {
 
     updateFoes(time: number): void {
         this.nucleusStraightening?.update(time, this.ctx.bosses.current);
+        this.crookedLens(time);
+    }
+
+    /** il nucleo è storto e l'ordine lo raddrizza: la camera parte inclinata e si drizza a ogni fase, perdendo colore */
+    private crookedLens(time: number): void {
+        const phase = this.nucleusStraightening?.straightened;
+        const boss = this.ctx.bosses.current;
+        if (phase === null || phase === undefined || boss?.def.kind !== 'glitchpedro' || !boss.engaged) {
+            this.ctx.lens.release('ordine', 1.5);
+            return;
+        }
+        const crooked = 1 - phase / 3;
+        this.ctx.lens.hold('ordine', {
+            angle: (0.032 + Math.sin(time / 1300) * 0.006) * crooked,
+            desat: 0.14 * phase,
+            chroma: 0.25 * crooked,
+        }, 1, 0.8);
     }
 
     update(time: number): void {
@@ -85,6 +102,9 @@ export class NucleoChapter extends Chapter {
                 // il glitch si strappa via: pedro torna in sé
                 const shell = this.pedroShell;
                 this.nucleusStraightening?.shatter();
+                // l'ordine va in pezzi: lo storto torna di colpo, e resta
+                this.ctx.lens.glitch(700, 0.9);
+                this.ctx.lens.kick({ angle: -0.05, barrel: 0.18 }, 30, 250, 1600);
                 if (shell?.scene) this.scene.tweens.add({ targets: shell, alpha: 1, duration: 900 });
                 state.setFlag('pedro-redento');
                 this.ctx.dialogues.start('pedro-redento', () => this.sceltaFinale(x, y, true));
@@ -169,6 +189,8 @@ export class NucleoChapter extends Chapter {
             this.ctx.bosses.current.engage();
             this.scene.cameras.main.flash(220, 255, 255, 255);
             this.ctx.feel.shake(700, 0.012);
+            this.ctx.lens.kick({ chroma: 1.6, barrel: 0.16, desat: -0.4 }, 60, 500, 1800);
+            this.ctx.lens.shockwave(x, y, 1.4, 1200);
         });
     }
 

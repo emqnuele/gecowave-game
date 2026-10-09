@@ -192,6 +192,8 @@ export class TanaChapter extends Chapter {
                 }).setDepth(6);
                 this.scene.cameras.main.flash(160, 120, 10, 10);
                 this.ctx.feel.shake(260, 0.006);
+                // arriva da dietro: la camera si storce dalla sua parte e si tinge
+                this.ctx.lens.kick({ angle: 0.045 * (ahead > 0 ? -1 : 1), tint: 0.25, tintColor: 0x7f1d1d, chroma: 0.9 }, 120, 400, 2400);
                 music.playCustom("assets/music/lochef85's OST 2.mp3");
                 bus.emit('toast', { text: TOASTS.inseguimento });
             };
@@ -228,6 +230,7 @@ export class TanaChapter extends Chapter {
             });
             music.playLevel(this.ctx.world.def.id);
             bus.emit('toast', { text: TOASTS.inseguimentoFine });
+            this.ctx.lens.release('lochef', 1.2);
             const lines = CHASE_LINES[Math.min(this.chaseZoneIdx, CHASE_LINES.length - 1)];
             if (!state.save.seenDialogues.includes(lines.end)) {
                 state.save.seenDialogues.push(lines.end);
@@ -271,6 +274,7 @@ export class TanaChapter extends Chapter {
         const dx = this.ctx.player.x - chef.x;
         const dy = this.ctx.player.y - 30 - chef.y;
         const dist = Math.hypot(dx, dy) || 1;
+        this.dread(dist);
         let speed = dist > 620 ? 380 : dist > 320 ? 250 : 200;
         // partenza morbida: 1.5s per entrare in caccia, il salto iniziale non uccide
         const ramp = Math.min(1, (this.scene.time.now - this.chaseStartedAt) / 1500);
@@ -304,6 +308,16 @@ export class TanaChapter extends Chapter {
                 chef.x -= Math.sign(dx) * 260;
             }
         }
+    }
+
+    /** più è vicino più l'immagine si chiude, si sporca e si piega */
+    private dread(dist: number): void {
+        const p = Math.max(0, Math.min(1, 1 - (dist - 60) / 700));
+        const now = this.scene.time.now;
+        this.ctx.lens.hold('lochef', {
+            dark: 0.42 * p, chroma: 0.7 * p, barrel: 0.07 * p, tint: 0.12 * p, tintColor: 0x5b0f12,
+            angle: Math.sin(now / 650) * 0.01 * p,
+        }, 1, 4);
     }
 
     /** la casa ti ha sentito nell'armadio: lochef torna in caccia da vicino */

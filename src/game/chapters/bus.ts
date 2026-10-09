@@ -138,6 +138,8 @@ export class BusChapter extends Chapter {
             onComplete: () => {
                 sfx.hit();
                 this.ctx.feel.shake(200, 0.01);
+                // ivan si prende il colpo per te: il mondo perde colore per un momento
+                this.ctx.lens.kick({ desat: 0.75, zoom: 0.03, chroma: 0.4 }, 60, 900, 1600);
                 ivan.setTint(0xf87171);
                 
                 this.scene.tweens.add({

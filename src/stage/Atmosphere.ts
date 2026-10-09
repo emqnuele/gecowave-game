@@ -54,6 +54,9 @@ export class Atmosphere {
     private outdoor = 1;
     private climate: [Weather, number][] = [];
 
+    /** chi vuole sapere del lampo, con quanto cielo si vede (0 al chiuso, 1 fuori) */
+    onBolt: ((outdoor: number) => void) | null = null;
+
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
     }
@@ -202,6 +205,7 @@ export class Atmosphere {
             onComplete: () => this.scene.tweens.add({ targets: this.flash, fillAlpha: { from: a * 0.7, to: 0 }, duration: 380, delay: 70 }),
         });
         this.scene.time.delayedCall(300 + rng.fx.next() * 900, () => sfx.thunder());
+        this.onBolt?.(this.outdoor);
     }
 
     /** il cielo: blu profondo di notte, arancio al tramonto, niente di giorno */

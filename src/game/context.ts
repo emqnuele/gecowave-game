@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { Input } from '../input/Input';
+import type { CameraLens } from '../stage/CameraLens';
 import type { LightingManager } from '../stage/LightingManager';
 import type { QuestManager } from '../story/QuestManager';
 import type { TerrainRenderer } from '../stage/TerrainRenderer';
@@ -80,6 +81,7 @@ export class GameContext {
     guide!: Guide;
     challenges!: Challenges;
     doomsday!: Doomsday;
+    lens!: CameraLens;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;

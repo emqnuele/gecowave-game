@@ -1299,6 +1299,20 @@ export class Phone {
         shake.append(toggle);
         root.append(shake);
 
+        const lens = el('div', 'phone-row glass-chip');
+        lens.append(text('span', 'name', 'effetti di camera'));
+        const lensToggle = el('button', `toggle sticker ${state.settings.cameraFx ? 'on' : ''}`);
+        lensToggle.textContent = state.settings.cameraFx ? 'attivi' : 'spenti';
+        lensToggle.addEventListener('click', () => {
+            state.settings.cameraFx = !state.settings.cameraFx;
+            state.persistSettings();
+            lensToggle.classList.toggle('on', state.settings.cameraFx);
+            lensToggle.textContent = state.settings.cameraFx ? 'attivi' : 'spenti';
+            sfx.ui();
+        });
+        lens.append(lensToggle);
+        root.append(lens);
+
         root.append(assistToggle({ rowClass: 'phone-row glass-chip' }));
 
         root.append(text('div', 'phone-section', 'comandi del telefono'));

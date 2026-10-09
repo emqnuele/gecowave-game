@@ -102,6 +102,7 @@ export class Ambushes {
     private spawnNotinoAmbush(count: number): Enemy[] {
         this.scene.cameras.main.flash(120, 168, 85, 247);
         this.ctx.feel.shake(180, 0.006);
+        this.ctx.lens.kick({ chroma: 0.9, angle: 0.02, barrel: 0.06 }, 40, 140, 650);
         sfx.bossRoar();
         const spawned: Enemy[] = [];
         for (let i = 0; i < count; i++) {
