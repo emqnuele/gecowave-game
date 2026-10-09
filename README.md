@@ -1,4 +1,4 @@
-# GECOWAVE: The Flux of Cosenza
+# GECOWAVE: The Flux of Coscience
 
 Un action-platformer 2D in stile Hollow Knight, ambientato nel **GecoRealm**: la GecoWave è andata in frantumi e un geco deve attraversare 14 capitoli, pieni di personaggi assurdi, per raccogliere i frammenti. Sviluppato da [emqnuele](https://emanuelefaraci.com) per [gecowave](https://gecowave.top).
 
