@@ -529,6 +529,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     }
 
     private setupScript(): void {
+        // la trama dei capitoli la racconta l'host: all'ospite arriva fatta
+        if (!this.ctx.simulates) return;
         const hint = MECHANIC_HINTS[this.world.def.id];
         if (hint && this.mechanic) waveOnce(this, `meccanica-${this.world.def.id}`, hint, 12000);
         this.chapter.setup?.();
@@ -628,7 +630,9 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
             this.tryInteract();
         }
         if (this.controls.pressed('pause')) bus.emit('request-pause', {});
+        this.ctx.coop?.mine(true);
         this.player.update(time, delta);
+        this.ctx.coop?.mine(false);
         this.ctx.coop?.tick(delta);
         this.mechanic?.update(time, delta);
 
@@ -643,7 +647,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
             this.enemies.updateEnemies(time, delta, target);
             this.enemies.updateSpawners(time);
             if (this.ctx.simulates && this.bosses.current) this.bosses.current.update(time, delta, this.ctx.coop ? this.ctx.coop.targetFor(this.bosses.current, target) : target);
-            this.chapter.updateFoes?.(time);
+            if (this.ctx.simulates) this.chapter.updateFoes?.(time);
             this.bosses.updateVoices(time);
         }
         this.pedroGhost?.update(this.player);
@@ -660,10 +664,18 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         state.save.record.playMs += delta;
         state.flushPersist();
         state.run.nearMic = this.world.level.checkpoints.some((cp) => Math.abs(cp.x - this.player.x) < 110 && Math.abs(cp.y - this.player.y) < 110);
-        this.progression.checkExits();
+        // l'ospite non esce da solo: la sua uscita la vede l'host, e porta tutti e due
+        const partner = this.ctx.coop?.partnerSpot() ?? null;
+        if (this.ctx.simulates) {
+            this.progression.checkExits();
+            if (partner) this.progression.checkExits(partner);
+        }
         this.interactions.updatePrompt();
         // l'ingaggio aspetta la fine del film: niente dialoghi sopra il ricordo
-        if (!flashback.isPlaying) this.bosses.updateTrigger();
+        if (!flashback.isPlaying) {
+            this.bosses.updateTrigger();
+            if (partner) this.bosses.updateTrigger(partner);
+        }
         this.enemies.magnetBarre();
         this.abilities.updateClone(time, delta);
         this.rewards.updateHoming(delta);
@@ -698,7 +710,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.abilities.updateAcquaTossica(time);
         this.abilities.updateAbilityFx(time);
         this.abilities.updatePoison(time);
-        this.chapter.update?.(time, delta);
+        if (this.ctx.simulates) this.chapter.update?.(time, delta);
         this.updateFakeWalls();
         if (this.player.consumeSlamLanding()) this.combat.slamLand(this.player.x, this.player.y);
         this.doomsday.update(time, delta);

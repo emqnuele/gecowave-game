@@ -220,21 +220,23 @@ export class Bosses implements GameSystem {
     }
 
 
-    updateTrigger(): void {
+    /** il boss si sveglia per il mio geco, o in due per quello del compagno (lo controlla l'host) */
+    updateTrigger(who?: { x: number; y: number }): void {
         if (!this.ctx.simulates) return;
-        if (!this.current || this.current.engaged || this.ctx.player.dead || this.ctx.flow.exiting) return;
-        const dist = Math.abs(this.ctx.player.x - this.current.x);
-        const near = dist < 440 && Math.abs(this.ctx.player.y - this.current.y) < 380;
+        if (!this.current || this.current.engaged || (!who && this.ctx.player.dead) || this.ctx.flow.exiting) return;
+        const at = who ?? this.ctx.player;
+        const dist = Math.abs(at.x - this.current.x);
+        const near = dist < 440 && Math.abs(at.y - this.current.y) < 380;
         // nelle regioni il boss si sveglia quando entri nella sua stanza, non attraverso la roccia
         const bossRoom = this.ctx.world.roomAt(this.current.x, this.current.y);
         if (bossRoom) {
-            const inside = this.ctx.world.roomAt(this.ctx.player.x, this.ctx.player.y) === bossRoom;
-            if (!inside && !(near && this.ctx.world.nav.sight(this.ctx.player.x, this.ctx.player.y - 10, this.current.x, this.current.y))) return;
+            const inside = this.ctx.world.roomAt(at.x, at.y) === bossRoom;
+            if (!inside && !(near && this.ctx.world.nav.sight(at.x, at.y - 10, this.current.x, this.current.y))) return;
         } else if (!near) {
             return;
         }
         // la formicona sta nella tana: non si sveglia se cammini sul soffitto
-        if (this.current.def.kind === 'formicona' && this.ctx.player.y < this.current.y - 60) return;
+        if (this.current.def.kind === 'formicona' && at.y < this.current.y - 60) return;
 
         if (this.ctx.chapter.beforeBossEngage?.()) return;
 

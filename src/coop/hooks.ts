@@ -39,6 +39,9 @@ export const coopHooks = {
     frozen: false,
     /** il geco locale è a terra e guarda l'altro */
     spectating: false,
+    /** l'host sta facendo una cosa sua (il suo geco, il telefono, la pausa): i toast restano suoi */
+    personal: 0,
+    menuOpen: false,
 };
 
 export function resetCoopHooks(): void {
@@ -49,4 +52,5 @@ export function resetCoopHooks(): void {
     coopHooks.hostBoss = null;
     coopHooks.frozen = false;
     coopHooks.spectating = false;
+    coopHooks.personal = 0;
 }

@@ -10,6 +10,7 @@ import { acoustics } from '../audio/acoustics';
 import { CreatureGlow, creatureBody, creatureFaces, creatureFrames, creatureRes } from '../art/creatureKit';
 import { emitWorld } from '../core/worldEvents';
 import { rng } from '../core/rng';
+import { coopHooks } from '../coop/hooks';
 
 type Phase = BossPhase;
 
@@ -98,7 +99,14 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         if (this.engaged) return;
         this.engaged = true;
         this.nextAttackAt = this.scene.time.now + (this.frenzy ? 400 : 1600);
-        // ingresso in scena per archetipo: ognuno entra a modo suo
+        coopHooks.hostBoss?.fx(this, 'engage');
+        this.entrance();
+        bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
+        emitWorld(this.scene, 'boss-engaged', this);
+    }
+
+    /** ingresso in scena per archetipo: ognuno entra a modo suo */
+    entrance(): void {
         const move = this.def.move ?? 'hover';
         this.setScale(this.baseScale * 0.5);
         this.scene.tweens.add({ targets: this, scale: this.baseScale, duration: 420, ease: 'Back.easeOut' });
@@ -126,8 +134,6 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             this.scene.tweens.add({ targets: this, x: this.anchorX, duration: 450, ease: 'Quad.easeOut' });
         }
         sfx.bossRoar();
-        bus.emit('boss-hp', { hp: this.hp, maxHp: this.maxHp, name: this.def.name });
-        emitWorld(this.scene, 'boss-engaged', this);
     }
 
     /** più robusto prima che lo scontro entri nel vivo (l'ombra nutrita dalle telecamere) */
@@ -171,15 +177,14 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         this.busy = false;
     }
 
-    update(_time: number, delta: number, player: Phaser.GameObjects.Sprite): void {
-        if (!this.active) return;
+    /** il fantoccio dell'ospite non pensa: respira e tiene lo scudo */
+    puppetTick(delta: number): void {
         this.t += delta;
-        const body = this.body as Phaser.Physics.Arcade.Body;
-        const now = this.scene.time.now;
-        // stile di movimento per archetipo: ogni boss tiene il palco a modo suo
-        const move = this.def.move ?? 'hover';
-        const phase = this.phase;
+        this.drawShield();
+    }
 
+    /** lo scudo di guggu finché ivan non arriva: lo disegna anche il fantoccio dell'ospite */
+    drawShield(): void {
         if (this.shieldGraphics && this.active) {
             if (state.hasFlag('ivan')) {
                 this.shieldGraphics.destroy();
@@ -195,7 +200,18 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
                 }
             }
         }
+    }
 
+    update(_time: number, delta: number, player: Phaser.GameObjects.Sprite): void {
+        if (!this.active) return;
+        this.t += delta;
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        const now = this.scene.time.now;
+        // stile di movimento per archetipo: ogni boss tiene il palco a modo suo
+        const move = this.def.move ?? 'hover';
+        const phase = this.phase;
+
+        this.drawShield();
         if (this.def.glitchy) {
             if (this.scaleX !== this.baseScale) this.setScale(this.baseScale);
             // scatti, tremori, niente movimenti morbidi: deve fare paura
@@ -346,12 +362,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         body.setVelocity(0, 0);
         const tx = player.x;
         const ty = player.y;
-        // marcatore a terra: dove atterra, si vede prima
-        const mark = this.scene.add.graphics().setDepth(6);
-        mark.lineStyle(2, this.def.glowColor, 0.85);
-        mark.strokeCircle(tx, ty, 26);
-        this.scene.tweens.add({ targets: mark, scale: 0.55, duration: 420, ease: 'Quad.easeIn' });
-        this.scene.time.delayedCall(430, () => mark.destroy());
+        coopHooks.hostBoss?.fx(this, 'dive', { tx, ty });
+        this.teleDive(tx, ty);
         this.anticipate(380);
         this.setTintFill(this.def.glowColor);
         this.scene.time.delayedCall(420, () => {
@@ -369,6 +381,15 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
+    /** marcatore a terra della picchiata: dove atterra, si vede prima */
+    teleDive(tx: number, ty: number): void {
+        const mark = this.scene.add.graphics().setDepth(6);
+        mark.lineStyle(2, this.def.glowColor, 0.85);
+        mark.strokeCircle(tx, ty, 26);
+        this.scene.tweens.add({ targets: mark, scale: 0.55, duration: 420, ease: 'Quad.easeIn' });
+        this.scene.time.delayedCall(430, () => mark.destroy());
+    }
+
     /** carica orizzontale da bus: tutta la stanza, poi torna */
     private charge(player: Phaser.GameObjects.Sprite): void {
         this.busy = true;
@@ -376,12 +397,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         body.setVelocity(0, 0);
         const dir = Math.sign(player.x - this.x) || 1;
         this.setFlipX(dir < 0);
-        // linea di carica: si legge dove passa prima che parta
-        const lane = this.scene.add.graphics().setDepth(6);
-        lane.lineStyle(3, this.def.glowColor, 0.5);
-        lane.lineBetween(this.x, player.y - 6, this.x + dir * 700, player.y - 6);
-        this.scene.tweens.add({ targets: lane, alpha: 0.15, duration: 480 });
-        this.scene.time.delayedCall(490, () => lane.destroy());
+        coopHooks.hostBoss?.fx(this, 'charge', { tx: this.x, ty: player.y, dir });
+        this.teleCharge(this.x, player.y, dir);
         this.anticipate(420);
         this.setTintFill(this.def.glowColor);
         this.scene.tweens.add({ targets: this, x: this.x + 4, duration: 60, yoyo: true, repeat: 4 });
@@ -400,6 +417,15 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
                 this.scene.tweens.add({ targets: this, y: this.anchorY, duration: 500, ease: 'Quad.easeOut', onComplete: () => { this.busy = false; } });
             });
         });
+    }
+
+    /** linea di carica: si legge dove passa prima che parta */
+    teleCharge(x: number, y: number, dir: number): void {
+        const lane = this.scene.add.graphics().setDepth(6);
+        lane.lineStyle(3, this.def.glowColor, 0.5);
+        lane.lineBetween(x, y - 6, x + dir * 700, y - 6);
+        this.scene.tweens.add({ targets: lane, alpha: 0.15, duration: 480 });
+        this.scene.time.delayedCall(490, () => lane.destroy());
     }
 
     private radial(count: number): void {
@@ -507,16 +533,10 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     /** cecchino telegrafato: linea di mira 450ms, poi un colpo veloce */
     private snipe(player: Phaser.GameObjects.Sprite): void {
         this.anticipate(120);
-        const gfx = this.scene.add.graphics().setDepth(6);
         const tx = player.x;
         const ty = player.y;
-        gfx.lineStyle(2, this.def.glowColor, 0.7);
-        gfx.lineBetween(this.x, this.y, tx, ty);
-        // secondo tratto bianco: il colpo sta caricando
-        gfx.lineStyle(1, 0xffffff, 0.9);
-        gfx.lineBetween(this.x, this.y, tx, ty);
-        sfx.ui();
-        this.scene.tweens.add({ targets: gfx, alpha: 0.25, duration: 150, yoyo: true, repeat: 2 });
+        coopHooks.hostBoss?.fx(this, 'snipe', { tx, ty });
+        const gfx = this.teleSnipe(tx, ty);
         this.scene.time.delayedCall(450, () => {
             gfx.destroy();
             if (!this.active || !player.active) return;
@@ -533,18 +553,27 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
+    /** la linea di mira del cecchino */
+    teleSnipe(tx: number, ty: number): Phaser.GameObjects.Graphics {
+        const gfx = this.scene.add.graphics().setDepth(6);
+        gfx.lineStyle(2, this.def.glowColor, 0.7);
+        gfx.lineBetween(this.x, this.y, tx, ty);
+        // secondo tratto bianco: il colpo sta caricando
+        gfx.lineStyle(1, 0xffffff, 0.9);
+        gfx.lineBetween(this.x, this.y, tx, ty);
+        sfx.ui();
+        this.scene.tweens.add({ targets: gfx, alpha: 0.25, duration: 150, yoyo: true, repeat: 2 });
+        return gfx;
+    }
+
     /** schianto AoE: piomba a terra dove sei, shockwave + shake. firma dei picchiatori */
     private slam(player: Phaser.GameObjects.Sprite): void {
         this.busy = true;
         const body = this.body as Phaser.Physics.Arcade.Body;
         body.setVelocity(0, 0);
         const tx = player.x;
-        // anello a terra: qui atterra. spostati.
-        const ring = this.scene.add.graphics().setDepth(6);
-        ring.lineStyle(3, this.def.glowColor, 0.9);
-        ring.strokeCircle(tx, player.y, 52);
-        this.scene.tweens.add({ targets: ring, scale: 0.5, duration: 420, ease: 'Quad.easeIn' });
-        this.scene.time.delayedCall(430, () => ring.destroy());
+        coopHooks.hostBoss?.fx(this, 'slam', { tx, ty: player.y });
+        this.teleSlam(tx, player.y);
         this.anticipate(380);
         this.setTintFill(this.def.glowColor);
         this.scene.time.delayedCall(420, () => {
@@ -556,10 +585,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
                 targets: this, x: tx, y: player.y - 40, duration: 220, ease: 'Quad.easeIn',
                 onComplete: () => {
                     if (!this.active) return;
-                    this.scene.cameras.main.shake(280, 0.01);
-                    sfx.bossRoar();
-                    this.dust(14);
-                    this.ringShock(tx, player.y - 20, this.def.glowColor);
+                    coopHooks.hostBoss?.fx(this, 'slam-hit', { tx, ty: player.y });
+                    this.slamHit(tx, player.y);
                     // shockwave radiale corta
                     for (let i = 0; i < 8; i++) {
                         const angle = (Math.PI * 2 * i) / 8;
@@ -577,6 +604,23 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
                 },
             });
         });
+    }
+
+    /** anello a terra: qui atterra. spostati. */
+    teleSlam(tx: number, ty: number): void {
+        const ring = this.scene.add.graphics().setDepth(6);
+        ring.lineStyle(3, this.def.glowColor, 0.9);
+        ring.strokeCircle(tx, ty, 52);
+        this.scene.tweens.add({ targets: ring, scale: 0.5, duration: 420, ease: 'Quad.easeIn' });
+        this.scene.time.delayedCall(430, () => ring.destroy());
+    }
+
+    /** lo schianto arriva: la stanza trema */
+    slamHit(tx: number, ty: number): void {
+        this.scene.cameras.main.shake(280, 0.01);
+        sfx.bossRoar();
+        this.dust(14);
+        this.ringShock(tx, ty - 20, this.def.glowColor);
     }
 
     /** mine predittive: colonne di lame dove STAI ANDANDO, non dove sei */
@@ -641,7 +685,8 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     /** contraccolpo degli atterraggi: polvere + shake piccolo */
-    private builtinImpact(strength: number, shake: number): void {
+    builtinImpact(strength: number, shake: number): void {
+        coopHooks.hostBoss?.fx(this, 'impact', { n: strength, dir: shake });
         this.dust(5);
         this.scene.cameras.main.shake(Math.round(strength), shake * 0.01);
     }
@@ -656,6 +701,7 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
 
     takeDamage(amount: number, fromX: number, dir?: HitDir): boolean {
         if (!this.active) return false;
+        if (coopHooks.puppets.has(this)) return coopHooks.puppetBoss?.damage(this, amount, fromX, dir) ?? false;
         if (dir && dir === this.guarding) {
             emitWorld(this.scene, 'boss-parried', { dir });
             this.ringShock(this.x + Math.sign(fromX - this.x) * 30, this.y, 0xffffff);
@@ -685,21 +731,27 @@ export class Boss extends Phaser.Physics.Arcade.Sprite {
             // cambio di fase: la stanza trattiene il fiato e il boss cambia pelle
             this.heardPhase = this.phase;
             emitWorld(this.scene, 'boss-phase', { phase: this.phase });
-            sfx.bossRoar();
-            acoustics.swell(1300, 0.7);
-            this.scene.cameras.main.shake(350, 0.008);
-            this.ringShock(this.x, this.y, this.def.glowColor);
-            this.dust(10);
-            // punch della camera: dentro e fuori in 300ms
-            const cam = this.scene.cameras.main;
-            const z = cam.zoom;
-            cam.zoomTo(z * 1.05, 140);
-            this.scene.time.delayedCall(160, () => cam.zoomTo(z, 220));
-            // l'aura si scalda: più rabbia, più luce
-            this.setTintFill(0xffffff);
-            this.scene.time.delayedCall(140, () => this.active && this.clearTint());
+            coopHooks.hostBoss?.fx(this, 'phase');
+            this.phaseLook();
         }
         return true;
+    }
+
+    /** cambio di fase: la stanza trattiene il fiato e il boss cambia pelle */
+    phaseLook(): void {
+        sfx.bossRoar();
+        acoustics.swell(1300, 0.7);
+        this.scene.cameras.main.shake(350, 0.008);
+        this.ringShock(this.x, this.y, this.def.glowColor);
+        this.dust(10);
+        // punch della camera: dentro e fuori in 300ms
+        const cam = this.scene.cameras.main;
+        const z = cam.zoom;
+        cam.zoomTo(z * 1.05, 140);
+        this.scene.time.delayedCall(160, () => cam.zoomTo(z, 220));
+        // l'aura si scalda: più rabbia, più luce
+        this.setTintFill(0xffffff);
+        this.scene.time.delayedCall(140, () => this.active && this.clearTint());
     }
 
     private die(): void {

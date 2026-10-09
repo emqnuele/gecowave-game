@@ -4,10 +4,13 @@ import { coop } from '../../coop/runtime';
 import { FAST_WORLD, type CoopMsgs, type EnemySpawn, type NestSpawn, type PickupSpawn, type WorldDump } from '../../coop/protocol';
 import { emitWorld, offWorld, onWorld } from '../../core/worldEvents';
 import { Enemy } from '../../entities/Enemy';
+import type { Boss } from '../../entities/Boss';
+import { coopHooks } from '../../coop/hooks';
+import type { BossSpawn } from '../../coop/protocol';
 import type { Spawner } from '../../entities/Spawner';
 import type { NetSession } from '../../net/session';
 import type { GameContext } from '../context';
-import { MODES, tintOf, writeWorld, type EnemyLook } from './worldWire';
+import { MODES, tintOf, writeWorld, type BossLook, type EnemyLook } from './worldWire';
 
 const SNAP_MS = 50;
 /** l'ospite vede i nemici attorno a sé: oltre questo non gli servono */
@@ -27,6 +30,7 @@ export class WorldHost {
     private readonly session: NetSession<CoopMsgs>;
     private readonly ids = new WeakMap<object, number>();
     private readonly byId = new Map<number, Enemy | Spawner>();
+    private readonly bosses = new Map<number, Boss>();
     private nextId = 1;
     private projId = 1;
     private readonly projs = new Map<number, Phaser.Physics.Arcade.Sprite>();
@@ -54,6 +58,19 @@ export class WorldHost {
         on('enemy-spawned', ({ enemy }) => this.registerEnemy(enemy, true));
         on('nest-spawned', ({ nest }) => this.registerNest(nest, true));
         on('enemy-explode', ({ x, y, r }) => this.send('boom', { x, y, r }));
+        on('boss-spawned', ({ boss }) => this.registerBoss(boss, true));
+        coopHooks.hostBoss = {
+            fx: (b, fx, data) => {
+                const id = this.ids.get(b);
+                if (id) this.send('boss-fx', { id, fx, ...data });
+            },
+        };
+        coopHooks.hostEnemy = {
+            say: (e, text, ms) => {
+                const id = this.ids.get(e);
+                if (id) this.send('enemy-say', { id, text, ms });
+            },
+        };
         this.offs.push(session.on('hit', (h) => this.onHit(h)));
         this.offs.push(session.on('take', ({ key }) => this.onTake(key)));
         this.offs.push(session.on('break', ({ cell }) => this.onBreak(cell)));
@@ -77,6 +94,36 @@ export class WorldHost {
     adoptExisting(): void {
         for (const c of this.ctx.groups.enemies.getChildren()) this.registerEnemy(c as Enemy, false);
         for (const c of this.ctx.groups.spawners.getChildren()) this.registerNest(c as Spawner, false);
+        const b = this.ctx.bosses.current;
+        if (b?.active) this.registerBoss(b, false);
+    }
+
+    private bossOf(b: Boss): BossSpawn {
+        return { id: this.ids.get(b)!, kind: b.def.kind, x: b.x, y: b.y, hp: b.hp, maxHp: b.maxHp, engaged: b.engaged, invulnerable: b.invulnerable };
+    }
+
+    private registerBoss(b: Boss, announce: boolean): void {
+        if (this.ids.has(b) || !b.active) return;
+        const id = this.nextId++ & 0xffff;
+        this.ids.set(b, id);
+        this.bosses.set(id, b);
+        b.once(Phaser.GameObjects.Events.DESTROY, () => {
+            this.bosses.delete(id);
+            this.send('boss-gone', { id, kind: b.def.kind, x: b.x, y: b.y, died: b.hp <= 0 });
+        });
+        if (announce) this.send('boss', this.bossOf(b));
+    }
+
+    private bossLook(): BossLook | null {
+        const b = this.ctx.bosses.current;
+        const id = b?.active ? this.ids.get(b) : undefined;
+        if (!b || !id) return null;
+        const body = b.body as Phaser.Physics.Arcade.Body;
+        const t = tintOf(b);
+        return {
+            id, x: b.x, y: b.y, vx: body.velocity.x, vy: body.velocity.y, rot: b.rotation, sx: b.scaleX, sy: b.scaleY, alpha: b.alpha,
+            flipX: b.flipX, tint: t.tint, color: t.color, engaged: b.engaged, invulnerable: b.invulnerable, guard: b.guarding, hp: b.hp, maxHp: b.maxHp,
+        };
     }
 
     private spawnOf(e: Enemy): EnemySpawn {
@@ -190,15 +237,17 @@ export class WorldHost {
             const live = p.sprite as Phaser.GameObjects.Sprite;
             pickups.push({ ...p.spec, x: live.x, y: live.y } as PickupSpawn);
         }
+        const boss = this.ctx.bosses.current;
+        if (boss?.active) this.registerBoss(boss, false);
         return {
             levelSeq: coop.levelSeq,
             enemies,
             nests,
-            boss: null,
+            boss: boss?.active ? this.bossOf(boss) : null,
             pickups,
             gone: [],
             walls: [...this.brokenWalls],
-            arena: false,
+            arena: this.ctx.arena.lockedRoom?.id ?? -1,
             host: { x: this.ctx.player.x, y: this.ctx.player.y },
         };
     }
@@ -236,7 +285,7 @@ export class WorldHost {
                 mode: Math.max(0, MODES.indexOf(e.mode)), angle: e.angle, alpha: e.alpha,
             });
         }
-        this.session.sendFast(FAST_WORLD, (w) => writeWorld(w, { levelSeq: coop.levelSeq, enemies, boss: null, actors: [] }));
+        this.session.sendFast(FAST_WORLD, (w) => writeWorld(w, { levelSeq: coop.levelSeq, enemies, boss: this.bossLook(), actors: [] }));
     }
 
     /* ---------- richieste dell'ospite ---------- */
@@ -252,6 +301,12 @@ export class WorldHost {
             } else if (h.k === 'stun') e.stun(Math.min(5000, v));
             else if (h.k === 'stagger') e.stagger(Math.min(5000, v));
             else if (h.k === 'parry') e.parried();
+        } else if (h.on === 'boss') {
+            const b = this.bosses.get(h.id);
+            if (!b?.active) return;
+            const v = Number.isFinite(h.v) ? Math.max(0, Math.min(500, h.v)) : 0;
+            const landed = b.takeDamage(v, h.fromX, h.dir);
+            emitWorld(this.scene, 'damage', { target: b, amount: v, landed });
         } else if (h.on === 'nest') {
             const s = this.byId.get(h.id);
             if (!s || s instanceof Enemy || !s.active || s.broken) return;
@@ -299,5 +354,7 @@ export class WorldHost {
     destroy(): void {
         for (const off of this.offs) off();
         this.offs.length = 0;
+        coopHooks.hostBoss = null;
+        coopHooks.hostEnemy = null;
     }
 }

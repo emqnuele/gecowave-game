@@ -13,7 +13,7 @@ import { state } from '../core/state';
 import type { EndingId } from './chapters/ChapterScript';
 import type { Flow, GameContext, GameSystem, SceneData } from './context';
 
-type ProgressionCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'bosses' | 'chapter' | 'safe' | 'feel' | 'doomsday' | 'flow'>;
+type ProgressionCtx = Pick<GameContext, 'coop' | 'scene' | 'world' | 'player' | 'bosses' | 'chapter' | 'safe' | 'feel' | 'doomsday' | 'flow'>;
 
 /** il capitolo come percorso: uscite, riepiloghi, punteggi, morte e fine partita */
 export class Progression implements Flow, GameSystem {
@@ -34,12 +34,14 @@ export class Progression implements Flow, GameSystem {
         this.onPlayerDead();
     }
 
-    checkExits(): void {
-        if (this.exiting || this.ctx.player.dead) return;
+    /** chi arriva all'uscita: il mio geco, o in due quello del compagno (lo controlla l'host) */
+    checkExits(who?: { x: number; y: number }): void {
+        if (this.exiting || (!who && this.ctx.player.dead)) return;
+        const at = who ?? this.ctx.player;
         // i capitoli segreti non hanno `next`: l'uscita riporta al varco d'origine
         if (!this.ctx.world.def.next) {
             if (!this.ctx.world.def.secret) return;
-            const hit = this.ctx.world.level.exits.some((r) => r.contains(this.ctx.player.x, this.ctx.player.y));
+            const hit = this.ctx.world.level.exits.some((r) => r.contains(at.x, at.y));
             if (!hit) return;
             if (this.ctx.bosses.current?.active && this.ctx.bosses.current.def.guardsExit !== false) return;
             const ret = state.portalReturn;
@@ -50,7 +52,7 @@ export class Progression implements Flow, GameSystem {
             this.completeChapterAndGo(target, spawnAt);
             return;
         }
-        const hit = this.ctx.world.level.exits.some((r) => r.contains(this.ctx.player.x, this.ctx.player.y));
+        const hit = this.ctx.world.level.exits.some((r) => r.contains(at.x, at.y));
         if (!hit) return;
         // i boss non si superano scappando (quelli opzionali sì)
         if (this.ctx.bosses.current?.active && this.ctx.bosses.current.def.guardsExit !== false) {
@@ -88,8 +90,10 @@ export class Progression implements Flow, GameSystem {
 
     /** uscita del capitolo con riepilogo animato: score una volta sola, poi la ui decide quando partire */
     completeChapterAndGo(next: string, spawnAt?: { x: number; y: number }): void {
-        if (this.exiting || this.ctx.player.dead || this.ctx.world.def.hub) {
-            if (!this.exiting && !this.ctx.player.dead && this.ctx.world.def.hub) this.gotoLevel(next, spawnAt);
+        // in due si esce anche se il mio geco è a terra: il capitolo nuovo lo rimette in piedi
+        const down = this.ctx.player.dead && !this.ctx.coop;
+        if (this.exiting || down || this.ctx.world.def.hub) {
+            if (!this.exiting && !down && this.ctx.world.def.hub) this.gotoLevel(next, spawnAt);
             return;
         }
         this.exiting = true;

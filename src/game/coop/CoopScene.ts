@@ -2,6 +2,7 @@ import { coop } from '../../coop/runtime';
 import { coopHooks, resetCoopHooks } from '../../coop/hooks';
 import { FAST_PLAYER, type CoopMsgs } from '../../coop/protocol';
 import { state } from '../../core/state';
+import { bus, type GameEvents } from '../../core/events';
 import { onWorld, offWorld } from '../../core/worldEvents';
 import type { PlayerAct } from '../../rules/ombra';
 import { InterpDelay, NetTrack, type Sample } from '../../net/interp';
@@ -15,6 +16,10 @@ import { WorldHost } from './WorldHost';
 import { WorldMirror } from './WorldMirror';
 import type { PickupSpawn } from '../../coop/protocol';
 import type { Spawner } from '../../entities/Spawner';
+import type { Room } from '../../world/types';
+
+/** gli eventi della ui che l'host gira all'ospite: la trama, i premi, il boss. il resto è di chi lo vive */
+const SHARED_UI = new Set<keyof GameEvents>(['toast', 'wavesung', 'bark', 'bark-clear', 'boss-hp', 'charm-found', 'ability-unlocked', 'doomsday-changed', 'ombra-read', 'chapter-score', 'trial-timer']);
 
 /** quante volte al secondo il mio geco parte verso l'altro */
 const SEND_MS = 1000 / 30;
@@ -51,10 +56,23 @@ export class CoopScene implements GameSystem {
         this.host = coop.isHost ? new WorldHost(ctx, session) : null;
         this.mirror = coop.isGuest ? new WorldMirror(ctx, session) : null;
         if (this.host) {
+            bus.tap = (event, payload) => {
+                if (!SHARED_UI.has(event) || coopHooks.personal > 0 || coopHooks.menuOpen || !coop.together) return;
+                this.session.send('ui', { e: event, p: payload });
+            };
+            this.offs.push(() => {
+                bus.tap = null;
+            });
             this.offs.push(session.on('ready', (m) => {
                 if (m.seq !== coop.levelSeq) return;
                 this.ensurePartner();
                 this.host?.welcome();
+            }));
+        }
+        this.offs.push(session.on('cmd', (m) => this.command(m)));
+        if (this.mirror) {
+            this.offs.push(session.on('ui', (m) => {
+                if (SHARED_UI.has(m.e as keyof GameEvents)) bus.emit(m.e as keyof GameEvents, m.p as never);
             }));
         }
         this.offs.push(coop.listen((e) => {
@@ -156,6 +174,39 @@ export class CoopScene implements GameSystem {
         this.mirror?.wallBroken(wall);
     }
 
+    /** l'arena si chiude: chi è rimasto fuori ci finisce dentro, accanto all'altro */
+    arenaLocked(room: Room, inside: (p: { x: number; y: number }) => boolean): void {
+        if (!this.host) return;
+        this.session.send('arena', { locked: true, room: room.id });
+        const p = this.partner;
+        const me = this.ctx.player;
+        const meIn = !me.dead && inside(me);
+        if (p?.alive && !inside(p) && meIn) {
+            this.session.send('cmd', { c: 'teleport', x: me.x - me.facing * 40, y: me.y - 10 });
+        } else if (!meIn && !me.dead && p?.alive) {
+            this.teleportSelf(p.x + 40, p.y - 10, 'l’arena si chiude: ti trovi dentro.');
+        }
+    }
+
+    arenaUnlocked(): void {
+        if (this.host) this.session.send('arena', { locked: false, room: -1 });
+    }
+
+    /** il mio geco cambia posto senza camminare: una nuvola dove sparisce e dove riappare */
+    teleportSelf(x: number, y: number, why?: string): void {
+        const p = this.ctx.player;
+        const puff = (px: number, py: number) => {
+            const e = this.scene.add.particles(px, py, 'p-dot', { speed: { min: 40, max: 160 }, scale: { start: 0.7, end: 0 }, alpha: { start: 0.7, end: 0 }, tint: 0x0b0c10, lifespan: 420, quantity: 16, stopAfter: 16 }).setDepth(6);
+            this.scene.time.delayedCall(800, () => e.destroy());
+        };
+        puff(p.x, p.y);
+        (p.body as Phaser.Physics.Arcade.Body).reset(x, y);
+        puff(x, y);
+        this.ctx.safe.lastSafe = { x, y };
+        this.scene.cameras.main.flash(120, 20, 20, 20);
+        if (why) bus.emit('toast', { text: why });
+    }
+
     nestHit(s: Spawner, amount: number): boolean {
         return this.mirror?.nestHit(s, amount) ?? false;
     }
@@ -193,6 +244,20 @@ export class CoopScene implements GameSystem {
             maxHp: state.maxHp,
             decoy: decoy?.active ? { x: decoy.x, y: decoy.y } : null,
         };
+    }
+
+    /** l'host muove il mio geco per la trama: arena, rientri, ferite */
+    private command(m: CoopMsgs['cmd']): void {
+        const p = this.ctx.player;
+        if (m.c === 'teleport') this.teleportSelf(m.x, m.y, 'l’arena si chiude: ti trovi dentro.');
+        else if (m.c === 'stun') p.stun(Math.max(0, Math.min(60000, m.ms)));
+        else if (m.c === 'hurt') p.hurt(Math.max(0, Math.min(10, m.amount)), m.fromX);
+        else if (m.c === 'kill') p.kill();
+    }
+
+    /** quello che fa il mio geco è mio: i suoi toast non vanno all'altro */
+    mine(on: boolean): void {
+        coopHooks.personal += on ? 1 : -1;
     }
 
     /** un passo di logica: parte il mio stato, si sistema il suo */

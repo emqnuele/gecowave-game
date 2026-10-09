@@ -70,7 +70,7 @@ export interface WorldDump {
     gone: string[];
     /** muri rotti e porte aperte, per cella */
     walls: number[];
-    arena: boolean;
+    arena: number;
     host: Spot;
 }
 
@@ -127,7 +127,7 @@ export interface CoopMsgs {
     'enemy-say': { id: number; text: string; ms: number };
     'boss': BossSpawn;
     'boss-fx': { id: number; fx: string; tx?: number; ty?: number; n?: number; dir?: number; xs?: number[]; phase?: number };
-    'boss-gone': { id: number; kind: BossKind; x: number; y: number };
+    'boss-gone': { id: number; kind: BossKind; x: number; y: number; died: boolean };
     'shoot': { id: number; x: number; y: number; tx: number; ty: number; color?: number; speed?: number; size?: number };
     'boom': { x: number; y: number; r: number };
     /** una comparsa della trama che l'ospite deve vedere (lochef che insegue, ivan, le guide) */
@@ -140,7 +140,7 @@ export interface CoopMsgs {
     'pickup': PickupSpawn;
     'gone': { key: string };
     'wall': { cell: number };
-    'arena': { locked: boolean; doors?: { x: number; y: number; w: number; h: number }[]; color?: number };
+    'arena': { locked: boolean; room: number };
 
     // --- richieste del guest ---
     'hit': Hit;

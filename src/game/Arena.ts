@@ -5,7 +5,7 @@ import { sfx } from '../audio/sfx';
 import type { Room } from '../world/types';
 import type { GameContext, GameSystem } from './context';
 
-type ArenaCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'groups' | 'feel' | 'bosses'>;
+type ArenaCtx = Pick<GameContext, 'simulates' | 'coop' | 'scene' | 'world' | 'player' | 'groups' | 'feel' | 'bosses'>;
 
 /** le sbarre che chiudono una stanza: per i boss e per il microfono rosso */
 export class Arena implements GameSystem {
@@ -21,28 +21,40 @@ export class Arena implements GameSystem {
 
     /** l'arena del boss si chiude a scontro iniziato col player dentro, si riapre a boss caduto */
     updateBossLock(time: number): void {
-        if (!this.ctx.simulates) return;
+        if (!this.ctx.simulates) {
+            // l'ospite le sbarre le riceve: qui si disegnano e basta
+            if (this.room) this.draw(time);
+            return;
+        }
         const boss = this.ctx.bosses.current;
         const player = this.ctx.player;
-        const fighting = !!boss?.active && boss.engaged && !boss.frenzy && !player.dead;
+        // in due l'arena resta chiusa finché uno dei due è in piedi
+        const partner = this.ctx.coop?.partnerSpot() ?? null;
+        const someoneUp = !player.dead || !!partner;
+        const fighting = !!boss?.active && boss.engaged && !boss.frenzy && someoneUp;
         if (this.room) {
             // le scenette a metà scontro (ivan) fermano il boss ma non riaprono l'arena
-            if (!boss?.active || player.dead) this.unlock();
+            if (!boss?.active || !someoneUp) this.unlock();
             else this.draw(time);
             return;
         }
         if (!fighting || !this.ctx.world.layout) return;
         const room = this.ctx.world.roomAt(boss!.x, boss!.y);
-        if (!room || room.kind !== 'arena' || this.ctx.world.roomAt(player.x, player.y) !== room) return;
+        if (!room || room.kind !== 'arena') return;
         // si chiude solo con il player ben dentro: mai sbarre addosso a chi sta sulla soglia
         const R = room.rect;
-        const c = player.x / TILE;
-        const r = player.y / TILE;
-        if (c < R.x + 4 || c > R.x + R.w - 4 || r < R.y + 2 || r > R.y + R.h - 2) return;
+        const inside = (p: { x: number; y: number }): boolean => {
+            if (this.ctx.world.roomAt(p.x, p.y) !== room) return false;
+            const c = p.x / TILE;
+            const r = p.y / TILE;
+            return !(c < R.x + 4 || c > R.x + R.w - 4 || r < R.y + 2 || r > R.y + R.h - 2);
+        };
+        if (!(!player.dead && inside(player)) && !(partner && inside(partner))) return;
         this.lock(room);
+        this.ctx.coop?.arenaLocked(room, inside);
     }
 
-    lock(room: Room): void {
+    lock(room: Room, quiet = false): void {
         this.room = room;
         for (const r of this.ctx.world.doorRects(room)) {
             const bar = this.scene.add.zone(r.centerX, r.centerY, r.width, r.height);
@@ -53,18 +65,25 @@ export class Arena implements GameSystem {
         this.ctx.feel.shake(220, 0.006);
         sfx.gate();
         sfx.bossRoar();
-        bus.emit('toast', { text: 'le uscite si chiudono. o lui o te.' });
+        if (!quiet) bus.emit('toast', { text: 'le uscite si chiudono. o lui o te.' });
     }
 
-    unlock(): void {
+    /** la stanza chiusa adesso, per chi la deve rifare dall'altra parte */
+    get lockedRoom(): Room | null {
+        return this.room;
+    }
+
+    unlock(quiet = false): void {
         this.ctx.groups.arenaBars.clear(true, true);
         this.gfx?.destroy();
         this.gfx = null;
         if (this.room && !this.ctx.player.dead) {
             sfx.unlock();
-            bus.emit('toast', { text: 'l\'arena si riapre.' });
+            if (!quiet) bus.emit('toast', { text: 'l\'arena si riapre.' });
         }
+        const was = this.room;
         this.room = null;
+        if (was) this.ctx.coop?.arenaUnlocked();
     }
 
     /** sbarre d'inchiostro che vibrano col colore del boss */

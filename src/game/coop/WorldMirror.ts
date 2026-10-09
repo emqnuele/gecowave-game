@@ -4,14 +4,20 @@ import { coop } from '../../coop/runtime';
 import { coopHooks } from '../../coop/hooks';
 import { FAST_WORLD, type CoopMsgs, type EnemySpawn, type NestSpawn, type PickupSpawn } from '../../coop/protocol';
 import type { Enemy } from '../../entities/Enemy';
+import type { Boss } from '../../entities/Boss';
+import { acoustics } from '../../audio/acoustics';
+import { bus } from '../../core/events';
+import { rng } from '../../core/rng';
+import type { BossSpawn } from '../../coop/protocol';
 import type { Spawner } from '../../entities/Spawner';
 import { InterpDelay, NetTrack, type Sample } from '../../net/interp';
 import type { NetSession } from '../../net/session';
 import type { GameContext } from '../context';
 import { cellOf } from './WorldHost';
-import { applyTint, MODES, readWorld, type EnemyLook } from './worldWire';
+import { applyTint, MODES, readWorld, type BossLook, type EnemyLook } from './worldWire';
 
 type EnemySample = Sample & { look: EnemyLook };
+type BossSample = Sample & { look: BossLook };
 
 /** un nemico che non arriva da un po' si ferma dov'è, come fa dall'host chi dorme */
 const STALE_MS = 700;
@@ -37,6 +43,7 @@ export class WorldMirror {
     /** il mondo dell'host è arrivato: prima di questo non c'è niente da colpire */
     arrived = false;
     private notesHooked = false;
+    private boss: { id: number; b: Boss; track: NetTrack<BossSample>; look: BossLook | null } | null = null;
 
     constructor(ctx: GameContext, session: NetSession<CoopMsgs>) {
         this.ctx = ctx;
@@ -49,6 +56,7 @@ export class WorldMirror {
             parried: (e) => this.claim(e, 'parry', 0, e.x),
             knock: () => {},
         };
+        coopHooks.puppetBoss = { damage: (b, amount, fromX, dir) => this.bossHit(b, amount, fromX, dir) };
         const on = <K extends keyof CoopMsgs & string>(t: K, fn: (m: CoopMsgs[K]) => void) => this.offs.push(session.on(t, fn));
         on('world', (d) => {
             if (d.levelSeq !== coop.levelSeq) return;
@@ -57,7 +65,13 @@ export class WorldMirror {
             for (const n of d.nests) this.nest(n);
             for (const p of d.pickups) this.pickup(p);
             for (const c of d.walls) this.wall(c);
+            if (d.boss) this.spawnBoss(d.boss);
+            if (d.arena >= 0) this.arena(true, d.arena);
         });
+        on('arena', (m) => this.arena(m.locked, m.room));
+        on('boss', (m) => this.spawnBoss(m));
+        on('boss-gone', (m) => this.bossGone(m));
+        on('boss-fx', (m) => this.bossFx(m));
         on('spawn', (e) => this.spawn(e));
         on('despawn', (m) => this.despawn(m));
         on('nest', (n) => this.nest(n));
@@ -92,6 +106,7 @@ export class WorldMirror {
             const now = performance.now();
             this.delay.arrived(now);
             const t = session.toLocal(sentAt);
+            if (f.boss && this.boss?.id === f.boss.id) this.boss.track.push({ t, x: f.boss.x, y: f.boss.y, vx: f.boss.vx, vy: f.boss.vy, look: f.boss });
             for (const look of f.enemies) {
                 if (!this.enemies.has(look.id)) continue;
                 let tr = this.tracks.get(look.id);
@@ -181,6 +196,104 @@ export class WorldMirror {
         if (id) this.session.send('proj-gone', { id });
     }
 
+    private arena(locked: boolean, roomId: number): void {
+        const arena = this.ctx.arena;
+        if (!locked) {
+            if (arena.lockedRoom) arena.unlock(true);
+            return;
+        }
+        const room = this.ctx.world.layout?.rooms.find((r) => r.id === roomId);
+        if (room && !arena.lockedRoom) arena.lock(room, true);
+    }
+
+    /* ---------- il boss ---------- */
+
+    private spawnBoss(m: BossSpawn): void {
+        if (this.boss?.id === m.id) return;
+        if (this.boss?.b.active) this.boss.b.destroy();
+        const bosses = this.ctx.bosses;
+        const b = bosses.make(m.x, m.y, m.kind, m.maxHp);
+        coopHooks.puppets.add(b);
+        b.hp = m.hp;
+        b.invulnerable = m.invulnerable;
+        b.engaged = m.engaged;
+        b.setPosition(m.x, m.y);
+        const body = b.body as Phaser.Physics.Arcade.Body;
+        body.moves = false;
+        body.immovable = true;
+        bosses.current = b;
+        bosses.light(b, b.def.glowColor, 280, 1.0);
+        this.ctx.combat.setupBossColliders();
+        this.boss = { id: m.id, b, track: new NetTrack(), look: null };
+    }
+
+    private bossGone(m: CoopMsgs['boss-gone']): void {
+        if (this.boss?.id !== m.id) return;
+        const b = this.boss.b;
+        this.boss = null;
+        if (this.ctx.bosses.current === b) this.ctx.bosses.current = null;
+        if (m.died) {
+            const scene = this.scene;
+            const color = b.def.glowColor;
+            acoustics.swell(3200, 1);
+            sfx.bossRoar();
+            for (let i = 0; i < 5; i++) {
+                scene.time.delayedCall(i * 180, () => {
+                    const p = scene.add.particles(m.x + (rng.fx.next() - 0.5) * 140, m.y + (rng.fx.next() - 0.5) * 140, 'p-spark', {
+                        speed: { min: 150, max: 400 }, scale: { start: 1.4, end: 0 }, tint: [color, 0xffffff], lifespan: 600, quantity: 20, stopAfter: 20,
+                    });
+                    scene.time.delayedCall(900, () => p.destroy());
+                });
+            }
+            scene.cameras.main.shake(800, 0.012);
+            bus.emit('boss-hp', null);
+        }
+        if (b.active) b.destroy();
+    }
+
+    private bossFx(m: CoopMsgs['boss-fx']): void {
+        const b = this.boss?.id === m.id ? this.boss.b : null;
+        if (!b?.active) return;
+        const tx = m.tx ?? b.x;
+        const ty = m.ty ?? b.y;
+        switch (m.fx) {
+            case 'engage': b.entrance(); break;
+            case 'phase': b.phaseLook(); break;
+            case 'dive': b.teleDive(tx, ty); break;
+            case 'charge': b.teleCharge(tx, ty, m.dir ?? 1); break;
+            case 'snipe': {
+                const g = b.teleSnipe(tx, ty);
+                this.scene.time.delayedCall(450, () => g.destroy());
+                break;
+            }
+            case 'slam': b.teleSlam(tx, ty); break;
+            case 'slam-hit': b.slamHit(tx, ty); break;
+            case 'impact': b.builtinImpact(m.n ?? 90, m.dir ?? 0.5); break;
+        }
+    }
+
+    /** un colpo al boss: la parata e l'invulnerabilità si leggono da quello che manda l'host */
+    private bossHit(b: Boss, amount: number, fromX: number, dir?: 'side' | 'up' | 'down' | 'shot'): boolean {
+        const cur = this.boss;
+        if (!cur || cur.b !== b) return false;
+        const look = cur.look;
+        if (look && dir && look.guard === dir) {
+            sfx.clang();
+            return false;
+        }
+        if (look?.invulnerable ?? b.invulnerable) {
+            const p = this.scene.add.particles(b.x + Math.sign(fromX - b.x) * 30, b.y, 'p-dot', {
+                speed: { min: 40, max: 100 }, scale: { start: 0.6, end: 0 }, tint: b.def.glowColor, lifespan: 250, quantity: 5, stopAfter: 5,
+            });
+            this.scene.time.delayedCall(500, () => p.destroy());
+            return false;
+        }
+        this.session.send('hit', { on: 'boss', id: cur.id, v: amount, fromX, dir });
+        b.setTintFill(0xffffff);
+        this.scene.time.delayedCall(60, () => b.active && b.clearTint());
+        return true;
+    }
+
     /* ---------- oggetti ---------- */
 
     /** un oggetto nato qui (dal livello) o arrivato dall'host: prenderlo è una richiesta */
@@ -247,6 +360,27 @@ export class WorldMirror {
         const now = performance.now();
         const at = now - this.delay.ms;
         const sceneNow = this.scene.time.now;
+        const boss = this.boss;
+        if (boss?.b.active) {
+            const s = boss.track.at(at, this.out);
+            if (s) {
+                const b = boss.b;
+                const look = s.look;
+                boss.look = look;
+                b.setPosition(this.out.x, this.out.y);
+                (b.body as Phaser.Physics.Arcade.Body).velocity.set(this.out.vx, this.out.vy);
+                b.setRotation(look.rot);
+                b.setScale(look.sx, look.sy);
+                b.setAlpha(look.alpha);
+                b.setFlipX(look.flipX);
+                applyTint(b, look.tint, look.color);
+                b.engaged = look.engaged;
+                b.invulnerable = look.invulnerable;
+                b.hp = look.hp;
+                b.maxHp = look.maxHp;
+            }
+            boss.b.puppetTick(delta);
+        }
         for (const [id, e] of this.enemies) {
             if (!e.active) {
                 this.enemies.delete(id);
@@ -280,5 +414,6 @@ export class WorldMirror {
         for (const off of this.offs) off();
         this.offs.length = 0;
         coopHooks.puppetEnemy = null;
+        coopHooks.puppetBoss = null;
     }
 }
