@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { TILE } from '../config';
-import { FOLK, FOLK_AFTER, FOLK_CHAT, FOLK_HIDING, FOLK_PANIC, FOLK_PEDRO, FOLK_QUIET, FOLK_RELIEF, FOLK_TERROR, type FolkKind } from '../content/folk';
+import { FOLK, FOLK_AFTER, FOLK_CHAT, FOLK_CHEER, FOLK_HEARD, FOLK_HIDING, FOLK_PANIC, FOLK_PEDRO, FOLK_QUIET, FOLK_RAIN, FOLK_RELIEF, FOLK_TERROR, FOLK_TIDE, type FolkKind } from '../content/folk';
 import { toneFor } from '../content/tone';
 import { mulberry32 } from '../rules/hash';
 import { folkImage } from '../art/folk';
@@ -22,6 +22,27 @@ const SIGHT_X = 560;
 const SIGHT_Y = 260;
 /** salti e cadute che un passante in fuga fa prima di rintanarsi */
 const FLEE_HOPS = 2;
+/** chi sente il fischio fin dove lo sente */
+const HEAR_R = 1300;
+/** sopra la testa, quante celle cercare un tetto per la pioggia */
+const COVER_ROWS = 8;
+/** pioggia oltre cui all'aperto ci si ripara */
+const RAIN_SHELTER = 0.35;
+
+/** quello che un passante sa del mondo a ogni passo */
+export interface FolkWorld {
+    player: Phaser.GameObjects.Sprite & { attackActive?: boolean };
+    threats: { x: number; y: number }[];
+    bossFight: boolean;
+    /** chi insegue il custode, se c'è (lochef nella tana) */
+    pursuer: { x: number; y: number } | null;
+    /** il pelo della marea adesso, null senza acqua */
+    water: number | null;
+    /** fin dove arriverà la marea che sta per salire, null se non sale */
+    flood: number | null;
+    /** 0..1, quanta pioggia cade */
+    rain: number;
+}
 
 interface Bubble {
     text: Phaser.GameObjects.Text;
@@ -58,6 +79,14 @@ class Wanderer {
     terror = false;
     lastSaw = 0;
     hops = 0;
+    /** sale verso l'alto prima che arrivi l'acqua */
+    climbing = false;
+    /** sotto un tetto ad aspettare che spiova */
+    sheltered = false;
+    /** sotto la pioggia, curvo */
+    hunch = false;
+    /** dopo un boss: si gira a guardarti, una volta */
+    cheerUntil = 0;
     readonly baseScaleY: number;
 
     constructor(sprite: Phaser.GameObjects.Image, kind: FolkKind, seg: number, x: number, feet: number, home: Room | null, onTalk: (w: Wanderer) => void) {
@@ -182,8 +211,9 @@ export class FolkManager {
         w.bubble.until = now + ms;
     }
 
-    update(time: number, delta: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean, pursuer: { x: number; y: number } | null = null, water: number | null = null): void {
+    update(time: number, delta: number, world: FolkWorld): void {
         if (this.suspended) return;
+        const water = world.water;
         const cam = this.scene.cameras.main.worldView;
         const dt = delta / 1000;
         for (const w of this.folk) {
@@ -205,13 +235,13 @@ export class FolkManager {
                 if (w.sprite.alpha <= 0) w.sprite.setVisible(false);
                 continue;
             }
-            this.think(w, time, player, threats, bossFight, pursuer);
+            this.think(w, time, world);
             this.move(w, time, dt);
             const bob = w.mode === 'walk' || w.mode === 'flee' ? Math.abs(Math.sin((time + w.phase) / (w.mode === 'flee' ? 70 : 110))) * 2.5 : Math.sin((time + w.phase) / 700) * 0.6;
             // rintanato: rannicchiato e scosso dai brividi
             const shiver = w.mode === 'hide' ? Math.sin((time + w.phase) / 28) * 0.9 : 0;
             w.sprite.setPosition(w.x + shiver, w.feet + 1 - (w.mode === 'hide' ? 0 : bob));
-            w.sprite.scaleY = w.mode === 'hide' ? w.baseScaleY * 0.8 : w.baseScaleY;
+            w.sprite.scaleY = w.baseScaleY * (w.mode === 'hide' ? 0.8 : w.hunch ? 0.9 : 1);
             w.sprite.setFlipX(w.facing < 0);
             w.sprite.setRotation(w.mode === 'walk' ? Math.sin((time + w.phase) / 110) * 0.05 : 0);
             // passo a fotogrammi: chi scappa corre, chi è fermo resta sul primo
@@ -231,9 +261,11 @@ export class FolkManager {
         }
     }
 
-    private think(w: Wanderer, now: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean, pursuer: { x: number; y: number } | null): void {
+    private think(w: Wanderer, now: number, world: FolkWorld): void {
         if (w.mode === 'air') return;
-        if (this.terrified(w, now, pursuer)) return;
+        const { player, threats, bossFight } = world;
+        if (this.terrified(w, now, world.pursuer)) return;
+        if (this.fleeWater(w, now, world.flood)) return;
         const px = player.x;
         const py = player.y;
         const dP = Math.hypot(px - w.x, py - (w.feet - 26));
@@ -258,6 +290,7 @@ export class FolkManager {
             w.mode = 'idle';
             w.until = now + 1500;
         }
+        if (this.cheer(w, now, px)) return;
         // il custode passa: ci si gira e si dice la propria
         if (dP < 90 && now >= w.nextBarkAt && w.mode !== 'chat') {
             w.nextBarkAt = now + 9000 + rng.logic.next() * 6000;
@@ -269,6 +302,7 @@ export class FolkManager {
             this.say(w, pool[Math.floor(rng.logic.next() * pool.length)]);
             return;
         }
+        if (this.shelter(w, now, world.rain)) return;
         if (now < w.until) return;
         // fine di uno stato: si sceglie cosa fare dopo
         const roll = rng.logic.next();
@@ -350,6 +384,148 @@ export class FolkManager {
         return true;
     }
 
+    /** il fischio di chi insegue: chi lo sente sa cosa vuol dire, e si rintana prima di vederlo */
+    hear(x: number, y: number): void {
+        const now = this.scene.time.now;
+        for (const w of this.folk) {
+            if (w.mode === 'air' || Math.abs(w.x - x) > HEAR_R || Math.abs(w.feet - y) > HEAR_R * 0.6) continue;
+            const fresh = !w.terror;
+            w.terror = true;
+            w.lastSaw = now;
+            if (!fresh) continue;
+            w.hops = 0;
+            this.unpair(w);
+            (w as Wanderer & { edge?: unknown }).edge = undefined;
+            w.mode = 'flee';
+            w.facing = x < w.x ? 1 : -1;
+            if (rng.logic.next() < 0.6) this.say(w, FOLK_HEARD[Math.floor(rng.logic.next() * FOLK_HEARD.length)], 1600);
+        }
+    }
+
+    /** un boss è caduto: chi è intorno si gira a guardarti, una volta */
+    cheerFrom(x: number, y: number): void {
+        const until = this.scene.time.now + 9000;
+        for (const w of this.folk) if (Math.abs(w.x - x) < 2200 && Math.abs(w.feet - y) < 1200) w.cheerUntil = until;
+    }
+
+    private cheer(w: Wanderer, now: number, px: number): boolean {
+        if (!w.cheerUntil) return false;
+        if (now > w.cheerUntil) {
+            w.cheerUntil = 0;
+            return false;
+        }
+        w.cheerUntil = 0;
+        this.unpair(w);
+        w.mode = 'face';
+        w.until = now + 2600;
+        w.facing = px < w.x ? -1 : 1;
+        if (rng.logic.next() < 0.8) this.say(w, FOLK_CHEER[Math.floor(rng.logic.next() * FOLK_CHEER.length)], 2400);
+        return true;
+    }
+
+    /** la marea sta per salire: chi resterebbe sotto sale di piano finché può */
+    private fleeWater(w: Wanderer, now: number, flood: number | null): boolean {
+        if (flood === null) {
+            w.climbing = false;
+            return false;
+        }
+        const seg = this.nav.segments[w.seg];
+        if ((seg.r + 1) * TILE - 34 <= flood) {
+            if (w.climbing) {
+                w.climbing = false;
+                w.mode = 'idle';
+                w.until = now + 2500;
+            }
+            return false;
+        }
+        const going = (w as Wanderer & { edge?: unknown }).edge;
+        if (w.climbing && w.mode === 'walk' && going) return true;
+        if (!w.climbing) {
+            w.climbing = true;
+            this.unpair(w);
+            if (rng.logic.next() < 0.7) this.say(w, FOLK_TIDE[Math.floor(rng.logic.next() * FOLK_TIDE.length)], 1800);
+        }
+        const up = this.nav.edges(w.seg)
+            .filter((e) => e.need <= 110 && this.nav.segments[e.to].r < seg.r)
+            .sort((a, b) => Math.abs(a.fromC * TILE - w.x) - Math.abs(b.fromC * TILE - w.x))[0];
+        if (up) {
+            w.mode = 'walk';
+            w.targetX = up.fromC * TILE + TILE / 2;
+            w.until = now + 8000;
+            (w as Wanderer & { edge?: typeof up }).edge = up;
+        } else if (w.mode !== 'idle' || now >= w.until) {
+            // più su non si va: si aspetta guardando in basso
+            w.mode = 'idle';
+            w.until = now + 1500;
+        }
+        return true;
+    }
+
+    /** sotto la pioggia, all'aperto: si cerca un tetto sul proprio pavimento, se no si cammina curvi */
+    private shelter(w: Wanderer, now: number, rain: number): boolean {
+        const wet = rain > RAIN_SHELTER && !!w.home?.surface;
+        w.hunch = wet && !w.sheltered;
+        if (!wet) {
+            w.sheltered = false;
+            return false;
+        }
+        if (w.mode === 'face' && now < w.until) return false;
+        if (w.sheltered) {
+            if (now >= w.until) {
+                w.until = now + 5000;
+                if (rng.logic.next() < 0.15) this.say(w, FOLK_RAIN[Math.floor(rng.logic.next() * FOLK_RAIN.length)], 2000);
+            }
+            w.mode = 'idle';
+            return true;
+        }
+        const cx = this.coverNear(w);
+        if (cx === null) return false;
+        this.unpair(w);
+        if (Math.abs(cx - w.x) < 6) {
+            w.sheltered = true;
+            w.mode = 'idle';
+            w.until = now + 5000;
+            if (rng.logic.next() < 0.5) this.say(w, FOLK_RAIN[Math.floor(rng.logic.next() * FOLK_RAIN.length)], 2000);
+            return true;
+        }
+        if (w.mode !== 'walk' || w.targetX !== cx) {
+            w.mode = 'walk';
+            w.targetX = cx;
+            w.until = now + 9000;
+            (w as Wanderer & { edge?: unknown }).edge = undefined;
+        }
+        return true;
+    }
+
+    /** colonne del pavimento con un tetto sopra, per pavimento; calcolate la prima volta che servono */
+    private covers = new Map<number, number[]>();
+
+    private coverNear(w: Wanderer): number | null {
+        let cols = this.covers.get(w.seg);
+        if (!cols) {
+            const seg = this.nav.segments[w.seg];
+            cols = [];
+            for (let c = seg.c0; c <= seg.c1; c++) {
+                for (let r = seg.r - 2; r >= seg.r - COVER_ROWS; r--) {
+                    if (this.nav.solid(c, r)) {
+                        cols.push(c * TILE + TILE / 2);
+                        break;
+                    }
+                }
+            }
+            this.covers.set(w.seg, cols);
+        }
+        let best: number | null = null;
+        for (const x of cols) if (best === null || Math.abs(x - w.x) < Math.abs(best - w.x)) best = x;
+        return best;
+    }
+
+    private unpair(w: Wanderer): void {
+        if (!w.partner) return;
+        w.partner.partner = null;
+        w.partner = null;
+    }
+
     private sees(w: Wanderer, p: { x: number; y: number }): boolean {
         const R = w.home?.rect;
         if (R && p.x >= R.x * TILE && p.x < (R.x + R.w) * TILE && p.y >= R.y * TILE && p.y < (R.y + R.h) * TILE) return true;
@@ -385,7 +561,7 @@ export class FolkManager {
         const lo = seg.c0 * TILE + 10;
         const hi = (seg.c1 + 1) * TILE - 10;
         if (w.mode === 'walk' || w.mode === 'flee') {
-            const pace = w.kind.pace * (w.mode === 'flee' ? 3.2 : 1);
+            const pace = w.kind.pace * (w.mode === 'flee' ? 3.2 : w.climbing ? 2.4 : w.hunch ? 1.5 : 1);
             const goal = w.mode === 'flee' ? (w.facing > 0 ? hi : lo) : w.targetX;
             const d = goal - w.x;
             if (Math.abs(d) < 3) {

@@ -3,6 +3,7 @@ import { TILE } from '../../config';
 import { TOASTS, WAVESUNG } from '../../content/story';
 import { bus } from '../../core/events';
 import { music } from '../../audio/music';
+import { haptics } from '../../input/haptics';
 import { NucleusStraightening } from '../../story/NucleusStraightening';
 import { state } from '../../core/state';
 import type { Boss } from '../../entities/Boss';
@@ -105,6 +106,7 @@ export class NucleoChapter extends Chapter {
                 // l'ordine va in pezzi: lo storto torna di colpo, e resta
                 this.ctx.lens.glitch(700, 0.9);
                 this.ctx.lens.kick({ angle: -0.05, barrel: 0.18 }, 30, 250, 1600);
+                haptics.rumble(1, 0.6, 600);
                 if (shell?.scene) this.scene.tweens.add({ targets: shell, alpha: 1, duration: 900 });
                 state.setFlag('pedro-redento');
                 this.ctx.dialogues.start('pedro-redento', () => this.sceltaFinale(x, y, true));
@@ -191,6 +193,7 @@ export class NucleoChapter extends Chapter {
             this.ctx.feel.shake(700, 0.012);
             this.ctx.lens.kick({ chroma: 1.6, barrel: 0.16, desat: -0.4 }, 60, 500, 1800);
             this.ctx.lens.shockwave(x, y, 1.4, 1200);
+            haptics.rumble(1, 1, 700);
         });
     }
 

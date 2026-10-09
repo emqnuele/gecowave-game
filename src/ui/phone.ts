@@ -9,6 +9,7 @@ import { ABILITY_CARDS } from '../content/story';
 import { deletePhoto, listPhotos, PHOTO_FILTERS, processPhoto, savePhoto, type PhotoFilter } from './photos';
 import { bus } from '../core/events';
 import { matchesAction } from '../input/actions';
+import { haptics } from '../input/haptics';
 import { formatKeys, keyLabel } from '../input/keyText';
 import { eatProblem } from '../core/inventory';
 import { music } from '../audio/music';
@@ -1312,6 +1313,22 @@ export class Phone {
         });
         lens.append(lensToggle);
         root.append(lens);
+
+        const buzz = el('div', 'phone-row glass-chip');
+        buzz.append(text('span', 'name', 'vibrazione del pad'));
+        const buzzToggle = el('button', `toggle sticker ${state.settings.rumble ? 'on' : ''}`);
+        buzzToggle.textContent = state.settings.rumble ? 'attiva' : 'spenta';
+        buzzToggle.addEventListener('click', () => {
+            state.settings.rumble = !state.settings.rumble;
+            state.persistSettings();
+            buzzToggle.classList.toggle('on', state.settings.rumble);
+            buzzToggle.textContent = state.settings.rumble ? 'attiva' : 'spenta';
+            if (!state.settings.rumble) haptics.stop();
+            else haptics.rumble(0.3, 0.5, 160);
+            sfx.ui();
+        });
+        buzz.append(buzzToggle);
+        root.append(buzz);
 
         root.append(assistToggle({ rowClass: 'phone-row glass-chip' }));
 

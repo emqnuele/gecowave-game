@@ -4,6 +4,7 @@ import { BOSS_BARKS } from '../content/barks';
 import { bus } from '../core/events';
 import { music } from '../audio/music';
 import { sfx } from '../audio/sfx';
+import { haptics } from '../input/haptics';
 import { state } from '../core/state';
 import { QUIET_ROOMS, seeded, type Mechanic, type MechanicCtx } from './types';
 
@@ -123,6 +124,7 @@ export class Tana implements Mechanic {
             if (now >= this.nextBeatAt) {
                 this.nextBeatAt = now + 880;
                 sfx.heartbeat(0.8);
+                haptics.heartbeat(0.8);
                 // il cuore batte anche negli occhi
                 this.ctx.lens.kick({ zoom: 0.022, chroma: 0.25 }, 40, 30, 300);
             }
@@ -176,6 +178,7 @@ export class Tana implements Mechanic {
         if (found) {
             // le ante si spalancano: l'occhio si piega
             this.ctx.lens.kick({ barrel: 0.25, chroma: 1.2, angle: 0.03 }, 40, 120, 800);
+            haptics.rumble(1, 0.8, 350);
             p.hurt(1);
             bus.emit('tana-sniffed', {});
         }

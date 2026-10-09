@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
+import { haptics } from '../input/haptics';
 import { state } from '../core/state';
 import { QUIET_ROOMS, type Mechanic, type MechanicCtx } from './types';
 import { emitWorld } from '../core/worldEvents';
@@ -54,6 +55,7 @@ export class Snipers implements Mechanic {
                     sfx.beep(0.3, 0.9);
                     // agganciato: il mondo si stringe attorno al mirino
                     this.ctx.lens.hold('mirino', { dark: 0.32, chroma: 0.35, desat: 0.2 }, 1, 6);
+                    haptics.rumble(0, 0.4, 200);
                 }
             }
             this.line.lineStyle(a.locked ? 3 : 1.5, a.locked ? 0xffffff : 0xef4444, a.locked ? 0.95 : 0.6);

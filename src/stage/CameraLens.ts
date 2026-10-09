@@ -3,6 +3,7 @@ import { LensPipeline } from '../art/fx/LensPipeline';
 import { bus } from '../core/events';
 import { softFail } from '../core/softFail';
 import { state } from '../core/state';
+import { haptics } from '../input/haptics';
 import { offWorld, onWorld, type WorldEvent, type WorldHandler } from '../core/worldEvents';
 import { combine, coverZoom, envelope, heartbeat, isRest, type LensPart } from '../rules/lens';
 
@@ -127,43 +128,59 @@ export class CameraLens {
         this.on('boss-engaged', (boss) => {
             const side = boss.x < this.scene.cameras.main.midPoint.x ? -1 : 1;
             this.kick({ angle: 0.028 * side, chroma: 0.5 }, 260, 300, 1700);
+            haptics.rumble(0.3, 0.5, 300);
         });
         this.on('boss-phase', () => {
             this.kick({ chroma: 1.2, barrel: 0.12 }, 60, 80, 520);
+            haptics.rumble(0.8, 0.6, 280);
             const b = this.bossAt();
             if (b) this.shockwave(b.x, b.y, 1);
         });
         this.on('boss-dying', () => {
             this.kick({ desat: 0.85, zoom: 0.04, chroma: 0.4 }, 220, 1100, 1300);
+            haptics.rumble(1, 0.7, 700);
         });
         this.on('boss-parried', () => {
             this.kick({ chroma: 0.8, zoom: 0.015 }, 20, 40, 220);
+            haptics.rumble(0.4, 0.8, 90);
         });
         this.on('player-dead', () => {
             this.kick({ desat: 1, barrel: -0.12, dark: 0.45 }, 450, 2600, 600);
+            haptics.rumble(1, 1, 500);
         });
         this.on('checkpoint', () => {
             this.kick({ tint: 0.14, tintColor: 0xffb347, desat: -0.15 }, 300, 250, 1500);
             const p = this.focus();
             this.shockwave(p.x, p.y, 0.5, 900);
+            haptics.rumble(0, 0.35, 140);
         });
         this.on('enemy-explode', ({ x, y }) => {
             const p = this.focus();
             const d = Math.hypot(x - p.x, y - p.y);
-            if (d < 650) this.shockwave(x, y, 0.85 * (1 - d / 650), 520);
+            if (d < 650) {
+                this.shockwave(x, y, 0.85 * (1 - d / 650), 520);
+                haptics.rumble(0.9 * (1 - d / 650), 0.5 * (1 - d / 650), 220);
+            }
         });
         this.on('player-risonante', ({ x, y, level }) => {
-            if ((level ?? 1) >= 2) this.shockwave(x, y, 0.22 * (level ?? 1), 480);
+            if ((level ?? 1) >= 2) {
+                this.shockwave(x, y, 0.22 * (level ?? 1), 480);
+                haptics.rumble(0.1 * (level ?? 1), 0.5, 120);
+            }
         });
         this.offs.push(
             bus.on('hp-changed', ({ hp, hurt }) => {
-                if (hurt && hp < this.lastHp) this.kick({ chroma: 0.9, pulse: 0.22 }, 30, 60, 280);
+                if (hurt && hp < this.lastHp) {
+                    this.kick({ chroma: 0.9, pulse: 0.22 }, 30, 60, 280);
+                    haptics.rumble(0.6, 0.4, 170);
+                }
                 this.lastHp = hp;
             }),
             bus.on('ability-unlocked', () => {
                 const p = this.focus();
                 this.shockwave(p.x, p.y, 1.3, 1100);
                 this.kick({ chroma: 0.8, desat: -0.3 }, 120, 300, 1200);
+                haptics.rumble(0.4, 0.6, 400);
             }),
             bus.on('doomsday-changed', ({ value }) => {
                 this.doomsday = value;
@@ -171,6 +188,7 @@ export class CameraLens {
             bus.on('ombra-read', () => {
                 this.glitch(260, 0.45);
                 this.kick({ desat: 0.4 }, 40, 200, 400);
+                haptics.rumble(0, 0.5, 150);
             }),
         );
     }
@@ -268,6 +286,7 @@ export class CameraLens {
         const jitter = (Math.sin(now * 0.0137) + 1) / 2;
         this.nextDoomGlitchAt = now + (14000 - 10500 * k) * (0.7 + 0.6 * jitter);
         this.glitch(120 + 200 * k * jitter, 0.35 + 0.45 * k);
+        haptics.rumble(0, 0.25 + 0.35 * k, 120 + 200 * k * jitter);
     }
 
     destroy(): void {

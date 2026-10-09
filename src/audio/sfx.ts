@@ -47,6 +47,7 @@ class Sfx {
     private noiseBuffer: AudioBuffer | null = null;
     private brownBuffer: AudioBuffer | null = null;
     private rain: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
+    private tide: { stop: () => void; gain: GainNode; pan: StereoPannerNode } | null = null;
     private beds = new Map<Bed, BedNodes>();
 
     /** va chiamato dopo un gesto utente per sbloccare l'audio */
@@ -594,6 +595,64 @@ class Sfx {
         this.tone(58, 110, { type: 'sine', to: 40, vol: 0.16 * vol });
         this.tone(52, 120, { type: 'sine', to: 38, vol: 0.12 * vol, delayMs: 190 });
     }
+    /** lochef che fischietta mentre cucina: allegro, lento, un filo stonato. si sente prima di vederlo */
+    whistle(pan = 0, vol = 1): void {
+        const tune = [659, 784, 880, 784, 659, 587, 622];
+        const beat = [0, 260, 520, 900, 1160, 1420, 1800];
+        tune.forEach((f, i) => {
+            const at = beat[i]!;
+            const len = i === tune.length - 1 ? 700 : 230;
+            // ogni nota ci arriva da sotto, come un fischio vero
+            this.tone(f * 0.94, len, { type: 'sine', to: f, vol: 0.035 * vol, pan, attackMs: 30, delayMs: at });
+            this.noise(len * 0.8, { freq: f * 4, q: 3, vol: 0.006 * vol, pan, attackMs: 40, delayMs: at });
+        });
+    }
+    /** bracciata: l'acqua spinta via e due bolle */
+    stroke(pan = 0, vol = 1): void {
+        this.noise(260, { freq: 520, q: 0.9, vol: 0.06 * vol, pan, to: 260, attackMs: 40 });
+        this.bubble(pan, 0.4 * vol);
+    }
+    /** la marea che sale: un rombo continuo, il volume lo decide chi sente la distanza */
+    setTideRoar(level: number, pan = 0): void {
+        const ctx = this.ctx;
+        if (!ctx || !this.master || !this.noiseBuffer || !this.brownBuffer) return;
+        if (!this.tide && level <= 0) return;
+        if (!this.tide) {
+            const gain = ctx.createGain();
+            gain.gain.value = 0;
+            const p = ctx.createStereoPanner();
+            gain.connect(p).connect(this.master);
+            const stops: (() => void)[] = [];
+            const layer = (buf: AudioBuffer, type: BiquadFilterType, freq: number, q: number, v: number, lfoRate: number, lfoDepth: number) => {
+                const src = ctx.createBufferSource();
+                src.buffer = buf;
+                src.loop = true;
+                const f = ctx.createBiquadFilter();
+                f.type = type;
+                f.frequency.value = freq;
+                f.Q.value = q;
+                const g = ctx.createGain();
+                g.gain.value = v;
+                src.connect(f).connect(g).connect(gain);
+                const o = ctx.createOscillator();
+                const d = ctx.createGain();
+                o.frequency.value = lfoRate;
+                d.gain.value = lfoDepth;
+                o.connect(d).connect(f.frequency);
+                src.start(0, rng.fx.next() * 1.5);
+                o.start();
+                stops.push(() => { src.stop(); o.stop(); });
+            };
+            // il fondo che spinge e la schiuma che frigge sopra
+            layer(this.brownBuffer, 'lowpass', 180, 0.7, 0.9, 0.11, 60);
+            layer(this.noiseBuffer, 'bandpass', 620, 0.8, 0.07, 0.23, 280);
+            this.tide = { gain, pan: p, stop: () => stops.forEach((st) => st()) };
+        }
+        const now = ctx.currentTime;
+        this.tide.gain.gain.setTargetAtTime(Math.max(0, Math.min(1, level)) * 0.16, now, 0.6);
+        this.tide.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), now, 0.3);
+    }
+
     /** la porta dell'arena che si chiude */
     gate(): void {
         this.noise(500, { freq: 200, q: 0.8, vol: 0.2, type: 'lowpass' });

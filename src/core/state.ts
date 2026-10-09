@@ -24,6 +24,8 @@ export interface Settings {
     screenShake: boolean;
     /** l'obiettivo che si storce: rotazioni, onde, glitch, veli */
     cameraFx: boolean;
+    /** il pad vibra nei momenti forti */
+    rumble: boolean;
     /** modalità assistita: la freccia che indica il prossimo varco verso l'obiettivo */
     guide: boolean;
     /** comandi rimappati: il preset dice tutto, custom solo le eccezioni */
@@ -40,7 +42,7 @@ export interface PortalReturn {
 /** stato persistente + stato di run, unica fonte di verità fuori dalle scene */
 class GameState {
     save: SaveData = defaultSave();
-    settings: Settings = { volume: 0.7, screenShake: true, cameraFx: true, guide: false, controls: { preset: 'classico', custom: {} } };
+    settings: Settings = { volume: 0.7, screenShake: true, cameraFx: true, rumble: true, guide: false, controls: { preset: 'classico', custom: {} } };
     godMode = false;
     /** barre lasciate a terra all'ultima morte, stile souls */
     dropped: DroppedBarre | null = null;

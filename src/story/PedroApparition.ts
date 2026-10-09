@@ -7,6 +7,7 @@ import { ensureCreature } from '../art/creatures';
 import { bus } from '../core/events';
 import type { CameraLens } from '../stage/CameraLens';
 import type { LightingManager } from '../stage/LightingManager';
+import { haptics } from '../input/haptics';
 import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
 import { rng } from '../core/rng';
@@ -105,6 +106,7 @@ export class PedroApparition {
         this.scene.cameras.main.flash(90, 34, 211, 238);
         // il realm si inceppa quando lui si accende
         this.lens.glitch(380, 0.7);
+        haptics.rumble(0.3, 0.7, 300);
         this.lens.shockwave(this.baseX, this.baseY, 0.6, 700);
         // tre lampi prima di restare: arriva a scatti, come nei suoi boss
         for (let i = 1; i <= 3; i++) {

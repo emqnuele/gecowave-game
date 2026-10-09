@@ -9,6 +9,7 @@ import { rng } from '../core/rng';
 import { bus } from '../core/events';
 import { state } from '../core/state';
 import type { CameraLens } from '../stage/CameraLens';
+import { haptics } from '../input/haptics';
 
 /* pericoli del terreno che non toccano la griglia verificata:
    - lastre che crollano sopra i pozzi: solide solo dall'alto, quindi aggiungono
@@ -146,6 +147,14 @@ export class HazardManager {
         this.calm = calm;
         this.lens = lens;
         this.group = scene.physics.add.staticGroup();
+    }
+
+    /** fin dove arriverà la marea che sta per salire (avviso o salita); null se non sale */
+    get floodAhead(): number | null {
+        const t = this.tide;
+        if (!t || t.retreat > 0.5) return null;
+        const q = (t.clock % TIDE_PERIOD) - TIDE_CALM;
+        return q >= 0 && q < TIDE_WARN + TIDE_RISE ? t.high : null;
     }
 
     /** dove arriva la marea adesso, in pixel; null dove non c'è */
@@ -312,6 +321,22 @@ export class HazardManager {
         };
     }
 
+    /** la marea si sente prima di vederla: dal fondo durante l'avviso, poi più forte quanto più il pelo è vicino */
+    private roar(t: Tide, warn: boolean, player: HazardTarget): void {
+        const p = t.clock % TIDE_PERIOD;
+        let loud = 0;
+        if (warn) {
+            loud = 0.3 * ((p - TIDE_CALM) / TIDE_WARN);
+        } else if (t.level < t.low - 1) {
+            const near = Phaser.Math.Clamp(1 - Math.abs(player.y - t.level) / 1400, 0.12, 1);
+            const q = p - TIDE_CALM - TIDE_WARN;
+            // sale: rombo pieno; tiene: un fondo; si ritira: risucchio a metà
+            const phase = q < TIDE_RISE ? 1 : q < TIDE_RISE + TIDE_HOLD ? 0.4 : 0.6;
+            loud = phase * near * (1 - t.retreat);
+        }
+        sfx.setTideRoar(loud);
+    }
+
     private tideAt(t: Tide, time: number): { level: number; warn: boolean } {
         const p = t.clock % TIDE_PERIOD;
         const span = t.low - t.high;
@@ -326,9 +351,10 @@ export class HazardManager {
         return { level: t.high + span * Phaser.Math.Easing.Sine.InOut(Math.min(1, q / TIDE_FALL)), warn: false };
     }
 
-    private updateTide(t: Tide, time: number, delta: number, pace: number): void {
+    private updateTide(t: Tide, time: number, delta: number, pace: number, player: HazardTarget): void {
         t.clock += delta * pace;
         const { level, warn } = this.tideAt(t, time);
+        this.roar(t, warn, player);
         // un boss in campo: l'acqua si ritira piano e lascia combattere all'asciutto
         t.retreat = Phaser.Math.Clamp(t.retreat + (this.calm() ? 0.4 : -0.4) * (delta / 1000), 0, 1);
         t.level = t.low - (t.low - level) * (1 - t.retreat);
@@ -337,6 +363,7 @@ export class HazardManager {
             sfx.rumble();
             if (state.settings.screenShake) this.scene.cameras.main.shake(900, 0.0025);
             this.lens?.kick({ angle: -0.012, barrel: 0.05, tint: 0.08, tintColor: t.color }, 600, 1800, 2600);
+            haptics.rumble(0.35, 0.1, 1800);
             const flag = `marea-${this.regionId}`;
             if (!state.hasFlag(flag)) {
                 state.setFlag(flag);
@@ -405,7 +432,7 @@ export class HazardManager {
         let headUnder = false;
         let deep = false;
         if (this.tide) {
-            this.updateTide(this.tide, time, delta, pace);
+            this.updateTide(this.tide, time, delta, pace, player);
             const level = this.tide.level;
             if (player.y + 10 > level) {
                 inside = { level, toxic: false };
@@ -582,6 +609,7 @@ export class HazardManager {
     }
 
     destroy(): void {
+        if (this.tide) sfx.setTideRoar(0);
         this.tide?.gfx.destroy();
         this.tide = null;
         this.bubbles?.destroy();

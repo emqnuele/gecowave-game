@@ -5,6 +5,8 @@ import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../core/events';
 import { biomeFor } from '../content/biomes';
 import { CameraLens } from '../stage/CameraLens';
+import { WetTrail } from '../stage/WetTrail';
+import { haptics } from '../input/haptics';
 import { AmbienceManager } from '../stage/AmbienceManager';
 import { DecorationManager } from '../stage/DecorationManager';
 import { TerrainRenderer } from '../stage/TerrainRenderer';
@@ -79,6 +81,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     private arena!: Arena;
     private feel!: Feel;
     private lens!: CameraLens;
+    private wet!: WetTrail;
     private enemies!: Enemies;
     private interactions!: Interactions;
     private dialogues!: Dialogues;
@@ -160,6 +163,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         ensurePlayerSkin(this, state.save.skin);
 
         this.world.biome = biomeFor(this.world.def);
+        this.wet = new WetTrail(this);
         this.lens = this.ctx.lens = new CameraLens(this, this.world.biome.id, () => {
             const b = this.bosses.current;
             return b?.active ? { x: b.x, y: b.y } : null;
@@ -361,7 +365,10 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.parallax.resize();
         this.atmosphere = new Atmosphere(this);
         // il lampo sbianca anche l'obiettivo: i colori si separano per un istante
-        this.atmosphere.onBolt = (outdoor) => this.lens.kick({ chroma: 0.5 + outdoor * 0.5, desat: -0.15 }, 10, 70, 360);
+        this.atmosphere.onBolt = (outdoor) => {
+            this.lens.kick({ chroma: 0.5 + outdoor * 0.5, desat: -0.15 }, 10, 70, 360);
+            haptics.rumble(0.25 * outdoor, 0.3, 180);
+        };
         this.atmosphere.build(this.world.biome, this.world.def.id);
         this.soundscape = new Soundscape(this, this.world.biome, this.world.nav, this.world.layout ? this.world.layout.horizonRow : null);
         this.interactions.buildPrompt();
@@ -523,6 +530,9 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         on('boss-summon', this.enemies.onBossSummon, this.enemies);
         on('boss-lamette', this.combat.onBossLamette, this.combat);
         on('boss-defeated', this.bosses.onDefeated, this.bosses);
+        // la gente intorno reagisce: si gira a guardarti dopo un boss, si rintana al fischio
+        on('boss-defeated', ({ x, y }) => this.folk.cheerFrom(x, y), this.folk);
+        on('pursuer-whistle', ({ x, y }) => this.folk.hear(x, y), this.folk);
         on('boss-engaged', this.bosses.onEngaged, this.bosses);
         on('boss-dying', () => this.bosses.silence());
         // ogni mossa del geco nutre il profilo: l'ombra lo leggerà alla fine
@@ -629,7 +639,15 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.abilities.updateClone(time, delta);
         this.rewards.updateHoming(delta);
         const chaser = this.chapter.pursuer?.();
-        this.folk.update(time, delta, this.player, this.threats(), !!this.bosses.current?.engaged, chaser?.active ? chaser : null, this.hazards.waterLine);
+        this.folk.update(time, delta, {
+            player: this.player,
+            threats: this.threats(),
+            bossFight: !!this.bosses.current?.engaged,
+            pursuer: chaser?.active ? chaser : null,
+            water: this.hazards.waterLine,
+            flood: this.hazards.floodAhead,
+            rain: this.atmosphere.rainLevel,
+        });
         this.traps.update(time, delta, this.player);
         this.hazards.update(time, delta, this.player);
         this.challenges.trial?.update(this.player);
@@ -643,6 +661,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         music.setNight(this.bosses.current?.engaged ? 0 : this.atmosphere.night * 0.85);
         // le vasche fisse del livello contano come le piene: testa sotto, mondo ovattato
         if (!this.player.headUnder && this.world.level.water.some((r) => r.contains(this.player.x, this.player.y - 16))) this.player.headUnder = true;
+        this.wet.update(this.player, this.player.submerged || this.player.headUnder || this.world.level.water.some((r) => r.contains(this.player.x, this.player.y + 20)));
         this.soundscape.update(time, delta, { player: this.player, room: here, night: this.atmosphere.night, boss: !!this.bosses.current?.engaged, rain: this.atmosphere.rainLevel });
         this.guide.updateGuide(time);
         this.abilities.updateAnalisi(time);

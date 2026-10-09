@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { WAVESUNG } from '../../content/story';
 import { bus } from '../../core/events';
+import { haptics } from '../../input/haptics';
 import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter, type ChapterCtx, type Target } from './ChapterScript';
@@ -143,6 +144,7 @@ export class VoidChapter extends Chapter {
         this.ctx.lens.shockwave(this.ctx.player.x, this.ctx.player.y, 1, 1000);
         // parte già piena: il dialogo ferma la scena e la verità si legge su un mondo scolorito
         this.ctx.lens.kick({ desat: 0.6, chroma: 0.8 }, 0, 600, 1400);
+        haptics.rumble(0.6, 0.3, 500);
         this.ctx.dialogues.start(`verita-${idx + 1}`, () => {
             const next = this.nextRegret();
             this.voidStep = next;

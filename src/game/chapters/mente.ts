@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { riddleFor, TOASTS } from '../../content/story';
 import { bus } from '../../core/events';
+import { haptics } from '../../input/haptics';
 import { sfx } from '../../audio/sfx';
 import { state } from '../../core/state';
 import type { BossKind } from '../../types';
@@ -57,6 +58,7 @@ export class MenteChapter extends Chapter {
                     this.scene.cameras.main.flash(240, 248, 113, 113);
                     // la testa di piema ti morde: il pensiero si piega
                     this.ctx.lens.kick({ barrel: 0.2, chroma: 1, angle: 0.025 }, 50, 150, 650);
+                    haptics.rumble(0.5, 0.6, 250);
                     this.ctx.player.hurt(2, door.x);
                     for (const side of [-1, 1]) {
                         const at = this.ctx.world.openSpotNear(door.x + side * 180, door.y - 40, 8);

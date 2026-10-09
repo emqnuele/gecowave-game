@@ -3,6 +3,7 @@ import { LAMETTA_BARKS } from '../../content/barks';
 import { TOASTS, WAVESUNG } from '../../content/story';
 import { BossVoice } from '../../story/BossVoice';
 import { bus } from '../../core/events';
+import { haptics } from '../../input/haptics';
 import { music } from '../../audio/music';
 import { sfx } from '../../audio/sfx';
 import { state } from '../../core/state';
@@ -130,6 +131,7 @@ export class SantuarioChapter extends Chapter {
             this.ctx.flow.exiting = true;
             // lo specchio nero ti tira dentro
             this.ctx.lens.kick({ barrel: -0.28, chroma: 1.1, desat: 0.4 }, 0, 3000, 400);
+            haptics.rumble(0.4, 0.4, 800);
             this.ctx.dialogues.start('lametta-uscita', () => {
                 this.ctx.flow.exiting = false;
                 this.ctx.flow.gotoLevel(this.ctx.world.def.next!);

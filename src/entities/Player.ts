@@ -372,7 +372,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.jumpBufferedUntil = 0;
                 this.airJumpUsed = false;
                 // niente act: l'ombra studia i salti, non le bracciate
-                sfx.bubble(0, 0.5);
+                sfx.stroke();
             } else if (now < this.wallUntil && this.wallSide !== 0) {
                 // salto dal muro: su e via dal muro, i comandi tornano dopo un istante
                 const away = -this.wallSide as 1 | -1;
