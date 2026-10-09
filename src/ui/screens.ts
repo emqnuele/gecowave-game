@@ -33,7 +33,7 @@ export interface GameController {
 
 /* ---------- comandi ---------- */
 
-interface MenuItem {
+export interface MenuItem {
     label: string;
     onPick: () => void;
     sub?: string;
@@ -41,6 +41,21 @@ interface MenuItem {
     small?: boolean;
     /** suono di ritorno invece di quello di scelta */
     back?: boolean;
+}
+
+/** come si apre la forgia: il destino c'è solo per chi crea la partita */
+export interface ForgeConfig {
+    back: () => void;
+    backLabel?: string;
+    /** il personaggio di partenza (rientro in una partita in due già vista) */
+    initial?: { name: string; stats: { forza: number; costituzione: number; flusso: number }; skin: string };
+    kick?: string;
+    kick2?: string;
+    /** una riga sotto gli attributi: per l'ospite, com'è la partita in cui entra */
+    note?: string;
+    fate: boolean;
+    doneLabel: string;
+    onDone: (r: { name: string; stats: { forza: number; costituzione: number; flusso: number }; skin: string; doomsday: boolean }) => void;
 }
 
 /* il menu e le pagine come un codice a inchiostro: serif da stampa antica,
@@ -60,6 +75,8 @@ export class Screens {
     private backdrop: (on: boolean) => void = () => {};
     /** il primo menu dopo l'avvio chiede un tasto: sblocca l'audio ed è un ingresso */
     private awake = false;
+    /** la porta della partita in due: la mette main */
+    coopEntry: (() => void) | null = null;
 
     constructor() {
         this.bg = el('div');
@@ -118,7 +135,7 @@ export class Screens {
 
     /* ---------- mattoni ---------- */
 
-    private openOverlay(cls = 'screen'): HTMLElement {
+    openOverlay(cls = 'screen'): HTMLElement {
         this.closeOverlay();
         this.overlay = el('div', cls);
         ui().append(this.overlay);
@@ -150,7 +167,7 @@ export class Screens {
         return wrap.firstElementChild as HTMLElement;
     }
 
-    private heading(title: string, sub?: string): HTMLElement[] {
+    heading(title: string, sub?: string): HTMLElement[] {
         const out: HTMLElement[] = [el('h2', 'sx-h', title), this.orn()];
         if (sub) {
             const s = el('div', 'sx-sub');
@@ -180,7 +197,7 @@ export class Screens {
         return b;
     }
 
-    private menu(items: MenuItem[], cls = ''): HTMLElement {
+    menu(items: MenuItem[], cls = ''): HTMLElement {
         const m = el('nav', `sx-menu ${cls}`);
         items.forEach((it, i) => {
             const b = this.item(it);
@@ -191,7 +208,7 @@ export class Screens {
     }
 
     /** frecce e invio su tutto ciò che ha data-nav; sinistra e destra cambiano i valori */
-    private bindNav(root: HTMLElement, onBack?: () => void): void {
+    bindNav(root: HTMLElement, onBack?: () => void): void {
         const list = () => [...root.querySelectorAll<HTMLElement>('[data-nav]')].filter((e) => e.offsetParent !== null && !e.hasAttribute('disabled'));
         let idx = -1;
         const focus = (i: number, sound = true) => {
@@ -243,7 +260,7 @@ export class Screens {
     }
 
     /** cambia passo nella forgia senza chiudere la schermata */
-    private closeNavOnly(): void {
+    closeNavOnly(): void {
         if (this.navHandler) window.removeEventListener('keydown', this.navHandler);
         this.navHandler = null;
     }
@@ -267,6 +284,8 @@ export class Screens {
             items.push({ label: 'continua', sub: `${state.save.playerName.toLowerCase()} · ${lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : state.save.levelId} · ${time}`, onPick: () => this.controller.continueGame() });
         }
         items.push({ label: 'nuova partita', onPick: () => (state.hasSave ? this.confirmNewGame() : this.controller.newGame()) });
+        const coopEntry = this.coopEntry;
+        if (coopEntry) items.push({ label: 'gioca in due', onPick: coopEntry });
         if (state.hasSave || state.godMode) items.push({ label: 'capitoli', onPick: () => this.showChapters(() => this.showMenu()) });
         items.push({ label: 'bacheca', onPick: () => this.showTrophies(() => this.showMenu()) });
         items.push({ label: 'comandi', onPick: () => this.showControls(() => this.showMenu()) });
@@ -1103,20 +1122,46 @@ export class Screens {
     /* ---------- forgia del personaggio ---------- */
 
     showCharacterCreation(onConfirm: () => void): void {
+        this.forge({
+            back: () => this.showMenu(),
+            fate: true,
+            doneLabel: 'inizia il viaggio',
+            onDone: (r) => {
+                state.save.playerName = r.name;
+                state.save.skin = r.skin;
+                state.save.stats.forza = r.stats.forza;
+                state.save.stats.costituzione = r.stats.costituzione;
+                state.save.stats.flusso = r.stats.flusso;
+                state.save.doomsdayMode = r.doomsday;
+                state.save.doomsday = 0;
+                // chi parte con la freccia accesa gioca assistito dal primo passo
+                state.save.assisted = state.settings.guide;
+                state.persist();
+                state.resetRun();
+                this.closeOverlay();
+                onConfirm();
+            },
+        });
+    }
+
+    /** la forgia del personaggio: in single e per chi ospita c'è anche il destino, chi entra nella partita di un altro sceglie solo sé stesso */
+    forge(cfg: ForgeConfig): void {
         const s = this.openOverlay('screen sx sx-forge menu-screen');
         this.setZone('yellow');
 
-        // ogni nuova run parte non assistita: la freccia è opt-in,
-        // mai ereditata dalle impostazioni o dalla partita precedente
-        state.settings.guide = false;
-        state.persistSettings();
+        if (cfg.fate) {
+            // ogni nuova run parte non assistita: la freccia è opt-in,
+            // mai ereditata dalle impostazioni o dalla partita precedente
+            state.settings.guide = false;
+            state.persistSettings();
+        }
 
-        let finalName = 'Geco';
+        let finalName = cfg.initial?.name ?? 'Geco';
         let doomsdayMode = false;
-        let availablePoints = 10;
-        const stats = { forza: 0, costituzione: 0, flusso: 0 };
+        const stats = { forza: cfg.initial?.stats.forza ?? 0, costituzione: cfg.initial?.stats.costituzione ?? 0, flusso: cfg.initial?.stats.flusso ?? 0 };
+        let availablePoints = 10 - stats.forza - stats.costituzione - stats.flusso;
         // la pelle parte da quella salvata (nuova run = bosco dopo il reset)
-        let skinId = isValidSkinId(state.save.skin) ? state.save.skin : 'bosco';
+        let skinId = cfg.initial ? cfg.initial.skin : isValidSkinId(state.save.skin) ? state.save.skin : 'bosco';
 
         const backs = new Map<HTMLElement, (() => void) | undefined>();
         const show = (from: HTMLElement, to: HTMLElement) => {
@@ -1129,11 +1174,11 @@ export class Screens {
 
         // --- il nome ---
         const step1 = el('div', 'sx-step active');
-        step1.append(el('div', 'sx-kick', 'capitolo zero · il custode provvisorio'));
+        step1.append(el('div', 'sx-kick', cfg.kick ?? 'capitolo zero · il custode provvisorio'));
         step1.append(...this.heading('come ti chiami?', 'incidi il tuo nome nella memoria del flusso'));
         const input = el('input', 'sx-name-input');
         input.type = 'text';
-        input.value = '';
+        input.value = cfg.initial?.name ?? '';
         input.maxLength = 12;
         input.placeholder = 'Geco';
         input.spellcheck = false;
@@ -1146,7 +1191,7 @@ export class Screens {
         step1.append(input);
         step1.append(this.menu([
             { label: 'incidi', onPick: goToStep2 },
-            { label: 'torna al titolo', back: true, onPick: () => this.showMenu() },
+            { label: cfg.backLabel ?? 'torna al titolo', back: true, onPick: cfg.back },
         ]));
         input.addEventListener('keydown', (e) => {
             if (e.code === 'Enter') {
@@ -1156,11 +1201,11 @@ export class Screens {
             }
         });
         s.append(step1);
-        backs.set(step1, () => this.showMenu());
+        backs.set(step1, cfg.back);
 
         // --- gli attributi ---
         const step2 = el('div', 'sx-step');
-        step2.append(el('div', 'sx-kick', 'capitolo zero · allocazione del flusso'));
+        step2.append(el('div', 'sx-kick', cfg.kick2 ?? 'capitolo zero · allocazione del flusso'));
         const [title2, ...rest2] = this.heading('la forgia');
         step2.append(title2, ...rest2);
         const grid = el('div', 'sx-forge-grid');
@@ -1350,9 +1395,13 @@ export class Screens {
         };
 
         const back2 = () => show(step2, step1);
+        const result = () => ({ name: finalName, stats: { ...stats }, skin: skinId, doomsday: doomsdayMode });
+        if (cfg.note) step2.append(el('div', 'sx-note', cfg.note));
         step2.append(this.menu([
             { label: 'indietro', back: true, onPick: back2 },
-            { label: 'conferma', onPick: () => { selectMode(doomsdayMode, false); show(step2, step3); } },
+            cfg.fate
+                ? { label: 'conferma', onPick: () => { selectMode(doomsdayMode, false); show(step2, step3); } }
+                : { label: cfg.doneLabel, onPick: () => { stopPreview(); cfg.onDone(result()); } },
         ], 'row'));
         s.append(step2);
         backs.set(step2, back2);
@@ -1385,24 +1434,10 @@ export class Screens {
             s.classList.remove('doom');
             show(step3, step2);
         };
-        const start = () => {
-            state.save.playerName = finalName;
-            state.save.skin = skinId;
-            state.save.stats.forza = stats.forza;
-            state.save.stats.costituzione = stats.costituzione;
-            state.save.stats.flusso = stats.flusso;
-            state.save.doomsdayMode = doomsdayMode;
-            state.save.doomsday = 0;
-            // chi parte con la freccia accesa gioca assistito dal primo passo
-            state.save.assisted = state.settings.guide;
-            state.persist();
-            state.resetRun();
-            this.closeOverlay();
-            onConfirm();
-        };
+        const start = () => cfg.onDone(result());
         step3.append(this.menu([
             { label: 'indietro', back: true, onPick: back3 },
-            { label: 'inizia il viaggio', onPick: start },
+            { label: cfg.doneLabel, onPick: start },
         ], 'row'));
         s.append(step3);
         backs.set(step3, back3);
@@ -1418,7 +1453,7 @@ export class Screens {
         standardCard.addEventListener('click', () => selectMode(false));
         doomsdayCard.addEventListener('click', () => selectMode(true));
 
-        this.bindNav(step1, () => this.showMenu());
+        this.bindNav(step1, cfg.back);
         setTimeout(() => input.focus(), 140);
         updateAll();
         selectMode(false, false);

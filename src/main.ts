@@ -31,6 +31,8 @@ import { Hud } from './ui/hud';
 import { Screens, type GameController } from './ui/screens';
 import { ui } from './ui/dom';
 import { installDevHandles, installLevelHook } from './dev/hooks';
+import { coop } from './coop/runtime';
+import { CoopScreens } from './ui/coopScreens';
 
 async function boot(): Promise<void> {
     // i font devono esserci prima che il canvas li usi
@@ -89,7 +91,7 @@ async function boot(): Promise<void> {
         }
     });
 
-    const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
+    const startLevel = (levelId: string, checkpointId: string | null, showCard = true, spawnAt?: { x: number; y: number }): void => {
         state.flushPersist(true);
         game.scene.stop('MenuScene');
         inGame = true;
@@ -98,11 +100,12 @@ async function boot(): Promise<void> {
         state.resetRun();
         hud.show();
         const scene = game.scene.getScene('GameScene');
+        const data = spawnAt ? { levelId, checkpointId, showCard, spawnAt } : { levelId, checkpointId, showCard };
         if (game.scene.isActive('GameScene') || game.scene.isPaused('GameScene')) {
-            scene.scene.restart({ levelId, checkpointId, showCard });
+            scene.scene.restart(data);
             game.scene.resume('GameScene');
         } else {
-            game.scene.start('GameScene', { levelId, checkpointId, showCard });
+            game.scene.start('GameScene', data);
         }
     };
     if (import.meta.env.DEV) {
@@ -142,6 +145,11 @@ async function boot(): Promise<void> {
             acoustics.reset();
             game.scene.stop('GameScene');
             hud.hide();
+            // uscire dalla partita in due la chiude per chi ospita, e libera chi è ospite
+            if (coop.active || state.saveSlot !== 'single') {
+                coop.end(null, false);
+                state.useSlot('single');
+            }
             screens.showMenu();
             music.playMenu();
         },
@@ -152,6 +160,69 @@ async function boot(): Promise<void> {
         },
     };
     screens.bind(controller);
+
+    /* ---------- la partita in due ---------- */
+    // l'intro della partita nuova la vedono tutti e due: chi finisce prima aspetta il capitolo
+    let introBusy = false;
+    let pendingCoopLevel: (() => void) | null = null;
+    const coopUi = new CoopScreens(screens, {
+        startHosted(fresh) {
+            if (fresh) {
+                if (coop.together) coop.session?.send('intro', {});
+                introBusy = true;
+                screens.storySequence(INTRO_CARDS, () => {
+                    introBusy = false;
+                    startLevel(FIRST_LEVEL, null);
+                });
+                return;
+            }
+            screens.closeOverlay();
+            startLevel(state.save.levelId, state.save.checkpointId);
+        },
+        backToTitle() {
+            coop.end(null, false);
+            state.useSlot('single');
+            screens.showMenu();
+        },
+    });
+    screens.coopEntry = () => coopUi.show();
+    if (import.meta.env.DEV) Object.assign(window, { __coop: coop });
+    coop.app = {
+        startLevel(levelId, checkpointId, showCard, spawnAt) {
+            const go = () => {
+                screens.closeOverlay();
+                startLevel(levelId, checkpointId, showCard, spawnAt);
+            };
+            if (introBusy) pendingCoopLevel = go;
+            else go();
+        },
+        toMenu(reason) {
+            const wasInGame = inGame;
+            inGame = false;
+            pendingCoopLevel = null;
+            state.flushPersist(true);
+            if (wasInGame) {
+                sfx.stopBeds();
+                acoustics.reset();
+                game.scene.stop('GameScene');
+                hud.hide();
+                music.playMenu();
+            }
+            state.useSlot('single');
+            coopUi.show(reason ?? undefined);
+        },
+        playIntro(done) {
+            introBusy = true;
+            screens.storySequence(INTRO_CARDS, () => {
+                introBusy = false;
+                done();
+                const next = pendingCoopLevel;
+                pendingCoopLevel = null;
+                next?.();
+            });
+        },
+        inLevel: () => inGame,
+    };
 
     const phone = new Phone({
         pause: () => controller.pause(),

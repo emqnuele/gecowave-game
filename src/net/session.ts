@@ -29,7 +29,7 @@ export interface SessionInfo {
 
 type Envelope = { t: string; [k: string]: unknown };
 
-export class NetSession<M extends Record<string, object>> {
+export class NetSession<M extends { [K in keyof M]: object }> {
     private readonly transport: Transport;
     private readonly handlers = new Map<string, Set<(m: never) => void>>();
     private readonly fastHandlers = new Map<number, (r: ByteReader, sentAt: number) => void>();
