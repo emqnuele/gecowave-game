@@ -1,4 +1,4 @@
-// copertura del corpus sulla build di main: quali funzioni, righe e rami di src/ nessuno scenario esegue mai.
+// copertura del corpus sulla build del riferimento (REF_DIST): quali funzioni, righe e rami di src/ nessuno scenario esegue mai.
 // uso: node scripts/harness/coverage.mjs [--only a,b] [--jobs 4] [--reuse]
 //   --reuse: riusa la copertura grezza già raccolta per gli scenari che ce l'hanno
 // scrive docs/harness/copertura.md (nella repo) e il report html in .harness/coverage/html
@@ -99,9 +99,8 @@ function focusFiles() {
             else if (n.endsWith('.ts') && FOCUS(`src/${rel}`)) out.push(`src/${rel}`);
         }
     };
-    walk('scenes');
-    walk('entities');
-    walk('engine');
+    // le cartelle di main e quelle di oggi: il filtro sceglie i file, qui si guarda dappertutto
+    for (const d of readdirSync(SRC)) if (statSync(join(SRC, d)).isDirectory()) walk(d);
     return out.sort();
 }
 
@@ -174,7 +173,7 @@ function report(map, scenarios, index) {
     const L = [];
     L.push('# copertura del corpus');
     L.push('');
-    L.push(`Generato da \`scripts/harness/coverage.mjs\` sulla build di main (${scenarios} scenari). È la mappa dei punti ciechi: una traccia uguale non dimostra niente sul codice che nessuno scenario esegue.`);
+    L.push(`Generato da \`scripts/harness/coverage.mjs\` sulla build del riferimento (${scenarios} scenari). È la mappa dei punti ciechi: una traccia uguale non dimostra niente sul codice che nessuno scenario esegue.`);
     L.push('');
     L.push('| | righe | rami | funzioni |');
     L.push('|---|---|---|---|');

@@ -4,20 +4,20 @@ Generato da `scripts/harness/mutate.mjs`. Ogni mutazione toglie o cambia una rig
 
 | mutazione | tipo | riga | esito | dove |
 |---|---|---|---|---|
-| sfx-microfono | sfx tolto | src/scenes/GameScene.ts:5721 | scoperta | livello-tana, fotogramma 564, sezioni sfx |
-| flag-dispositivo | setFlag tolto | src/scenes/GameScene.ts:5389 | scoperta | cap-ruhra, fotogramma 1654, sezioni save |
-| toast-arena | bus.emit tolto | src/scenes/GameScene.ts:3685 | scoperta | guida-santuario, fotogramma 139, sezioni ui, ev |
-| tween-cuore | tween tolto | src/scenes/GameScene.ts:1967 | scoperta | rio-cura, fotogramma 2, sezioni bod |
-| gocce-lametta | confronto >= in > | src/scenes/GameScene.ts:4826 | scoperta | cap-santuario, fotogramma 3394, sezioni dl, dlo, bod, lit, ui, ev |
-| ordine-pali-nidi | ordine di creazione | src/scenes/GameScene.ts:543 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni dlo |
-| persist-lore | persist tolto | src/scenes/GameScene.ts:1807 | scoperta | piazza, fotogramma 96, sezioni store |
-| profondita-prompt | profondità | src/scenes/GameScene.ts:2448 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni dl, dlo |
-| salto-sfx | sfx tolto (entità) | src/entities/Player.ts:346 | scoperta | livello-perduta, fotogramma 71, sezioni sfx |
-| rinculo-nemico | costante (entità) | src/entities/Enemy.ts:591 | scoperta | campagna, fotogramma 1812, sezioni ent, bod |
-| fase-boss | soglia (entità) | src/entities/Boss.ts:91 | scoperta | campagna, fotogramma 6190, sezioni boss, ent, dl, dlo, cam, ui, ev, sev, sfx, mus |
-| lastre-suono | soglia (motore) | src/engine/HazardManager.ts:262 | scoperta | campagna, fotogramma 1938, sezioni sfx |
+| sfx-microfono | sfx tolto | src/game/Travel.ts:191 | scoperta | livello-tana, fotogramma 564, sezioni sfx |
+| flag-dispositivo | setFlag tolto | src/game/chapters/ruhra.ts:50 | scoperta | cap-ruhra, fotogramma 1701, sezioni save |
+| toast-arena | bus.emit tolto | src/game/Arena.ts:56 | scoperta | guida-santuario, fotogramma 139, sezioni ui, ev |
+| tween-cuore | tween tolto | src/game/Rewards.ts:188 | scoperta | rio-cura, fotogramma 2, sezioni bod |
+| gocce-lametta | confronto >= in > | src/game/chapters/santuario.ts:107 | scoperta | cap-santuario, fotogramma 3416, sezioni dl, dlo, bod, lit, ui, ev |
+| ordine-pali-nidi | ordine di creazione | src/scenes/GameScene.ts:223 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni dlo |
+| persist-lore | persist tolto | src/game/Rewards.ts:134 | scoperta | piazza, fotogramma 96, sezioni store |
+| profondita-prompt | profondità | src/game/Interactions.ts:70 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni dl, dlo |
+| salto-sfx | sfx tolto (entità) | src/entities/Player.ts:356 | scoperta | livello-perduta, fotogramma 71, sezioni sfx |
+| rinculo-nemico | costante (entità) | src/entities/Enemy.ts:593 | scoperta | campagna, fotogramma 1812, sezioni ent, bod |
+| fase-boss | soglia (regola) | src/rules/combat.ts:15 | scoperta | campagna, fotogramma 6291, sezioni boss, ent, dl, dlo, cam, ui, ev, sev, sfx, mus |
+| lastre-suono | soglia (motore) | src/mechanics/HazardManager.ts:264 | scoperta | lastre-ricordi, fotogramma 176, sezioni sfx |
 | hud-barre | testo ui | src/ui/hud.ts:109 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni ui |
-| film-buio | tween (film) | src/engine/FlashbackManager.ts:194 | scoperta | film-uscita, fotogramma 43, sezioni dl, dlo |
+| film-buio | tween (film) | src/story/FlashbackManager.ts:194 | scoperta | film-uscita, fotogramma 43, sezioni dl, dlo |
 
 ## sfx-microfono
 
@@ -27,25 +27,25 @@ sezioni diverse: sfx
 
 [sfx] effetti sonori
   .: [["checkpoint",[]]]  ->  null
-  emessi nel riferimento da: src/scenes/GameScene.ts:5721 (activateCheckpoint)
+  emessi nel riferimento da: .harness/src/game/Travel.ts:191
 ```
 
 ## flag-dispositivo
 
 ```
-PRIMA DIVERGENZA al fotogramma 1654 (tempo di scena {"BootScene":137574.18,"GameScene":137574.18})
+PRIMA DIVERGENZA al fotogramma 1701 (tempo di scena {"BootScene":138357.67,"GameScene":138357.67})
 sezioni diverse: save
 
 [save] il salvataggio
   .flags[64]: dispositivo  ->  (assente)
 
 ultimi eventi prima (riferimento):
-  1631 GameScene:player-act
-  1643 bark-clear {}
-  1643 dialogue-start {"lines":[{"color":"orange","speaker":"la riba","text":"ok ok mi aredo!! tieni sto coso, il dispositivo per entrare nela testa di piema. me l'avevano dato per sorvegliarlo ma non so manco acenderlo."}],"onEnd":"ƒ"}
-  1643 dialogue-end {}
-  1643 GameScene:boss-defeated
-  1644 GameScene:pause
+  1678 GameScene:player-act
+  1690 bark-clear {}
+  1690 dialogue-start {"lines":[{"color":"orange","speaker":"la riba","text":"ok ok mi aredo!! tieni sto coso, il dispositivo per entrare nela testa di piema. me l'avevano dato per sorvegliarlo ma non so manco acenderlo."}],"onEnd":"ƒ"}
+  1690 dialogue-end {}
+  1690 GameScene:boss-defeated
+  1691 GameScene:pause
 ```
 
 ## toast-arena
@@ -64,8 +64,8 @@ sezioni diverse: ui, ev
   [5][1].cds: (assente)  ->  {"acquatossica":0,"analisi":0,"riflesso":0,"risonante":0,"scudo":0}
   [5][1].flow: (assente)  ->  0
   [6]: ["wave-cooldowns",{"cds":{"acquatossica":0,"analisi":0,"riflesso":0,"risonante":0,"scudo":0},"flow":0}]  ->  (assente)
-  emessi nel riferimento da: src/ui/dialogue.ts:115 (close), src/entities/Boss.ts:128 (engage), src/engine/BossVoice.ts:91 (speak), src/entities/Player.ts:201 (emitVitals), src/entities/Player.ts:202 (emitVitals), src/scenes/GameScene.ts:3685 (lockArena), src/scenes/GameScene.ts:4494 (updateAbilityFx)
-  emessi nella candidata da: ../gecowave-mut/src/ui/dialogue.ts:115 (close), ../gecowave-mut/src/entities/Boss.ts:128 (engage), ../gecowave-mut/src/engine/BossVoice.ts:91 (speak), ../gecowave-mut/src/entities/Player.ts:201 (emitVitals), ../gecowave-mut/src/entities/Player.ts:202 (emitVitals), ../gecowave-mut/src/scenes/GameScene.ts:4493 (updateAbilityFx)
+  emessi nel riferimento da: .harness/src/ui/dialogue.ts:115, .harness/src/entities/Boss.ts:129, .harness/src/story/BossVoice.ts:93, .harness/src/entities/Player.ts:211, .harness/src/entities/Player.ts:212, .harness/src/game/Arena.ts:56, .harness/src/game/abilities/index.ts:118
+  emessi nella candidata da: ../gecowave-mut/src/ui/dialogue.ts:115 (close), ../gecowave-mut/src/entities/Boss.ts:129 (engage), ../gecowave-mut/src/story/BossVoice.ts:93 (speak), ../gecowave-mut/src/entities/Player.ts:211 (emitVitals), ../gecowave-mut/src/entities/Player.ts:212 (emitVitals), ../gecowave-mut/src/game/abilities/index.ts:118 (updateAbilityFx)
 ```
 
 ## tween-cuore
@@ -79,15 +79,15 @@ sezioni diverse: bod
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 ultimi eventi prima (riferimento):
-  1 hp-changed {"hp":50,"hurt":false,"maxHp":50}
-  1 flow-changed {"flow":0,"maxFlow":99}
-  1 zone-changed {"accentWord":"merdone","color":"orange","punchline":"il fiume sacro. sacro, non profumato.","showCard":false,"title":"IL RIO"}
-  1 barre-changed {"barre":667,"gained":false}
-  1 abilities-changed {"abilities":["scivolata","rimbalzo","riflesso"]}
-  1 fragments-changed {"count":3,"total":8}
-  1 MenuScene:shutdown
-  1 GameScene:start
-  1 GameScene:ready
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
+  1 GameScene:nest-spawned
   1 GameScene:create
 
 la diagnostica divergeva già al fotogramma 1: [{"path":".tweens","a":271,"b":270}]
@@ -96,23 +96,23 @@ la diagnostica divergeva già al fotogramma 1: [{"path":".tweens","a":271,"b":27
 ## gocce-lametta
 
 ```
-PRIMA DIVERGENZA al fotogramma 3394 (tempo di scena {"BootScene":166579.98,"GameScene":166579.98})
+PRIMA DIVERGENZA al fotogramma 3416 (tempo di scena {"BootScene":166946.72,"GameScene":166946.72})
 sezioni diverse: dl, dlo, bod, lit, ui, ev
 
 [dl] la display list come multiinsieme: un oggetto grafico in più, in meno o diverso
-  conteggi: {"dl":983,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
+  conteggi: {"dl":981,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [dlo] l'ordine di disegno a parità di profondità
-  conteggi: {"dl":983,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
+  conteggi: {"dl":981,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [bod] i corpi fisici
-  conteggi: {"dl":983,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
+  conteggi: {"dl":981,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [lit] le luci 2d
-  conteggi: {"dl":983,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
+  conteggi: {"dl":981,"ent":149,"bod":370,"lit":250} -> {"dl":982,"ent":149,"bod":370,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 ```
 
@@ -164,12 +164,12 @@ sezioni diverse: sfx
 
 [sfx] effetti sonori
   [0][0]: jump  ->  setRain
-  [0][1][0]: (assente)  ->  1
+  [0][1][0]: (assente)  ->  0.7041075000000019
   [1][0]: setRain  ->  setBeds
-  [1][1][0]: 1  ->  {"cave":0.332849199375,"rain-roof":0.48,"wind":0.16642247272265628}
-  [2]: ["setBeds",[{"cave":0.332849199375,"rain-roof":0.48,"wind":0.16642247272265628}]]  ->  (assente)
-  emessi nel riferimento da: src/entities/Player.ts:346 (update), src/engine/Atmosphere.ts:176 (update), src/engine/audio/Soundscape.ts:199 (probe)
-  emessi nella candidata da: ../gecowave-mut/src/engine/Atmosphere.ts:176 (update), ../gecowave-mut/src/engine/audio/Soundscape.ts:199 (probe)
+  [1][1][0]: 0.7041075000000019  ->  {"cave":0.332849199375,"rain-roof":0.3379716000000009,"wind":0.16642247272265628}
+  [2]: ["setBeds",[{"cave":0.332849199375,"rain-roof":0.3379716000000009,"wind":0.16642247272265628}]]  ->  (assente)
+  emessi nel riferimento da: .harness/src/entities/Player.ts:356, .harness/src/stage/Atmosphere.ts:177, .harness/src/audio/Soundscape.ts:200
+  emessi nella candidata da: ../gecowave-mut/src/stage/Atmosphere.ts:177 (update), ../gecowave-mut/src/audio/Soundscape.ts:200 (probe)
 ```
 
 ## rinculo-nemico
@@ -179,17 +179,18 @@ PRIMA DIVERGENZA al fotogramma 1812 (tempo di scena {"BootScene":140208.04,"Game
 sezioni diverse: ent, bod
 
 [ent] le entità del gioco (classi: nemici, nidi, clone, compagni...)
-  conteggi: {"dl":1046,"ent":189,"bod":390,"lit":246} -> {"dl":1046,"ent":189,"bod":390,"lit":246}
+  conteggi: {"dl":1048,"ent":190,"bod":390,"lit":247} -> {"dl":1048,"ent":190,"bod":390,"lit":247}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [bod] i corpi fisici
-  conteggi: {"dl":1046,"ent":189,"bod":390,"lit":246} -> {"dl":1046,"ent":189,"bod":390,"lit":246}
+  conteggi: {"dl":1048,"ent":190,"bod":390,"lit":247} -> {"dl":1048,"ent":190,"bod":390,"lit":247}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 ultimi eventi prima (riferimento):
   1786 GameScene:enemy-alert
   1803 hp-changed {"hp":51,"hurt":false,"maxHp":51}
   1803 toast {"text":"un cuore del realm. la vita massima aumenta per sempre."}
+  1803 GameScene:enemy-spawned
   1804 hp-changed {"hp":50,"hurt":true,"maxHp":51}
   1804 flow-changed {"flow":16,"maxFlow":99}
   1811 GameScene:player-act
@@ -198,42 +199,42 @@ ultimi eventi prima (riferimento):
 ## fase-boss
 
 ```
-PRIMA DIVERGENZA al fotogramma 6190 (tempo di scena {"BootScene":213189.30000000002,"GameScene":213189.30000000002})
+PRIMA DIVERGENZA al fotogramma 6291 (tempo di scena {"BootScene":214872.97000000003,"GameScene":214872.97000000003})
 sezioni diverse: boss, ent, dl, dlo, cam, ui, ev, sev, sfx, mus
 
 [boss] il boss (tutti i suoi campi)
-  .animT: 31753.849499999575  ->  31748.014999999574
+  .animT: 33690.06999999952  ->  33684.235499999515
   .heardPhase: 2  ->  1
 
 [ent] le entità del gioco (classi: nemici, nidi, clone, compagni...)
-  conteggi: {"dl":1130,"ent":213,"bod":310,"lit":250} -> {"dl":1128,"ent":213,"bod":310,"lit":250}
+  conteggi: {"dl":1154,"ent":213,"bod":315,"lit":250} -> {"dl":1152,"ent":213,"bod":315,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [dl] la display list come multiinsieme: un oggetto grafico in più, in meno o diverso
-  conteggi: {"dl":1130,"ent":213,"bod":310,"lit":250} -> {"dl":1128,"ent":213,"bod":310,"lit":250}
+  conteggi: {"dl":1154,"ent":213,"bod":315,"lit":250} -> {"dl":1152,"ent":213,"bod":315,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [dlo] l'ordine di disegno a parità di profondità
-  conteggi: {"dl":1130,"ent":213,"bod":310,"lit":250} -> {"dl":1128,"ent":213,"bod":310,"lit":250}
+  conteggi: {"dl":1154,"ent":213,"bod":315,"lit":250} -> {"dl":1152,"ent":213,"bod":315,"lit":250}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 ```
 
 ## lastre-suono
 
 ```
-PRIMA DIVERGENZA al fotogramma 1938 (tempo di scena {"BootScene":142308.46000000002,"GameScene":142308.46000000002})
+PRIMA DIVERGENZA al fotogramma 176 (tempo di scena {"BootScene":112935.92,"GameScene":112935.92})
 sezioni diverse: sfx
 
 [sfx] effetti sonori
-  [0][0]: crumble  ->  setRain
-  [0][1][0]: (assente)  ->  0.2500000000002323
-  [1]: ["setRain",[0.2500000000002323]]  ->  (assente)
-  emessi nel riferimento da: src/engine/HazardManager.ts:262 (update), src/engine/Atmosphere.ts:176 (update)
-  emessi nella candidata da: ../gecowave-mut/src/engine/Atmosphere.ts:176 (update)
+  [0][0]: crumble  ->  land
+  [0][1][0]: (assente)  ->  stone
+  [0][1][1]: (assente)  ->  0.9333333333333333
+  [1]: ["land",["stone",0.9333333333333333]]  ->  (assente)
+  emessi nel riferimento da: .harness/src/mechanics/HazardManager.ts:264, .harness/src/audio/Soundscape.ts:238
+  emessi nella candidata da: ../gecowave-mut/src/audio/Soundscape.ts:238 (footsteps)
 
 ultimi eventi prima (riferimento):
-  1926 GameScene:enemy-alert
-  1934 GameScene:player-act
+  147 GameScene:enemy-alert
 ```
 
 ## hud-barre
@@ -254,10 +255,10 @@ PRIMA DIVERGENZA al fotogramma 43 (tempo di scena {"BootScene":110718.81,"GameSc
 sezioni diverse: dl, dlo
 
 [dl] la display list come multiinsieme: un oggetto grafico in più, in meno o diverso
-  conteggi: {"dl":765,"ent":134,"bod":276,"lit":188} -> {"dl":765,"ent":134,"bod":276,"lit":188}
+  conteggi: {"dl":751,"ent":134,"bod":276,"lit":188} -> {"dl":751,"ent":134,"bod":276,"lit":188}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 
 [dlo] l'ordine di disegno a parità di profondità
-  conteggi: {"dl":765,"ent":134,"bod":276,"lit":188} -> {"dl":765,"ent":134,"bod":276,"lit":188}
+  conteggi: {"dl":751,"ent":134,"bod":276,"lit":188} -> {"dl":751,"ent":134,"bod":276,"lit":188}
   (servono le impronte complete di questo fotogramma: rilancia con --full)
 ```

@@ -17,7 +17,7 @@ node scripts/harness/corpus.mjs run --seed 777    # il corpus con un altro seed,
 HZ=120 node scripts/harness/corpus.mjs run        # su un monitor a 120 hz (multipli di 60), in traces/hz-120
 node scripts/harness/esiti.mjs [dirA] [dirB] --rumore .harness/traces/seed-777   # sugli esiti, non al bit
 node scripts/harness/mutate.mjs                   # mutazioni di prova -> docs/harness/mutazioni.md
-node scripts/harness/perf.mjs --save cand --vs base --profile   # prestazioni in tempo reale contro perf-base.json
+node scripts/harness/perf.mjs --save prova --vs finale   # prestazioni in tempo reale contro perf-finale.json (--cpu 4 --vs finale-cpu4, --profile)
 node scripts/harness/caso.mjs                     # censimento delle estrazioni casuali -> docs/harness/caso.md
 node scripts/harness/names.mjs                    # i nomi rinominati dal bundler (finiscono nelle tracce) uguali a main
 ```
@@ -37,7 +37,7 @@ Sul macbook air senza ventola `--jobs 3`: con 4 browser per ore la macchina rest
 
 ## problemi noti
 
-- `menu-schermate` a macchina carica, in un giro su sette circa, diverge al fotogramma 131 al ritorno dalla bacheca (solo la lista di disegno del menu). Due giri di fila sulla stessa build sono identici. Se compare da solo in un `check`, rifarlo con `--only menu-schermate`.
+- `menu-schermate` ha due tracce possibili, e quale esce dipende dal carico della macchina: a macchina ferma `c0db…` (quella del riferimento), con altri browser al lavoro `76a8…`, sempre la stessa per ciascun carico. Divergono al fotogramma 131, al ritorno dalla bacheca, solo nella lista di disegno del menu: qualcosa che il menu ricrea dipende dal tempo reale (un'immagine decodificata dal browser, sospetto), non dall'orologio finto. Se compare da solo in un `check`, rifarlo con `--only menu-schermate` a macchina ferma.
 
 ## i pezzi
 

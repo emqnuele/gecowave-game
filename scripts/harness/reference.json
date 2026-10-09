@@ -1,6 +1,6 @@
 {
- "commit": "fddd54ef9693141b4b4b983a763d28f33ac71c40",
- "note": "codice finale della parte B (branch refactor); ricalcolato dalle tracce del passo t16 con l'algoritmo del runner: docs/harness/riferimenti.md",
+ "commit": "0dd51248f416e8be289c9b0be08d5dd0782308f5",
+ "note": "codice finale del refactor (branch refactor), ricalcolato dalle tracce del giro di copertura della build definitiva: docs/harness/riferimenti.md",
  "scenarios": {
   "agguato-vendetta": {
    "strict": "7fb36a849934648a",
@@ -916,7 +916,7 @@
   },
   "ombra-premium": {
    "strict": "f16bd3a3a76aa257",
-   "diag": "3feb4544a3fb1bcf",
+   "diag": "244f85c163d61ae9",
    "frames": 4792,
    "failure": null
   },
@@ -1048,7 +1048,7 @@
   },
   "sigillo-rio-resina": {
    "strict": "4ff89d907e3a7c7c",
-   "diag": "c4b2e7f8e8881352",
+   "diag": "53ea41be89ce0fd1",
    "frames": 393,
    "failure": null
   },
@@ -1072,7 +1072,7 @@
   },
   "sigillo-trenbolone-miasma": {
    "strict": "37efb553e04ad350",
-   "diag": "2aa907eb59bf4b79",
+   "diag": "9911ec69dd782126",
    "frames": 393,
    "failure": null
   },
@@ -1132,73 +1132,73 @@
   },
   "wave-boss-breccio": {
    "strict": "1a0ff2f576822691",
-   "diag": "811a37f9a949b032",
+   "diag": "5c7a6dd1fd6b8d70",
    "frames": 1477,
    "failure": null
   },
   "wave-boss-guggu": {
    "strict": "a28dabd9e8c7d3f0",
-   "diag": "2852eb4277c63599",
+   "diag": "8e47df66b0adb645",
    "frames": 3545,
    "failure": null
   },
   "wave-boss-limite": {
    "strict": "c4dbda6ffaf2d3e6",
-   "diag": "d31be36a1e6268bc",
+   "diag": "039245be6d2b9706",
    "frames": 3402,
    "failure": null
   },
   "wave-boss-ombra": {
    "strict": "688e7156e7107c75",
-   "diag": "d67f557c5e3af2b6",
+   "diag": "7970a71d3f37ba24",
    "frames": 3054,
    "failure": null
   },
   "wave-boss-ticummi": {
    "strict": "bf25354622aa737a",
-   "diag": "461839a6001dee14",
+   "diag": "20ee40a0c8492649",
    "frames": 1483,
    "failure": null
   },
   "wave-bus": {
    "strict": "b814b9375b86469e",
-   "diag": "137dbc7ba2497496",
+   "diag": "8a06d65bf42b6e8d",
    "frames": 3584,
    "failure": null
   },
   "wave-cantina": {
    "strict": "8a95c92ed75b2994",
-   "diag": "2d591ddf4ab4ef0e",
+   "diag": "365246151a4e3755",
    "frames": 3817,
    "failure": null
   },
   "wave-caso": {
    "strict": "188b30676a0d77bf",
-   "diag": "61061c0f436670d5",
+   "diag": "1e181b9d9bb42937",
    "frames": 3878,
    "failure": null
   },
   "wave-rio": {
    "strict": "78c2d0a6c3249bb0",
-   "diag": "e413f185516e69e4",
+   "diag": "bc0fbdd307d77658",
    "frames": 3310,
    "failure": null
   },
   "wave-stabilimento": {
    "strict": "3918622be116276f",
-   "diag": "9c0d231ae2f6f7a5",
+   "diag": "33c82d36e5a69516",
    "frames": 3725,
    "failure": null
   },
   "wave-tecnokill": {
    "strict": "b235e7670dcbbda3",
-   "diag": "5a7de042ecbfb07b",
+   "diag": "6fb3ab0e865c6b7b",
    "frames": 3776,
    "failure": null
   },
   "wave-void": {
    "strict": "92e6028b19342fd2",
-   "diag": "656761596880224c",
+   "diag": "0db394ff62ab3376",
    "frames": 3323,
    "failure": null
   }

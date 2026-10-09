@@ -26,7 +26,7 @@ const walk = (d) => {
         else if (n.endsWith('.ts') && FOCUS(`src/${rel}`)) files.push(`src/${rel}`);
     }
 };
-for (const d of ['scenes', 'entities', 'engine']) walk(d);
+for (const d of readdirSync(SRC)) if (statSync(join(SRC, d)).isDirectory()) walk(d);
 
 const raws = readdirSync(RAW).filter((f) => f.endsWith('.json.gz')).map((f) => ({ id: f.replace('.json.gz', ''), cov: JSON.parse(gunzipSync(readFileSync(join(RAW, f))).toString()) }));
 const bundle = join(REF_DIST, 'assets', raws[0].cov.url.split('/assets/')[1]);
