@@ -1,7 +1,7 @@
 import { FLASHBACK_BEFORE, FLASHBACK_ONCE } from '../content/flashbacks';
 import { DIALOGUES } from '../content/story';
 import { bus } from '../core/events';
-import { flashback, type FilmHost } from '../story/FlashbackManager';
+import { flashback } from '../story/FlashbackManager';
 import { state } from '../core/state';
 import type { DialogueLine } from '../types';
 import type { GameContext, GameSystem } from './context';
@@ -9,14 +9,12 @@ import type { GameContext, GameSystem } from './context';
 /** i dialoghi fermano la scena: prima l'eventuale film, poi le righe */
 export class Dialogues implements GameSystem {
     private readonly ctx: Pick<GameContext, 'scene' | 'player'>;
-    private readonly host: FilmHost;
     /** i film in attesa: ognuno parte quando il precedente ha chiuso anche le sue righe */
     private readonly queue: { id: string; onEnd?: () => void }[] = [];
     private filming = false;
 
-    constructor(ctx: Pick<GameContext, 'scene' | 'player'>, host: FilmHost) {
+    constructor(ctx: Pick<GameContext, 'scene' | 'player'>) {
         this.ctx = ctx;
-        this.host = host;
     }
 
     start(id: string, onEnd?: () => void): void {
@@ -49,7 +47,7 @@ export class Dialogues implements GameSystem {
             this.lines(DIALOGUES[id], done);
             return;
         }
-        flashback.play(this.ctx.scene, this.ctx.player, FLASHBACK_BEFORE[id]!, () => this.lines(DIALOGUES[id], done), { host: this.host });
+        flashback.play(this.ctx.scene, this.ctx.player, FLASHBACK_BEFORE[id]!, () => this.lines(DIALOGUES[id], done));
     }
 
     private nextFilm(): void {

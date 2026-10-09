@@ -117,7 +117,7 @@ async function toTag(ctx, level, tag) {
 }
 
 export default [
-    // uscire al menu a metà film: niente stato globale appeso (godMode, didascalia, musica bassa)
+    // la pausa a metà film: la partita è ferma sotto il film, il menu non si apre e il film finisce pulito
     atLevel('film-uscita', 'caso', async (ctx) => {
         await ctx.wait(30);
         await resolveAll(ctx);

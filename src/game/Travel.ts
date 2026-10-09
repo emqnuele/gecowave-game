@@ -47,14 +47,6 @@ export class Travel implements GameSystem {
         }
     }
 
-    /** durante i film restano solo roccia e attori: si spengono i servizi */
-    setPropsVisible(v: boolean): void {
-        for (const p of this.propDressing) {
-            if (p.img.active) p.img.setVisible(v);
-            if (p.light) p.light.intensity = v ? p.glow : 0;
-        }
-    }
-
     updateBusStops(): void {
         for (const s of this.busStops) {
             if (state.save.stops.includes(s.key)) continue;

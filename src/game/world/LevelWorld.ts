@@ -46,29 +46,6 @@ export class LevelWorld {
         return id >= 0 ? L.rooms[id] : null;
     }
 
-    /** palco dei flashback: il tratto piano più largo vicino al geco, mai nella stanza da evitare (l'arena del boss) */
-    findFlatStage(x: number, y: number, avoid: Room | null): Point | null {
-        let best: { x: number; y: number; score: number } | null = null;
-        for (const seg of this.nav.segments) {
-            const w = seg.c1 - seg.c0 + 1;
-            if (w < 14) continue;
-            const cx = Math.round((seg.c0 + seg.c1) / 2);
-            // aria sopra la testa per tre celle: gli attori alti ci stanno
-            if (!this.nav.free(cx, seg.r - 1) || !this.nav.free(cx, seg.r - 2)) continue;
-            const px = cx * TILE + TILE / 2;
-            const py = (seg.r + 1) * TILE;
-            if (avoid) {
-                const room = this.roomAt(px, py);
-                if (room && room === avoid) continue;
-            }
-            const d = Math.hypot(px - x, py - y);
-            if (d > 2400) continue;
-            const score = w * 40 - d;
-            if (!best || score > best.score) best = { x: px, y: py, score };
-        }
-        return best;
-    }
-
     /** quanto si è avanti nel capitolo: celle nel capitolo vecchio, stanze del percorso nella regione */
     progressAt(x: number, y: number): number {
         if (!this.layout) return x / TILE;

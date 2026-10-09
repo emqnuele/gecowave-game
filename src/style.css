@@ -577,7 +577,7 @@ body {
   transform: rotate(-1deg);
 }
 
-/* ---------- flashback stile film: sottotitoli, mai muri ---------- */
+/* ---------- i ricordi come film: bande nere, grana, solo le battute dei personaggi ---------- */
 body.film #hud,
 body.film #toast,
 body.film .subs {
@@ -601,13 +601,13 @@ body.film::after {
   75% { transform: translate(-40px, -40px); }
   100% { transform: translate(60px, 60px); }
 }
-/* letterbox nel dom: la camera può zoomare quanto vuole, le barre restano */
+/* letterbox nel dom: la camera può zoomare quanto vuole, le barre restano; 12vh su 16:9 è il 2,35:1 del cinema */
 #film-bar-top,
 #film-bar-bot {
   position: fixed;
   left: 0;
   right: 0;
-  height: 7vh;
+  height: 12vh;
   background: #000;
   z-index: 250;
 }
@@ -625,33 +625,35 @@ body.film::after {
 @keyframes film-bar-bot {
   from { transform: translateY(100%); }
 }
-#flashback-caption {
+#film-line {
   position: absolute;
   left: 50%;
-  bottom: 10vh;
+  bottom: 3.2vh;
   transform: translateX(-50%);
-  max-width: min(760px, calc(100vw - 64px));
-  color: #fafaf9;
+  max-width: min(820px, calc(100vw - 64px));
+  color: #f4efe4;
   font-family: 'IM Fell English', Georgia, serif;
-  font-style: italic;
-  font-size: clamp(21px, 3vw, 30px);
-  line-height: 1.6;
-  letter-spacing: 0.02em;
+  font-size: clamp(18px, 2.4vw, 26px);
+  line-height: 1.45;
   text-align: center;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 1), 0 0 3px rgba(0, 0, 0, 1);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 1);
   z-index: 300;
-  pointer-events: auto;
-  cursor: pointer;
-  transition: opacity 0.26s ease;
-  animation: flashback-in 0.45s ease both;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
 }
-
-@keyframes flashback-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+#film-line.on {
+  opacity: 1;
+}
+#film-line .who {
+  font-style: italic;
+  font-size: 0.8em;
+  letter-spacing: 0.06em;
+  margin-right: 0.6em;
+  opacity: 0.9;
 }
 /* la pausa a metà film: didascalia e barre coprivano il menu e ne rubavano i clic */
-body:has(#ui > .screen) #flashback-caption,
+body:has(#ui > .screen) #film-line,
 body:has(#ui > .screen) #film-bar-top,
 body:has(#ui > .screen) #film-bar-bot {
   visibility: hidden;

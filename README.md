@@ -33,7 +33,7 @@ src/
   content/       i dati del gioco: capitoli, storia e dialoghi, nemici, boss, oggetti, flashback
   world/         la regione come dato: generatore, simulatore, griglia, navigazione (anche per editor e scripts/world)
   stage/         la regione in scena: terreno, acqua, luci, cielo, arredo, passanti, caricamento
-  story/         chi porta la trama: film dei ricordi, missioni, voce dei boss, ombra, pedro, nucleo
+  story/         chi porta la trama: i ricordi girati come film (film/), missioni, voce dei boss, ombra, pedro, nucleo
   mechanics/     le regole del posto: una meccanica per bioma, trappole, pericoli, sigilli, corse
   art/ audio/ input/ ui/ dev/    disegno, suono, comandi, interfaccia dom, strumenti di sviluppo
 editor/          editor delle regioni (usa i tipi del gioco: va tenuto compilabile)
@@ -64,6 +64,12 @@ Lo stesso vale per la storia: i dialoghi vivono in `story.ts` (`DIALOGUES['mio-i
 
 - Nemico: un disegno in `src/art/creatures/`, un archetipo in `enemies.ts` (comportamenti pronti: `walker`, `flyer`, `hopper`, `turret`, `chaser`, `charger`, più `splitsInto` per quelli che si dividono), e una lettera nella legenda del livello.
 - Boss: una entry in `bosses.ts` con gli attacchi per fase (`dive`, `charge`, `radial`, `rain`, `burst`, `teleport`, `lamette`, `summon`) e l'eventuale ricompensa nell'aggancio `bossDefeated` dello script del capitolo (`src/game/chapters/`).
+
+## I ricordi (flashback)
+
+I ricordi sono piccoli film girati dal motore: il gioco si ferma come sotto un dialogo e il film gira in una scena sua (`src/story/film/FilmScene.ts`), con le bande nere, la seppia d'epoca, la grana e le ombre degli attori proiettate sul muro. Niente didascalie: si sente solo quello che i personaggi si dicono. Si saltano con invio, salto, attacco o interagisci.
+
+Un film è un copione in `src/content/films.ts`: il set (studio, bottega, atelier, deserto, piazza, sala monitor, cantina dei server, archivio, aula), l'ora (notte, mattina, pomeriggio, neon), il cast con le posizioni, gli oggetti di scena e le inquadrature. Ogni inquadratura ha una durata, dove guarda la macchina (centro e zoom, con un movimento facoltativo e lo sfondo fuori fuoco nei primi piani) e i gesti con il loro istante: camminare, girarsi, annuire, piegarsi, tremare, salire, passarsi un oggetto, dire una battuta, accendere uno schermo, abbassare una luce, far scendere la notte. Il ricordo prima di quale dialogo lo dice `src/content/flashbacks.ts`. I provini si fanno senza schermo con l'harness, catturando i fotogrammi.
 
 ## I frammenti della GecoWave
 

@@ -19,7 +19,7 @@ import { TrapManager } from '../mechanics/TrapManager';
 import { HazardManager } from '../mechanics/HazardManager';
 import { StoryManager } from '../story/StoryManager';
 import { StagingManager } from '../stage/StagingManager';
-import { flashback, type FilmHost } from '../story/FlashbackManager';
+import { flashback } from '../story/FlashbackManager';
 import { QuestManager } from '../story/QuestManager';
 import { Atmosphere } from '../stage/Atmosphere';
 import { Soundscape } from '../audio/Soundscape';
@@ -66,7 +66,7 @@ import { FixedStep } from '../rules/fixedStep';
 
 const FALL_DEATH_MARGIN = 3000;
 
-export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
+export class GameScene extends Phaser.Scene implements PlayerHost {
     private ctx!: GameContext;
     /** nasce in create: phaser riusa l'istanza, un passo a metà non deve passare alla vita dopo */
     private sim!: FixedStep;
@@ -76,7 +76,6 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
     private controls!: Input;
     private bosses!: Bosses;
     private arena!: Arena;
-    private groups!: GameGroups;
     private feel!: Feel;
     private enemies!: Enemies;
     private interactions!: Interactions;
@@ -113,8 +112,6 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
     /** la meccanica del bioma (porte a orario, correnti, telecamere...) */
     private mechanic: Mechanic | null = null;
     private playerLightRef: Phaser.GameObjects.Light | null = null;
-    /** il flashback la spegne e la riaccende invece di distruggerla */
-    vignette: Phaser.FX.Vignette | null = null;
 
     constructor() {
         super('GameScene');
@@ -140,7 +137,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
         this.enemies = this.ctx.enemies = new Enemies(this.ctx);
         this.bosses.silence();
         this.interactions = this.ctx.interactions = new Interactions(this.ctx);
-        this.dialogues = this.ctx.dialogues = new Dialogues(this.ctx, this);
+        this.dialogues = this.ctx.dialogues = new Dialogues(this.ctx);
         this.rewards = this.ctx.rewards = new Rewards(this.ctx);
         this.abilities = this.ctx.abilities = new Abilities(this.ctx);
         this.combat = this.ctx.combat = new Combat(this.ctx);
@@ -218,7 +215,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
         this.playerLightRef = this.lighting.playerLight(this.player);
         this.safe = this.ctx.safe = new SafeGround(this.ctx, sp);
 
-        this.groups = this.ctx.groups = new GameGroups(this);
+        this.ctx.groups = new GameGroups(this);
 
         this.spawnEntities();
         this.enemies.spawnCaveSpawners();
@@ -484,7 +481,7 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
         // chi comincia al buio resta al buio: gli occhi si aprono a fine intro
         if (this.chapter.startsInDark?.()) cam.fadeOut(0, 0, 0, 0);
         else cam.fadeIn(500, 0, 0, 0);
-        this.vignette = cam.postFX ? cam.postFX.addVignette(0.5, 0.5, 0.86) : null;
+        cam.postFX?.addVignette(0.5, 0.5, 0.86);
     }
 
     private setupScript(): void {
@@ -537,27 +534,11 @@ export class GameScene extends Phaser.Scene implements FilmHost, PlayerHost {
         on('boss-phase', (({ phase }: { phase: number }) => this.bosses.onPhase(phase)));
     }
 
-    /* ---------- facciata per film e geco ---------- */
+    /* ---------- facciata per il geco ---------- */
 
     /** facciata del geco: con il clone vivo la seconda pressione è uno scambio */
     get cloneAlive(): boolean {
         return this.abilities.cloneAlive;
-    }
-
-    /** facciata del film: microfoni e pali si spengono durante il ricordo */
-    setPropsVisible(v: boolean): void {
-        this.travel.setPropsVisible(v);
-    }
-
-    /** facciata del film: i nemici spariscono durante il ricordo */
-    get enemyGroup(): Phaser.GameObjects.Group {
-        return this.groups.enemies;
-    }
-
-    /** facciata del film: il palco non va mai nell'arena del boss */
-    findFlatStage(x: number, y: number): { x: number; y: number } | null {
-        const bossRoom = this.bosses.current?.active ? this.world.roomAt(this.bosses.current.x, this.bosses.current.y) : null;
-        return this.world.findFlatStage(x, y, bossRoom);
     }
 
     /* ---------- loop ---------- */

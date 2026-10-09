@@ -19,6 +19,7 @@ import { checkAchievements } from './core/achievements';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { GalleryScene } from './scenes/GalleryScene';
+import { FilmScene } from './story/film/FilmScene';
 import { MenuScene } from './scenes/MenuScene';
 import { DialogueBox } from './ui/dialogue';
 import { Subtitles } from './ui/subtitles';
@@ -66,7 +67,7 @@ async function boot(): Promise<void> {
             },
         },
         input: { gamepad: true },
-        scene: [BootScene, GameScene, GalleryScene, MenuScene],
+        scene: [BootScene, GameScene, GalleryScene, MenuScene, FilmScene],
     });
 
     if (import.meta.env.DEV) installDevHandles(game);

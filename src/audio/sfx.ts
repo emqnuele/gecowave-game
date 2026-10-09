@@ -229,6 +229,10 @@ class Sfx {
     }
     /** gesso sulla lavagna: l'ipotesi */
     chalk(): void { this.noise(280, { freq: 4800, q: 4, vol: 0.05, to: 2800 }); }
+    /** una sillaba borbottata: i personaggi dei film parlano così */
+    mumble(freq: number): void { this.tone(freq, 75, { type: 'triangle', to: freq * 0.82, vol: 0.035, attackMs: 8 }); }
+    /** carta maneggiata */
+    rustle(): void { this.noise(170, { freq: 3200, q: 0.7, vol: 0.05 }); }
     /** tic dei passaggi */
     analisiTick(): void { this.tone(1320, 40, { type: 'sine', vol: 0.025 }); }
     /** accordo pieno della dimostrazione */
