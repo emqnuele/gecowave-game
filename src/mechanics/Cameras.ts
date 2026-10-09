@@ -27,7 +27,6 @@ export const SORVEGLIANZA_CAMS: CameraMode = { kind: 'sorveglianza', density: 0.
 
 const SWEEP = 0.85;
 const COOLDOWN_MS = 9000;
-const MAX_DATA = 8;
 
 interface Cam {
     x: number;
@@ -143,7 +142,8 @@ export class Cameras implements Mechanic {
         this.ctx.lens.kick({ desat: 0.7, tint: 0.08, tintColor: 0x7f1d1d }, 30, 260, 500);
         if (this.mode.kind === 'sorveglianza') {
             state.recordOmbraSighting();
-            bus.emit('toast', { text: `la tommasorveglianza ti ha ripreso. l'ombra impara (${state.save.ombra.sightings}/${MAX_DATA}).` });
+            // il geco non sa a cosa servono le riprese: lo scopre davanti all'ombra
+            bus.emit('toast', { text: 'la tommasorveglianza ti ha ripreso. per la sua sicurezza. 👍' });
         } else {
             bus.emit('toast', { text: 'telecamera di ticummi: allarme. arriva gente.' });
         }

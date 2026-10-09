@@ -47,14 +47,16 @@ export function codexSections(collected: string[], hasFlag: (f: string) => boole
     });
     const anyPage = pages.some((p) => p.collected);
     if (anyPage || hasFlag('visto-bus')) {
-        sections.push({ id: 'quaderno', title: 'il quaderno strappato di pedro', sub: 'il custode l\'ha scelto lui, non la wave', entries: pages });
+        // chi ha scelto il custode lo dicono le pagine, non il titolo
+        const sub = hasFlag('quaderno-completo') ? 'il custode l\'ha scelto lui, non la wave' : 'pagine strappate, sparse per il realm';
+        sections.push({ id: 'quaderno', title: 'il quaderno strappato di pedro', sub, entries: pages });
     }
 
     // il pensiero sepolto: stato, non spoiler
     const thoughtDone = hasFlag('pensiero-cancellato') || hasFlag('pensiero-portato');
     if (hasFlag('visto-mente') || thoughtDone) {
         sections.push({
-            id: 'pensiero', title: 'il pensiero sepolto di piema', sub: 'cancellarlo ti assolve, portarlo fuori lo condanna',
+            id: 'pensiero', title: 'il pensiero sepolto di piema', sub: thoughtDone ? 'fatto è fatto' : 'qualcosa che piema non vuole guardare',
             entries: [{ id: 'pensiero-sepolto', title: thoughtDone ? (hasFlag('pensiero-portato') ? 'portato fuori — è agli atti' : 'cancellato — come fece lui') : 'ancora sepolto, in fondo alla mente', region: 'mente', index: 0, total: 1, collected: thoughtDone, gated: false }],
         });
     }

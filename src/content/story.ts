@@ -259,8 +259,8 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
 
     /* ---------- capitolo 5: il trenbolone e il rio merdone ---------- */
     'ticummi-offerta': [
-        { speaker: 'ticummi', color: 'blue', text: 'ho visto tutto. notino ti cerca per i frammenti. per 133 barre ti attivo la TOMMASORVEGLIANZA: lui respinto da solo. senza, lo affronti tu.' },
-        { speaker: 'ticummi', color: 'blue', text: 'clausola piccola: tutto quello che fai lo studio. l\'ombra laggiù si allena sui tuoi salti. con 41.077 secondi sarà forte come te. senza, una beta.' },
+        { speaker: 'ticummi', color: 'blue', text: 'psst. ehi. tu. quello col trenbolone in circolo. ho visto tutto, io vedo sempre tutto. notino ti sta cercando per rubarti i frammenti.' },
+        { speaker: 'ticummi', color: 'blue', text: 'per soli 0,09€ ti attivo la TOMMASORVEGLIANZA: protezione totale da ogni pericolo esterno. al cambio del realm fanno 133 barre, ma il cambio lo decido io. assolutamente sicura. 👍 fidati, sto su una sedia volante.' },
     ],
     'spaccino-offerta': [
         { speaker: 'spaccino del rio', color: 'orange', text: 'ehi, geco. ti vedo smunto. ti serve la spinta. la forza vera.' },
@@ -1057,12 +1057,9 @@ export const DIALOGUES: Record<string, DialogueLine[]> = {
     'seme-cartellino': [
         { speaker: 'il cartellino', color: 'green', text: '«CUSTODE» a penna. «provvisorio» a matita, sotto. la matita si cancella. la penna no.' },
     ],
-    /* ---------- scelte leggibili ---------- */
-    'tommaso-avviso-clausola': [
-        { speaker: 'tommasorveglianza', color: 'cyan', text: 'GRAZIE PER LA FIDUCIA. notino verrà respinto in automatico. in cambio, ogni tuo salto diventa nostro. clausola 12: i tuoi dati diventano armi. l\'ombra ringrazia. 🫶' },
-    ],
+    /* ---------- l'offerta di ticummi, rifiutata ---------- */
     'tommaso-rifiuto': [
-        { speaker: 'ticummi', color: 'cyan', text: 'rifiuti? RISPARMI? va bene. notino ti darà la caccia finché vuole, ma almeno l\'ombra sarà una beta sgranata. ci vediamo in cantina.' },
+        { speaker: 'ticummi', color: 'cyan', text: 'rifiuti? RISPARMI? va bene. notino ti darà la caccia finché vuole. io ti offrivo la serenità a 0,09€. la serenità non torna in offerta. 👍' },
     ],
 };
 
@@ -1393,7 +1390,7 @@ export const MECHANIC_HINTS: Record<string, { sender: string; text: string }> = 
 
 export const WAVESUNG = {
     trenboloneAd: { sender: 'sponsor', text: 'TRENBOLONE! dona una nuova vita alla tua vita di merda! fatti di trenbolone! (messaggio promozionale non richiesto)' },
-    ticummiPromo: { sender: 'ticummi', text: 'offerta a tempo: tommasorveglianza, solo 0,09€. assolutamente sicura! 👍🫶 avviso onesto: notino respinto gratis, ma l\'ombra si allena su di te.' },
+    ticummiPromo: { sender: 'ticummi', text: 'offerta a tempo: tommasorveglianza, solo 0,09€. assolutamente sicura! 👍🫶' },
     pedroEcoPerduta: { sender: '???', text: 't1 v3d0. 5u1 mur0. c0m3 un4 v0lt4.' },
     pedroFootage: { sender: 'tommasorveglianza', text: 'FOOTAGE D\'ARCHIVIO cliente n.2: lametta guardava pedro ogni notte, giorni 1-42. giorno 41 ore 03:58 spegne lui la telecamera. motivo: "non voglio vedere". 👍' },
     romeroBus: { sender: 'romero', text: 'sono romero, questura. ti ho visto sul bus. se trovi lavagne strane, non toccarle. chiamami dal telefono. ho un caso vecchio quarant\'anni, e il glitch gli somiglia troppo.' },

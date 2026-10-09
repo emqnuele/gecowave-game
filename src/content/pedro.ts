@@ -47,7 +47,7 @@ export const PEDRO_APPARITIONS: Record<string, [string, string]> = {
     ],
     sorveglianza: [
         'qui mi guardavano dormire. poi una notte: click. più nessuno.',
-        `l'ombra sei tu, comprato a 0,09. io sono lametta, ${gl('regalato')}.`,
+        `ti hanno già fatto una foto. ${gl('sorridi')}, custode.`,
     ],
     cantina: [
         `è lì sotto, legato. il mio creatore. dovrei ${gl('odiarlo')}.`,

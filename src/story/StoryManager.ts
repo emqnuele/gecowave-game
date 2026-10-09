@@ -179,9 +179,9 @@ export class StoryManager {
             x, y, range: 60,
             onInteract: () => {
                 this.hooks.dialogue('pensiero-sepolto', () => {
-                    this.hooks.choice('il pensiero sepolto di piema. cancellarlo ti fa come lui (nessuna prova, un dio libero). portarlo fuori lo incastra (prova per romero).', [
-                        { label: 'cancellalo: come fece lui, nessun processo per piema' },
-                        { label: 'portalo fuori: prova per arrestare anche piema', danger: true },
+                    this.hooks.choice('il pensiero sepolto di piema. è suo. è vero. è tuo, adesso.', [
+                        { label: 'cancellalo: è il suo socio, è il suo dolore' },
+                        { label: 'portalo fuori: è una prova', danger: true },
                     ], (i) => {
                         state.setFlag(i === 0 ? 'pensiero-cancellato' : 'pensiero-portato');
                         state.persist();
