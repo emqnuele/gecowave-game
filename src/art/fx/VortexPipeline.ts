@@ -21,7 +21,7 @@ const FRAG = [
     '    float r = length(d);',
     '    float ang = atan(d.y, d.x);',
     '    float inner = 1.0 - smoothstep(0.0, 1.05, r);',
-    '    float twist = uProgress * (10.0 * inner * inner + uTime * 0.6 * inner);',
+    '    float twist = uProgress * (7.5 * inner * inner + uTime * 0.5 * inner);',
     '    float pull = 1.0 - uProgress * 0.7 * (1.0 - smoothstep(0.0, 0.75, r));',
     '    float r2 = r * pull;',
     '    vec2 suv = center + vec2(cos(ang + twist) * r2 / aspect, sin(ang + twist) * r2);',
@@ -35,15 +35,18 @@ const FRAG = [
 
 export class VortexPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
     progress = 0;
+    // tempo dal risucchio, non dall'avvio: col tempo assoluto dopo minuti di gioco girava a raffica
+    private readonly born: number;
     tint: [number, number, number] = [0, 0, 0];
 
     constructor(game: Phaser.Game) {
         super({ game, fragShader: FRAG });
+        this.born = game.loop.time;
     }
 
     onPreRender(): void {
         this.set1f('uProgress', this.progress);
-        this.set1f('uTime', this.game.loop.time / 1000);
+        this.set1f('uTime', (this.game.loop.time - this.born) / 1000);
         this.set3f('uTint', this.tint[0], this.tint[1], this.tint[2]);
     }
 }
