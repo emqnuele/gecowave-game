@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { TILE } from '../config';
-import { FOLK, FOLK_AFTER, FOLK_CHAT, FOLK_PANIC, FOLK_PEDRO, FOLK_QUIET, type FolkKind } from '../content/folk';
+import { FOLK, FOLK_AFTER, FOLK_CHAT, FOLK_HIDING, FOLK_PANIC, FOLK_PEDRO, FOLK_QUIET, FOLK_RELIEF, FOLK_TERROR, type FolkKind } from '../content/folk';
 import { toneFor } from '../content/tone';
 import { mulberry32 } from '../rules/hash';
 import { folkImage } from '../art/folk';
@@ -15,7 +15,13 @@ import { rng } from '../core/rng';
    (camminate, cadute, saltelli) e restano nella loro stanza. vivono solo
    vicino alla camera, il resto della regione dorme */
 
-type Mode = 'idle' | 'walk' | 'air' | 'chat' | 'flee' | 'face';
+type Mode = 'idle' | 'walk' | 'air' | 'chat' | 'flee' | 'face' | 'hide';
+
+/** quanto lontano un passante vede chi lo insegue, fuori dalla sua stanza */
+const SIGHT_X = 560;
+const SIGHT_Y = 260;
+/** salti e cadute che un passante in fuga fa prima di rintanarsi */
+const FLEE_HOPS = 2;
 
 interface Bubble {
     text: Phaser.GameObjects.Text;
@@ -48,6 +54,11 @@ class Wanderer {
     home: Room | null;
     air: { x0: number; y0: number; vx: number; vy: number; t: number; to: number } | null = null;
     phase = rng.fx.next() * 1000;
+    /** ha visto chi insegue: scappa, si rintana, poi aspetta che se ne vada */
+    terror = false;
+    lastSaw = 0;
+    hops = 0;
+    readonly baseScaleY: number;
 
     constructor(sprite: Phaser.GameObjects.Image, kind: FolkKind, seg: number, x: number, feet: number, home: Room | null, onTalk: (w: Wanderer) => void) {
         this.sprite = sprite;
@@ -58,6 +69,7 @@ class Wanderer {
         this.feet = feet;
         this.home = home;
         this.talk = { x, y: feet - 26, range: 70, onInteract: () => onTalk(this) };
+        this.baseScaleY = sprite.scaleY;
     }
 }
 
@@ -170,7 +182,7 @@ export class FolkManager {
         w.bubble.until = now + ms;
     }
 
-    update(time: number, delta: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean): void {
+    update(time: number, delta: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean, pursuer: { x: number; y: number } | null = null): void {
         if (this.suspended) return;
         const cam = this.scene.cameras.main.worldView;
         const dt = delta / 1000;
@@ -183,10 +195,13 @@ export class FolkManager {
                 if (w.bubble) w.bubble.text.setVisible(false);
                 continue;
             }
-            this.think(w, time, player, threats, bossFight);
+            this.think(w, time, player, threats, bossFight, pursuer);
             this.move(w, time, dt);
             const bob = w.mode === 'walk' || w.mode === 'flee' ? Math.abs(Math.sin((time + w.phase) / (w.mode === 'flee' ? 70 : 110))) * 2.5 : Math.sin((time + w.phase) / 700) * 0.6;
-            w.sprite.setPosition(w.x, w.feet + 1 - bob);
+            // rintanato: rannicchiato e scosso dai brividi
+            const shiver = w.mode === 'hide' ? Math.sin((time + w.phase) / 28) * 0.9 : 0;
+            w.sprite.setPosition(w.x + shiver, w.feet + 1 - (w.mode === 'hide' ? 0 : bob));
+            w.sprite.scaleY = w.mode === 'hide' ? w.baseScaleY * 0.8 : w.baseScaleY;
             w.sprite.setFlipX(w.facing < 0);
             w.sprite.setRotation(w.mode === 'walk' ? Math.sin((time + w.phase) / 110) * 0.05 : 0);
             // passo a fotogrammi: chi scappa corre, chi è fermo resta sul primo
@@ -206,8 +221,9 @@ export class FolkManager {
         }
     }
 
-    private think(w: Wanderer, now: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean): void {
+    private think(w: Wanderer, now: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean, pursuer: { x: number; y: number } | null): void {
         if (w.mode === 'air') return;
+        if (this.terrified(w, now, pursuer)) return;
         const px = player.x;
         const py = player.y;
         const dP = Math.hypot(px - w.x, py - (w.feet - 26));
@@ -290,6 +306,46 @@ export class FolkManager {
         }
     }
 
+    /** chi insegue il custode fa paura a tutti: chi lo vede scappa lontano da lui e si rintana finché non se ne va */
+    private terrified(w: Wanderer, now: number, pursuer: { x: number; y: number } | null): boolean {
+        if (pursuer && this.sees(w, pursuer)) {
+            w.lastSaw = now;
+            const away: 1 | -1 = pursuer.x < w.x ? 1 : -1;
+            if (!w.terror) {
+                w.terror = true;
+                w.hops = 0;
+                if (w.partner) {
+                    w.partner.partner = null;
+                    w.partner = null;
+                }
+                (w as Wanderer & { edge?: unknown }).edge = undefined;
+                if (rng.logic.next() < 0.75) this.say(w, FOLK_TERROR[Math.floor(rng.logic.next() * FOLK_TERROR.length)], 1600);
+            }
+            // rintanato resta giù, a meno che non gli arrivi addosso dal lato del muro
+            if (w.mode === 'hide' && (away === w.facing || Math.abs(pursuer.x - w.x) > 140)) return true;
+            if (w.mode !== 'flee') w.mode = 'flee';
+            w.facing = away;
+            return true;
+        }
+        if (!w.terror) return false;
+        // se ne è andato: si aspetta ancora un po', poi si torna a respirare
+        if (now - w.lastSaw < 3200 + (w.phase % 1800)) {
+            if (w.mode === 'hide' && rng.logic.next() < 0.002) this.say(w, FOLK_HIDING[Math.floor(rng.logic.next() * FOLK_HIDING.length)], 1800);
+            return true;
+        }
+        w.terror = false;
+        w.mode = 'idle';
+        w.until = now + 2000;
+        if (rng.logic.next() < 0.6) this.say(w, FOLK_RELIEF[Math.floor(rng.logic.next() * FOLK_RELIEF.length)], 2200);
+        return true;
+    }
+
+    private sees(w: Wanderer, p: { x: number; y: number }): boolean {
+        const R = w.home?.rect;
+        if (R && p.x >= R.x * TILE && p.x < (R.x + R.w) * TILE && p.y >= R.y * TILE && p.y < (R.y + R.h) * TILE) return true;
+        return Math.abs(p.x - w.x) < SIGHT_X && Math.abs(p.y - (w.feet - 26)) < SIGHT_Y;
+    }
+
     private inHome(w: Wanderer, seg: number): boolean {
         if (!w.home) return true;
         const s = this.nav.segments[seg];
@@ -308,7 +364,7 @@ export class FolkManager {
                 w.feet = land;
                 w.seg = a.to;
                 w.air = null;
-                w.mode = 'idle';
+                w.mode = w.terror ? 'flee' : 'idle';
                 w.until = now + 800;
             } else {
                 w.feet = y;
@@ -323,6 +379,23 @@ export class FolkManager {
             const goal = w.mode === 'flee' ? (w.facing > 0 ? hi : lo) : w.targetX;
             const d = goal - w.x;
             if (Math.abs(d) < 3) {
+                if (w.mode === 'flee' && w.terror) {
+                    // in fondo al pavimento: un salto o una caduta ancora più lontano, poi ci si rintana
+                    const dir = w.facing;
+                    const out = w.hops < FLEE_HOPS
+                        ? this.nav.edges(w.seg).find((e) => e.need <= 110 && Math.sign(e.vx || e.toC - e.fromC) === dir && Math.abs(e.fromC * TILE + TILE / 2 - w.x) < TILE * 1.5)
+                        : undefined;
+                    if (out) {
+                        w.hops++;
+                        w.mode = 'air';
+                        w.air = { x0: w.x, y0: w.feet, vx: out.kind === 'jump' ? out.vx : dir * 110, vy: out.kind === 'jump' ? out.vy : 0, t: 0, to: out.to };
+                        return;
+                    }
+                    w.mode = 'hide';
+                    // la faccia al muro: non guardarlo negli occhi
+                    w.facing = dir;
+                    return;
+                }
                 if (w.mode === 'walk' && w.edge) {
                     const e = w.edge;
                     w.edge = undefined;

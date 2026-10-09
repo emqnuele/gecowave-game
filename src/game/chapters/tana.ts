@@ -215,9 +215,12 @@ export class TanaChapter extends Chapter {
             this.chaseSprite = null;
             this.chaseTrail?.destroy();
             this.chaseTrail = null;
+            // se ne va dalla parte opposta a te, voltandoti le spalle
+            const away = Math.sign(chef.x - this.ctx.player.x) || -1;
+            chef.setFlipX(away > 0);
             this.scene.tweens.add({
                 targets: chef,
-                x: chef.x - 500,
+                x: chef.x + away * 500,
                 alpha: 0,
                 duration: 900,
                 ease: 'Quad.easeIn',

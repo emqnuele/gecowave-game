@@ -617,7 +617,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.enemies.magnetBarre();
         this.abilities.updateClone(time, delta);
         this.rewards.updateHoming(delta);
-        this.folk.update(time, delta, this.player, this.threats(), !!this.bosses.current?.engaged);
+        const chaser = this.chapter.pursuer?.();
+        this.folk.update(time, delta, this.player, this.threats(), !!this.bosses.current?.engaged, chaser?.active ? chaser : null);
         this.traps.update(time, delta, this.player);
         this.hazards.update(time, delta, this.player);
         this.challenges.trial?.update(this.player);
