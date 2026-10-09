@@ -16,5 +16,5 @@ export default [
     { id: 'fase-boss', file: 'src/rules/combat.ts', find: 'if (hp > maxHp * 0.66) return 1;', replace: 'if (hp > maxHp * 0.6) return 1;', kind: 'soglia (regola)' },
     { id: 'lastre-suono', file: 'src/mechanics/HazardManager.ts', find: 'if (Math.abs(s.x - player.x) < 700) sfx.crumble();', replace: 'if (Math.abs(s.x - player.x) < 500) sfx.crumble();', kind: 'soglia (motore)' },
     { id: 'hud-barre', file: 'src/ui/hud.ts', find: 'this.barre.textContent = `♪ ${barre} barre`;', replace: 'this.barre.textContent = `♪ ${barre}  barre`;', kind: 'testo ui' },
-    { id: 'film-buio', file: 'src/story/FlashbackManager.ts', find: "scene.tweens.add({ targets: dark, alpha: 0.97, duration: ENTER * 0.6, ease: 'Quad.easeOut' });", replace: "scene.tweens.add({ targets: dark, alpha: 0.95, duration: ENTER * 0.6, ease: 'Quad.easeOut' });", kind: 'tween (film)' },
+    { id: 'film-ombra', file: 'src/story/film/FilmScene.ts', find: 'this.shadow.setAlpha(0.42 * s.alpha);', replace: 'this.shadow.setAlpha(0.4 * s.alpha);', kind: 'alfa (film)' },
 ];
