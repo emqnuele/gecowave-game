@@ -3,7 +3,7 @@ import { LensPipeline } from '../art/fx/LensPipeline';
 import { bus } from '../core/events';
 import { softFail } from '../core/softFail';
 import { state } from '../core/state';
-import { onWorld } from '../core/worldEvents';
+import { offWorld, onWorld, type WorldEvent, type WorldHandler } from '../core/worldEvents';
 import { combine, coverZoom, envelope, heartbeat, isRest, type LensPart } from '../rules/lens';
 
 /* l'obiettivo della camera: colpi brevi (un boss che cambia fase, un'esplosione),
@@ -117,39 +117,44 @@ export class CameraLens {
         this.kick({ glitch: amount, chroma: amount * 0.8 }, 20, ms, 120);
     }
 
+    /** ogni ascolto si toglie da solo: off senza funzione svuoterebbe l'evento anche per gli altri */
+    private on<K extends WorldEvent>(event: K, fn: WorldHandler<K>): void {
+        onWorld(this.scene, event, fn, this);
+        this.offs.push(() => offWorld(this.scene, event, fn, this));
+    }
+
     private listen(): void {
-        const s = this.scene;
-        onWorld(s, 'boss-engaged', (boss) => {
+        this.on('boss-engaged', (boss) => {
             const side = boss.x < this.scene.cameras.main.midPoint.x ? -1 : 1;
             this.kick({ angle: 0.028 * side, chroma: 0.5 }, 260, 300, 1700);
-        }, this);
-        onWorld(s, 'boss-phase', () => {
+        });
+        this.on('boss-phase', () => {
             this.kick({ chroma: 1.2, barrel: 0.12 }, 60, 80, 520);
             const b = this.bossAt();
             if (b) this.shockwave(b.x, b.y, 1);
-        }, this);
-        onWorld(s, 'boss-dying', () => {
+        });
+        this.on('boss-dying', () => {
             this.kick({ desat: 0.85, zoom: 0.04, chroma: 0.4 }, 220, 1100, 1300);
-        }, this);
-        onWorld(s, 'boss-parried', () => {
+        });
+        this.on('boss-parried', () => {
             this.kick({ chroma: 0.8, zoom: 0.015 }, 20, 40, 220);
-        }, this);
-        onWorld(s, 'player-dead', () => {
+        });
+        this.on('player-dead', () => {
             this.kick({ desat: 1, barrel: -0.12, dark: 0.45 }, 450, 2600, 600);
-        }, this);
-        onWorld(s, 'checkpoint', () => {
+        });
+        this.on('checkpoint', () => {
             this.kick({ tint: 0.14, tintColor: 0xffb347, desat: -0.15 }, 300, 250, 1500);
             const p = this.focus();
             this.shockwave(p.x, p.y, 0.5, 900);
-        }, this);
-        onWorld(s, 'enemy-explode', ({ x, y }) => {
+        });
+        this.on('enemy-explode', ({ x, y }) => {
             const p = this.focus();
             const d = Math.hypot(x - p.x, y - p.y);
             if (d < 650) this.shockwave(x, y, 0.85 * (1 - d / 650), 520);
-        }, this);
-        onWorld(s, 'player-risonante', ({ x, y, level }) => {
+        });
+        this.on('player-risonante', ({ x, y, level }) => {
             if ((level ?? 1) >= 2) this.shockwave(x, y, 0.22 * (level ?? 1), 480);
-        }, this);
+        });
         this.offs.push(
             bus.on('hp-changed', ({ hp, hurt }) => {
                 if (hurt && hp < this.lastHp) this.kick({ chroma: 0.9, pulse: 0.22 }, 30, 60, 280);
@@ -268,14 +273,6 @@ export class CameraLens {
     destroy(): void {
         for (const off of this.offs) off();
         this.offs = [];
-        this.scene.events.off('boss-engaged', undefined, this);
-        this.scene.events.off('boss-phase', undefined, this);
-        this.scene.events.off('boss-dying', undefined, this);
-        this.scene.events.off('boss-parried', undefined, this);
-        this.scene.events.off('player-dead', undefined, this);
-        this.scene.events.off('checkpoint', undefined, this);
-        this.scene.events.off('enemy-explode', undefined, this);
-        this.scene.events.off('player-risonante', undefined, this);
         // allo shutdown la camera può essere già andata: con lei se ne va anche la pipeline
         const cam = this.scene.cameras?.main;
         if (cam && this.pipe) cam.removePostPipeline(this.pipe);
