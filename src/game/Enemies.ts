@@ -13,6 +13,8 @@ import type { EnemyKind } from '../types';
 import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../core/worldEvents';
 import { rng } from '../core/rng';
+import { coop } from '../coop/runtime';
+import { eliteChanceFor, enemyHpFor, spawnerIntervalFor, spawnerMaxAliveFor } from './coop/scaling';
 
 type EnemiesCtx = Pick<GameContext, 'simulates' | 'coop' | 'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'rewards' | 'quests' | 'bosses'>;
 
@@ -48,7 +50,7 @@ export class Enemies implements GameSystem {
         if (!room || !['hall', 'cave', 'gauntlet', 'shaft'].includes(room.kind)) return false;
         const p = room.pathIndex >= 0 ? room.pathIndex : this.ctx.world.layout.rooms[room.anchor].pathIndex;
         if (p < this.ctx.world.layout.pathLength * 0.3) return false;
-        return h % 1000 < 22;
+        return h % 1000 < eliteChanceFor(22);
     }
 
     /** varianti dei nemici delle regioni: deterministiche, per bioma e comportamento */
@@ -71,6 +73,10 @@ export class Enemies implements GameSystem {
 
     spawnEnemy(kind: EnemyKind, x: number, y: number, opts: { sleeping?: boolean; hunting?: boolean; elite?: boolean; trait?: EnemyTrait | null } = {}): Enemy {
         const e = new Enemy(this.scene, x, y, kind, this.ctx.world.nav, { sleeping: opts.sleeping && !opts.elite, elite: opts.elite, trait: opts.trait });
+        // in due i nemici dell'host hanno più vita: i fantocci dell'ospite la ricevono già scalata
+        if (this.ctx.simulates && coop.together) {
+            e.hp = enemyHpFor(e.hp);
+        }
         if (opts.hunting) e.hunt();
         e.setDepth(4);
         this.ctx.groups.enemies.add(e);
@@ -136,8 +142,8 @@ export class Enemies implements GameSystem {
             const spot = this.caveSpawnerSpot(room);
             if (!spot) continue;
             this.spawnSpawner(kind, spot.x, spot.y, {
-                maxAlive: 3,
-                intervalMs: 3000 + (h % 2000),
+                maxAlive: spawnerMaxAliveFor(3),
+                intervalMs: spawnerIntervalFor(3000 + (h % 2000)),
                 radius: 600,
             });
         }

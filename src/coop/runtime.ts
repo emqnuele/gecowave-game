@@ -28,6 +28,10 @@ export interface CoopApp {
     playIntro(done: () => void): void;
     /** l'ospite in partita che non è dentro un capitolo (menu, forgia): niente da fare */
     inLevel(): boolean;
+    /** l'host è già dentro un capitolo quando il guest si presenta: aggancia il coop alla scena viva */
+    attachHostCoop(): void;
+    /** dove sta l'host adesso, se è dentro un capitolo: per far apparire chi entra lì accanto */
+    hostSpot(): Spot | null;
 }
 
 export type CoopEvent =
@@ -200,7 +204,15 @@ class CoopRuntime {
             const meta = readMeta();
             if (meta) writeMeta({ ...meta, partner: c.name });
             this.emit({ type: 'partner', char: c });
-            if (this.hostLevel) this.sendLevel(this.hostLevel.levelId, this.hostLevel.checkpointId, this.hostLevel.spawn, true);
+            if (this.hostLevel) {
+                // chi entra a partita iniziata appare accanto all'host, non allo spawn del capitolo
+                const live = this.app?.hostSpot();
+                const spawn = live ?? this.hostLevel.spawn;
+                this.hostLevel.spawn = spawn;
+                // l'host partito da solo non ha il coop in scena: lo si aggancia prima del ready
+                this.app?.attachHostCoop();
+                this.sendLevel(this.hostLevel.levelId, this.hostLevel.checkpointId, spawn, true);
+            }
         }));
         this.offSession.push(s.on('leave', () => {
             this.dropSession('uscito');

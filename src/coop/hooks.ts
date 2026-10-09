@@ -60,6 +60,7 @@ export function resetCoopHooks(): void {
     coopHooks.frozen = false;
     coopHooks.spectating = false;
     coopHooks.personal = 0;
+    coopHooks.menuOpen = false;
     coopHooks.filmEnded = null;
     coopHooks.choice = null;
     coopHooks.joinPartner = null;

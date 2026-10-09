@@ -11,6 +11,7 @@ import type { Spawner } from '../../entities/Spawner';
 import type { NetSession } from '../../net/session';
 import type { GameContext } from '../context';
 import { MODES, tintOf, writeWorld, type BossLook, type EnemyLook } from './worldWire';
+import { enemyHpFor, spawnerIntervalFor, spawnerMaxAliveFor } from './scaling';
 
 const SNAP_MS = 50;
 /** l'ospite vede i nemici attorno a sé: oltre questo non gli servono */
@@ -254,8 +255,32 @@ export class WorldHost {
 
     /** l'ospite è arrivato: gli si manda il mondo, e da qui ogni fatto */
     welcome(): void {
+        this.scaleExisting();
         this.ready = true;
         this.session.send('world', this.dump());
+    }
+
+    /** chi era già vivo da solo diventa più duro in due: una volta sola, senza curarlo */
+    private scaleExisting(): void {
+        for (const c of this.ctx.groups.enemies.getChildren()) {
+            const e = c as Enemy;
+            if (!e.active || e.getData('coopScaled')) continue;
+            e.setData('coopScaled', true);
+            e.hp = Math.min(enemyHpFor(e.hp), enemyHpFor(e.arch.hp * (e.elite ? 3.5 : 1)));
+        }
+        const b = this.ctx.bosses.current;
+        if (b?.active && !b.getData('coopScaled')) {
+            b.setData('coopScaled', true);
+            b.maxHp = enemyHpFor(b.maxHp);
+            b.hp = Math.min(enemyHpFor(b.hp), b.maxHp);
+        }
+        for (const c of this.ctx.groups.spawners.getChildren()) {
+            const s = c as Spawner & { intervalMs: number; maxAlive: number };
+            if (s.getData('coopScaled')) continue;
+            s.setData('coopScaled', true);
+            s.intervalMs = spawnerIntervalFor(s.intervalMs);
+            s.maxAlive = spawnerMaxAliveFor(s.maxAlive);
+        }
     }
 
     tick(delta: number, partner: { x: number; y: number } | null): void {

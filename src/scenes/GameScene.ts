@@ -433,6 +433,21 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         });
     }
 
+    /** l'host partito da solo aggancia il coop quando il guest si presenta: stessa scena, nuova sessione */
+    attachLateCoop(): void {
+        const session = coop.session;
+        if (!coop.isHost || !session || !session.open) return;
+        const cur = this.ctx.coop as (CoopScene & { session: unknown }) | null;
+        if (cur && (cur as unknown as { session: unknown }).session === session) return;
+        this.ctx.coop?.destroy();
+        this.ctx.coop = new CoopScene(this.ctx, session);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.ctx.coop?.destroy();
+            this.ctx.coop = null;
+        });
+        this.ctx.coop.loaded();
+    }
+
     /** la partita in due: l'host annuncia il capitolo, l'ospite dice che è arrivato */
     private setupCoop(data: SceneData): void {
         const session = coop.session;

@@ -218,6 +218,22 @@ async function boot(): Promise<void> {
             if (introBusy) pendingCoopLevel = go;
             else go();
         },
+        attachHostCoop() {
+            const scene = game.scene.getScene('GameScene') as GameScene | null;
+            if (scene && game.scene.isActive('GameScene')) {
+                try {
+                    scene.attachLateCoop();
+                } catch (e) {
+                    if (import.meta.env.DEV) console.warn('coop tardivo saltato:', e);
+                }
+            }
+        },
+        hostSpot() {
+            if (!inGame || !game.scene.isActive('GameScene')) return null;
+            const scene = game.scene.getScene('GameScene') as GameScene | null;
+            const p = (scene as unknown as { player?: { x: number; y: number } } | null)?.player;
+            return p ? { x: p.x, y: p.y } : null;
+        },
         toMenu(reason) {
             const wasInGame = inGame;
             inGame = false;

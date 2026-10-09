@@ -52,7 +52,72 @@ const scene = (p, fn, arg) => p.evaluate(([src, arg]) => {
     return new Function('g', 'arg', src)(g, arg);
 }, [fn, arg]);
 
+async function joinAs(t, code, { name = null, remembered = false } = {}) {
+    const { B } = t;
+    await t.click(B, 'gioca in due');
+    if (await B.evaluate(() => [...document.querySelectorAll('button')].some((b) => (b.textContent || '').includes('rete: online')))) await t.click(B, 'rete: online');
+    await t.click(B, 'entra in una partita');
+    await t.type(B, '.cx-code-input', code);
+    await t.click(B, 'entra');
+    await t.until(B, () => document.body.textContent.includes('la partita di'));
+    if (remembered) {
+        await t.click(B, 'entra come');
+        return;
+    }
+    await t.click(B, 'forgia il tuo geco');
+    await t.type(B, '.sx-step.active .sx-name-input', name ?? 'Entra');
+    await t.click(B, 'incidi');
+    await t.click(B, 'entra nella partita');
+}
+
 export const SCENARIOS = {
+    async dentro(t) {
+        const { A, B } = t;
+        await t.click(A, 'gioca in due');
+        await t.click(A, 'rete: online');
+        await t.click(A, 'ospita una partita');
+        await t.type(A, '.sx-step.active .sx-name-input', 'Ospite');
+        await t.click(A, 'incidi');
+        await t.click(A, 'conferma');
+        await t.click(A, 'apri la partita');
+        await t.until(A, () => /[A-Z0-9] [A-Z0-9]/.test(document.querySelector('.cx-code')?.textContent ?? ''));
+        const code = (await A.evaluate(() => document.querySelector('.cx-code').textContent)).replace(/\s/g, '');
+        // l'host parte da solo
+        await t.click(A, 'inizia');
+        for (let i = 0; i < 30; i++) {
+            if (await A.evaluate(() => window.__game.scene.getScene('GameScene')?.sys.settings.status === 5)) break;
+            await A.keyboard.press('Enter');
+            await t.wait(400);
+        }
+        await t.wait(2000);
+        await scene(A, `g.player.body.reset(g.player.x + 300, g.player.y - 20)`);
+        await t.wait(800);
+        const hostAt = await scene(A, `return { x: Math.round(g.player.x), y: Math.round(g.player.y) }`);
+        await joinAs(t, code);
+        await t.until(B, () => window.__game.scene.getScene('GameScene')?.sys.settings.status === 5, null, 30000);
+        await t.wait(2500);
+        const guestAt = await scene(B, `return { x: Math.round(g.player.x), y: Math.round(g.player.y), partner: !!g.ctx.coop?.partner?.visible }`);
+        t.check('chi entra dopo arriva accanto all’host', Math.abs(guestAt.x - hostAt.x) < 200 && Math.abs(guestAt.y - hostAt.y) < 200, JSON.stringify({ hostAt, guestAt }));
+        t.check('e lo vede', guestAt.partner);
+        const enemies = [await scene(A, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`), await scene(B, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`)];
+        t.check('il mondo arriva intero', enemies[0] === enemies[1] && enemies[0] > 0, JSON.stringify(enemies));
+        // l'ospite esce al menu: l'host continua, poi rientra col suo geco
+        await B.keyboard.down('Escape');
+        await t.wait(200);
+        await B.keyboard.up('Escape');
+        await t.wait(400);
+        await t.click(B, 'esci al menu');
+        await t.wait(1500);
+        const alone = await scene(A, `return { partner: !!g.ctx.coop?.partner, active: g.sys.settings.status }`);
+        t.check('l’host resta in partita senza compagno', !alone.partner && alone.active === 5, JSON.stringify(alone));
+        await joinAs(t, code, { remembered: true });
+        await t.until(B, () => window.__game.scene.getScene('GameScene')?.sys.settings.status === 5, null, 30000);
+        await t.wait(2500);
+        const back = await scene(A, `return { partner: !!g.ctx.coop?.partner?.visible, name: g.ctx.coop?.partner?.char.name }`);
+        t.check('rientra col geco di prima', back.partner && back.name === 'Entra', JSON.stringify(back));
+        await t.shot(B, 'dentro-ospite');
+    },
+
     async lobby(t) {
         const code = await hostAndJoin(t);
         t.check('codice della stanza', /^[A-Z2-9]{5}$/.test(code), code);

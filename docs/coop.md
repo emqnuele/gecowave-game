@@ -1,33 +1,37 @@
 # coop
 
-> roadmap: il multiplayer non è nel gioco attuale, solo nel branch `multiplayer-p2p`.
+> implementato sul branch `coop`: rete nuova (non il vecchio `multiplayer-p2p`), ognuno simula il suo geco, l'host simula il mondo.
 
-Il multiplayer vive sul branch `multiplayer-p2p` (src/net/: snapshot buffer, interpolazione, protocollo, test a due tab). Va riportato sopra la struttura nuova: l'host simula tutto (`GameContext.simulates`, ADR-052), il guest disegna e manda input.
+## come funziona
 
-## cosa manca
-- [ ] Ripartire dal refactor e riportare `src/net/` dal branch `multiplayer-p2p` (snapshot buffer, interpolazione, protocollo, test 2 tab sono già buoni)
-- [ ] Il guest renderizza e manda input, l'host simula tutto
-- [ ] Implementare le regole di design qui sotto
-- [ ] Rifare i test e2e a due tab
+* **rete** (`src/net/`): sessione sopra trasporto astratto (PeerJS online, BroadcastChannel locale per due schede). Handshake con versione build, reliable JSON chunked, fast binario a 30Hz (geco) e 20Hz (mondo), ping/RTT/offset, link buono/instabile/perso.
+* **autorità**: ogni client decide il suo geco (movimento, danni ricevuti). L'host decide nemici, boss, nidi, proiettili, drop, trama, salvataggio. I colpi del guest arrivano come richieste (`hit/take/break/interact`).
+* **salvataggio**: slot `coop` sull'host, copia `ospite` sul guest. L'host invia i campi condivisi, il guest rimanda solo scoperte (flag, fermate, stanze, dialoghi letti). Statistiche e abilità: ognuno tiene le sue; i premi corazza/forza dell'host passano anche al guest.
+* **difficoltà in due** (`src/game/coop/scaling.ts`): hp nemici e boss ×1,7, élite ×1,8, nidi +1 vivo e ×0,72 intervallo. I danni restano a cuori interi.
+* **join a partita iniziata**: chi entra appare accanto all'host col mondo intero; uscire e rientrare col codice riusa il geco ricordato.
 
-## Regole di design coop (decise)
-**Dialoghi automatici** (boss, trama, flashback)
-- Li vedono entrambi, il gioco va in pausa per tutti e due
-- Solo l'host manda avanti il testo
+## regole decise e implementate
 
-**Dialoghi manuali** (parlare con NPC)
-- Li vede solo chi li apre, il mondo continua per l'altro
-- Chi è in dialogo è invulnerabile e non bersagliabile: i nemici puntano l'altro
-- Si può parlare sempre, nessun blocco vicino ai nemici
+* **dialoghi trama**: entrambi li vedono, mondo fermo per entrambi, solo l'host manda avanti.
+* **dialoghi manuali**: solo chi li apre, mondo continua, chi parla è fermo/invulnerabile/non bersagliabile.
+* **scelte trama**: le fa l'host, l'ospite vede un toast. Scelte da dialogo manuale: le fa chi parla, via host.
+* **film/ricordi**: l'ospite segue quello dell'host.
+* **morte**: chi cade fa spettatore (camera sull'altro), si rialza al microfono acceso dall'altro. Doppio KO = ripartenza insieme.
+* **telefono/pausa**: in due non fermano il mondo, congelano solo il proprio geco. Voce "raggiungi il compagno" se ci si perde.
+* **cambio capitolo/uscite/bus/varchi/checkpoint**: li decide l'host, il guest segue. Il guest non viaggia da solo.
+* **doomsday/freccia assistita**: li sceglie l'host in forgia, valgono per entrambi, il guest li vede in lobby.
 
-**Morte**
-- Chi muore diventa spettatore e rientra al prossimo checkpoint
-- Se muoiono entrambi si riparte insieme dall'ultimo checkpoint
+## prove
 
-**Single player**: nessun cambio di comportamento, i dialoghi bloccano il gioco come ora.
+```bash
+scripts/harness/build.sh
+node scripts/coop/duo.mjs lobby|start|mondo|dialogo|morte|dentro
+```
 
-## Da decidere più avanti
-- Cosa succede a un dialogo manuale aperto quando parte un dialogo automatico
-- Cosa vede lo spettatore (camera sull'altro? può muoversi?)
-- Cosa si condivide tra i due: drop, cure, progressi e salvataggio del guest
-- Il guest può attivare i trigger di trama o solo l'host?
+Tutti verdi in locale (due schede, senza rete). `dentro` copre join a partita iniziata, mondo intero, uscita guest e rientro col geco ricordato. Single invariato per costruzione (tutto il coop è dietro `coop.together/ctx.simulates`); unit `npm test` verdi.
+
+## limiti noti
+
+* l'inseguitore della tana (lochef) esiste solo sull'host: il guest non lo vede. I messaggi `actor/actor-gone` sono riservati ma non usati.
+* l'online vero (PeerJS + TURN) è implementato ma provato solo in locale: prima di pubblicare servono prove su due reti diverse, credenziali TURN a tempo da endpoint proprio (`VITE_TURN_ENDPOINT`), mai statiche nella build pubblica (`.env` è gitignored, ma le `VITE_*` finiscono nel bundle).
+* la stanza tiene un guest alla volta; il secondo riceve "partita piena".

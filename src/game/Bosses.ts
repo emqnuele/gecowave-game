@@ -14,6 +14,8 @@ import type { AbilityId, BossKind } from '../types';
 import type { GameContext, GameSystem } from './context';
 import { emitWorld } from '../core/worldEvents';
 import { rng } from '../core/rng';
+import { coop } from '../coop/runtime';
+import { enemyHpFor } from './coop/scaling';
 
 type BossesCtx = Pick<GameContext, 'simulates' | 'scene' | 'world' | 'player' | 'lighting' | 'rewards' | 'dialogues' | 'chapter' | 'doomsday' | 'flow'>;
 
@@ -133,6 +135,11 @@ export class Bosses implements GameSystem {
     /** un boss nasce sospeso sopra il pavimento più vicino, con la testa sotto il soffitto */
     make(x: number, y: number, kind: BossKind, hpOverride?: number): Boss {
         const boss = new Boss(this.scene, x, y, kind, hpOverride);
+        // in due il boss dell'host ha più vita: l'ospite la riceve già scalata
+        if (this.ctx.simulates && coop.together && !hpOverride) {
+            boss.maxHp = enemyHpFor(boss.maxHp);
+            boss.hp = boss.maxHp;
+        }
         const c = Math.floor(x / TILE);
         let r = Math.floor(y / TILE);
         while (r < this.ctx.world.level.heightPx / TILE - 1 && !this.ctx.world.nav.solid(c, r + 1)) r++;
