@@ -56,6 +56,8 @@ export const coopHooks = {
     joinPartner: null as (() => void) | null,
     partnerName: null as (() => string | null) | null,
     choice: null as ((p: { title: string; options: { label: string; danger?: boolean }[]; onPick: (i: number) => void }) => boolean) | null,
+    /** il tabellone del citelis passa da qui prima di mostrarsi: true se il coop l'ha preso */
+    travel: null as ((p: { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void }) => boolean) | null,
 };
 
 export function resetCoopHooks(): void {
@@ -71,6 +73,7 @@ export function resetCoopHooks(): void {
     coopHooks.menuOpen = false;
     coopHooks.filmEnded = null;
     coopHooks.choice = null;
+    coopHooks.travel = null;
     coopHooks.joinPartner = null;
     coopHooks.partnerName = null;
 }

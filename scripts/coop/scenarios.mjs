@@ -71,6 +71,68 @@ async function joinAs(t, code, { name = null, remembered = false } = {}) {
 }
 
 export const SCENARIOS = {
+    async citelis(t) {
+        await enterTogether(t);
+        const { A, B } = t;
+        const board = (p) => p.evaluate(() => [...document.querySelectorAll('.sx-page')].some((el) => el.textContent.includes('prossima partenza')));
+        // due fermate scoperte, così il tabellone ha dove scegliere
+        await B.evaluate(() => {
+            const save = window.__state.save;
+            const g = window.__game.scene.getScene('GameScene');
+            for (const s of g.ctx.travel.busStops) if (!save.stops.includes(s.key)) save.stops.push(s.key);
+        });
+        await A.evaluate(() => {
+            const save = window.__state.save;
+            const g = window.__game.scene.getScene('GameScene');
+            for (const s of g.ctx.travel.busStops) if (!save.stops.includes(s.key)) save.stops.push(s.key);
+        });
+        // il guest apre il palo: il tabellone deve aprirsi da lui, non dall'host
+        const pole = await scene(B, `const s = g.ctx.travel.busStops[0]; return s ? { x: s.x, y: s.y } : null`);
+        t.check('c’è un palo del citelis', !!pole, JSON.stringify(pole));
+        await scene(B, `g.player.body.reset(arg.x - 20, arg.y)`, pole);
+        await t.wait(400);
+        await B.keyboard.down('KeyE');
+        await t.wait(150);
+        await B.keyboard.up('KeyE');
+        await t.until(B, () => [...document.querySelectorAll('.sx-page')].some((el) => el.textContent.includes('prossima partenza')), 10000);
+        await t.wait(400);
+        t.check('il tabellone è del guest', await board(B));
+        t.check('l’host non si blocca', !(await board(A)));
+        const moving = await scene(A, `return Math.round(g.player.x)`);
+        await A.keyboard.down('KeyD');
+        await t.wait(700);
+        await A.keyboard.up('KeyD');
+        const moved = await scene(A, `return Math.round(g.player.x)`);
+        t.check('l’host si muove mentre il guest sceglie', moved > moving + 30, `${moving} -> ${moved}`);
+        await t.shot(B, 'citelis-ospite');
+        // il guest sceglie un'altra fermata: viaggiano tutti e due, l'host non ha mai visto il tabellone
+        const dest = await B.evaluate(() => {
+            const btns = [...document.querySelectorAll('.sx-page button')].filter((b) => b.offsetParent !== null && !/resto qui|sei qui/i.test(b.textContent));
+            const b = btns[btns.length - 1];
+            const label = b?.textContent ?? null;
+            b?.click();
+            return label;
+        });
+        t.check('il guest sceglie una fermata', !!dest, dest);
+        await t.until(A, () => window.__game.scene.getScene('GameScene')?.sys.isActive(), 30000);
+        await t.until(B, () => window.__game.scene.getScene('GameScene')?.sys.isActive(), 30000);
+        await t.wait(2500);
+        const lvA = await A.evaluate(() => window.__state.save.levelId);
+        const lvB = await B.evaluate(() => window.__state.save.levelId);
+        t.check('viaggiano insieme', lvA === lvB, `host ${lvA}, ospite ${lvB}`);
+        // microfono: cura anche l'ospite, non solo l'host
+        await B.evaluate(() => { window.__state.run.hp = 1; });
+        const cp = await scene(A, `const c = g.world.level.checkpoints[0]; return c ? { x: c.x, y: c.y } : null`);
+        await scene(A, `g.player.body.reset(arg.x, arg.y)`, cp);
+        await t.wait(400);
+        await A.keyboard.down('KeyE');
+        await t.wait(150);
+        await A.keyboard.up('KeyE');
+        await t.wait(1200);
+        const healed = await B.evaluate(() => ({ hp: window.__state.run.hp, max: window.__state.maxHp }));
+        t.check('il microfono cura l’ospite', healed.hp === healed.max, JSON.stringify(healed));
+    },
+
     async trappole(t) {
         await enterTogether(t);
         const { A, B } = t;

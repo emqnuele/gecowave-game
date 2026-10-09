@@ -145,6 +145,9 @@ export interface CoopMsgs {
     'gone': { key: string };
     'wall': { cell: number };
     'arena': { locked: boolean; room: number };
+    /** il tabellone del citelis chiesto dall'ospite: lo vede lui, il viaggio lo fa l'host */
+    'travel-open': { token: number; stops: { key: string; levelId: string; label: string }[]; current: string };
+    'travel-pick': { token: number; key: string };
 
     // --- richieste del guest ---
     'hit': Hit;

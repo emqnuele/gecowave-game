@@ -199,6 +199,7 @@ async function boot(): Promise<void> {
     });
     screens.coopEntry = () => coopUi.show();
     screens.choiceRouter = (p) => coopHooks.choice?.(p) ?? false;
+    screens.travelRouter = (p) => coopHooks.travel?.(p) ?? false;
     screens.pauseExtras = () => {
         if (!coop.active) return null;
         const name = coopHooks.partnerName?.();

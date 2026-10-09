@@ -32,6 +32,8 @@ export class CoopRules {
     private readonly remotePicks = new Map<number, (i: number) => void>();
     /** ospite: il dialogo condiviso aperto adesso */
     private sharedToken = -1;
+    /** host: il tabellone aperto sullo schermo dell'ospite, in attesa della sua fermata */
+    private travelToken = 0;
     private readonly offs: (() => void)[] = [];
     /** il mio geco è a terra e guarda l'altro */
     down = false;
@@ -52,12 +54,15 @@ export class CoopRules {
         this.offs.push(s.on('dlg-close', (m) => this.closed(m.token)));
         this.offs.push(s.on('choice-open', (m) => this.choiceFromHost(m)));
         this.offs.push(s.on('choice-pick', (m) => this.picked(m.token, m.index)));
+        this.offs.push(s.on('travel-open', (m) => this.travelFromHost(m)));
+        this.offs.push(s.on('travel-pick', (m) => this.travelPicked(m.token, m.key)));
         this.offs.push(s.on('film', (m) => this.followFilm(m.id)));
         this.offs.push(s.on('film-end', () => this.endFollowedFilm()));
         this.offs.push(s.on('interact', (m) => this.remoteInteract(m.x, m.y)));
         // la fine la decide l'host leggendo il compagno, al passo dopo: vedi tick
         this.offs.push(s.on('died', (m) => this.teamDied(m)));
         coopHooks.choice = (p) => this.routeChoice(p);
+        coopHooks.travel = (p) => this.routeTravel(p);
         if (coop.isHost) {
             coopHooks.filmEnded = () => this.session.send('film-end', { token: 0 });
             const onCp = ({ id }: { id: string; levelId: string }) => this.checkpointLit(id);
@@ -251,6 +256,36 @@ export class CoopRules {
         if (pick && Number.isInteger(index) && index >= 0) pick(index);
     }
 
+    /* ---------- citelis ---------- */
+
+    /** il tabellone chiesto dall'ospite: lo vede lui sul suo schermo, il viaggio lo fa l'host */
+    routeTravel(p: { stops: { key: string; levelId: string; label: string }[]; current: string }): boolean {
+        if (!coop.isHost || !coop.together || this.actor !== 'remote') return false;
+        if (!Array.isArray(p.stops) || !p.stops.length) return false;
+        const token = ++this.token;
+        this.travelToken = token;
+        this.session.send('travel-open', { token, stops: p.stops, current: p.current });
+        return true;
+    }
+
+    private travelFromHost(m: CoopMsgs['travel-open']): void {
+        if (!coop.isGuest) return;
+        const stops = Array.isArray(m.stops) ? m.stops.filter((s) => s && typeof s.key === 'string' && typeof s.levelId === 'string').map((s) => ({ key: s.key.slice(0, 64), levelId: s.levelId.slice(0, 32), label: String(s.label).slice(0, 80) })) : [];
+        if (!stops.length || typeof m.token !== 'number') return;
+        this.runAs('local', () => bus.emit('travel-show', {
+            stops,
+            current: String(m.current),
+            onPick: (key: string) => this.session.send('travel-pick', { token: m.token, key }),
+        }));
+    }
+
+    private travelPicked(token: number, key: string): void {
+        if (!coop.isHost || token !== this.travelToken || typeof key !== 'string') return;
+        this.travelToken = 0;
+        if (this.ctx.flow.exiting) return;
+        this.ctx.travel.travelTo(key);
+    }
+
     /* ---------- film ---------- */
 
     /** host: un ricordo parte, l'ospite lo guarda con me */
@@ -346,7 +381,11 @@ export class CoopRules {
         const cp = this.ctx.world.level.checkpoints.find((c) => c.id === id);
         if (!cp) return;
         if (this.down) this.revive(cp.x + 30, cp.y - 8);
-        if (coop.together) this.session.send('cmd', { c: 'revive', x: cp.x - 30, y: cp.y - 8 });
+        if (coop.together) {
+            this.session.send('cmd', { c: 'revive', x: cp.x - 30, y: cp.y - 8 });
+            // il microfono cura anche l'altro: la sua vita la decide lui, ma la cura è di tutti e due
+            this.session.send('grant', { heal: true });
+        }
     }
 
     /** a terra tutti e due: il mio geco o quello del compagno, chiunque sia caduto per ultimo */
@@ -402,5 +441,6 @@ export class CoopRules {
         coopHooks.spectating = false;
         coopHooks.filmEnded = null;
         coopHooks.choice = null;
+        coopHooks.travel = null;
     }
 }

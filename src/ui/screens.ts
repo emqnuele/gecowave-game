@@ -81,6 +81,7 @@ export class Screens {
     /** la pausa in due: voci in più e una nota diversa (il mondo non aspetta) */
     pauseExtras: (() => { items: MenuItem[]; note: string } | null) | null = null;
     choiceRouter: ((p: { title: string; options: { label: string; danger?: boolean }[]; onPick: (i: number) => void }) => boolean) | null = null;
+    travelRouter: ((p: { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void }) => boolean) | null = null;
 
     constructor() {
         this.bg = el('div');
@@ -112,7 +113,10 @@ export class Screens {
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('charm-found', ({ id }) => this.charmCard(id));
         bus.on('achievement', ({ id }) => this.trophy(id));
-        bus.on('travel-show', (p) => this.travelBoard(p));
+        bus.on('travel-show', (p) => {
+            if (this.travelRouter?.(p)) return;
+            this.travelBoard(p);
+        });
         bus.on('chapter-score', (p) => this.chapterScore(p));
         bus.on('choice-show', (p) => {
             if (this.choiceRouter?.(p)) return;
