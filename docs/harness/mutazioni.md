@@ -17,7 +17,7 @@ Generato da `scripts/harness/mutate.mjs`. Ogni mutazione toglie o cambia una rig
 | fase-boss | soglia (regola) | src/rules/combat.ts:15 | scoperta | campagna, fotogramma 6291, sezioni boss, ent, dl, dlo, cam, ui, ev, sev, sfx, mus |
 | lastre-suono | soglia (motore) | src/mechanics/HazardManager.ts:264 | scoperta | lastre-ricordi, fotogramma 176, sezioni sfx |
 | hud-barre | testo ui | src/ui/hud.ts:109 | scoperta | riflesso-senza-flow, fotogramma 1, sezioni ui |
-| film-buio | tween (film) | src/story/FlashbackManager.ts:194 | scoperta | film-uscita, fotogramma 43, sezioni dl, dlo |
+| film-ombra | alfa (film) | src/story/film/FilmScene.ts:94 | scoperta | film-uscita, fotogramma 108, sezioni dl, dlo (a/b sulla build del branch: i film non hanno ancora un giro di copertura) |
 
 ## sfx-microfono
 
@@ -248,17 +248,12 @@ sezioni diverse: ui
   candidata:   </></><div class="hud-barre" style="color: rgb(248, 113, 113);">"♪ 846  barre"</><div class="hud-tommaso" style="display: none;">"🛡️ protetto da tommasorveglianza 👍"
 ```
 
-## film-buio
+## film-ombra
 
 ```
-PRIMA DIVERGENZA al fotogramma 43 (tempo di scena {"BootScene":110718.81,"GameScene":110718.81})
+PRIMA DIVERGENZA al fotogramma 108 (il primo del film)
 sezioni diverse: dl, dlo
 
 [dl] la display list come multiinsieme: un oggetto grafico in più, in meno o diverso
-  conteggi: {"dl":751,"ent":134,"bod":276,"lit":188} -> {"dl":751,"ent":134,"bod":276,"lit":188}
-  (servono le impronte complete di questo fotogramma: rilancia con --full)
-
-[dlo] l'ordine di disegno a parità di profondità
-  conteggi: {"dl":751,"ent":134,"bod":276,"lit":188} -> {"dl":751,"ent":134,"bod":276,"lit":188}
-  (servono le impronte complete di questo fotogramma: rilancia con --full)
+  conteggi: {"dl":776,"ent":134,"bod":276,"lit":190} -> {"dl":776,"ent":134,"bod":276,"lit":190}
 ```
