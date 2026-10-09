@@ -6,12 +6,19 @@ import type { NavGraph } from '../world/NavGraph';
 import { sfx } from '../audio/sfx';
 import type { RegionLayout, Room } from '../world/types';
 import { rng } from '../core/rng';
+import { bus } from '../core/events';
+import { state } from '../core/state';
+import type { CameraLens } from '../stage/CameraLens';
 
 /* pericoli del terreno che non toccano la griglia verificata:
    - lastre che crollano sopra i pozzi: solide solo dall'alto, quindi aggiungono
      strade senza toglierne nessuna (si passa da sotto, si cade come prima)
    - allagamenti periodici nelle stanze basse: l'acqua sale, rallenta, e dove è
-     tossica morde. si ritira sempre, quindi non chiude niente per sempre */
+     tossica morde. si ritira sempre, quindi non chiude niente per sempre
+   - la marea, dove il posto è fatto d'acqua: un livello solo per tutta la regione
+     che sale dal fondo per decine di metri e poi torna giù. sotto si nuota (la
+     bracciata aggiunge strade) e il salto da terra resta pieno, quindi nessuna
+     strada verificata si chiude */
 
 const SLAB_H = 12;
 const SHAKE_MS = 480;
@@ -48,6 +55,42 @@ interface Flood {
     lastDraw: number;
 }
 
+interface Tide {
+    /** per riga della griglia: tratti d'aria [c0, c1) in celle */
+    rows: { c0: number; c1: number }[][];
+    /** quota in pixel a riposo (sotto il fondo) e in piena */
+    low: number;
+    high: number;
+    level: number;
+    clock: number;
+    color: number;
+    gfx: Phaser.GameObjects.Graphics;
+    lastDraw: number;
+    warned: boolean;
+    /** 1 quando un boss combatte: l'acqua si ritira e lascia l'arena asciutta */
+    retreat: number;
+}
+
+/** dove il posto è fatto d'acqua: quante celle sale dal fondo e di che colore. qui niente allagamenti a stanze */
+const TIDES: Record<string, { cells: number; color: number }> = {
+    swamp: { cells: 66, color: 0x3f5a24 },
+    factory: { cells: 52, color: 0x2b5566 },
+    library: { cells: 52, color: 0x22384f },
+    cellar: { cells: 52, color: 0x3d2a3a },
+};
+
+/** il ciclo della marea, in ms: calma, avviso, salita, piena, ritirata */
+const TIDE_CALM = 95000;
+const TIDE_WARN = 8000;
+const TIDE_RISE = 48000;
+const TIDE_HOLD = 34000;
+const TIDE_FALL = 45000;
+const TIDE_PERIOD = TIDE_CALM + TIDE_WARN + TIDE_RISE + TIDE_HOLD + TIDE_FALL;
+/** la prima piena comincia dopo una quarantina di secondi nella regione */
+const TIDE_FIRST = TIDE_CALM - 40000;
+/** margine disegnato fuori dalla camera: la grafica va a 20fps, la camera no */
+const TIDE_MARGIN = 160;
+
 const QUIET = new Set(['start', 'rest', 'arena', 'exit', 'secret']);
 
 /** probabilità di lastre per stanza e acqua per bioma */
@@ -76,6 +119,7 @@ export interface HazardTarget {
     y: number;
     submerged: boolean;
     headUnder: boolean;
+    deep: boolean;
     body: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | null;
     hurt(amount: number, fromX?: number): boolean;
 }
@@ -87,14 +131,26 @@ export class HazardManager {
     private scene: Phaser.Scene;
     private nav: NavGraph;
     private stormy: () => boolean;
+    private calm: () => boolean;
+    private lens: CameraLens | null;
     private wasIn = false;
     private nextBite = 0;
+    private tide: Tide | null = null;
+    private regionId = '';
+    private bubbles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
 
-    constructor(scene: Phaser.Scene, nav: NavGraph, stormy: () => boolean) {
+    constructor(scene: Phaser.Scene, nav: NavGraph, stormy: () => boolean, calm: () => boolean = () => false, lens: CameraLens | null = null) {
         this.scene = scene;
         this.nav = nav;
         this.stormy = stormy;
+        this.calm = calm;
+        this.lens = lens;
         this.group = scene.physics.add.staticGroup();
+    }
+
+    /** dove arriva la marea adesso, in pixel; null dove non c'è */
+    get waterLine(): number | null {
+        return this.tide && this.tide.level < this.tide.low - 1 ? this.tide.level : null;
     }
 
     populate(opts: { seed: string; biomeId: string; layout: RegionLayout | null; rim: number; deep: number; avoid: { x: number; y: number }[] }): void {
@@ -110,7 +166,10 @@ export class HazardManager {
             if (QUIET.has(room.kind)) continue;
             if (rnd() < cfg.slabs) this.placeSlabs(room, L, rnd, clear, opts.biomeId);
         }
-        if (cfg.flood) {
+        const tide = TIDES[opts.biomeId];
+        this.regionId = opts.seed;
+        if (tide) this.placeTide(tide.cells, tide.color);
+        else if (cfg.flood) {
             const cands = L.rooms.filter((r) => !QUIET.has(r.kind) && (r.kind === 'pool' || r.sy + r.sh >= L.macroH - 1));
             // ordine stabile ma mescolato: le stanze allagabili non sono sempre le prime a sinistra
             const order = cands.map((r) => ({ r, k: rnd() })).sort((a, b) => a.k - b.k).map((o) => o.r);
@@ -231,6 +290,66 @@ export class HazardManager {
         });
     }
 
+    private placeTide(cells: number, color: number): void {
+        const rows: Tide['rows'] = [];
+        for (let r = 0; r < this.nav.rows; r++) {
+            const runs: { c0: number; c1: number }[] = [];
+            let start = -1;
+            for (let c = 0; c <= this.nav.cols; c++) {
+                const air = c < this.nav.cols && !this.nav.solid(c, r);
+                if (air && start < 0) start = c;
+                if (!air && start >= 0) {
+                    runs.push({ c0: start, c1: c });
+                    start = -1;
+                }
+            }
+            rows.push(runs);
+        }
+        const low = this.nav.rows * TILE + 4;
+        this.tide = {
+            rows, low, high: (this.nav.rows - cells) * TILE + 10, level: low, clock: TIDE_FIRST, color,
+            gfx: this.scene.add.graphics().setDepth(5), lastDraw: 0, warned: false, retreat: 0,
+        };
+    }
+
+    private tideAt(t: Tide, time: number): { level: number; warn: boolean } {
+        const p = t.clock % TIDE_PERIOD;
+        const span = t.low - t.high;
+        if (p < TIDE_CALM) return { level: t.low, warn: false };
+        let q = p - TIDE_CALM;
+        if (q < TIDE_WARN) return { level: t.low, warn: true };
+        q -= TIDE_WARN;
+        if (q < TIDE_RISE) return { level: t.low - span * Phaser.Math.Easing.Sine.InOut(q / TIDE_RISE), warn: false };
+        q -= TIDE_RISE;
+        if (q < TIDE_HOLD) return { level: t.high + Math.sin(time * 0.0015) * 4, warn: false };
+        q -= TIDE_HOLD;
+        return { level: t.high + span * Phaser.Math.Easing.Sine.InOut(Math.min(1, q / TIDE_FALL)), warn: false };
+    }
+
+    private updateTide(t: Tide, time: number, delta: number, pace: number): void {
+        t.clock += delta * pace;
+        const { level, warn } = this.tideAt(t, time);
+        // un boss in campo: l'acqua si ritira piano e lascia combattere all'asciutto
+        t.retreat = Phaser.Math.Clamp(t.retreat + (this.calm() ? 0.4 : -0.4) * (delta / 1000), 0, 1);
+        t.level = t.low - (t.low - level) * (1 - t.retreat);
+        if (warn && !t.warned && t.retreat < 0.5) {
+            t.warned = true;
+            sfx.rumble();
+            if (state.settings.screenShake) this.scene.cameras.main.shake(900, 0.0025);
+            this.lens?.kick({ angle: -0.012, barrel: 0.05, tint: 0.08, tintColor: t.color }, 600, 1800, 2600);
+            const flag = `marea-${this.regionId}`;
+            if (!state.hasFlag(flag)) {
+                state.setFlag(flag);
+                bus.emit('toast', { text: 'l\'acqua sale dal fondo. sali, o nuota: in acqua {k:jump} è una bracciata.' });
+            }
+        }
+        if (!warn) t.warned = false;
+        if (time - t.lastDraw >= 50) {
+            t.lastDraw = time;
+            this.drawTide(t, time);
+        }
+    }
+
     /** quota dell'acqua nel ciclo: calma, avviso, piena, tenuta, ritirata */
     private levelAt(f: Flood, time: number): { level: number; warn: boolean } {
         const period = f.period;
@@ -282,8 +401,18 @@ export class HazardManager {
                 this.scene.tweens.add({ targets: s.img, alpha: 1, duration: 350 });
             }
         }
-        let inside: Flood | null = null;
+        let inside: { level: number; toxic: boolean } | null = null;
         let headUnder = false;
+        let deep = false;
+        if (this.tide) {
+            this.updateTide(this.tide, time, delta, pace);
+            const level = this.tide.level;
+            if (player.y + 10 > level) {
+                inside = { level, toxic: false };
+                headUnder = player.y - 18 > level;
+                deep = player.y - 30 > level;
+            }
+        }
         for (const f of this.floods) {
             f.clock += delta * pace;
             const near = Math.abs(f.cx - player.x) < 1800 && Math.abs(f.cy - player.y) < 1200;
@@ -308,7 +437,7 @@ export class HazardManager {
             }
             const R = f.room.rect;
             const inRoom = player.x > R.x * TILE && player.x < (R.x + R.w) * TILE && player.y > R.y * TILE && player.y < (R.y + R.h) * TILE;
-            if (inRoom && player.y + 10 > level) {
+            if (inRoom && player.y + 10 > level && !inside) {
                 inside = f;
                 headUnder = player.y - 18 > level;
             }
@@ -326,9 +455,73 @@ export class HazardManager {
         this.wasIn = !!inside;
         player.submerged = !!inside;
         player.headUnder = !!inside && headUnder;
+        player.deep = !!inside && deep;
+        this.updateBubbles(player);
         if (inside?.toxic && headUnder && now >= this.nextBite) {
             this.nextBite = now + 1600;
             player.hurt(1);
+        }
+    }
+
+    /** le bolle del geco sott'acqua: solo grafica */
+    private updateBubbles(player: HazardTarget): void {
+        if (!this.tide) return;
+        if (!this.bubbles) {
+            this.bubbles = this.scene.add.particles(0, 0, 'p-dot', {
+                speedY: { min: -90, max: -50 }, speedX: { min: -12, max: 12 }, scale: { start: 0.35, end: 0.1 },
+                alpha: { start: 0.55, end: 0 }, tint: 0xcfe8ff, lifespan: 1300, frequency: 260, emitting: false,
+            }).setDepth(6);
+        }
+        this.bubbles.setPosition(player.x, player.y - 14);
+        if (player.headUnder !== this.bubbles.emitting) {
+            if (player.headUnder) this.bubbles.start();
+            else this.bubbles.stop();
+        }
+    }
+
+    private drawTide(t: Tide, time: number): void {
+        const g = t.gfx;
+        g.clear();
+        if (t.level >= t.low - 1) return;
+        const v = this.scene.cameras.main.worldView;
+        const top = t.level;
+        if (v.bottom + TIDE_MARGIN < top) return;
+        const r0 = Math.max(0, Math.floor(Math.max(top, v.y - TIDE_MARGIN) / TILE));
+        const r1 = Math.min(t.rows.length - 1, Math.floor((v.bottom + TIDE_MARGIN) / TILE));
+        const c0 = Math.floor((v.x - TIDE_MARGIN) / TILE);
+        const c1 = Math.ceil((v.right + TIDE_MARGIN) / TILE);
+        const color = t.color;
+        for (let r = r0; r <= r1; r++) {
+            const y0 = Math.max(r * TILE, top);
+            const y1 = (r + 1) * TILE;
+            if (y1 <= y0) continue;
+            // più si scende più l'acqua è scura, ma resta leggibile: ci si nuota dentro
+            const depth = Phaser.Math.Clamp((r * TILE + TILE / 2 - top) / 1100, 0, 1);
+            g.fillStyle(mix(color, 0x05060a, 0.55 + depth * 0.3), 0.42 + depth * 0.26);
+            const surface = r * TILE <= top && top < y1;
+            for (const run of t.rows[r]!) {
+                const x0 = Math.max(run.c0, c0) * TILE;
+                const x1 = Math.min(run.c1, c1) * TILE;
+                if (x1 <= x0) continue;
+                g.fillRect(x0, y0, x1 - x0, y1 - y0);
+            }
+            if (!surface) continue;
+            // il pelo dell'acqua: una riga chiara che ondeggia, e la schiuma sotto
+            for (const run of t.rows[r]!) {
+                const x0 = Math.max(run.c0, c0) * TILE;
+                const x1 = Math.min(run.c1, c1) * TILE;
+                if (x1 <= x0) continue;
+                g.lineStyle(2, shade(color, 0.25), 0.75);
+                g.beginPath();
+                for (let x = x0; x <= x1; x += 8) {
+                    const y = top + Math.sin(x * 0.045 + time * 0.0035) * 2 + Math.sin(x * 0.013 - time * 0.0011) * 1.5;
+                    if (x === x0) g.moveTo(x, y);
+                    else g.lineTo(x, y);
+                }
+                g.strokePath();
+                g.fillStyle(shade(color, 0.1), 0.18);
+                g.fillRect(x0, top + 3, x1 - x0, 7);
+            }
         }
     }
 
@@ -389,6 +582,10 @@ export class HazardManager {
     }
 
     destroy(): void {
+        this.tide?.gfx.destroy();
+        this.tide = null;
+        this.bubbles?.destroy();
+        this.bubbles = null;
         for (const f of this.floods) f.gfx.destroy();
         this.floods.length = 0;
         this.slabs.length = 0;

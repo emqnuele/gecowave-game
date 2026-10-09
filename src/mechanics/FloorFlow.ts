@@ -104,7 +104,8 @@ export class FloorFlow implements Mechanic {
             if (onIt && (this.style.kind === 'stream' || body.blocked.down)) drift = f.speedNow;
         }
         // nel rio anche le piene trascinano, col verso del torrente più vicino
-        if (!drift && this.style.kind === 'stream' && p.submerged) drift = this.nearest(p.x, p.y)?.speedNow ?? 0;
+        // sotto la marea si nuota: la corrente tira solo chi tocca ancora il fondo del torrente
+        if (!drift && this.style.kind === 'stream' && p.submerged && !p.deep) drift = this.nearest(p.x, p.y)?.speedNow ?? 0;
         // le corse a tempo sono misurate sul pavimento fermo: durante la corsa la corrente non conta
         p.drift = this.ctx.trialRunning() ? 0 : drift;
     }

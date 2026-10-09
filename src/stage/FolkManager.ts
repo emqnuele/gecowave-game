@@ -182,7 +182,7 @@ export class FolkManager {
         w.bubble.until = now + ms;
     }
 
-    update(time: number, delta: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean, pursuer: { x: number; y: number } | null = null): void {
+    update(time: number, delta: number, player: Phaser.GameObjects.Sprite & { attackActive?: boolean }, threats: { x: number; y: number }[], bossFight: boolean, pursuer: { x: number; y: number } | null = null, water: number | null = null): void {
         if (this.suspended) return;
         const cam = this.scene.cameras.main.worldView;
         const dt = delta / 1000;
@@ -193,6 +193,16 @@ export class FolkManager {
             if (!visible) {
                 w.glow.setVisible(false);
                 if (w.bubble) w.bubble.text.setVisible(false);
+                continue;
+            }
+            // la marea sopra la testa: si sono messi al riparo, tornano quando l'acqua scende
+            const under = water !== null && w.feet - 34 > water;
+            w.sprite.setAlpha(Phaser.Math.Clamp(w.sprite.alpha + (under ? -3 : 3) * dt, 0, 1));
+            w.talk.range = under ? 0 : 70;
+            if (under) {
+                w.glow.setVisible(false);
+                if (w.bubble) w.bubble.text.setVisible(false);
+                if (w.sprite.alpha <= 0) w.sprite.setVisible(false);
                 continue;
             }
             this.think(w, time, player, threats, bossFight, pursuer);

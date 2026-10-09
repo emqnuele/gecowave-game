@@ -293,7 +293,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
                 ...this.challenges.challengePoints(),
             ],
         });
-        this.hazards = new HazardManager(this, this.world.nav, () => this.atmosphere?.weather === 'temporale' || this.atmosphere?.weather === 'pioggia');
+        this.hazards = new HazardManager(this, this.world.nav, () => this.atmosphere?.weather === 'temporale' || this.atmosphere?.weather === 'pioggia',
+            () => !!this.bosses.current?.engaged, this.lens);
         this.hazards.populate({
             seed: this.world.def.id,
             biomeId: this.world.biome.id,
@@ -628,7 +629,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.abilities.updateClone(time, delta);
         this.rewards.updateHoming(delta);
         const chaser = this.chapter.pursuer?.();
-        this.folk.update(time, delta, this.player, this.threats(), !!this.bosses.current?.engaged, chaser?.active ? chaser : null);
+        this.folk.update(time, delta, this.player, this.threats(), !!this.bosses.current?.engaged, chaser?.active ? chaser : null, this.hazards.waterLine);
         this.traps.update(time, delta, this.player);
         this.hazards.update(time, delta, this.player);
         this.challenges.trial?.update(this.player);

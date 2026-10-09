@@ -74,6 +74,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     submerged = false;
     /** testa sott'acqua: il mondo si sente da dentro una vasca */
     headUnder = false;
+    /** tutto sotto, nella marea: si galleggia e il salto diventa una bracciata */
+    deep = false;
+    private nextStrokeAt = 0;
     /** spinta del posto (corrente del rio, nastri dello stabilimento), px/s; la scena la rimette ogni fotogramma */
     drift = 0;
     /** tana: dentro l'armadio non si vede, non si muove, non si prende danno */
@@ -343,6 +346,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             body.setVelocityX(Phaser.Math.Linear(body.velocity.x, dir * run + this.drift, this.grounded ? 0.2 : 0.07));
         }
         if (this.submerged && body.velocity.y > 300) body.setVelocityY(300);
+        // nella marea si galleggia: la gravità quasi sparisce e si affonda piano, più svelti tenendo giù
+        body.setGravityY(this.deep ? -PHYSICS.gravity * 0.78 : 0);
+        if (this.deep && body.velocity.y > (downHeld ? 260 : 120)) body.setVelocityY(downHeld ? 260 : 120);
 
         // salto: buffer + coyote + rimbalzo
         if (this.controls.pressed('jump')) {
@@ -355,6 +361,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 this.coyoteUntil = 0;
                 sfx.jump();
                 this.act({ act: 'jump' });
+            } else if (this.deep && now >= this.nextStrokeAt) {
+                // la bracciata: aggiunge strade, non ne toglie (a terra il salto resta quello pieno)
+                body.setVelocityY(-PHYSICS.jumpVelocity * 0.6);
+                this.nextStrokeAt = now + 230;
+                this.jumpBufferedUntil = 0;
+                this.airJumpUsed = false;
+                // niente act: l'ombra studia i salti, non le bracciate
+                sfx.bubble(0, 0.5);
             } else if (now < this.wallUntil && this.wallSide !== 0) {
                 // salto dal muro: su e via dal muro, i comandi tornano dopo un istante
                 const away = -this.wallSide as 1 | -1;
