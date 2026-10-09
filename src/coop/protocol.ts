@@ -58,6 +58,7 @@ export type PickupSpawn =
     | { kind: 'item'; key: string; x: number; y: number; item: string; amount: number; loose: boolean }
     | { kind: 'cuore'; key: string; x: number; y: number; loose: boolean }
     | { kind: 'barre'; key: string; x: number; y: number; amount: number }
+    | { kind: 'maschera'; key: string; x: number; y: number }
     | { kind: 'note'; key: string; x: number; y: number; vx: number; vy: number; value: number };
 
 /** il mondo com'è adesso, per chi arriva (a capitolo iniziato o dopo un caricamento) */

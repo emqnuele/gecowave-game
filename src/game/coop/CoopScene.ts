@@ -43,6 +43,7 @@ export class CoopScene implements GameSystem {
     private sendAcc = 0;
     private seq = 0;
     private lastHp = -1;
+    private lastHurtAt = 0;
     private readonly offs: (() => void)[] = [];
     private readonly out = { x: 0, y: 0, vx: 0, vy: 0 };
     readonly saves: SaveLink;
@@ -207,6 +208,12 @@ export class CoopScene implements GameSystem {
         return p?.active && p.visible && p.alive ? { x: p.x, y: p.y } : null;
     }
 
+    /** dove guarda l'ospite anche da terra: gli snapshot del mondo continuano qui, il gameplay no */
+    partnerView(): { x: number; y: number } | null {
+        const p = this.partner;
+        return p?.active && p.visible ? { x: p.x, y: p.y } : null;
+    }
+
     /** chi insegue chi: il geco più vicino che si può toccare, senza cambiare idea a ogni passo */
     targetFor(who: { x: number; y: number }, mine: Phaser.GameObjects.Sprite): Phaser.GameObjects.Sprite {
         const p = this.partner;
@@ -346,9 +353,16 @@ export class CoopScene implements GameSystem {
     tick(delta: number): void {
         this.saves.tick(delta);
         this.rules.tick();
-        this.host?.tick(delta, this.partnerSpot());
-        if (state.run.hp < this.lastHp && !this.ctx.player.dead) this.session.send('act', { a: 'hurt', fromX: this.ctx.player.x });
-        this.lastHp = state.run.hp;
+        this.host?.tick(delta, this.partnerView());
+        const hp = state.run.hp;
+        if (hp < this.lastHp && !this.ctx.player.dead) {
+            const now = this.scene.time.now;
+            if (now - this.lastHurtAt > 350) {
+                this.lastHurtAt = now;
+                this.session.send('act', { a: 'hurt', fromX: this.ctx.player.x });
+            }
+        }
+        this.lastHp = hp;
         this.sendAcc += delta;
         if (this.sendAcc >= SEND_MS) {
             this.sendAcc = Math.min(this.sendAcc - SEND_MS, SEND_MS);

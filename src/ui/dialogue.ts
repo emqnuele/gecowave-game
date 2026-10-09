@@ -47,6 +47,9 @@ export class DialogueBox {
     }
 
     private start(lines: DialogueLine[], onEnd?: () => void, coop?: DialogueCoop): void {
+        // il dialogo che questo sostituisce deve chiudere il suo seguito (in due: avvisare l'altro),
+        // ma la scena non si tocca: chi segue la trama non deve riprenderla a metà
+        const replaced = this.box ? this.coop?.onReplaced : undefined;
         this.close(false);
         this.lines = lines;
         this.index = 0;
@@ -67,6 +70,7 @@ export class DialogueBox {
         ui().append(this.box);
         window.addEventListener('keydown', this.keyHandler);
         this.showLine();
+        replaced?.();
     }
 
     private showLine(): void {

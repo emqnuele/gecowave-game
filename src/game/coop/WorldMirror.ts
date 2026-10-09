@@ -50,10 +50,10 @@ export class WorldMirror {
         this.scene = ctx.scene;
         this.session = session;
         coopHooks.puppetEnemy = {
-            damage: (e, amount, fromX) => this.claim(e, 'dmg', amount, fromX),
-            stun: (e, ms) => this.claim(e, 'stun', ms, e.x),
-            stagger: (e, ms) => this.claim(e, 'stagger', ms, e.x),
-            parried: (e) => this.claim(e, 'parry', 0, e.x),
+            damage: (e, amount, fromX) => this.claimDamage(e, 'dmg', amount, fromX),
+            stun: (e, ms) => this.claimDamage(e, 'stun', ms, e.x),
+            stagger: (e, ms) => this.claimDamage(e, 'stagger', ms, e.x),
+            parried: (e) => this.claimDamage(e, 'parry', 0, e.x),
             knock: () => {},
         };
         coopHooks.puppetBoss = { damage: (b, amount, fromX, dir) => this.bossHit(b, amount, fromX, dir) };
@@ -68,6 +68,7 @@ export class WorldMirror {
             for (const c of d.walls) this.wall(c);
             if (d.boss) this.spawnBoss(d.boss);
             if (d.arena >= 0) this.arena(true, d.arena);
+            this.reconcilePickups(d.pickups);
         });
         on('arena', (m) => this.arena(m.locked, m.room));
         on('boss', (m) => this.spawnBoss(m));
@@ -124,7 +125,7 @@ export class WorldMirror {
         }));
     }
 
-    private claim(e: Enemy, k: 'dmg' | 'stun' | 'stagger' | 'parry', v: number, fromX: number): void {
+    private claimDamage(e: Enemy, k: 'dmg' | 'stun' | 'stagger' | 'parry', v: number, fromX: number): void {
         const id = this.ids.get(e);
         if (id) this.session.send('hit', { on: 'enemy', id, k, v, fromX });
     }
@@ -313,16 +314,18 @@ export class WorldMirror {
     }
 
     /* ---------- oggetti ---------- */
+    /* la raccolta la chiede il premio stesso (Rewards guarda ctx.coop.mirror): qui si tiene
+       solo il registro per chiave, così take/claim/reconcile sanno di chi è uno sprite */
 
-    /** un oggetto nato qui (dal livello) o arrivato dall'host: prenderlo è una richiesta */
     registerPickup(key: string, sprite: Phaser.GameObjects.GameObject): void {
         this.pickups.set(key, sprite);
-        const player = this.ctx.player;
-        const collider = this.scene.physics.world.colliders.getActive().find((c) => (c.object1 === player && c.object2 === sprite) || (c.object2 === player && c.object1 === sprite));
-        if (collider) {
-            collider.collideCallback = () => this.take(key, sprite);
-            collider.processCallback = () => true;
-        }
+    }
+
+    /** la raccolta dell'ospite passa sempre da qui: niente premi locali, li applica l'host e tornano col save */
+    claim(key: string, sprite: Phaser.GameObjects.GameObject): boolean {
+        if (!sprite.active || this.pickups.get(key) !== sprite) return false;
+        this.take(key, sprite);
+        return true;
     }
 
     private take(key: string, sprite: Phaser.GameObjects.GameObject): void {
@@ -333,6 +336,17 @@ export class WorldMirror {
         this.session.send('take', { key });
     }
 
+    /** chi entra dopo ha già generato i pickup del livello: quelli che l'host non ha più sono già presi */
+    private reconcilePickups(live: PickupSpawn[]): void {
+        const keys = new Set(live.map((p) => p.key));
+        for (const [key, sprite] of [...this.pickups]) {
+            if (!keys.has(key)) {
+                this.pickups.delete(key);
+                if (sprite.active) sprite.destroy();
+            }
+        }
+    }
+
     private pickup(p: PickupSpawn): void {
         if (this.pickups.has(p.key)) return;
         const r = this.ctx.rewards;
@@ -341,6 +355,7 @@ export class WorldMirror {
             case 'item': r.spawnItemPickup(p.x, p.y, p.item, p.amount, p.key, p.loose); break;
             case 'cuore': r.spawnCuore(p.x, p.y, p.key, p.loose); break;
             case 'barre': r.spawnBarrePickup(p.x, p.y, p.amount, p.key); break;
+            case 'maschera': r.spawnMaschera(p.x, p.y, p.key); break;
             case 'note': this.note(p); break;
         }
     }

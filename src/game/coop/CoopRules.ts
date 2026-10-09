@@ -153,14 +153,18 @@ export class CoopRules {
 
     /** un dialogo mio: il mondo va avanti, io sto fermo e nessuno mi tocca */
     private manual(lines: DialogueLine[], onEnd?: () => void, done?: () => void): void {
+        // chiudo il mio seguito sia alla fine sia se un dialogo di trama prende il posto:
+        // l'ospite deve comunque mandare dlg-close, o l'host resta appeso
+        const finish = (): void => {
+            coopHooks.frozen = false;
+            done?.();
+            this.runAs('local', () => onEnd?.());
+        };
         coopHooks.frozen = true;
         bus.emit('dialogue-start', {
             lines,
-            onEnd: () => {
-                coopHooks.frozen = false;
-                done?.();
-                this.runAs('local', () => onEnd?.());
-            },
+            onEnd: finish,
+            coop: { onReplaced: finish },
         });
     }
 
@@ -178,7 +182,13 @@ export class CoopRules {
                 if (coop.together) this.session.send('dlg-close', { token });
                 onEnd?.();
             },
-            coop: { onStep: (index) => coop.together && this.session.send('dlg-step', { token, index }) },
+            // una trama sopra un'altra: la vecchia avvisa e basta, la scena resta ferma per la nuova
+            coop: {
+                onStep: (index) => coop.together && this.session.send('dlg-step', { token, index }),
+                onReplaced: () => {
+                    if (coop.together) this.session.send('dlg-close', { token });
+                },
+            },
         });
     }
 
@@ -509,10 +519,16 @@ export class CoopRules {
         bus.emit('player-died', { lost: m.lost, score: m.score, guestOf: name });
     }
 
-    /** la partita è passata a un altro capitolo o si è chiusa: niente resta appeso */
+    /** la partita è passata a un altro capitolo o si è chiusa: niente resta appeso.
+        i seguiti di dialoghi/scelte del capitolo vecchio non devono mai scattare in quello nuovo */
     destroy(): void {
         for (const off of this.offs) off();
         this.offs.length = 0;
+        this.remoteEnds.clear();
+        this.remotePicks.clear();
+        this.travelToken = 0;
+        this.sharedToken = -1;
+        this.wiping = false;
         this.band?.remove();
         this.band = null;
         coopHooks.frozen = false;

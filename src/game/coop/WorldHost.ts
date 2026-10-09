@@ -36,8 +36,9 @@ export class WorldHost {
     private projId = 1;
     private readonly projs = new Map<number, Phaser.Physics.Arcade.Sprite>();
     private readonly projIds = new WeakMap<object, number>();
-    /** gli oggetti da raccogliere, per chiave: chi li prende li prende per tutti e due */
-    private readonly pickups = new Map<string, { spec: PickupSpawn | null; sprite: Phaser.GameObjects.GameObject }>();
+    /** gli oggetti da raccogliere, per chiave: chi li prende li prende per tutti e due.
+        lo spec resta sempre: serve a chi entra a capitolo iniziato (dump) */
+    private readonly pickups = new Map<string, { spec: PickupSpawn; sprite: Phaser.GameObjects.GameObject }>();
     private noteSeq = 0;
     private readonly brokenWalls = new Set<number>();
     /** l'ospite ha caricato questo capitolo: da qui i fatti gli arrivano uno a uno */
@@ -102,6 +103,8 @@ export class WorldHost {
         for (const [id, at] of this.ctx.npcs.at) this.registerNpc(id, at.x, at.y, false);
         const b = this.ctx.bosses.current;
         if (b?.active) this.registerBoss(b, false);
+        // i premi del livello sono nati prima che il coop si agganciasse: si adottano, o chi entra dopo non li vede
+        for (const { spec, sprite } of this.ctx.rewards.livePickups()) this.registerPickup(spec, sprite, false);
     }
 
     private bossOf(b: Boss): BossSpawn {
@@ -200,10 +203,13 @@ export class WorldHost {
         }
     }
 
-    /** un oggetto da raccogliere: quelli nati dopo il caricamento l'ospite li riceve, quelli del livello li fa da sé */
+    /** un oggetto da raccogliere: l'ospite lo riceve se nasce dopo il caricamento,
+        ma resta nel registro per il dump a chi entra dopo */
     registerPickup(spec: PickupSpawn, sprite: Phaser.GameObjects.GameObject, always = false): void {
+        // adottare di nuovo lo stesso sprite (caricamento + late join) non deve raddoppiare gli avvisi
+        if (this.pickups.get(spec.key)?.sprite === sprite) return;
         const dynamic = always || !this.loading;
-        this.pickups.set(spec.key, { spec: dynamic ? spec : null, sprite });
+        this.pickups.set(spec.key, { spec, sprite });
         sprite.once(Phaser.GameObjects.Events.DESTROY, () => {
             if (this.pickups.get(spec.key)?.sprite === sprite) this.pickups.delete(spec.key);
             this.send('gone', { key: spec.key });
@@ -259,7 +265,7 @@ export class WorldHost {
         }
         const pickups: PickupSpawn[] = [];
         for (const [, p] of this.pickups) {
-            if (!p.spec || !p.sprite.active) continue;
+            if (!p.sprite.active) continue;
             const live = p.sprite as Phaser.GameObjects.Sprite;
             pickups.push({ ...p.spec, x: live.x, y: live.y } as PickupSpawn);
         }
@@ -309,10 +315,12 @@ export class WorldHost {
         }
     }
 
-    tick(delta: number, partner: { x: number; y: number } | null): void {
+    /** view: dove guarda l'ospite (vivo o a terra davanti al compagno). null solo se non c'è nessuno:
+        gli snapshot continuano comunque intorno all'host, altrimenti lo spettatore vede tutto fermo */
+    tick(delta: number, view: { x: number; y: number } | null): void {
         // le note nascono dopo la morte, nel gestore dei nemici: si contano al passo dopo
         this.tagNotes();
-        if (!this.ready || !partner || !coop.together) return;
+        if (!this.ready || !coop.together) return;
         this.snapAcc += delta;
         if (this.snapAcc < SNAP_MS) return;
         this.snapAcc = 0;
@@ -323,8 +331,8 @@ export class WorldHost {
             const e = c as Enemy;
             if (!e.active || e.dormant) continue;
             // l'ospite non vede oltre il suo schermo largo, l'host oltre il suo: gli altri restano fermi dove sono
-            const near = (Math.abs(e.x - partner.x) < VIEW_X && Math.abs(e.y - partner.y) < VIEW_Y) || (Math.abs(e.x - px) < VIEW_X && Math.abs(e.y - py) < VIEW_Y);
-            if (!near) continue;
+            const nearGuest = !!view && Math.abs(e.x - view.x) < VIEW_X && Math.abs(e.y - view.y) < VIEW_Y;
+            if (!nearGuest && (Math.abs(e.x - px) >= VIEW_X || Math.abs(e.y - py) >= VIEW_Y)) continue;
             const id = this.ids.get(e);
             if (!id) continue;
             const body = e.body as Phaser.Physics.Arcade.Body;
@@ -336,11 +344,11 @@ export class WorldHost {
                 mode: Math.max(0, MODES.indexOf(e.mode)), angle: e.angle, alpha: e.alpha,
             });
         }
-        this.session.sendFast(FAST_WORLD, (w) => writeWorld(w, { levelSeq: coop.levelSeq, enemies, boss: this.bossLook(), actors: [], traps: this.trapLooks(partner) }));
+        this.session.sendFast(FAST_WORLD, (w) => writeWorld(w, { levelSeq: coop.levelSeq, enemies, boss: this.bossLook(), actors: [], traps: this.trapLooks(view) }));
     }
 
-    /** le trappole dove guarda l'ospite (o l'host, se l'altro è a terra): poche, stato piccolo */
-    private trapLooks(partner: { x: number; y: number }): TrapLook[] {
+    /** le trappole dove guarda l'ospite (anche a terra) o l'host: poche, stato piccolo */
+    private trapLooks(view: { x: number; y: number } | null): TrapLook[] {
         const out: TrapLook[] = [];
         const traps = this.ctx.traps.traps;
         if (!traps.length) return out;
@@ -349,8 +357,8 @@ export class WorldHost {
         const now = this.scene.time.now;
         for (let i = 0; i < traps.length; i++) {
             const t = traps[i];
-            const near = (Math.abs(t.x - partner.x) < VIEW_X && Math.abs(t.y - partner.y) < VIEW_Y) || (Math.abs(t.x - px) < VIEW_X && Math.abs(t.y - py) < VIEW_Y);
-            if (!near) continue;
+            const nearGuest = !!view && Math.abs(t.x - view.x) < VIEW_X && Math.abs(t.y - view.y) < VIEW_Y;
+            if (!nearGuest && (Math.abs(t.x - px) >= VIEW_X || Math.abs(t.y - py) >= VIEW_Y)) continue;
             const kind = t.kind === 'sega' ? 0 : t.kind === 'pressa' ? 1 : 2;
             out.push({
                 id: i, kind: kind as 0 | 1 | 2, x: t.x, y: t.y,

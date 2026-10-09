@@ -57,6 +57,8 @@ export interface DialogueCoop {
     follow?: boolean;
     onStep?: (index: number) => void;
     hint?: string;
+    /** un altro dialogo prende il posto di questo: chi l'ha aperto deve comunque chiudere il suo seguito */
+    onReplaced?: () => void;
 }
 
 type Handler<T> = (payload: T) => void;
