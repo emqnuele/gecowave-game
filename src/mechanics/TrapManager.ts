@@ -18,7 +18,7 @@ interface Hurtable {
     hurt(amount: number, fromX?: number): boolean;
 }
 
-interface Trap {
+export interface Trap {
     kind: TrapKind;
     x: number;
     y: number;
@@ -38,6 +38,10 @@ interface Trap {
     state: number;
     /** una pozza di smela sopra: il getto resta spento fino a qui */
     suppressedUntil: number;
+    /** in due: l'ospite non simula, rifà la fase dell'host (x per la sega, p per gli altri) */
+    tx: number;
+    rp: number;
+    rsup: boolean;
 }
 
 const INK = 0x0b0c10;
@@ -71,6 +75,10 @@ const QUIET = new Set(['start', 'rest', 'arena', 'exit', 'secret']);
 
 export class TrapManager {
     readonly traps: Trap[] = [];
+    /** in due l'ospite non simula le trappole: rifà la fase dell'host, i danni restano i suoi */
+    puppet = false;
+    private readonly hooked = new Set<number>();
+    private readonly pstate = new Map<number, number>();
     private scene: Phaser.Scene;
     private nav: NavGraph;
 
@@ -130,7 +138,7 @@ export class TrapManager {
             const sprite = this.scene.add.image(x0, y, 'trap-sega').setDepth(4).setPipeline('Light2D');
             const speed = 90 + rnd() * 70;
             const glow = this.scene.lights.addLight(x0, y, 90, 0xef4444, 0.45);
-            this.traps.push({ kind, x: x0, y, a: x0, b: x1, speed, phase: 0, period: 0, dir: 1, sprite, glow, state: 0, suppressedUntil: 0 });
+            this.traps.push({ kind, x: x0, y, a: x0, b: x1, speed, phase: 0, period: 0, dir: 1, sprite, glow, state: 0, suppressedUntil: 0, tx: x0, rp: 0, rsup: false });
             return true;
         }
         if (kind === 'pressa') {
@@ -152,7 +160,7 @@ export class TrapManager {
             const sprite = this.scene.add.image(x, upY, 'trap-pressa').setOrigin(0.5, 1).setDepth(4).setPipeline('Light2D');
             const rod = this.scene.add.image(x, top * TILE, 'trap-rod').setOrigin(0.5, 0).setDepth(3).setPipeline('Light2D');
             const period = 2600 + rnd() * 1200;
-            this.traps.push({ kind, x, y: upY, a: upY, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, rod, state: 0, suppressedUntil: 0 });
+            this.traps.push({ kind, x, y: upY, a: upY, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, rod, state: 0, suppressedUntil: 0, tx: x, rp: 0, rsup: false });
             this.drawRod(this.traps[this.traps.length - 1], top * TILE);
             return true;
         }
@@ -165,7 +173,7 @@ export class TrapManager {
         const sprite = this.scene.add.image(x, floorY, 'trap-grata').setOrigin(0.5, 1).setDepth(4).setPipeline('Light2D');
         const jet = this.scene.add.graphics().setDepth(5);
         const period = 3000 + rnd() * 1400;
-        this.traps.push({ kind: 'vapore', x, y: floorY, a: floorY - JET_H, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, extra: jet, state: 0, suppressedUntil: 0 });
+        this.traps.push({ kind: 'vapore', x, y: floorY, a: floorY - JET_H, b: floorY, speed: 0, phase: rnd() * period, period, dir: 1, sprite, extra: jet, state: 0, suppressedUntil: 0, tx: x, rp: 0, rsup: false });
         return true;
     }
 
@@ -178,20 +186,27 @@ export class TrapManager {
         }
     }
 
-    update(time: number, delta: number, player: Hurtable): void {
+    update(time: number, delta: number, player: Hurtable, near?: { x: number; y: number } | null): void {
         const body = player.body as Phaser.Physics.Arcade.Body | null;
         if (!body) return;
         const px0 = body.x;
         const py0 = body.y;
         const px1 = body.x + body.width;
         const py1 = body.y + body.height;
-        for (const t of this.traps) {
-            // lontano dal geco le trappole si fermano: niente costo e niente sorprese
-            if (Math.abs(t.x - player.x) > 1300 || Math.abs(t.y - player.y) > 900) continue;
+        for (let i = 0; i < this.traps.length; i++) {
+            const t = this.traps[i];
+            if (!this.puppet) {
+                // lontano da tutti e due i gechi le trappole si fermano: niente costo e niente sorprese
+                const farMe = Math.abs(t.x - player.x) > 1300 || Math.abs(t.y - player.y) > 900;
+                const farYou = !near || Math.abs(t.x - near.x) > 1300 || Math.abs(t.y - near.y) > 900;
+                if (farMe && farYou) continue;
+            }
             if (t.kind === 'sega') {
                 t.x += t.dir * t.speed * (delta / 1000);
                 if (t.x > t.b) { t.x = t.b; t.dir = -1; }
                 if (t.x < t.a) { t.x = t.a; t.dir = 1; }
+                // l'ospite integra uguale e si riaggancia alla fase dell'host: niente salti
+                if (this.puppet) t.x += (t.tx - t.x) * Math.min(1, (delta / 1000) * 8);
                 t.sprite.setPosition(t.x, t.y);
                 t.glow?.setPosition(t.x, t.y);
                 t.sprite.rotation += t.dir * t.speed * (delta / 1000) / SAW_R;
@@ -200,7 +215,7 @@ export class TrapManager {
                 if ((nx - t.x) ** 2 + (ny - t.y) ** 2 < (SAW_R - 2) ** 2) player.hurt(1, t.x);
                 continue;
             }
-            const p = (time + t.phase) % t.period;
+            const p = this.puppet ? t.rp : (time + t.phase) % t.period;
             if (t.kind === 'pressa') {
                 // ciclo: ferma in alto, trema, cade, resta giù, risale
                 const wait = t.period - 1900;
@@ -216,7 +231,7 @@ export class TrapManager {
                 } else if (p < wait + 1060) {
                     bottom = t.b;
                     deadly = true;
-                    if (t.state === 0) {
+                    if (this.puppet ? this.edge(i) : t.state === 0) {
                         t.state = 1;
                         this.slam(t);
                     }
@@ -225,6 +240,7 @@ export class TrapManager {
                 }
                 if (p < wait) {
                     t.state = 0;
+                    if (this.puppet) this.pstate.set(i, 0);
                     t.sprite.x = t.x;
                 }
                 t.y = bottom;
@@ -236,8 +252,8 @@ export class TrapManager {
             // vapore: sbuffi d'avviso, poi il getto
             const g = t.extra!;
             g.clear();
-            // spento dalla pozza: la grata resta, il getto no
-            if (time < t.suppressedUntil) continue;
+            // spento dalla pozza (mia o dell'host): la grata resta, il getto no
+            if (time < t.suppressedUntil || (this.puppet && t.rsup)) continue;
             const warn = t.period - 1800;
             if (p >= warn && p < warn + 600) {
                 g.fillStyle(0xcbd5e1, 0.15 + 0.1 * Math.sin(p * 0.05));
@@ -252,6 +268,38 @@ export class TrapManager {
                 for (let i = 0; i < 6; i++) g.fillCircle(t.x + Math.sin(p * 0.02 + i) * 8, top + ((p * 0.4 + i * 23) % (t.b - top)), 6);
                 if (px1 > t.x - 9 && px0 < t.x + 9 && py1 > top && py0 < t.b) player.hurt(1, t.x);
             }
+        }
+    }
+
+    /** la pressa dell'host è caduta: sul mio schermo casca anche lei, una volta sola */
+    private edge(i: number): boolean {
+        if ((this.pstate.get(i) ?? 0) === 1) return false;
+        this.pstate.set(i, 1);
+        return true;
+    }
+
+    /** la fase dell'host per una trappola: l'ospite ci si aggancia senza salti */
+    applyTrap(id: number, kind: TrapKind, x: number, y: number, p: number, dir: number, speed: number, state: number, suppressed: boolean): void {
+        const t = this.traps[id];
+        if (!t || t.kind !== kind) return;
+        this.puppet = true;
+        if (t.kind === 'sega') {
+            if (!Number.isFinite(x) || !Number.isFinite(speed)) return;
+            // primo aggancio: si parte da dove sta l'host, poi si integra uguale
+            if (!this.hooked.has(id)) {
+                this.hooked.add(id);
+                t.x = Math.max(t.a, Math.min(t.b, x));
+            }
+            t.tx = Math.max(t.a, Math.min(t.b, x));
+            t.dir = dir >= 0 ? 1 : -1;
+            t.speed = Math.max(0, Math.min(500, speed));
+        } else if (t.kind === 'pressa') {
+            if (!Number.isFinite(y)) return;
+            t.y = y;
+            t.state = state === 1 ? 1 : 0;
+        } else {
+            if (Number.isFinite(p)) t.rp = p;
+            t.rsup = suppressed;
         }
     }
 

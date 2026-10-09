@@ -10,7 +10,7 @@ import type { BossSpawn } from '../../coop/protocol';
 import type { Spawner } from '../../entities/Spawner';
 import type { NetSession } from '../../net/session';
 import type { GameContext } from '../context';
-import { MODES, tintOf, writeWorld, type BossLook, type EnemyLook } from './worldWire';
+import { MODES, tintOf, writeWorld, type BossLook, type EnemyLook, type TrapLook } from './worldWire';
 import { enemyHpFor, spawnerIntervalFor, spawnerMaxAliveFor } from './scaling';
 
 const SNAP_MS = 50;
@@ -58,9 +58,11 @@ export class WorldHost {
         };
         on('enemy-spawned', ({ enemy }) => this.registerEnemy(enemy, true));
         on('nest-spawned', ({ nest }) => this.registerNest(nest, true));
-        on('npc-spawned', ({ id, x, y }) => this.registerNpc(id, x, y, true));
-        on('npc-gone', ({ id }) => this.unregisterNpc(id, true));
         on('enemy-explode', ({ x, y, r }) => this.send('boom', { x, y, r }));
+        coopHooks.hostNpc = {
+            spawned: (id, x, y) => this.registerNpc(id, x, y, true),
+            gone: (id) => this.unregisterNpc(id, true),
+        };
         on('boss-spawned', ({ boss }) => this.registerBoss(boss, true));
         coopHooks.hostBoss = {
             fx: (b, fx, data) => {
@@ -334,7 +336,30 @@ export class WorldHost {
                 mode: Math.max(0, MODES.indexOf(e.mode)), angle: e.angle, alpha: e.alpha,
             });
         }
-        this.session.sendFast(FAST_WORLD, (w) => writeWorld(w, { levelSeq: coop.levelSeq, enemies, boss: this.bossLook(), actors: [] }));
+        this.session.sendFast(FAST_WORLD, (w) => writeWorld(w, { levelSeq: coop.levelSeq, enemies, boss: this.bossLook(), actors: [], traps: this.trapLooks(partner) }));
+    }
+
+    /** le trappole dove guarda l'ospite (o l'host, se l'altro è a terra): poche, stato piccolo */
+    private trapLooks(partner: { x: number; y: number }): TrapLook[] {
+        const out: TrapLook[] = [];
+        const traps = this.ctx.traps.traps;
+        if (!traps.length) return out;
+        const px = this.ctx.player.x;
+        const py = this.ctx.player.y;
+        const now = this.scene.time.now;
+        for (let i = 0; i < traps.length; i++) {
+            const t = traps[i];
+            const near = (Math.abs(t.x - partner.x) < VIEW_X && Math.abs(t.y - partner.y) < VIEW_Y) || (Math.abs(t.x - px) < VIEW_X && Math.abs(t.y - py) < VIEW_Y);
+            if (!near) continue;
+            const kind = t.kind === 'sega' ? 0 : t.kind === 'pressa' ? 1 : 2;
+            out.push({
+                id: i, kind: kind as 0 | 1 | 2, x: t.x, y: t.y,
+                p: t.kind === 'vapore' ? (now + t.phase) % t.period : 0,
+                dir: t.dir, speed: t.speed, state: t.state,
+                suppressed: t.kind === 'vapore' && now < t.suppressedUntil,
+            });
+        }
+        return out;
     }
 
     /* ---------- richieste dell'ospite ---------- */
@@ -405,5 +430,6 @@ export class WorldHost {
         this.offs.length = 0;
         coopHooks.hostBoss = null;
         coopHooks.hostEnemy = null;
+        coopHooks.hostNpc = null;
     }
 }

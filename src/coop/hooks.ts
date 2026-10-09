@@ -19,6 +19,12 @@ export interface PuppetBossNet {
     damage(b: Boss, amount: number, fromX: number, dir?: HitDir): boolean;
 }
 
+/** l'host sente i personaggi nati dopo il caricamento: l'ospite li mette identici */
+export interface HostNpcNet {
+    spawned(id: string, x: number, y: number): void;
+    gone(id: string): void;
+}
+
 /** l'host sente le battute e i gesti che l'ospite deve vedere */
 export interface HostEnemyNet {
     say(e: Enemy, text: string, ms: number): void;
@@ -35,6 +41,7 @@ export const coopHooks = {
     puppetBoss: null as PuppetBossNet | null,
     hostEnemy: null as HostEnemyNet | null,
     hostBoss: null as HostBossNet | null,
+    hostNpc: null as HostNpcNet | null,
     /** il geco locale è fermo e intoccabile: dialogo per conto suo, telefono, pausa */
     frozen: false,
     /** il geco locale è a terra e guarda l'altro */
@@ -57,6 +64,7 @@ export function resetCoopHooks(): void {
     coopHooks.puppetBoss = null;
     coopHooks.hostEnemy = null;
     coopHooks.hostBoss = null;
+    coopHooks.hostNpc = null;
     coopHooks.frozen = false;
     coopHooks.spectating = false;
     coopHooks.personal = 0;

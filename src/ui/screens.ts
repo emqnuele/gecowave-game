@@ -108,8 +108,7 @@ export class Screens {
         });
         bus.on('toast', ({ text }) => this.toast(text));
         bus.on('wavesung', ({ sender, text }) => this.wavesung(sender, text));
-        bus.on('player-died', ({ lost, score }) => this.showDeath(lost, score));
-        bus.on('coop-death-show', ({ lost, score, host }) => this.showDeath(lost, score, host));
+        bus.on('player-died', ({ lost, score, guestOf }) => this.showDeath(lost, score, guestOf));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('charm-found', ({ id }) => this.charmCard(id));
         bus.on('achievement', ({ id }) => this.trophy(id));

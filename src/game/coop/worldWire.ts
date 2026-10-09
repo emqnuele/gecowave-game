@@ -59,6 +59,20 @@ export interface ActorLook {
     color: number;
 }
 
+/** una trappola: l'indice basta, il piazzamento è uguale dai due lati */
+export interface TrapLook {
+    /** sega: x e dir contano; pressa: y e state; vapore: p e suppressed */
+    id: number;
+    kind: 0 | 1 | 2;
+    x: number;
+    y: number;
+    p: number;
+    dir: 1 | -1;
+    speed: number;
+    state: number;
+    suppressed: boolean;
+}
+
 const GUARDS = [null, 'side', 'up', 'down', 'shot'] as const;
 
 const rgb = (w: ByteWriter, c: number) => w.u8((c >> 16) & 0xff).u8((c >> 8) & 0xff).u8(c & 0xff);
@@ -70,6 +84,7 @@ export interface WorldFrame {
     enemies: EnemyLook[];
     boss: BossLook | null;
     actors: ActorLook[];
+    traps: TrapLook[];
 }
 
 export function writeWorld(w: ByteWriter, f: WorldFrame): void {
@@ -105,6 +120,13 @@ export function writeWorld(w: ByteWriter, f: WorldFrame): void {
         flags |= a.tint << 2;
         w.u16(a.id).f32(a.x).f32(a.y).u8(a.frame).u8(flags).u8(Math.round(Math.max(0, Math.min(1, a.alpha)) * 255)).i16(a.angle * 10).u16(a.scale * 1000);
         rgb(w, a.color);
+    }
+    w.u8(Math.min(255, f.traps.length));
+    for (const t of f.traps.slice(0, 255)) {
+        let flags = 0;
+        if (t.dir < 0) flags |= 1;
+        if (t.suppressed) flags |= 2;
+        w.u16(t.id).u8(t.kind).f32(t.x).f32(t.y).f32(t.p).f32(t.speed).u8(t.state & 1).u8(flags);
     }
 }
 
@@ -160,8 +182,21 @@ export function readWorld(r: ByteReader): WorldFrame | null {
         const color = readRgb(r);
         actors.push({ id, x, y, frame, flipX: !!(flags & 1), visible: !!(flags & 2), tint: ((flags >> 2) & 3) as 0 | 1 | 2, alpha, angle, scale, color });
     }
+    const k = r.u8();
+    const traps: TrapLook[] = [];
+    for (let i = 0; i < k; i++) {
+        const id = r.u16();
+        const kind = r.u8() as 0 | 1 | 2;
+        const x = r.f32();
+        const y = r.f32();
+        const p = r.f32();
+        const speed = r.f32();
+        const state = r.u8();
+        const flags = r.u8();
+        traps.push({ id, kind, x, y, p, dir: flags & 1 ? -1 : 1, speed, state, suppressed: !!(flags & 2) });
+    }
     if (r.broken) return null;
-    return { levelSeq, enemies, boss, actors };
+    return { levelSeq, enemies, boss, actors, traps };
 }
 
 /** la tinta di uno sprite come la vede chi la deve rifare */

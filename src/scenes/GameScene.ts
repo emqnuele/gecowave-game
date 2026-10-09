@@ -707,7 +707,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
             flood: this.hazards.floodAhead,
             rain: this.atmosphere.rainLevel,
         });
-        this.traps.update(time, delta, this.player);
+        this.traps.update(time, delta, this.player, this.ctx.coop?.partnerSpot() ?? null);
         this.hazards.update(time, delta, this.player);
         this.challenges.trial?.update(this.player);
         this.updateArenaLock(time);

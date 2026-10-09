@@ -117,6 +117,10 @@ export class WorldMirror {
                 tr.push({ t, x: look.x, y: look.y, vx: look.vx, vy: look.vy, look });
                 this.seen.set(look.id, now);
             }
+            // le trappole non si interpolano: la sega si integra uguale, le altre si settano
+            for (const trap of f.traps) {
+                this.ctx.traps.applyTrap(trap.id, trap.kind === 0 ? 'sega' : trap.kind === 1 ? 'pressa' : 'vapore', trap.x, trap.y, trap.p, trap.dir, trap.speed, trap.state, trap.suppressed);
+            }
         }));
     }
 

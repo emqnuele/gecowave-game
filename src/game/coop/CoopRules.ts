@@ -389,7 +389,7 @@ export class CoopRules {
         this.band?.remove();
         this.band = null;
         const name = coop.partner?.name.toLowerCase() ?? 'l’host';
-        bus.emit('coop-death-show', { lost: m.lost, score: m.score, host: name });
+        bus.emit('player-died', { lost: m.lost, score: m.score, guestOf: name });
     }
 
     /** la partita è passata a un altro capitolo o si è chiusa: niente resta appeso */

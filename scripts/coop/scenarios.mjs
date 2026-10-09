@@ -71,6 +71,31 @@ async function joinAs(t, code, { name = null, remembered = false } = {}) {
 }
 
 export const SCENARIOS = {
+    async trappole(t) {
+        await enterTogether(t);
+        const { A, B } = t;
+        // tutti e due accanto alla prima sega, in punti diversi della sua corsa:
+        // la sega deve stare nello stesso punto sui due schermi
+        const saw = await scene(A, `const s = g.traps.traps.find((x) => x.kind === 'sega'); return s ? { a: s.a, b: s.b, y: s.y } : null`);
+        t.check('c’è una sega in perduta', !!saw, JSON.stringify(saw));
+        if (!saw) return;
+        await scene(A, `g.player.body.reset(arg.a - 200, arg.y - 100)`, saw);
+        await scene(B, `g.player.body.reset(arg.b + 200, arg.y - 100)`, saw);
+        for (let i = 0; i < 3; i++) {
+            await t.wait(1500);
+            const a = await scene(A, `const s = g.traps.traps.find((x) => x.kind === 'sega'); return s ? Math.round(s.x) : -1`);
+            const b = await scene(B, `const s = g.traps.traps.find((x) => x.kind === 'sega'); return s ? Math.round(s.x) : -1`);
+            t.check('la sega corre uguale dai due lati', Math.abs(a - b) < 30, `host ${a}, ospite ${b}`);
+        }
+        // l'host ci finisce dentro: il danno arriva dove lo vede anche il guest
+        const hpBefore = await A.evaluate(() => window.__state.run.hp);
+        await scene(A, `const s = g.traps.traps.find((x) => x.kind === 'sega'); g.player.body.reset(s.x, s.y - 10);`);
+        await t.wait(1200);
+        const hpAfter = await A.evaluate(() => window.__state.run.hp);
+        t.check('la sega ferisce', hpAfter < hpBefore, `${hpBefore} -> ${hpAfter}`);
+        await t.shot(B, 'trappole-ospite');
+    },
+
     async dentro(t) {
         const { A, B } = t;
         await t.click(A, 'gioca in due');

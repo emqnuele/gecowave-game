@@ -3,7 +3,7 @@ import { ZONE_HEX } from '../config';
 import { animateCreature, creatureRes } from '../art/creatureKit';
 import { ensureCreature } from '../art/creatures';
 import { npcTexture } from '../art/npcTexture';
-import { emitWorld } from '../core/worldEvents';
+import { coopHooks } from '../coop/hooks';
 import type { GameContext, GameSystem } from './context';
 import type { Interactable } from './Interactions';
 
@@ -50,10 +50,10 @@ export class Npcs implements GameSystem {
         npc.once(Phaser.GameObjects.Events.DESTROY, () => {
             if (this.sprites.get(id) === npc) {
                 this.sprites.delete(id);
-                emitWorld(this.ctx.scene, 'npc-gone', { id });
+                coopHooks.hostNpc?.gone(id);
             }
         });
-        emitWorld(this.ctx.scene, 'npc-spawned', { id, x, y });
+        coopHooks.hostNpc?.spawned(id, x, y);
         return npc;
     }
 
