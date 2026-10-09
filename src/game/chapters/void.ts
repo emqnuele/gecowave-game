@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { WAVESUNG } from '../../content/story';
 import { bus } from '../../core/events';
+import { haptics } from '../../input/haptics';
 import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import { Chapter, type ChapterCtx, type Target } from './ChapterScript';
@@ -139,6 +140,11 @@ export class VoidChapter extends Chapter {
 
     /** un rimpianto è caduto: si rivela la verità e romero ti porta al prossimo */
     private onVeritaRivelata(idx: number): void {
+        // una verità che arriva: il vuoto si scolora e trema
+        this.ctx.lens.shockwave(this.ctx.player.x, this.ctx.player.y, 1, 1000);
+        // parte già piena: il dialogo ferma la scena e la verità si legge su un mondo scolorito
+        this.ctx.lens.kick({ desat: 0.6, chroma: 0.8 }, 0, 600, 1400);
+        haptics.rumble(0.6, 0.3, 500);
         this.ctx.dialogues.start(`verita-${idx + 1}`, () => {
             const next = this.nextRegret();
             this.voidStep = next;
@@ -213,6 +219,7 @@ export class VoidChapter extends Chapter {
             const mk = this.ctx.npcs.castSprite(mx, this.ctx.player.y, 'npc-markolino').setDepth(5);
             this.ctx.lighting.follow(mk, 0x4ade80, 200, 0.9);
             mk.setFlipX(true);
+            this.ctx.lens.kick({ angle: 0.03, chroma: 1, barrel: 0.08 }, 80, 300, 1300);
             bus.emit('wavesung', WAVESUNG.markolinoPedroMuove);
             this.scene.tweens.add({
                 targets: mk,

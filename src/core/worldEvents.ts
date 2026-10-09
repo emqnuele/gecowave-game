@@ -41,6 +41,8 @@ export interface WorldEvents {
     'boss-phase': { phase: number };
     'boss-dying': { kind: BossKind };
     'boss-defeated': { kind: BossKind; x: number; y: number };
+    // chi insegue si fa sentire prima di farsi vedere: i passanti lo riconoscono
+    'pursuer-whistle': { x: number; y: number };
 }
 
 export type WorldEvent = keyof WorldEvents;

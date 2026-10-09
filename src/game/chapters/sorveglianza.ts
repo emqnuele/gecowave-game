@@ -22,7 +22,6 @@ export class SorveglianzaChapter extends Chapter {
 
     setup(): void {
         waveOnce(this.scene, 'pedro-footage-visto', WAVESUNG.pedroFootage, 12000);
-        waveOnce(this.scene, 'tutorial-ombra-visto', WAVESUNG.markolinoOmbra, 45000);
         if (!state.hasFlag('wavesung-sorveglianza')) {
             state.setFlag('wavesung-sorveglianza');
             this.scene.time.delayedCall(1200, () => bus.emit('wavesung', WAVESUNG.piemaAiuto));
@@ -31,6 +30,9 @@ export class SorveglianzaChapter extends Chapter {
 
     update(): void {
         this.ambushes.update();
+        // il consiglio di markolino arriva solo dopo che l'ombra si è mostrata: prima il geco non sa niente
+        const boss = this.ctx.bosses.current;
+        if (boss?.def.kind === 'ombra' && boss.engaged) waveOnce(this.scene, 'tutorial-ombra-in-scontro', WAVESUNG.markolinoOmbra, 4000);
     }
 
     bossDefeated(kind: BossKind, x: number, y: number): void {

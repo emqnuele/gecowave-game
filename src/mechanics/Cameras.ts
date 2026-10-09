@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TILE } from '../config';
 import { bus } from '../core/events';
 import { sfx } from '../audio/sfx';
+import { haptics } from '../input/haptics';
 import { state } from '../core/state';
 import { pathGaps, QUIET_ROOMS, seeded, type Mechanic, type MechanicCtx } from './types';
 
@@ -26,7 +27,6 @@ export const SORVEGLIANZA_CAMS: CameraMode = { kind: 'sorveglianza', density: 0.
 
 const SWEEP = 0.85;
 const COOLDOWN_MS = 9000;
-const MAX_DATA = 8;
 
 interface Cam {
     x: number;
@@ -136,9 +136,14 @@ export class Cameras implements Mechanic {
         sfx.beep(0, 1);
         this.ctx.scene.time.delayedCall(160, () => sfx.beep(0, 1));
         this.ctx.scene.cameras.main.flash(120, 120, 20, 20);
+        // ripreso: per un attimo lo vedi con gli occhi della telecamera
+        this.ctx.lens.glitch(300, 0.5);
+        haptics.rumble(0, 0.6, 250);
+        this.ctx.lens.kick({ desat: 0.7, tint: 0.08, tintColor: 0x7f1d1d }, 30, 260, 500);
         if (this.mode.kind === 'sorveglianza') {
             state.recordOmbraSighting();
-            bus.emit('toast', { text: `la tommasorveglianza ti ha ripreso. l'ombra impara (${state.save.ombra.sightings}/${MAX_DATA}).` });
+            // il geco non sa a cosa servono le riprese: lo scopre davanti all'ombra
+            bus.emit('toast', { text: 'la tommasorveglianza ti ha ripreso. per la sua sicurezza. 👍' });
         } else {
             bus.emit('toast', { text: 'telecamera di ticummi: allarme. arriva gente.' });
         }

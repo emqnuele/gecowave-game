@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import { WAVESUNG } from '../../content/story';
 import { bus } from '../../core/events';
+import { haptics } from '../../input/haptics';
 import { sfx } from '../../audio/sfx';
 import { state } from '../../core/state';
 import type { Boss } from '../../entities/Boss';
@@ -138,6 +139,9 @@ export class BusChapter extends Chapter {
             onComplete: () => {
                 sfx.hit();
                 this.ctx.feel.shake(200, 0.01);
+                // ivan si prende il colpo per te: il mondo perde colore per un momento
+                this.ctx.lens.kick({ desat: 0.75, zoom: 0.03, chroma: 0.4 }, 60, 900, 1600);
+                haptics.rumble(0.8, 0.4, 400);
                 ivan.setTint(0xf87171);
                 
                 this.scene.tweens.add({

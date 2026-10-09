@@ -4,6 +4,9 @@ import { MECHANIC_HINTS } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../core/events';
 import { biomeFor } from '../content/biomes';
+import { CameraLens } from '../stage/CameraLens';
+import { WetTrail } from '../stage/WetTrail';
+import { haptics } from '../input/haptics';
 import { AmbienceManager } from '../stage/AmbienceManager';
 import { DecorationManager } from '../stage/DecorationManager';
 import { TerrainRenderer } from '../stage/TerrainRenderer';
@@ -77,6 +80,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     private bosses!: Bosses;
     private arena!: Arena;
     private feel!: Feel;
+    private lens!: CameraLens;
+    private wet!: WetTrail;
     private enemies!: Enemies;
     private interactions!: Interactions;
     private dialogues!: Dialogues;
@@ -158,6 +163,11 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         ensurePlayerSkin(this, state.save.skin);
 
         this.world.biome = biomeFor(this.world.def);
+        this.wet = new WetTrail(this);
+        this.lens = this.ctx.lens = new CameraLens(this, this.world.biome.id, () => {
+            const b = this.bosses.current;
+            return b?.active ? { x: b.x, y: b.y } : null;
+        });
         this.lighting = this.ctx.lighting = new LightingManager(this);
         this.lighting.enable(this.world.biome);
 
@@ -257,7 +267,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         // catalogo completo: da qui i denominatori del riepilogo sono stabili
         sealLevel(this.world.def.id, this.world.layout?.rooms.length ?? 0);
         // pedro in scena una volta per regione: due righe, poi si sfalda
-        this.pedroGhost = new PedroApparition(this, this.lighting);
+        this.pedroGhost = new PedroApparition(this, this.lighting, this.lens);
         this.pedroGhost.setup(this.world.def.id, this.world.layout);
         this.marks33 = this.ctx.marks33 = new TrentatreMarks(this);
         // il 33 affonda nel muro: roccia del bioma verso il fondo
@@ -287,7 +297,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
                 ...this.challenges.challengePoints(),
             ],
         });
-        this.hazards = new HazardManager(this, this.world.nav, () => this.atmosphere?.weather === 'temporale' || this.atmosphere?.weather === 'pioggia');
+        this.hazards = new HazardManager(this, this.world.nav, () => this.atmosphere?.weather === 'temporale' || this.atmosphere?.weather === 'pioggia',
+            () => !!this.bosses.current?.engaged, this.lens);
         this.hazards.populate({
             seed: this.world.def.id,
             biomeId: this.world.biome.id,
@@ -304,7 +315,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
                 .filter((k) => k !== 'notino-mini' && k !== 'pittura-mini');
             this.mechanic = createMechanic({
                 scene: this, regionId: this.world.def.id, nav: this.world.nav, layout: this.world.layout, water: this.world.level.water,
-                lighting: this.lighting, playerLight: this.playerLightRef, player: this.player,
+                lighting: this.lighting, playerLight: this.playerLightRef, player: this.player, lens: this.lens,
                 avoid: [sp, ...this.world.level.checkpoints.map((c) => ({ x: c.x, y: c.y })), ...this.travel.busStops, ...this.interactions.points(),
                     ...this.world.level.entities.filter((e) => e.spec.type !== 'enemy').map((e) => ({ x: e.x, y: e.y }))],
                 enemyKinds,
@@ -330,6 +341,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         const sniffedOff = bus.on('tana-sniffed', () => this.chapter.sniffed?.());
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.mechanic?.destroy();
+            this.lens.destroy();
             this.mechanic = null;
             this.bosses.silence();
             sniffedOff();
@@ -352,6 +364,11 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.parallax.build(this.world.def.color, this.world.def.id, this.world.biome, this.world.layout ? this.world.layout.horizonRow * TILE : this.world.level.heightPx);
         this.parallax.resize();
         this.atmosphere = new Atmosphere(this);
+        // il lampo sbianca anche l'obiettivo: i colori si separano per un istante
+        this.atmosphere.onBolt = (outdoor) => {
+            this.lens.kick({ chroma: 0.5 + outdoor * 0.5, desat: -0.15 }, 10, 70, 360);
+            haptics.rumble(0.25 * outdoor, 0.3, 180);
+        };
         this.atmosphere.build(this.world.biome, this.world.def.id);
         this.soundscape = new Soundscape(this, this.world.biome, this.world.nav, this.world.layout ? this.world.layout.horizonRow : null);
         this.interactions.buildPrompt();
@@ -513,6 +530,9 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         on('boss-summon', this.enemies.onBossSummon, this.enemies);
         on('boss-lamette', this.combat.onBossLamette, this.combat);
         on('boss-defeated', this.bosses.onDefeated, this.bosses);
+        // la gente intorno reagisce: si gira a guardarti dopo un boss, si rintana al fischio
+        on('boss-defeated', ({ x, y }) => this.folk.cheerFrom(x, y), this.folk);
+        on('pursuer-whistle', ({ x, y }) => this.folk.hear(x, y), this.folk);
         on('boss-engaged', this.bosses.onEngaged, this.bosses);
         on('boss-dying', () => this.bosses.silence());
         // ogni mossa del geco nutre il profilo: l'ombra lo leggerà alla fine
@@ -550,6 +570,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         for (let i = 0; i < n; i++) this.tick(time - (n - 1 - i) * this.sim.dt, this.sim.dt);
         // senza passo il mondo è fermo, ma la camera si è mossa: quello che si vede la segue
         if (n === 0) this.present(time);
+        this.lens.update(this.player);
     }
 
     /** phaser applica il lerp della camera a ogni fotogramma: a 120 hz la camera inseguirebbe il doppio */
@@ -617,7 +638,16 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.enemies.magnetBarre();
         this.abilities.updateClone(time, delta);
         this.rewards.updateHoming(delta);
-        this.folk.update(time, delta, this.player, this.threats(), !!this.bosses.current?.engaged);
+        const chaser = this.chapter.pursuer?.();
+        this.folk.update(time, delta, {
+            player: this.player,
+            threats: this.threats(),
+            bossFight: !!this.bosses.current?.engaged,
+            pursuer: chaser?.active ? chaser : null,
+            water: this.hazards.waterLine,
+            flood: this.hazards.floodAhead,
+            rain: this.atmosphere.rainLevel,
+        });
         this.traps.update(time, delta, this.player);
         this.hazards.update(time, delta, this.player);
         this.challenges.trial?.update(this.player);
@@ -631,6 +661,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         music.setNight(this.bosses.current?.engaged ? 0 : this.atmosphere.night * 0.85);
         // le vasche fisse del livello contano come le piene: testa sotto, mondo ovattato
         if (!this.player.headUnder && this.world.level.water.some((r) => r.contains(this.player.x, this.player.y - 16))) this.player.headUnder = true;
+        this.wet.update(this.player, this.player.submerged || this.player.headUnder || this.world.level.water.some((r) => r.contains(this.player.x, this.player.y + 20)));
         this.soundscape.update(time, delta, { player: this.player, room: here, night: this.atmosphere.night, boss: !!this.bosses.current?.engaged, rain: this.atmosphere.rainLevel });
         this.guide.updateGuide(time);
         this.abilities.updateAnalisi(time);

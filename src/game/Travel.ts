@@ -10,7 +10,7 @@ import type { GameContext, GameSystem, SceneData } from './context';
 import type { Interactable } from './Interactions';
 import { emitWorld } from '../core/worldEvents';
 
-type TravelCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'npcs' | 'bosses' | 'chapter' | 'flow'>;
+type TravelCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'npcs' | 'bosses' | 'chapter' | 'flow' | 'dialogues'>;
 
 /** microfoni, fermate del citelis e varchi: dove si salva e da dove si parte */
 export class Travel implements GameSystem {
@@ -65,7 +65,8 @@ export class Travel implements GameSystem {
         }
         if (!state.save.stops.includes(current)) state.save.stops.push(current);
         // dopo guggu il citelis porta anche in piazza, da qualsiasi fermata
-        if (state.hasFlag('boss-down-guggu') && !state.save.stops.includes(HUB_STOP)) state.save.stops.push(HUB_STOP);
+        const newHub = state.hasFlag('boss-down-guggu') && !state.save.stops.includes(HUB_STOP);
+        if (newHub) state.save.stops.push(HUB_STOP);
         const order = [...Object.keys(LEVELS).filter((k) => LEVELS[k].hub), ...LEVEL_ORDER, ...Object.keys(LEVELS).filter((k) => !LEVEL_ORDER.includes(k) && !LEVELS[k].hub)];
         const stops = state.save.stops
             .map((key) => {
@@ -79,7 +80,10 @@ export class Travel implements GameSystem {
                 const label = LEVELS[s.levelId].hub ? `capolinea ${LEVELS[s.levelId].accentWord}` : `${LEVELS[s.levelId].accentWord} · fermata ${n}`;
                 return { key: s.key, levelId: s.levelId, label };
             });
-        bus.emit('travel-show', { stops, current, onPick: (key) => this.travelTo(key) });
+        const show = (): void => bus.emit('travel-show', { stops, current, onPick: (key) => this.travelTo(key) });
+        // la prima volta il citelis annuncia la linea nuova, poi apre il tabellone
+        if (newHub) this.ctx.dialogues.start('piazza-fermata', show);
+        else show();
     }
 
     /** viaggio col citelis: si scende alla fermata scelta, accanto al suo microfono */

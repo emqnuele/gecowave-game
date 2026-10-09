@@ -22,6 +22,35 @@ export interface FolkKind {
 
 /** battute che valgono ovunque, con il contesto del momento */
 export const FOLK_PANIC = ['aiuto!!', 'non sono qui. non mi vedi.', 'mamma!!', 'io non c\'entro!', 'scappo, ciao', 'chiamo la tommasorveglianza!!'];
+/** quando passa chi ti insegue (lochef, nella tana): chi lo vede scappa e si rintana */
+export const FOLK_TERROR = [
+    'fischietta. FISCHIETTA.',
+    'non guardarlo negli occhi!!',
+    'io non ho fame io non ho fame io non ho fame',
+    'il dolce no. il dolce no.',
+    'nasconditi, scemo!!',
+    'è tornato dalla spesa!!',
+    'ospite numero tredici, corri!!',
+];
+/** rintanati: sottovoce, la faccia al muro */
+export const FOLK_HIDING = ['shh.', 'non respirare.', 'sono un mobile. sono un mobile.', 'conta le porte...', 'mamma.'];
+/** se n'è andato */
+export const FOLK_RELIEF = [
+    'è andato?',
+    'ha preso la porta in più.',
+    'stanotte non dormo. di nuovo.',
+    'grazie, custode. credo.',
+    'ho perso una scarpa. va bene così.',
+    'la prossima volta mi nascondo meglio. nel frigo, magari. no.',
+];
+/** il fischio della cucina, sentito da lontano */
+export const FOLK_HEARD = ['lo senti? fischietta.', 'zitto. è lui.', 'nasconditi. ORA.', 'la canzone della cucina...', 'no no no no'];
+/** la marea sta per salire */
+export const FOLK_TIDE = ['sale l\'acqua!! tutti su!!', 'l\'acqua sale. di nuovo.', 'non so nuotare. non so nuotare.', 'le scarpe nuove no!!', 'su su su su', 'chi ha lasciato aperto il rubinetto?'];
+/** piove, all'aperto */
+export const FOLK_RAIN = ['piove. ovviamente.', 'aspetto che spiove.', 'ho lasciato i panni stesi.', 'non è pioggia, è il realm che piange.', 'mi si sciolgono i capelli.'];
+/** un boss è appena caduto */
+export const FOLK_CHEER = ['l\'ha fatto davvero.', 'custode!!', 'io l\'avevo detto.', 'chi era quello?', 'ok ma adesso chi pulisce.', 'lo racconterò ai nipoti. male.'];
 export const FOLK_PEDRO = [
     'hai sentito? pedro si avvicina.',
     'il cielo fa i glitch. brutto segno.',

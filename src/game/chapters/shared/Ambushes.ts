@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import { sfx } from '../../../audio/sfx';
+import { haptics } from '../../../input/haptics';
 import { state } from '../../../core/state';
 import type { Enemy } from '../../../entities/Enemy';
 import type { ChapterCtx } from '../ChapterScript';
@@ -102,6 +103,8 @@ export class Ambushes {
     private spawnNotinoAmbush(count: number): Enemy[] {
         this.scene.cameras.main.flash(120, 168, 85, 247);
         this.ctx.feel.shake(180, 0.006);
+        this.ctx.lens.kick({ chroma: 0.9, angle: 0.02, barrel: 0.06 }, 40, 140, 650);
+        haptics.rumble(0.5, 0.5, 220);
         sfx.bossRoar();
         const spawned: Enemy[] = [];
         for (let i = 0; i < count; i++) {

@@ -5,7 +5,9 @@ import type { RegionLayout } from '../world/types';
 import { animateCreature, creatureRes } from '../art/creatureKit';
 import { ensureCreature } from '../art/creatures';
 import { bus } from '../core/events';
+import type { CameraLens } from '../stage/CameraLens';
 import type { LightingManager } from '../stage/LightingManager';
+import { haptics } from '../input/haptics';
 import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
 import { rng } from '../core/rng';
@@ -34,9 +36,12 @@ export class PedroApparition {
     private baseX = 0;
     private baseY = 0;
 
-    constructor(scene: Phaser.Scene, lighting: LightingManager) {
+    private lens: CameraLens;
+
+    constructor(scene: Phaser.Scene, lighting: LightingManager, lens: CameraLens) {
         this.scene = scene;
         this.lighting = lighting;
+        this.lens = lens;
     }
 
     setup(regionId: string, layout: RegionLayout | null): void {
@@ -99,6 +104,10 @@ export class PedroApparition {
         sfx.bossVoice('boss-pedro');
         this.light = this.lighting.static(this.baseX, this.baseY - 20, 0x22d3ee, 200, 0.9);
         this.scene.cameras.main.flash(90, 34, 211, 238);
+        // il realm si inceppa quando lui si accende
+        this.lens.glitch(380, 0.7);
+        haptics.rumble(0.3, 0.7, 300);
+        this.lens.shockwave(this.baseX, this.baseY, 0.6, 700);
         // tre lampi prima di restare: arriva a scatti, come nei suoi boss
         for (let i = 1; i <= 3; i++) {
             this.later(i * 110, () => sp.setAlpha(i === 3 ? 0.92 : i % 2 ? 0.8 : 0.15));
@@ -120,6 +129,7 @@ export class PedroApparition {
         const sp = this.sprite;
         if (!sp || this.phase === 'gone') return;
         this.phase = 'gone';
+        this.lens.glitch(200, 0.4);
         this.timers.forEach((t) => t.remove(false));
         this.timers = [];
         if (early && this.said < 2) {

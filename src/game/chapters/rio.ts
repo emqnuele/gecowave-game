@@ -40,8 +40,9 @@ export class RioChapter extends Chapter {
                 this.ctx.dialogues.start(id, () => {
                     if (state.hasFlag('tommasorveglianza')) return;
                     bus.emit('choice-show', {
-                        title: 'tommasorveglianza 133 barre: notino respinto gratis, ma l\'ombra si allena su di te (forte). senza: affronti notino tu, ombra beta.',
-                        options: [{ label: 'compra (133 barre): protetto, ma spiato' }, { label: 'rifiuta: libero, ma agguati veri' }],
+                        // ticummi fa il suo mestiere: vende. cosa compri davvero lo scopri solo davanti all'ombra
+                        title: 'tommasorveglianza: 133 barre. assolutamente sicura. 👍',
+                        options: [{ label: 'compra (133 barre)' }, { label: 'rifiuta l\'affare' }],
                         onPick: (i) => {
                             if (i === 0 && state.save.barre >= 133) {
                                 state.save.barre -= 133;
@@ -49,7 +50,7 @@ export class RioChapter extends Chapter {
                                 state.save.ombra.premium = true;
                                 state.persist();
                                 bus.emit('barre-changed', { barre: state.save.barre, gained: false });
-                                this.ctx.dialogues.start('tommaso-avviso-clausola');
+                                bus.emit('toast', { text: 'tommasorveglianza attiva. ti senti osservato, ma protetto.' });
                             } else if (i === 0) {
                                 bus.emit('toast', { text: 'non hai 133 barre. ticummi ti guarda con pietà.' });
                             } else {
@@ -106,6 +107,8 @@ export class RioChapter extends Chapter {
         state.removeFlag('trenbolone-attivo');
         sfx.heal();
         this.scene.cameras.main.flash(200, 74, 222, 128);
+        this.ctx.lens.shockwave(this.ctx.player.x, this.ctx.player.y, 0.8, 900);
+        this.ctx.lens.kick({ tint: 0.14, tintColor: 0x4ade80, desat: -0.25 }, 150, 300, 1200);
         // refresh hud when player gets cured in the river
         bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
         if (!state.hasFlag('rio-curato')) {

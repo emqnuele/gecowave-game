@@ -7,17 +7,17 @@ import { rng } from '../core/rng';
 /** obiettivo principale mostrato nel diario, per capitolo */
 export const OBJECTIVES: Record<string, string> = {
     perduta: 'esplora il cratere: la mappa (qui nel telefono) si disegna mentre giri, la ✶ segna l\'obiettivo. trova il primo frammento della wave. e dove vedi un 33 dipinto, guarda dietro.',
-    bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea. romero ti cerca: parlargli non è opzionale, è utile.',
+    bus: 'guggu ha perso il controllo dei citelis. trova ivan maggini e raggiungi il capolinea. c\'è un commissario che ti cerca.',
     santuario: 'attraversa il santuario polarizzante. breccio custodisce un riflesso, lametta il resto. cerca il ritratto con gli occhi storti: romero lo vuole.',
     tecnokill: 'sopravvivi al server di notino. torre radio, dune, e poi lui. armato di "BUM". pedro ti guarda già: senti la statica?',
-    trenbolone: 'la via per il rio è sbarrata. per passare ti serve il trenbolone. purtroppo. ticummi ti offre la sorveglianza: leggi bene prima di firmare.',
+    trenbolone: 'la via per il rio è sbarrata. per passare ti serve il trenbolone. purtroppo.',
     tana: 'sei nella tana di lochef85. la porta è chiusa da fuori. trova un\'altra uscita. non mangiare niente.',
-    rio: 'risali il rio merdone fino al villaggio di formica. il fiume rigenera, se lo rispetti. lo stabilimento dopo è opzionale: truffa, non destino.',
-    stabilimento: 'OPZIONALE: chiudi la catena dell\'acqua premium di smela per la sua bottiglia. puoi attraversare senza fermarti: l\'uscita resta aperta.',
+    rio: 'risali il rio merdone fino al villaggio di formica. il fiume rigenera, se lo rispetti. lo stabilimento dopo è opzionale.',
+    stabilimento: 'chiudi la catena dell\'acqua premium di smela. oppure tira dritto: l\'uscita resta aperta.',
     ruhra: 'trova piema alla ruhra prima che analisi 1 lo consumi. occhio alla riba. porta il dispositivo nella mente.',
-    mente: 'sei dentro la mente di piema. risolvi le porte, sconfiggi il teorema. in fondo c\'è un pensiero sepolto: cancellarlo ti assolve, portarlo fuori ti condanna lui. scegli sapendo.',
+    mente: 'sei dentro la mente di piema. risolvi le porte, sconfiggi il teorema. in fondo c\'è qualcosa che lui non vuole guardare.',
     caso: 'aiuta romero: tre indizi in tre scene del crimine. senza il fascicolo completo il limite è intoccabile.',
-    sorveglianza: 'entra nella tommasorveglianza. l\'ombra si è allenata su di te: forte se hai comprato, beta se hai rifiutato. lametta è sparito qui vicino.',
+    sorveglianza: 'entra nella tommasorveglianza. lametta è sparito qui vicino.',
     cantina: 'scendi nella cantina di ticummi. laboratorio, caveau, e una scelta.',
     ricordi: 'cammina nel backup di pedro, giorni 1-42. alla fine c\'è l\'ultimo pedro pulito.',
     void: 'segui romero tra i cinque rimpianti. ogni verità va strappata.',
@@ -56,11 +56,11 @@ export const CONTACTS: Contact[] = [
                 bus: 'ivan è l\'unico che può tagliare guggu. senza di lui il capolinea non lo vedi neanche col binocolo. e se vedi romero, parlagli: indaga sul glitch da prima di te.',
                 santuario: 'gli specchi mentono, ma alcuni sono porte. e lametta dipinge con rabbia: schiva i colori. cerca il ritratto con gli occhi storti.',
                 tecnokill: 'notino spara a tutto quello che si muove. tu non muoverti. no scherzo, MUOVITI. carica {k:wave} da lontano invece di andare sotto.',
-                trenbolone: 'ticummi ti offre la sorveglianza? ti protegge da notino ma allena l\'ombra su di te. 41.077 secondi di te = ombra forte. zero secondi = beta. scegli.',
-                rio: 'il rio rigenera chi non si droga. se hai preso il trenbolone... auguri. lo stabilimento dopo è opzionale: attraversalo pure senza fermarti.',
-                stabilimento: 'smela? puoi saltarla. attraversa e vai. se la affronti, la sua bottiglia è tua. la truffa vive solo se ti fermi.',
-                sorveglianza: 'l\'ombra sei tu. comprata = forte, cambia ritmo. non comprata = beta, mena e basta.',
-                mente: 'il pensiero sepolto in fondo: cancellarlo ti fa sentire come piema. portarlo fuori ti dà la prova per arrestarlo. non c\'è scelta pulita.',
+                trenbolone: 'la via per il rio la apre solo il trenbolone. lo spaccino te lo regala. le cose regalate costano sempre qualcosa.',
+                rio: 'il rio rigenera chi non si droga. e se ticummi ti vende sicurezza a 0,09€... non ho mai capito cosa venda davvero. fai tu.',
+                stabilimento: 'smela? puoi tirare dritto, l\'uscita resta aperta. se ti fermi, alla sorgente c\'è qualcosa che ti spetta.',
+                sorveglianza: 'là dentro è tutto telecamere. muoviti come se nessuno ti guardasse. tanto ti guardano lo stesso.',
+                mente: 'in fondo alla testa di piema c\'è un pensiero sepolto. quello che ne fai resta. pensaci prima.',
                 ruhra: 'piema è dentro la ruhra. la riba ti morderà. è affettuosa, a modo suo. scudati? pogo da sopra, non in faccia.',
                 nucleo: 'qualsiasi cosa ti offra pedro: è glitchata. io te l\'ho detto. resta scritto.',
             };
@@ -98,8 +98,8 @@ export const CONTACTS: Contact[] = [
     {
         id: 'ticummi', name: 'ticummi', color: 'cyan', icon: '👁️',
         call(ctx) {
-            if (has(ctx, 'tommasorveglianza')) return 'gentile cliente, la sua chiamata è importante per noi ed è stata registrata, trascritta, analizzata e rivenduta. l\'ombra la ringrazia per i 41.077 secondi. 👍🫶';
-            return 'salve! tommasorveglianza, solo 0,09€. assolutamente sicura. ah, costa 133 barre in realtà. lo 0,09 è il prezzo emotivo. avviso onesto: notino respinto gratis, ombra allenata su di te. 👍';
+            if (has(ctx, 'tommasorveglianza')) return 'gentile cliente, la sua chiamata è importante per noi ed è stata registrata, trascritta, analizzata e rivenduta. 👍🫶';
+            return 'salve! tommasorveglianza, solo 0,09€. assolutamente sicura. ah, costa 133 barre in realtà. lo 0,09 è il prezzo emotivo. 👍';
         },
     },
     {

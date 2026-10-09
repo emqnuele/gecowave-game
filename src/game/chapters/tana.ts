@@ -6,6 +6,9 @@ import { creatureFrames, creatureRes } from '../../art/creatureKit';
 import { ensureCreature } from '../../art/creatures';
 import { bus } from '../../core/events';
 import { music } from '../../audio/music';
+import { sfx } from '../../audio/sfx';
+import { emitWorld } from '../../core/worldEvents';
+import { haptics } from '../../input/haptics';
 import { state } from '../../core/state';
 import type { BossKind } from '../../types';
 import type { Interactable } from '../Interactions';
@@ -35,6 +38,10 @@ export class TanaChapter extends Chapter {
     /** fatica di lochef: dopo 8s a contatto rallenta del 30% per 3s */
     private chaseNearSince = 0;
     private chaseTiredUntil = 0;
+    /** il fischio prima della caccia: quante volte si è già sentito per zona */
+    private whistled: number[] = [];
+    private nextChaseWhistleAt = 0;
+    private nextDreadBuzzAt = 0;
     /** l'ospite n.12 dopo l'arresto: si parla e poi torna a casa */
     private ospite12Sprite: Phaser.GameObjects.Sprite | null = null;
     private ospite12Interact: Interactable | null = null;
@@ -51,6 +58,7 @@ export class TanaChapter extends Chapter {
             this.chaseStarts.push(this.ctx.world.progressAt(x, y));
             this.chaseStarts.sort((a, b) => a - b);
             this.chaseDone = this.chaseStarts.map(() => false);
+            this.whistled = this.chaseStarts.map(() => 0);
             return true;
         }
         if (id === 'caccia-fine') {
@@ -159,6 +167,7 @@ export class TanaChapter extends Chapter {
         if (!this.chaseSprite) {
             // c'è una zona di caccia non ancora completata sotto i piedi?
             const here = this.ctx.world.progressAt(this.ctx.player.x, this.ctx.player.y);
+            this.foreshadow(here);
             const idx = this.chaseStarts.findIndex((sx, i) => {
                 const ex = this.chaseEnds[i] ?? Infinity;
                 return !this.chaseDone[i] && here >= sx && here < ex;
@@ -192,6 +201,9 @@ export class TanaChapter extends Chapter {
                 }).setDepth(6);
                 this.scene.cameras.main.flash(160, 120, 10, 10);
                 this.ctx.feel.shake(260, 0.006);
+                // arriva da dietro: la camera si storce dalla sua parte e si tinge
+                this.ctx.lens.kick({ angle: 0.045 * (ahead > 0 ? -1 : 1), tint: 0.25, tintColor: 0x7f1d1d, chroma: 0.9 }, 120, 400, 2400);
+                haptics.rumble(0.9, 0.5, 450);
                 music.playCustom("assets/music/lochef85's OST 2.mp3");
                 bus.emit('toast', { text: TOASTS.inseguimento });
             };
@@ -215,9 +227,12 @@ export class TanaChapter extends Chapter {
             this.chaseSprite = null;
             this.chaseTrail?.destroy();
             this.chaseTrail = null;
+            // se ne va dalla parte opposta a te, voltandoti le spalle
+            const away = Math.sign(chef.x - this.ctx.player.x) || -1;
+            chef.setFlipX(away > 0);
             this.scene.tweens.add({
                 targets: chef,
-                x: chef.x - 500,
+                x: chef.x + away * 500,
                 alpha: 0,
                 duration: 900,
                 ease: 'Quad.easeIn',
@@ -225,6 +240,7 @@ export class TanaChapter extends Chapter {
             });
             music.playLevel(this.ctx.world.def.id);
             bus.emit('toast', { text: TOASTS.inseguimentoFine });
+            this.ctx.lens.release('lochef', 1.2);
             const lines = CHASE_LINES[Math.min(this.chaseZoneIdx, CHASE_LINES.length - 1)];
             if (!state.save.seenDialogues.includes(lines.end)) {
                 state.save.seenDialogues.push(lines.end);
@@ -254,6 +270,7 @@ export class TanaChapter extends Chapter {
                     const lines = BOSS_BARKS.lochef?.extra?.whisper ?? [];
                     const raw = lines.length ? lines[this.chaseWhisperIdx++ % lines.length] : 'dove sei, piccolo?';
                     bus.emit('bark', { speaker: 'lochef85', color: 'red', text: typeof raw === 'string' ? raw : raw.text, urgent: true });
+                    this.whistleFrom(chef.x, chef.y, 0.45);
                 }
             }
             chef.setFlipX(hx > 0);
@@ -268,6 +285,12 @@ export class TanaChapter extends Chapter {
         const dx = this.ctx.player.x - chef.x;
         const dy = this.ctx.player.y - 30 - chef.y;
         const dist = Math.hypot(dx, dy) || 1;
+        this.dread(dist);
+        // lontano fischietta: sai dov'è prima di vederlo
+        if (dist > 450 && this.scene.time.now >= this.nextChaseWhistleAt) {
+            this.nextChaseWhistleAt = this.scene.time.now + 8000;
+            this.whistleFrom(chef.x, chef.y, 0.7);
+        }
         let speed = dist > 620 ? 380 : dist > 320 ? 250 : 200;
         // partenza morbida: 1.5s per entrare in caccia, il salto iniziale non uccide
         const ramp = Math.min(1, (this.scene.time.now - this.chaseStartedAt) / 1500);
@@ -300,6 +323,41 @@ export class TanaChapter extends Chapter {
                 // il colpo lo rallenta: ti vuole vivo
                 chef.x -= Math.sign(dx) * 260;
             }
+        }
+    }
+
+    /** prima della caccia lo senti: lontano, poi più vicino, sempre da dietro */
+    private foreshadow(here: number): void {
+        this.chaseStarts.forEach((start, i) => {
+            if (this.chaseDone[i] || here >= start) return;
+            const stage = this.whistled[i] ?? 0;
+            const want = here >= start - 0.35 ? 2 : here >= start - 1 ? 1 : 0;
+            if (want <= stage) return;
+            this.whistled[i] = want;
+            const goal = this.ctx.guide.currentObjective();
+            const next = goal && this.ctx.guide.guide ? this.ctx.guide.guide.nextPoint(this.ctx.player.x, this.ctx.player.y, goal.x, goal.y) : null;
+            const ahead = next ? Math.sign(next.x - this.ctx.player.x) || 1 : 1;
+            this.whistleFrom(this.ctx.player.x - ahead * (want === 1 ? 900 : 500), this.ctx.player.y, want === 1 ? 0.45 : 0.75);
+        });
+    }
+
+    private whistleFrom(x: number, y: number, vol: number): void {
+        sfx.whistle(Phaser.Math.Clamp((x - this.ctx.player.x) / 700, -0.9, 0.9), vol);
+        emitWorld(this.scene, 'pursuer-whistle', { x, y });
+    }
+
+    /** più è vicino più l'immagine si chiude, si sporca e si piega */
+    private dread(dist: number): void {
+        const p = Math.max(0, Math.min(1, 1 - (dist - 60) / 700));
+        const now = this.scene.time.now;
+        this.ctx.lens.hold('lochef', {
+            dark: 0.42 * p, chroma: 0.7 * p, barrel: 0.07 * p, tint: 0.12 * p, tintColor: 0x5b0f12,
+            angle: Math.sin(now / 650) * 0.01 * p,
+        }, 1, 4);
+        // addosso: un ronzio in mano che non smette
+        if (p > 0.75 && now >= this.nextDreadBuzzAt) {
+            this.nextDreadBuzzAt = now + 600;
+            haptics.rumble(0, 0.3 * p, 220);
         }
     }
 
