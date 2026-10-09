@@ -167,6 +167,10 @@
   letter-spacing: 0.08em;
   color: var(--sx-dim);
   margin-top: 2px;
+  max-width: min(420px, 72vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: color 0.25s ease;
 }
 

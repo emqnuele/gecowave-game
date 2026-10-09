@@ -120,7 +120,8 @@ export class CoopScreens {
         const page = el('div', 'sx-page');
         page.append(el('div', 'sx-kick', 'ospita'));
         page.append(...this.ui.heading('la tua partita in due'));
-        const sub = `${save.playerName.toLowerCase()} · ${chapterLabel(save.levelId)} · ${playTime(save.record.playMs)}${meta?.partner ? ` · con ${meta.partner.toLowerCase()}` : ''}${save.doomsdayMode ? ' · doomsday' : ''}`;
+        // il chi è già sotto coi due gechi: qui bastano capitolo, tempo e destino
+        const sub = `${chapterLabel(save.levelId)} · ${playTime(save.record.playMs)}${save.doomsdayMode ? ' · doomsday' : ''}`;
         page.append(this.ui.menu([
             { label: 'continua', sub, onPick: () => this.continueHostedGame() },
             { label: 'nuova partita in due', sub: 'quella salvata andrà perduta', danger: true, onPick: () => this.confirmNew() },
