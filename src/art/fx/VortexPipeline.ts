@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 
-/* Il tornado è uno shader vero sul frame live della camera, non linee disegnate.
+/* il tornado è uno shader vero sul frame live della camera, non linee disegnate.
    uProgress 0 = frame intatto, 1 = tutto risucchiato nel nero.
    La tinta del ricordo colora i bordi mentre risucchia. */
 

@@ -1,11 +1,11 @@
 import sharp from 'sharp';
 import { copyFileSync } from 'node:fs';
 
-// Toglie l'alone bianco dallo scontorno (matte su fondo chiaro) senza
+// toglie l'alone bianco dallo scontorno (matte su fondo chiaro) senza
 // toccare il disegno: solo i pixel semi-trasparenti cambiano RGB, mai l'alpha.
 // - alpha alta: unblend del matte, recupera il vero colore (stabile);
 // - alpha bassa: copia dall'opaco piu' vicino (l'unblend amplificherebbe il rumore).
-// Uso: node scripts/assets/defringe-sprite.mjs <input> [output]
+// uso: node scripts/assets/defringe-sprite.mjs <input> [output]
 // senza output: backup in <input>.bak.png e sovrascrittura sul posto.
 
 const R = 6;

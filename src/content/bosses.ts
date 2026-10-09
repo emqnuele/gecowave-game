@@ -1,6 +1,6 @@
 import type { BossKind, EnemyKind } from '../types';
 
-/* Ogni boss ha un archetipo di combattimento distinto: non solo pool di
+/* ogni boss ha un archetipo di combattimento distinto: non solo pool di
    proiettili diversa, ma movimento, range e firma scenica diversi.
    - move: come tiene il palco (hover/stalk/strafe/turret/erratic/orbit)
    - Gli attacchi nuovi (spiral/cross/snipe/slam/mines) sono implementati

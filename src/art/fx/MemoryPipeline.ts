@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 
-/* Il "sembra un ricordo": seppia sbiadita da pellicola vecchia.
+/* il "sembra un ricordo": seppia sbiadita da pellicola vecchia.
    uStrength 0 = frame intatto, 1 = memoria (desaturato ~62%, neri
    alzati, grana animata, tinta del ricordo ai bordi). Gli accenti
    forti (rosso, ambra) restano leggibili: non è un bianco e nero. */

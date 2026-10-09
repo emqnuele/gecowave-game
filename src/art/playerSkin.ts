@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { DEFAULT_SKIN_ID, isValidSkinId, skinPreset, type SkinPreset } from '../content/skins';
 
-/* Pelle del geco: palette swap mirato sullo sheet originale.
+/* pelle del geco: palette swap mirato sullo sheet originale.
    Ricordati solo una cosa: lo swap avviene UNA volta sola (boot, menu,
    forgia), mai per-frame. In gioco il costo è zero: stessa texture,
    stessi draw call. Ogni variante attiva è una copia dello sheet
@@ -65,7 +65,7 @@ export function isSkinPixel(r: number, g: number, b: number, a: number): boolean
     return s >= SAT_MIN && l >= LIGHT_MIN && l <= LIGHT_MAX && hueDist(h, SOURCE_SKIN_HUE) <= HUE_WINDOW;
 }
 
-/* Il boost di saturazione cresce con la saturazione d'origine: i pixel
+/* il boost di saturazione cresce con la saturazione d'origine: i pixel
    quasi-grigi hanno hue rumoroso e non devono diventare confetti. */
 const SAT_RAMP_TOP = 0.16;
 
@@ -77,8 +77,8 @@ function boostFactor(s: number, satMul: number): number {
 }
 
 /**
- * Ricolora in place i pixel di pelle di un buffer RGBA.
- * Conserva shading (lightness) e variazione di tinta: solo lo hue ruota.
+ * ricolora in place i pixel di pelle di un buffer RGBA.
+ * conserva shading (lightness) e variazione di tinta: solo lo hue ruota.
  */
 export function recolorSkinPixels(data: Uint8ClampedArray, preset: SkinPreset): { changed: number; total: number } {
     if (preset.hue === null && preset.satMul === undefined && preset.lightAdd === undefined) {
@@ -143,10 +143,10 @@ export function simulateGameLight(data: Uint8ClampedArray): void {
 }
 
 /**
- * Caduta della luce propria: la point light sta sul petto del geco.
- * In Light.frag il centro vale 1.35 e i bordi ~1.0: questa funzione parte
+ * caduta della luce propria: la point light sta sul petto del geco.
+ * in Light.frag il centro vale 1.35 e i bordi ~1.0: questa funzione parte
  * dalla base (bordi) e solleva solo il cuore, mai oltre il vero.
- * Solo per l'anteprima: in game lo fa lo shader, non duplicarlo nelle texture.
+ * solo per l'anteprima: in game lo fa lo shader, non duplicarlo nelle texture.
  */
 export function applyOwnLightFalloff(data: Uint8ClampedArray, w: number, h: number): void {
     const cx = w / 2;
@@ -189,7 +189,7 @@ export function skinFinalCss(preset: SkinPreset): string {
 export const PLAYER_FRAME = 350;
 
 /**
- * Anteprima onesta: ritaglia un frame dallo sheet, applica la pelle
+ * anteprima onesta: ritaglia un frame dallo sheet, applica la pelle
  * con lo STESSO codice del gioco e poi la luce nominale. Ciò che vedi
  * è ciò che vedrai in game (a meno di torce e biomi lontani).
  */
@@ -254,9 +254,9 @@ export function refreshPlayerAnims(scene: Phaser.Scene): void {
 }
 
 /**
- * Garantisce che le texture `player`/`player_atk` usino la pelle scelta.
- * Idempotente: se la pelle è già quella, non tocca niente.
- * Va chiamata prima di creare sprite del player (Boot/Menu/Game).
+ * garantisce che le texture `player`/`player_atk` usino la pelle scelta.
+ * idempotente: se la pelle è già quella, non tocca niente.
+ * va chiamata prima di creare sprite del player (Boot/Menu/Game).
  */
 export function ensurePlayerSkin(scene: Phaser.Scene, skinId: unknown): void {
     const preset = skinPreset(isValidSkinId(skinId) ? skinId : DEFAULT_SKIN_ID);

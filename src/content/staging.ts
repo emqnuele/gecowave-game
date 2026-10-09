@@ -1,4 +1,4 @@
-/* Staging muto: una scena ambientale per regione, zero dialoghi.
+/* staging muto: una scena ambientale per regione, zero dialoghi.
    Ogni voce descrive un tableau che si capisce guardando: oggetti,
    luci, un gesto in loop. Il manager lo costruisce nel mondo;
    la didascalia (se c'è) è un toast di poche parole, mai un muro. */

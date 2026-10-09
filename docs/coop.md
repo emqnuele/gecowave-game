@@ -1,5 +1,7 @@
 # coop
 
+> roadmap: il multiplayer non è nel gioco attuale, solo nel branch `multiplayer-p2p`.
+
 Il multiplayer vive sul branch `multiplayer-p2p` (src/net/: snapshot buffer, interpolazione, protocollo, test a due tab). Va riportato sopra la struttura nuova: l'host simula tutto (`GameContext.simulates`, ADR-052), il guest disegna e manda input.
 
 ## cosa manca

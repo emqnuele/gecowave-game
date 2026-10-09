@@ -5,7 +5,7 @@ import { bus } from '../core/events';
 import type { LightingManager } from './LightingManager';
 import type { RegionLayout, Room } from '../world/types';
 
-/* Staging muto: un tableau ambientale per regione, zero dialoghi.
+/* staging muto: un tableau ambientale per regione, zero dialoghi.
    Si costruisce in una stanza laterale: luce colorata, polvere lenta,
    2-3 sagome-prop e un gesto in loop. Si capisce guardando.
    La didascalia (se c'è) è un toast di poche parole all'avvistamento. */
