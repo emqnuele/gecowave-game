@@ -46,6 +46,8 @@ export interface FilmData {
     // un ricordo già visto si guarda più in fretta
     quick: boolean;
     onEnd: () => void;
+    /** in due chi guarda il film dell'altro non lo salta: lo chiude chi l'ha aperto */
+    follow?: boolean;
 }
 
 class Actor {
@@ -192,6 +194,7 @@ export class FilmScene extends Phaser.Scene {
     // dove guarda la macchina: il tremolio della pellicola si aggiunge sopra, senza spostarla
     private eye = { x: 0, y: 0, z: 1, r: 0 };
     private onKey = (e: KeyboardEvent): void => {
+        if (this.film.follow) return;
         if (e.code === 'Enter' || matchesAction(e, 'jump') || matchesAction(e, 'attack') || matchesAction(e, 'interact')) this.end(260);
     };
 
@@ -473,6 +476,11 @@ export class FilmScene extends Phaser.Scene {
             case 'uccelli': sfx.bird(-0.3, 0.8); break;
             case 'vento': sfx.whisper(0, 0.8); break;
         }
+    }
+
+    /** l'altro ha chiuso il film: si chiude anche qui */
+    endNow(): void {
+        this.end(260);
     }
 
     private end(fadeMs: number): void {

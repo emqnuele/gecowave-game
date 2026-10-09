@@ -107,6 +107,8 @@ class CoopRuntime {
     app: CoopApp | null = null;
     /** a ogni capitolo nuovo dell'host: i messaggi del capitolo vecchio si buttano */
     levelSeq = 0;
+    /** i titoli di coda sono partiti: la fine della partita in due non deve interromperli */
+    inEnding = false;
     private listeners = new Set<(e: CoopEvent) => void>();
     private offSession: (() => void)[] = [];
     /** l'ospite non ha ancora mai caricato un capitolo di questa partita */
@@ -367,9 +369,11 @@ class CoopRuntime {
         this.hostLevel = null;
         this.levelSeq = 0;
         this.link = 'buono';
+        const ending = this.inEnding;
+        this.inEnding = false;
         if (!wasActive) return;
         if (reason) this.emit({ type: 'closed', reason });
-        if (toMenu) this.app?.toMenu(reason);
+        if (toMenu && !ending) this.app?.toMenu(reason);
     }
 }
 

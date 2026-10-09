@@ -64,6 +64,65 @@ export const SCENARIOS = {
         await t.shot(t.B, 'lobby-guest');
     },
 
+    async dialogo(t) {
+        await enterTogether(t);
+        await scene(t.A, `g.ctx.dialogues.lines([{ speaker: 'prova', color: 'green', text: 'riga uno' }, { speaker: 'prova', color: 'green', text: 'riga due' }, { speaker: 'prova', color: 'green', text: 'riga tre' }])`);
+        await t.until(t.A, () => !!document.getElementById('dialogue'), null, 5000);
+        await t.until(t.B, () => !!document.getElementById('dialogue'), null, 5000);
+        await t.wait(500);
+        const state = (p) => p.evaluate(() => ({
+            dlg: !!document.getElementById('dialogue'),
+            hint: document.querySelector('#dialogue .hint')?.textContent ?? null,
+            paused: window.__game.scene.isPaused('GameScene'),
+            text: document.querySelector('#dialogue .speaker')?.textContent ?? null,
+        }));
+        const a = await state(t.A);
+        const b = await state(t.B);
+        t.check('il dialogo della trama si apre per tutti e due', a.dlg && b.dlg, JSON.stringify({ a, b }));
+        t.check('il mondo è fermo per tutti e due', a.paused && b.paused);
+        t.check('l’ospite sa chi manda avanti', /manda avanti/.test(b.hint ?? ''), b.hint);
+        await t.shot(t.B, 'dialogo-ospite');
+        // l'ospite preme invio: non succede niente
+        await t.B.keyboard.press('Enter');
+        await t.B.keyboard.press('Enter');
+        await t.wait(300);
+        t.check('l’ospite non manda avanti', (await state(t.B)).dlg);
+        for (let i = 0; i < 30 && (await state(t.A)).dlg; i++) {
+            await t.A.keyboard.press('Enter');
+            await t.wait(150);
+        }
+        await t.wait(500);
+        const a2 = await state(t.A);
+        const b2 = await state(t.B);
+        t.check('chiuso dall’host, chiuso per tutti e due', !a2.dlg && !b2.dlg, JSON.stringify({ a2, b2 }));
+        t.check('e il mondo riparte', !a2.paused && !b2.paused);
+
+        // un dialogo aperto dall'ospite: lo vede solo lui, il mondo dell'host non si ferma
+        const npc = await scene(t.A, `const p = g.ctx.npcs.at.get('markolino-dono'); return p ? { x: p.x, y: p.y } : null`);
+        t.check('markolino c’è', !!npc, JSON.stringify(npc));
+        await scene(t.B, `g.player.body.reset(arg.x - 30, arg.y - 10)`, npc);
+        await t.wait(600);
+        await t.B.keyboard.down('KeyE');
+        await t.wait(120);
+        await t.B.keyboard.up('KeyE');
+        await t.until(t.B, () => !!document.getElementById('dialogue'), null, 5000);
+        await t.wait(300);
+        const a3 = await state(t.A);
+        const b3 = await state(t.B);
+        t.check('il dialogo dell’ospite è solo suo', b3.dlg && !a3.dlg, JSON.stringify({ a3, b3 }));
+        t.check('e nessuno si ferma', !a3.paused && !b3.paused);
+        const frozen = await t.B.evaluate(() => window.__game.scene.getScene('GameScene').player.invulnerable);
+        t.check('chi parla non si tocca', frozen);
+        await t.shot(t.B, 'dialogo-manuale-ospite');
+        for (let i = 0; i < 40 && (await state(t.B)).dlg; i++) {
+            await t.B.keyboard.press('Enter');
+            await t.wait(150);
+        }
+        await t.wait(1500);
+        const gift = await scene(t.A, `return g.ctx.groups && window.__state.hasFlag('markolino-dono-visto')`);
+        t.check('il seguito del dialogo dell’ospite lo fa l’host', gift);
+    },
+
     async mondo(t) {
         await enterTogether(t);
         const host = await scene(t.A, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`);

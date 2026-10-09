@@ -68,6 +68,7 @@ import { reseedRng, rng } from '../core/rng';
 import { FixedStep } from '../rules/fixedStep';
 import { coop } from '../coop/runtime';
 import { CoopScene } from '../game/coop/CoopScene';
+import { coopHooks } from '../coop/hooks';
 
 const FALL_DEATH_MARGIN = 3000;
 
@@ -331,8 +332,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
                 trialRunning: () => !!this.challenges.trial?.active,
                 chaseRunning: () => !!this.chapter.pursuer?.()?.active,
                 chaseRanges: () => this.chapter.chaseRanges?.() ?? [],
-                addInteractable: (x, y, range, onInteract) => {
-                    const entry: Interactable = { x, y, range, onInteract };
+                addInteractable: (x, y, range, onInteract, local) => {
+                    const entry: Interactable = local ? { x, y, range, onInteract, local } : { x, y, range, onInteract };
                     this.interactions.add(entry);
                     return () => {
                         this.interactions.remove(entry);
@@ -623,8 +624,10 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     /** un passo di logica: l'ordine è quello di sempre, a 60 hz un passo per fotogramma */
     private tick(time: number, delta: number): void {
         this.controls.update();
-        if (this.controls.pressed('interact')) this.tryInteract();
-        else if (this.controls.device === 'gamepad' && this.controls.pressed('up')
+        // in due chi legge un dialogo ha il mondo che gira: il tasto che lo manda avanti non riapre niente
+        const talking = coopHooks.frozen;
+        if (!talking && this.controls.pressed('interact')) this.tryInteract();
+        else if (!talking && this.controls.device === 'gamepad' && this.controls.pressed('up')
             && !this.controls.down('wave') && this.player.still && this.interactions.nearest()) {
             // col pad interagisci premendo su da fermo, come a hallownest
             this.tryInteract();
@@ -736,6 +739,10 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
 
     private tryInteract(): void {
         if (this.player.dead || this.progression.exiting) return;
+        if (this.ctx.coop) {
+            this.ctx.coop.rules.interact();
+            return;
+        }
         this.interactions.nearest()?.onInteract();
     }
 

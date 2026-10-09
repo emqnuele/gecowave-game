@@ -90,7 +90,7 @@ export class Tana implements Mechanic {
                 } else {
                     this.tryHide(wh);
                 }
-            });
+            }, true);
             this.hideouts.push(wh);
             return;
         }

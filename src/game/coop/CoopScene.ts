@@ -14,6 +14,7 @@ import { RemoteGeco, type GecoState } from './RemoteGeco';
 import { SaveLink } from './SaveLink';
 import { WorldHost } from './WorldHost';
 import { WorldMirror } from './WorldMirror';
+import { CoopRules } from './CoopRules';
 import type { PickupSpawn } from '../../coop/protocol';
 import type { Spawner } from '../../entities/Spawner';
 import type { Room } from '../../world/types';
@@ -43,6 +44,7 @@ export class CoopScene implements GameSystem {
     readonly saves: SaveLink;
     readonly host: WorldHost | null;
     readonly mirror: WorldMirror | null;
+    readonly rules: CoopRules;
     /** l'esca del riflesso del compagno: i nemici dell'host la inseguono come la mia */
     private partnerDecoy: Phaser.GameObjects.Zone | null = null;
     private readonly aim = new WeakMap<object, object>();
@@ -55,9 +57,27 @@ export class CoopScene implements GameSystem {
         this.saves = new SaveLink(session);
         this.host = coop.isHost ? new WorldHost(ctx, session) : null;
         this.mirror = coop.isGuest ? new WorldMirror(ctx, session) : null;
+        this.rules = new CoopRules(this);
+        coopHooks.partnerName = () => (this.partner?.alive ? this.partner.char.name.toLowerCase() : null);
+        coopHooks.joinPartner = () => {
+            const p = this.partner;
+            if (!p?.alive || this.rules.down || this.ctx.player.dead) return;
+            this.teleportSelf(p.x - 30, p.y - 10, `raggiungi ${p.char.name.toLowerCase()}.`);
+        };
         if (this.host) {
             bus.tap = (event, payload) => {
-                if (!SHARED_UI.has(event) || coopHooks.personal > 0 || coopHooks.menuOpen || !coop.together) return;
+                if (!coop.together) return;
+                // i riepiloghi viaggiano senza il bottone: ognuno li chiude quando ha letto
+                if (event === 'chapter-summary-show' || event === 'final-summary-show') {
+                    const p = payload as GameEvents['chapter-summary-show'];
+                    this.session.send('summary', { kind: event === 'chapter-summary-show' ? 'chapter' : 'final', data: p.summary, token: 0 });
+                    return;
+                }
+                if (event === 'ending') {
+                    this.session.send('ending', payload as GameEvents['ending']);
+                    return;
+                }
+                if (!SHARED_UI.has(event) || coopHooks.personal > 0 || coopHooks.menuOpen) return;
                 this.session.send('ui', { e: event, p: payload });
             };
             this.offs.push(() => {
@@ -73,6 +93,15 @@ export class CoopScene implements GameSystem {
         if (this.mirror) {
             this.offs.push(session.on('ui', (m) => {
                 if (SHARED_UI.has(m.e as keyof GameEvents)) bus.emit(m.e as keyof GameEvents, m.p as never);
+            }));
+            this.offs.push(session.on('summary', (m) => {
+                if (!m.data || typeof m.data !== 'object') return;
+                const ev = m.kind === 'final' ? 'final-summary-show' : 'chapter-summary-show';
+                bus.emit(ev, { summary: m.data as never, onContinue: () => {} });
+            }));
+            this.offs.push(session.on('ending', (m) => {
+                coop.inEnding = true;
+                bus.emit('ending', m as GameEvents['ending']);
             }));
         }
         this.offs.push(coop.listen((e) => {
@@ -253,6 +282,7 @@ export class CoopScene implements GameSystem {
         else if (m.c === 'stun') p.stun(Math.max(0, Math.min(60000, m.ms)));
         else if (m.c === 'hurt') p.hurt(Math.max(0, Math.min(10, m.amount)), m.fromX);
         else if (m.c === 'kill') p.kill();
+        else if (m.c === 'revive') this.rules.revive(m.x, m.y);
     }
 
     /** quello che fa il mio geco è mio: i suoi toast non vanno all'altro */
@@ -263,6 +293,7 @@ export class CoopScene implements GameSystem {
     /** un passo di logica: parte il mio stato, si sistema il suo */
     tick(delta: number): void {
         this.saves.tick(delta);
+        this.rules.tick();
         this.host?.tick(delta, this.partnerSpot());
         if (state.run.hp < this.lastHp && !this.ctx.player.dead) this.session.send('act', { a: 'hurt', fromX: this.ctx.player.x });
         this.lastHp = state.run.hp;
@@ -292,6 +323,7 @@ export class CoopScene implements GameSystem {
         for (const off of this.offs) off();
         this.offs.length = 0;
         this.saves.destroy();
+        this.rules.destroy();
         this.host?.destroy();
         this.mirror?.destroy();
         this.dropPartner();

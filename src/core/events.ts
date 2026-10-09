@@ -9,8 +9,10 @@ export interface GameEvents {
     'fragments-changed': { count: number; total: number };
     'zone-changed': { title: string; accentWord: string; color: ZoneColor; punchline: string; showCard: boolean };
     'abilities-changed': { abilities: AbilityId[] };
-    'dialogue-start': { lines: DialogueLine[]; onEnd?: () => void };
+    'dialogue-start': { lines: DialogueLine[]; onEnd?: () => void; coop?: DialogueCoop };
     'dialogue-end': {};
+    /** in due: chi segue il dialogo dell'altro passa alla riga che l'altro ha raggiunto */
+    'dialogue-step': { index: number };
     'player-died': { lost: number; score: number | null };
     'toast': { text: string };
     'wavesung': { sender: string; text: string };
@@ -48,6 +50,13 @@ export interface GameEvents {
     'input-device': { device: 'tastiera' | 'gamepad' };
     /** comandi cambiati: chi legge input si ricostruisce */
     'controls-changed': {};
+}
+
+/** in due il dialogo si segue o si guida: chi segue non manda avanti, chi guida dice a che riga è */
+export interface DialogueCoop {
+    follow?: boolean;
+    onStep?: (index: number) => void;
+    hint?: string;
 }
 
 type Handler<T> = (payload: T) => void;

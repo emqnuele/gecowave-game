@@ -42,6 +42,13 @@ export const coopHooks = {
     /** l'host sta facendo una cosa sua (il suo geco, il telefono, la pausa): i toast restano suoi */
     personal: 0,
     menuOpen: false,
+    /** il film dell'host è finito: l'ospite chiude il suo */
+    filmEnded: null as (() => void) | null,
+    /** le scelte in due passano da qui prima di mostrarsi: true se il coop le ha prese */
+    /** la pausa in due: raggiungere il compagno, chi è, dove sta */
+    joinPartner: null as (() => void) | null,
+    partnerName: null as (() => string | null) | null,
+    choice: null as ((p: { title: string; options: { label: string; danger?: boolean }[]; onPick: (i: number) => void }) => boolean) | null,
 };
 
 export function resetCoopHooks(): void {
@@ -53,4 +60,8 @@ export function resetCoopHooks(): void {
     coopHooks.frozen = false;
     coopHooks.spectating = false;
     coopHooks.personal = 0;
+    coopHooks.filmEnded = null;
+    coopHooks.choice = null;
+    coopHooks.joinPartner = null;
+    coopHooks.partnerName = null;
 }

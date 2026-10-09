@@ -146,7 +146,7 @@ export interface CoopMsgs {
     'hit': Hit;
     'take': { key: string };
     'break': { cell: number };
-    'interact': { key: string };
+    'interact': { x: number; y: number };
     /** le scoperte dell'ospite (fermate, stanze, dialoghi letti, flag) da unire al salvataggio */
     'merge': { flags?: string[]; abilities?: string[]; seenDialogues?: string[]; collectedLore?: string[]; charms?: string[]; stops?: string[]; explored?: Record<string, number[]> };
 

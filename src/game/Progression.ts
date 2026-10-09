@@ -314,6 +314,8 @@ export class Progression implements Flow, GameSystem {
     }
 
     onPlayerDead(): void {
+        // in due chi cade guarda l'altro: la fine arriva solo se cadono tutti e due
+        if (this.ctx.coop?.rules.onLocalDeath()) return;
         state.save.record.deaths++;
         const lost = state.save.barre;
         // morto in uno scontro: la voce tace e la barra si toglie, alla ripresa si ricomincia

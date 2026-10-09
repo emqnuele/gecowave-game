@@ -32,6 +32,7 @@ import { Screens, type GameController } from './ui/screens';
 import { ui } from './ui/dom';
 import { installDevHandles, installLevelHook } from './dev/hooks';
 import { coop } from './coop/runtime';
+import { coopHooks } from './coop/hooks';
 import { CoopScreens } from './ui/coopScreens';
 
 async function boot(): Promise<void> {
@@ -131,10 +132,21 @@ async function boot(): Promise<void> {
         },
         pause() {
             state.flushPersist(true);
+            // in due il mondo non si ferma per il telefono o la pausa: si ferma il mio geco
+            if (coop.active && inGame) {
+                coopHooks.frozen = true;
+                coopHooks.menuOpen = true;
+                return;
+            }
             game.scene.pause('GameScene');
             acoustics.setPaused(true);
         },
         resume() {
+            if (coop.active && inGame) {
+                coopHooks.frozen = false;
+                coopHooks.menuOpen = false;
+                return;
+            }
             game.scene.resume('GameScene');
             acoustics.setPaused(false);
         },
@@ -186,6 +198,16 @@ async function boot(): Promise<void> {
         },
     });
     screens.coopEntry = () => coopUi.show();
+    screens.choiceRouter = (p) => coopHooks.choice?.(p) ?? false;
+    screens.pauseExtras = () => {
+        if (!coop.active) return null;
+        const name = coopHooks.partnerName?.();
+        const items = name && coopHooks.joinPartner
+            ? [{ label: `raggiungi ${name}`, sub: 'se ti sei perso o sei rimasto bloccato', onPick: () => { screens.closeOverlay(); controller.resume(); coopHooks.joinPartner?.(); } }]
+            : [];
+        const who = coop.isHost ? 'uscire chiude la partita anche per l’altro.' : 'uscire ti riporta al menu: la partita resta all’host.';
+        return { items, note: `in due il mondo non aspetta: il tuo geco sì. ${who}` };
+    };
     if (import.meta.env.DEV) Object.assign(window, { __coop: coop });
     coop.app = {
         startLevel(levelId, checkpointId, showCard, spawnAt) {
@@ -254,6 +276,8 @@ async function boot(): Promise<void> {
 
     bus.on('ending', ({ id, score, rank }) => {
         inGame = false;
+        // in due i titoli li vedono tutti e due, e la partita insieme finisce qui
+        if (coop.active) coop.inEnding = true;
         state.flushPersist(true);
         state.setFlag(`finale-${id}`);
         checkAchievements();
@@ -295,6 +319,11 @@ async function boot(): Promise<void> {
             gameEl.style.visibility = 'visible';
             game.scale.refresh();
             music.playMenu();
+            if (coop.active || state.saveSlot !== 'single') {
+                coop.inEnding = false;
+                coop.end(null, false);
+                state.useSlot('single');
+            }
             screens.showMenu();
         });
     });

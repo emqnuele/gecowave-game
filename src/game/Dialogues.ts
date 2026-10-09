@@ -8,12 +8,12 @@ import type { GameContext, GameSystem } from './context';
 
 /** i dialoghi fermano la scena: prima l'eventuale film, poi le righe */
 export class Dialogues implements GameSystem {
-    private readonly ctx: Pick<GameContext, 'scene' | 'player'>;
+    private readonly ctx: Pick<GameContext, 'scene' | 'player' | 'coop'>;
     /** i film in attesa: ognuno parte quando il precedente ha chiuso anche le sue righe */
     private readonly queue: { id: string; onEnd?: () => void }[] = [];
     private filming = false;
 
-    constructor(ctx: Pick<GameContext, 'scene' | 'player'>) {
+    constructor(ctx: Pick<GameContext, 'scene' | 'player' | 'coop'>) {
         this.ctx = ctx;
     }
 
@@ -47,6 +47,8 @@ export class Dialogues implements GameSystem {
             this.lines(DIALOGUES[id], done);
             return;
         }
+        // in due il ricordo lo guardano tutti e due
+        this.ctx.coop?.rules.film(FLASHBACK_BEFORE[id]!);
         flashback.play(this.ctx.scene, this.ctx.player, FLASHBACK_BEFORE[id]!, () => this.lines(DIALOGUES[id], done));
     }
 
@@ -82,6 +84,10 @@ export class Dialogues implements GameSystem {
     lines(lines: DialogueLine[] | undefined, onEnd?: () => void): void {
         if (!lines) {
             onEnd?.();
+            return;
+        }
+        if (this.ctx.coop) {
+            this.ctx.coop.rules.dialogue(lines, onEnd);
             return;
         }
         const scene = this.ctx.scene;

@@ -4,7 +4,7 @@
 import { readFile, mkdir } from 'node:fs/promises';
 import { join, extname, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { launch } from '../harness/game.mjs';
+import { chromium } from 'playwright-core';
 import { SCENARIOS } from './scenarios.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -23,7 +23,12 @@ if (!scenario) {
 }
 await mkdir(OUT, { recursive: true });
 
-const browser = await launch({ headless: !headed });
+// due schede devono girare insieme: niente rallentamento di quella in secondo piano
+const browser = await chromium.launch({
+    headless: !headed,
+    args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required',
+        '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding'],
+});
 const context = await browser.newContext({ viewport: { width: 960, height: 540 } });
 const dist = resolve(ROOT, process.env.DIST ?? 'dist-dev');
 await context.route(`${ORIGIN}/**`, async (route) => {

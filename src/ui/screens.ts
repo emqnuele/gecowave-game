@@ -77,6 +77,10 @@ export class Screens {
     private awake = false;
     /** la porta della partita in due: la mette main */
     coopEntry: (() => void) | null = null;
+    /** in due certe scelte le fa l'altro o le guarda soltanto: true se il coop l'ha presa */
+    /** la pausa in due: voci in più e una nota diversa (il mondo non aspetta) */
+    pauseExtras: (() => { items: MenuItem[]; note: string } | null) | null = null;
+    choiceRouter: ((p: { title: string; options: { label: string; danger?: boolean }[]; onPick: (i: number) => void }) => boolean) | null = null;
 
     constructor() {
         this.bg = el('div');
@@ -110,7 +114,10 @@ export class Screens {
         bus.on('achievement', ({ id }) => this.trophy(id));
         bus.on('travel-show', (p) => this.travelBoard(p));
         bus.on('chapter-score', (p) => this.chapterScore(p));
-        bus.on('choice-show', ({ title, options, onPick }) => this.choice(title, options, onPick));
+        bus.on('choice-show', (p) => {
+            if (this.choiceRouter?.(p)) return;
+            this.choice(p.title, p.options, p.onPick);
+        });
         bus.on('request-pause', () => this.showPause());
     }
 
@@ -420,12 +427,14 @@ export class Screens {
             this.closeOverlay();
             this.controller.resume();
         };
+        const extra = this.pauseExtras?.() ?? null;
         page.append(this.menu([
             { label: 'riprendi', onPick: resume },
+            ...(extra?.items ?? []),
             { label: 'comandi', onPick: () => this.showControls(() => this.showPause(), true) },
             { label: 'impostazioni', onPick: () => this.showSettings(() => this.showPause(), true) },
             { label: 'esci al menu', danger: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
-        ]), el('div', 'sx-note', 'il gioco aspetta. pedro no.'));
+        ]), el('div', 'sx-note', extra?.note ?? 'il gioco aspetta. pedro no.'));
         s.append(page);
         this.bindNav(page, resume);
     }
@@ -765,7 +774,7 @@ export class Screens {
 
     /* ---------- scelte ---------- */
 
-    private choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
+    choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
         this.controller.pause();
         const s = this.openOverlay('screen sx');
         const page = el('div', 'sx-page');

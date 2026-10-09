@@ -8,6 +8,7 @@ import { music } from '../audio/music';
 import { acoustics } from '../audio/acoustics';
 import { VortexPipeline, hexToTint } from '../art/fx/VortexPipeline';
 import type { FilmData } from './film/FilmScene';
+import { coopHooks } from '../coop/hooks';
 
 // il mondo si ferma come sotto un dialogo: il film gira in una scena sua e alla fine si riparte da dov'era
 
@@ -21,7 +22,7 @@ export class FlashbackManager {
         return this.playing;
     }
 
-    play(scene: Phaser.Scene, _player: Phaser.GameObjects.Sprite, id: string, onEnd?: () => void, opts?: { markSeen?: boolean }): void {
+    play(scene: Phaser.Scene, _player: Phaser.GameObjects.Sprite, id: string, onEnd?: () => void, opts?: { markSeen?: boolean; follow?: boolean }): void {
         const fb = FLASHBACKS[id];
         if (!fb || !FILMS[id] || this.playing) {
             onEnd?.();
@@ -60,11 +61,12 @@ export class FlashbackManager {
             cam.setRotation(0);
             // il mondo si ferma come sotto un dialogo: niente geco nascosto, niente invincibilità
             scene.game.scene.pause(key);
-            const data: FilmData = { id, quick: seen, onEnd: () => back() };
+            const data: FilmData = opts?.follow ? { id, quick: seen, onEnd: () => back(), follow: true } : { id, quick: seen, onEnd: () => back() };
             scene.game.scene.run('FilmScene', data);
         });
 
         const back = (): void => {
+            coopHooks.filmEnded?.();
             scene.events.off(Phaser.Scenes.Events.SHUTDOWN, onShutdown);
             scene.game.scene.resume(key);
             music.setGraveDuck(false);
