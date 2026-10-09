@@ -7,6 +7,8 @@ import { ensureCreature } from '../art/creatures';
 import { CreatureGlow, creatureBody, creatureFrames, creatureRes } from '../art/creatureKit';
 import { emitWorld } from '../core/worldEvents';
 import { rng } from '../core/rng';
+import { state } from '../core/state';
+import { SHIELD_TOMMASO, shieldBarksFor } from '../content/barks';
 
 /* stati: chi dorme si sveglia se ti avvicini o lo colpisci, chi pattuglia gira
    sul suo pavimento senza cadere, chi ti vede dà l'allarme e ti insegue lungo
@@ -18,6 +20,12 @@ export type EnemyMode = 'sleep' | 'patrol' | 'alert' | 'chase' | 'return' | 'fle
 export type EnemyTrait = 'scudo' | 'soffitto' | 'kamikaze';
 
 const FUSE_MS = 650;
+/** parate di fila che fanno cadere lo scudo: di lato si passa, solo più piano del pogo */
+const GUARD_HITS = 3;
+const GUARD_WINDOW_MS = 2600;
+const GUARD_BREAK_MS = 1300;
+/** lo scudo è disegnato al doppio, come i fogli delle creature */
+const SHIELD_RES = 2;
 const BLAST_R = 96;
 
 /** quanto salta ogni comportamento, in px: decide quali archi del grafo può usare */
@@ -73,6 +81,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     private mark: Phaser.GameObjects.Text | null = null;
     readonly trait: EnemyTrait | null;
     private shield: Phaser.GameObjects.Image | null = null;
+    private shieldKick = 0;
+    private guardHits = 0;
+    private guardAt = -99999;
+    private speech: Phaser.GameObjects.Text | null = null;
+    private speechUntil = 0;
+    private nextBarkAt = 0;
     /** appeso al soffitto finché non passi sotto */
     private hanging = false;
     private fuseAt = 0;
@@ -117,24 +131,75 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.trait = opts.trait ?? null;
         if (this.trait === 'soffitto' && !this.hangFromCeiling()) this.trait = null;
         if (this.trait === 'scudo') {
-            Enemy.ensureTextures(scene);
-            this.shield = scene.add.image(x, y, 'trait-scudo').setDepth(4.1).setPipeline('Light2D').setTint(mix(this.arch.glowColor, 0x52525b, 0.55));
+            const key = Enemy.shieldTexture(scene, kind);
+            // chiaro e appena tinto: quello scuro di prima nel buio non si leggeva come scudo
+            this.shield = scene.add.image(x, y, key).setDepth(4.1).setScale(1 / SHIELD_RES).setPipeline('Light2D').setTint(mix(this.arch.glowColor, 0xe4e4e7, 0.6));
         }
         if (opts.sleeping && !airborne && !this.hanging) this.setMode('sleep');
     }
 
-    private static ensureTextures(scene: Phaser.Scene): void {
-        if (scene.textures.exists('trait-scudo')) return;
+    /** ogni simbolo ha il suo scudo: la valigia del pendolare, l'antisommossa del tossico, il resto lo scudo d'inchiostro */
+    private static shieldTexture(scene: Phaser.Scene, kind: EnemyKind): string {
+        const key = kind === 'pendolare' ? 'trait-scudo-valigia' : kind === 'tossico-trenbo' ? 'trait-scudo-tossico' : 'trait-scudo';
+        if (scene.textures.exists(key)) return key;
+        const INK = 0x0b0c10;
         const g = scene.add.graphics();
-        // scudo d'inchiostro: chiaro, si tinge col colore del nemico
-        g.fillStyle(0xd4d4d8, 1);
-        g.fillRoundedRect(1, 1, 10, 24, 4);
-        g.lineStyle(2, 0x0b0c10, 1);
-        g.strokeRoundedRect(1, 1, 10, 24, 4);
-        g.lineStyle(1.5, 0x0b0c10, 1);
-        g.lineBetween(6, 4, 6, 22);
-        g.generateTexture('trait-scudo', 12, 26);
+        if (key === 'trait-scudo-valigia') {
+            g.lineStyle(4, INK, 1);
+            g.strokeRoundedRect(10, 2, 14, 10, 4);
+            g.fillStyle(0xd6d3d1, 1);
+            g.fillRoundedRect(2, 10, 30, 44, 6);
+            g.fillStyle(0xa8a29e, 1);
+            g.fillRect(8, 10, 5, 44);
+            g.fillRect(21, 10, 5, 44);
+            g.fillStyle(0xfafaf9, 1);
+            g.fillRoundedRect(14, 30, 6, 10, 2);
+            g.fillStyle(INK, 1);
+            for (const [cx, cy] of [[5, 13], [29, 13], [5, 51], [29, 51]]) g.fillRect(cx - 3, cy - 3, 6, 6);
+            g.lineStyle(4, INK, 1);
+            g.strokeRoundedRect(2, 10, 30, 44, 6);
+            g.generateTexture(key, 34, 56);
+        } else if (key === 'trait-scudo-tossico') {
+            g.fillStyle(0xe7e5e4, 1);
+            g.fillRoundedRect(2, 2, 28, 58, 8);
+            g.fillStyle(INK, 1);
+            g.fillRoundedRect(7, 8, 18, 9, 3);
+            g.lineStyle(2, 0xfafaf9, 0.9);
+            g.lineBetween(10, 11, 16, 11);
+            // l'adesivo dell'occhio, storto come lo attacca un tossico
+            g.fillStyle(0xfafaf9, 1);
+            g.fillEllipse(16, 36, 18, 11);
+            g.fillStyle(INK, 1);
+            g.fillCircle(16, 36, 4);
+            g.lineStyle(2, INK, 1);
+            g.strokeEllipse(16, 36, 18, 11);
+            g.lineStyle(3, 0xa8a29e, 1);
+            g.lineBetween(5, 50, 27, 44);
+            g.lineStyle(2, INK, 0.7);
+            g.lineBetween(22, 22, 26, 27);
+            g.lineBetween(8, 52, 11, 56);
+            g.lineStyle(4, INK, 1);
+            g.strokeRoundedRect(2, 2, 28, 58, 8);
+            g.generateTexture(key, 32, 62);
+        } else {
+            g.fillStyle(0xd4d4d8, 1);
+            g.fillRoundedRect(2, 2, 24, 52, 9);
+            g.fillStyle(0xfafafa, 1);
+            g.fillRoundedRect(6, 6, 5, 44, 2);
+            g.lineStyle(2, INK, 0.35);
+            for (let y = 12; y <= 44; y += 6) g.lineBetween(13, y, 22, y);
+            g.fillStyle(INK, 1);
+            g.fillCircle(15, 28, 6);
+            g.fillStyle(0xe4e4e7, 1);
+            g.fillCircle(15, 28, 2.5);
+            g.fillStyle(INK, 1);
+            for (const [cx, cy] of [[9, 9], [20, 9], [9, 47], [20, 47]]) g.fillCircle(cx, cy, 1.8);
+            g.lineStyle(4, INK, 1);
+            g.strokeRoundedRect(2, 2, 24, 52, 9);
+            g.generateTexture(key, 28, 56);
+        }
         g.destroy();
+        return key;
     }
 
     /** si attacca al soffitto sopra la sua casa; false se lì sopra non c'è roccia */
@@ -168,6 +233,53 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         return Math.sign(fromX - this.x) === facing;
     }
 
+    /** una parata: lo scudo trema, lui si vanta, e alla terza di fila gli cade */
+    parried(): void {
+        if (!this.shield) return;
+        const now = this.scene.time.now;
+        this.guardHits = now - this.guardAt < GUARD_WINDOW_MS ? this.guardHits + 1 : 1;
+        this.guardAt = now;
+        this.shieldKick = 1;
+        this.shield.setTintFill(0xffffff);
+        this.scene.time.delayedCall(70, () => this.shield?.setTint(mix(this.arch.glowColor, 0xe4e4e7, 0.6)));
+        const lines = shieldBarksFor(this.arch.kind);
+        if (this.guardHits >= GUARD_HITS) {
+            this.guardHits = 0;
+            this.stun(GUARD_BREAK_MS);
+            this.say(this.pickLine(lines.broken), 1600);
+            return;
+        }
+        if (now < this.nextBarkAt) return;
+        // la prima parata parla sempre, poi ogni tanto: un nemico che commenta ogni colpo stanca
+        if (this.speech && rng.fx.next() < 0.45) return;
+        const tommaso = state.save.seenDialogues.includes('ticummi-offerta') && rng.fx.next() < 0.35;
+        this.say(this.pickLine(tommaso ? SHIELD_TOMMASO : lines.parry));
+    }
+
+    private pickLine(lines: string[]): string {
+        return lines[Math.floor(rng.fx.next() * lines.length)];
+    }
+
+    /** la battuta sopra la testa, come quelle dei passanti */
+    private say(text: string, ms = 2200): void {
+        const now = this.scene.time.now;
+        if (!this.speech) {
+            this.speech = this.scene.add.text(this.x, this.y, '', {
+                fontFamily: '"Permanent Marker", cursive',
+                fontSize: '13px',
+                color: '#f1f5f9',
+                stroke: '#000000',
+                strokeThickness: 4,
+                padding: { x: 4, y: 2 },
+                wordWrap: { width: 190 },
+                align: 'center',
+            }).setOrigin(0.5, 1).setDepth(8);
+        }
+        this.speech.setText(text).setVisible(!this.dormant).setAlpha(1).setRotation((rng.fx.next() - 0.5) * 0.06);
+        this.speechUntil = now + ms;
+        this.nextBarkAt = now + ms + 600;
+    }
+
     setDormant(dormant: boolean): void {
         if (dormant === this.dormant || !this.body) return;
         this.dormant = dormant;
@@ -178,6 +290,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.aura?.setVisible(!dormant);
         this.look.setVisible(!dormant);
         this.shield?.setVisible(!dormant);
+        if (dormant) this.speech?.setVisible(false);
         // chi dorme appeso resta appeso: senza gravità anche quando si risveglia il corpo
         if (!dormant && this.hanging) body.setAllowGravity(false);
     }
@@ -231,7 +344,23 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         const dist = Math.hypot(dx, dy);
         this.mark?.setPosition(this.x, this.y - body.height / 2 - 16 + Math.sin(this.t / 300) * 2);
         this.aura?.setPosition(this.x, this.y);
-        if (this.shield) this.shield.setPosition(this.x + (this.flipX ? 1 : -1) * (body.width / 2 + 6), this.y + 2).setFlipX(this.flipX);
+        if (this.shield) {
+            const side = this.flipX ? 1 : -1;
+            // stordito non para: lo scudo cade storto, così si vede che ora passa tutto
+            const down = now < this.stunnedUntil;
+            this.shieldKick = Math.max(0, this.shieldKick - delta / 120);
+            this.shield
+                .setPosition(this.x + side * (body.width / 2 + 6 - this.shieldKick * 5 + (down ? 4 : 0)), this.y + 2 + (down ? body.height * 0.3 : 0))
+                .setFlipX(this.flipX)
+                .setRotation(down ? side * 1.2 : 0)
+                .setAlpha(down ? 0.7 : 1);
+        }
+        if (this.speech?.visible) {
+            const left = this.speechUntil - now;
+            this.speech.setPosition(this.x, this.y - body.height / 2 - 30);
+            if (left <= 0) this.speech.setVisible(false);
+            else if (left < 400) this.speech.setAlpha(left / 400);
+        }
 
         if (this.hanging) {
             // passa sotto e ti cade addosso: lo si vede solo se lo si cerca
@@ -649,6 +778,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.aura = null;
         this.shield?.destroy();
         this.shield = null;
+        this.speech?.destroy();
+        this.speech = null;
         super.destroy(fromScene);
     }
 

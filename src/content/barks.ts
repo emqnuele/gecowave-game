@@ -1,4 +1,4 @@
-import type { BossKind, ZoneColor } from '../types';
+import type { BossKind, EnemyKind, ZoneColor } from '../types';
 
 /* i boss parlano mentre si combatte: all'ingaggio, a ogni fase, quando ti
    colpiscono, quando ti curi, quando sei a un cuore, e ogni tanto da soli.
@@ -380,3 +380,57 @@ export function barksFor(kind: BossKind): BarkSet | null {
     return BOSS_BARKS[kind] ?? null;
 }
 
+
+/* chi tiene lo scudo lo dice: una parata senza voce sembrava un nemico rotto */
+
+export interface ShieldBarks {
+    parry: string[];
+    broken: string[];
+}
+
+const SHIELD_DEFAULT: ShieldBarks = {
+    parry: [
+        'clang. si chiama scudo, cercalo.',
+        'di lato? ancora di lato?',
+        'toc toc. non c\'è nessuno.',
+        'lo scudo ringrazia.',
+        'sopra la testa niente scudo. ops, l\'ho detto.',
+        'alle spalle non ci arrivi, geco.',
+    ],
+    broken: ['no no no lo scudo—', 'mi è scivolato. non guardare.', 'aspetta, aspetta, lo riprendo!', 'garanzia scaduta. proprio oggi.'],
+};
+
+export const SHIELD_BARKS: Partial<Record<EnemyKind, ShieldBarks>> = {
+    pendolare: {
+        parry: [
+            'c\'è dentro il pranzo. non si tocca.',
+            'valigia rigida. ventidue anni di pendolarismo.',
+            'convalidato. respinto.',
+            'sto andando a lavoro, non rompere.',
+            'il bagaglio a mano para tutto. dall\'alto no, ma zitto.',
+        ],
+        broken: ['la valigia! il pranzo!', 'perso il bagaglio. come sempre.', 'questa la segnalo all\'azienda.'],
+    },
+    'tossico-trenbo': {
+        parry: [
+            'lo scudo è più fatto di me. e ce ne vuole.',
+            'zio, mi colpisci il coperchio?',
+            'mi rimbalzi, fratè. mi rimbalzi.',
+            'la testa è scoperta. ma tu guardi lo scudo.',
+            'trenbolone nelle vene, scudo nelle mani.',
+        ],
+        broken: ['fratè ridammi lo scudo.', 'ah. era di cartone.', 'calma. calma. dov\'è finito.'],
+    },
+};
+
+/** solo dopo l'offerta di ticummi: prima di lì il geco non sa cosa sia */
+export const SHIELD_TOMMASO: string[] = [
+    'hah! questo scudo della tommasorveglianza è fantastico!',
+    'protetto da tommasorveglianza. 👍',
+    'assolutamente sicuro. c\'è scritto sul retro. 👍',
+    'la tommasorveglianza ha registrato il tuo colpo. 🫶',
+];
+
+export function shieldBarksFor(kind: EnemyKind): ShieldBarks {
+    return SHIELD_BARKS[kind] ?? SHIELD_DEFAULT;
+}

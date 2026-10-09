@@ -34,6 +34,7 @@ export class Combat implements GameSystem {
         if (now < this.parryUntil) return;
         this.parryUntil = now + 350;
         sfx.clang();
+        enemy.parried();
         const dir = Math.sign(this.ctx.player.x - enemy.x) || 1;
         (this.ctx.player.body as Phaser.Physics.Arcade.Body).setVelocityX(dir * 260);
         const sparks = this.scene.add.particles(enemy.x - dir * 18, enemy.y, 'p-spark', {
