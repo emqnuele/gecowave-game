@@ -69,7 +69,7 @@ const APPS: AppDef[] = [
 const DOCK: AppId[] = ['messaggi', 'mappa', 'zaino', 'trofei'];
 
 /** i capitoli che hanno un dipinto loro: lo sfondo della home è il posto dove sei */
-const PAINTED = new Set(['bus', 'cantina', 'caso', 'galliate', 'marcetti', 'mente', 'nucleo', 'ricordi', 'rio', 'ruhra', 'santuario', 'sorveglianza', 'stabilimento', 'tana', 'tecnokill', 'trenbolone']);
+const PAINTED = new Set(['bus', 'cantina', 'caso', 'galliate', 'marcetti', 'mente', 'nucleo', 'ricordi', 'rio', 'ruhra', 'santuario', 'sorveglianza', 'stabilimento', 'tana', 'tecnokill', 'trenbolone', 'void']);
 
 function wallpaperFor(levelId: string): string {
     return PAINTED.has(levelId) ? `assets/backgrounds/${levelId}.png` : 'assets/background.png';
