@@ -63,6 +63,7 @@ export class WorldMirror {
             this.arrived = true;
             for (const e of d.enemies) this.spawn(e);
             for (const n of d.nests) this.nest(n);
+            for (const n of d.npcs ?? []) this.npc(n);
             for (const p of d.pickups) this.pickup(p);
             for (const c of d.walls) this.wall(c);
             if (d.boss) this.spawnBoss(d.boss);
@@ -80,6 +81,8 @@ export class WorldMirror {
             this.nests.delete(id);
             if (s?.active) this.ctx.enemies.breakSpawner(s);
         });
+        on('npc', (m) => this.npc(m));
+        on('npc-gone', ({ id }) => this.ctx.npcs.despawn(id));
         on('shoot', (m) => {
             const proj = this.ctx.combat.shootProjectile(m);
             this.projs.set(m.id, proj);
@@ -170,6 +173,17 @@ export class WorldMirror {
         coopHooks.puppets.add(s);
         this.nests.set(n.id, s);
         this.ids.set(s, n.id);
+    }
+
+    /** un personaggio nato dall'host: se ce l'ho già (caricamento) non si sdoppia */
+    private npc(m: { id: string; x: number; y: number }): void {
+        if (typeof m.id !== 'string' || !Number.isFinite(m.x) || !Number.isFinite(m.y)) return;
+        if (this.ctx.npcs.at.has(m.id)) return;
+        try {
+            this.ctx.npcs.spawn(m.id.slice(0, 64), m.x, m.y);
+        } catch {
+            // id di contenuto ignoto: meglio un npc in meno che un capitolo rotto
+        }
     }
 
     private wall(cell: number): void {

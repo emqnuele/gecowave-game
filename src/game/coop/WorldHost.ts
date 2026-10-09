@@ -58,6 +58,8 @@ export class WorldHost {
         };
         on('enemy-spawned', ({ enemy }) => this.registerEnemy(enemy, true));
         on('nest-spawned', ({ nest }) => this.registerNest(nest, true));
+        on('npc-spawned', ({ id, x, y }) => this.registerNpc(id, x, y, true));
+        on('npc-gone', ({ id }) => this.unregisterNpc(id, true));
         on('enemy-explode', ({ x, y, r }) => this.send('boom', { x, y, r }));
         on('boss-spawned', ({ boss }) => this.registerBoss(boss, true));
         coopHooks.hostBoss = {
@@ -95,6 +97,7 @@ export class WorldHost {
     adoptExisting(): void {
         for (const c of this.ctx.groups.enemies.getChildren()) this.registerEnemy(c as Enemy, false);
         for (const c of this.ctx.groups.spawners.getChildren()) this.registerNest(c as Spawner, false);
+        for (const [id, at] of this.ctx.npcs.at) this.registerNpc(id, at.x, at.y, false);
         const b = this.ctx.bosses.current;
         if (b?.active) this.registerBoss(b, false);
     }
@@ -154,6 +157,21 @@ export class WorldHost {
 
     private nestOf(s: Spawner): NestSpawn {
         return { id: this.ids.get(s)!, kind: s.kind, x: s.x, y: s.y, broken: s.broken };
+    }
+
+    /** un personaggio nato dopo il caricamento l'ospite lo mette identico; prima, ce l'ha già */
+    private readonly npcIds = new Set<string>();
+
+    private registerNpc(id: string, x: number, y: number, announce: boolean): void {
+        if (typeof id !== 'string' || !Number.isFinite(x) || !Number.isFinite(y)) return;
+        const known = this.npcIds.has(id);
+        this.npcIds.add(id);
+        if (announce && !known) this.send('npc', { id: id.slice(0, 64), x, y });
+    }
+
+    private unregisterNpc(id: string, announce: boolean): void {
+        if (!this.npcIds.delete(id)) return;
+        if (announce) this.send('npc-gone', { id });
     }
 
     private registerNest(s: Spawner, announce: boolean): void {
@@ -232,6 +250,11 @@ export class WorldHost {
             this.registerNest(s, false);
             nests.push(this.nestOf(s));
         }
+        const npcs: { id: string; x: number; y: number }[] = [];
+        for (const [id, at] of this.ctx.npcs.at) {
+            this.npcIds.add(id);
+            npcs.push({ id, x: at.x, y: at.y });
+        }
         const pickups: PickupSpawn[] = [];
         for (const [, p] of this.pickups) {
             if (!p.spec || !p.sprite.active) continue;
@@ -244,6 +267,7 @@ export class WorldHost {
             levelSeq: coop.levelSeq,
             enemies,
             nests,
+            npcs,
             boss: boss?.active ? this.bossOf(boss) : null,
             pickups,
             gone: [],

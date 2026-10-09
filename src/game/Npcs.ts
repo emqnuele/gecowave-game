@@ -1,8 +1,9 @@
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import { ZONE_HEX } from '../config';
 import { animateCreature, creatureRes } from '../art/creatureKit';
 import { ensureCreature } from '../art/creatures';
 import { npcTexture } from '../art/npcTexture';
+import { emitWorld } from '../core/worldEvents';
 import type { GameContext, GameSystem } from './context';
 import type { Interactable } from './Interactions';
 
@@ -12,6 +13,8 @@ type NpcsCtx = Pick<GameContext, 'scene' | 'world' | 'lighting' | 'interactions'
 export class Npcs implements GameSystem {
     /** dove stanno gli npc di trama, per indicarli */
     readonly at = new Map<string, { x: number; y: number }>();
+    private readonly sprites = new Map<string, Phaser.GameObjects.Sprite>();
+    private readonly entries = new Map<string, Interactable>();
     private readonly ctx: NpcsCtx;
 
     constructor(ctx: NpcsCtx) {
@@ -43,14 +46,32 @@ export class Npcs implements GameSystem {
         if (!id.startsWith('vavleeh')) {
             this.ctx.scene.tweens.add({ targets: npc, y: npc.y - 3, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         }
+        this.sprites.set(id, npc);
+        npc.once(Phaser.GameObjects.Events.DESTROY, () => {
+            if (this.sprites.get(id) === npc) {
+                this.sprites.delete(id);
+                emitWorld(this.ctx.scene, 'npc-gone', { id });
+            }
+        });
+        emitWorld(this.ctx.scene, 'npc-spawned', { id, x, y });
         return npc;
     }
 
     /** il personaggio si può interpellare */
     talk(id: string, x: number, y: number): Interactable {
         const entry: Interactable = { x, y, range: 70, onInteract: () => this.interact(id) };
+        this.entries.set(id, entry);
         this.ctx.interactions.add(entry);
         return entry;
+    }
+
+    /** il personaggio se ne va: via sprite, voce e punto dove parlargli */
+    despawn(id: string): void {
+        const entry = this.entries.get(id);
+        this.entries.delete(id);
+        if (entry) this.ctx.interactions.remove(entry);
+        this.at.delete(id);
+        this.sprites.get(id)?.destroy();
     }
 
     interact(id: string): void {

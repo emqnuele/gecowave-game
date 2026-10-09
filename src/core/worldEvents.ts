@@ -24,6 +24,9 @@ export interface WorldEvents {
     // nemici e nidi
     'enemy-spawned': { enemy: Enemy };
     'nest-spawned': { nest: Spawner };
+    /** un personaggio di scena nato dopo il caricamento: in due lo vede anche l'altro */
+    'npc-spawned': { id: string; x: number; y: number };
+    'npc-gone': { id: string };
     'enemy-shoot': { x: number; y: number; tx: number; ty: number; color?: number; speed?: number; size?: number };
     'enemy-fuse': { x: number; y: number };
     'enemy-alert': { x: number; y: number; from: Enemy };

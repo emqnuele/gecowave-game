@@ -64,6 +64,7 @@ export interface WorldDump {
     levelSeq: number;
     enemies: EnemySpawn[];
     nests: NestSpawn[];
+    npcs: { id: string; x: number; y: number }[];
     boss: BossSpawn | null;
     pickups: PickupSpawn[];
     /** le chiavi degli oggetti del livello già presi o spariti */
@@ -123,6 +124,9 @@ export interface CoopMsgs {
     'despawn': { id: number; died: boolean; x: number; y: number; kind: EnemyKind; color: number };
     'nest': NestSpawn;
     'nest-gone': { id: number };
+    /** un personaggio nato a capitolo iniziato: l'ospite lo mette identico, e ci parla tramite l'host */
+    'npc': { id: string; x: number; y: number };
+    'npc-gone': { id: string };
     'enemy-fx': { id: number; fx: 'hurt' | 'parry' | 'stagger' | 'wake' | 'drop' | 'fuse' | 'charge' | 'fired'; ms?: number };
     'enemy-say': { id: number; text: string; ms: number };
     'boss': BossSpawn;
