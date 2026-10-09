@@ -107,7 +107,7 @@
 .sx-item {
   position: relative;
   display: grid;
-  justify-items: inherit;
+  justify-items: center;
   background: none;
   border: none;
   padding: 7px 34px;
@@ -116,7 +116,7 @@
   font-family: var(--font-fell);
   font-size: clamp(19px, 2vw, 24px);
   letter-spacing: 0.1em;
-  text-align: inherit;
+  text-align: center;
   transition: color 0.25s ease, text-shadow 0.25s ease, transform 0.25s ease;
   outline: none;
 }
