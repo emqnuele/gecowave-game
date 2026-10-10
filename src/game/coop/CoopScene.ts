@@ -281,7 +281,8 @@ export class CoopScene implements GameSystem {
     }
 
     /** il mio geco cambia posto senza camminare: una nuvola dove sparisce e dove riappare */
-    teleportSelf(x: number, y: number, why?: string): void {        const p = this.ctx.player;
+    teleportSelf(x: number, y: number, why?: string): void {
+        const p = this.ctx.player;
         const puff = (px: number, py: number) => {
             const e = this.scene.add.particles(px, py, 'p-dot', { speed: { min: 40, max: 160 }, scale: { start: 0.7, end: 0 }, alpha: { start: 0.7, end: 0 }, tint: 0x0b0c10, lifespan: 420, quantity: 16, stopAfter: 16 }).setDepth(6);
             this.scene.time.delayedCall(800, () => e.destroy());

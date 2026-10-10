@@ -48,7 +48,7 @@ async function open(tag) {
     page.on('console', (m) => {
         if (m.type() === 'error' || process.env.VERBOSE) console.log(`[${tag} ${m.type()}] ${m.text()}`);
     });
-    await page.goto(`${ORIGIN}/`);
+    await page.goto(`${ORIGIN}/?rete=locale`);
     await page.waitForFunction(() => !!window.__game?.scene?.isActive('MenuScene'), null, { timeout: 60000 });
     await page.keyboard.press('ShiftLeft');
     await page.waitForTimeout(300);

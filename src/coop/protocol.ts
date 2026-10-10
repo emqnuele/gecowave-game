@@ -161,8 +161,6 @@ export interface CoopMsgs {
     'quiz-gone': { x: number; y: number };
     /** un trofeo dell'ospite vale anche per la partita */
     'achieve': { id: string };
-    /** titoli di coda finiti anche dall'altra parte: si chiude insieme */
-    'ending-done': Record<string, never>;
 
     // --- richieste del guest ---
     'hit': Hit;

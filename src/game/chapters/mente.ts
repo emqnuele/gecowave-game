@@ -77,7 +77,8 @@ export class MenteChapter extends Chapter {
                 this.ctx.interactions.remove(entry);
                 // in due la porta cade anche dall'altra parte: niente fantasmi che si aprono
                 this.ctx.coop?.session.send('quiz-gone', { x: door.x, y: door.y });
-                sfx.unlock();                const burst = this.scene.add.particles(door.x, door.y, 'p-spark', {
+                sfx.unlock();
+                const burst = this.scene.add.particles(door.x, door.y, 'p-spark', {
                     speed: { min: 40, max: 160 },
                     scale: { start: 0.7, end: 0 },
                     tint: 0x60a5fa,

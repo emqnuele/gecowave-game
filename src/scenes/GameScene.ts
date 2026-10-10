@@ -426,26 +426,30 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     private createCoop(): void {
         const session = coop.session;
         if (!coop.active || !session) return;
-        this.ctx.coop = new CoopScene(this.ctx, session);
-        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-            this.ctx.coop?.destroy();
-            this.ctx.coop = null;
-        });
+        this.mountCoop(session);
+    }
+
+    /** un coop per scena: quello vecchio si chiude, e alla chiusura della scena se ne va anche il nuovo */
+    private mountCoop(session: NonNullable<typeof coop.session>): CoopScene {
+        const hadCoop = !!this.ctx.coop;
+        this.ctx.coop?.destroy();
+        const cs = new CoopScene(this.ctx, session);
+        this.ctx.coop = cs;
+        if (!hadCoop) {
+            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+                this.ctx.coop?.destroy();
+                this.ctx.coop = null;
+            });
+        }
+        return cs;
     }
 
     /** l'host partito da solo aggancia il coop quando il guest si presenta: stessa scena, nuova sessione */
     attachLateCoop(): void {
         const session = coop.session;
         if (!coop.isHost || !session || !session.open) return;
-        const cur = this.ctx.coop as (CoopScene & { session: unknown }) | null;
-        if (cur && (cur as unknown as { session: unknown }).session === session) return;
-        this.ctx.coop?.destroy();
-        this.ctx.coop = new CoopScene(this.ctx, session);
-        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-            this.ctx.coop?.destroy();
-            this.ctx.coop = null;
-        });
-        this.ctx.coop.loaded();
+        if (this.ctx.coop?.session === session) return;
+        this.mountCoop(session).loaded();
     }
 
     /** la partita in due: l'host annuncia il capitolo, l'ospite dice che è arrivato */

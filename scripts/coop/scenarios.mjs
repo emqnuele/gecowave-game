@@ -6,20 +6,17 @@ const coopOf = (page) => page.evaluate(() => {
 
 async function hostAndJoin(t, { hostName = 'Ospite', guestName = 'Entra' } = {}) {
     const { A, B } = t;
-    await t.click(A, 'gioca in due');
-    await t.click(A, 'rete: online');
-    await t.click(A, 'ospita una partita');
+    await t.click(A, 'multiplayer');
+    await t.click(A, 'crea partita');
     await t.type(A, '.sx-step.active .sx-name-input', hostName);
     await t.click(A, 'incidi');
     await t.click(A, 'conferma');
-    await t.click(A, 'apri la partita');
+    await t.click(A, 'apri la stanza');
     await t.until(A, () => /[A-Z0-9] [A-Z0-9]/.test(document.querySelector('.cx-code')?.textContent ?? ''));
     const code = (await A.evaluate(() => document.querySelector('.cx-code').textContent)).replace(/\s/g, '');
-    await t.click(B, 'gioca in due');
-    await t.click(B, 'rete: online');
-    await t.click(B, 'entra in una partita');
+    await t.click(B, 'multiplayer');
+    await t.click(B, 'entra con un codice');
     await t.type(B, '.cx-code-input', code);
-    await t.click(B, 'entra');
     await t.until(B, () => document.body.textContent.includes('la partita di'));
     await t.click(B, 'forgia il tuo geco');
     await t.type(B, '.sx-step.active .sx-name-input', guestName);
@@ -54,11 +51,9 @@ const scene = (p, fn, arg) => p.evaluate(([src, arg]) => {
 
 async function joinAs(t, code, { name = null, remembered = false } = {}) {
     const { B } = t;
-    await t.click(B, 'gioca in due');
-    if (await B.evaluate(() => [...document.querySelectorAll('button')].some((b) => (b.textContent || '').includes('rete: online')))) await t.click(B, 'rete: online');
-    await t.click(B, 'entra in una partita');
+    await t.click(B, 'multiplayer');
+    await t.click(B, 'entra con un codice');
     await t.type(B, '.cx-code-input', code);
-    await t.click(B, 'entra');
     await t.until(B, () => document.body.textContent.includes('la partita di'));
     if (remembered) {
         await t.click(B, 'entra come');
@@ -160,13 +155,12 @@ export const SCENARIOS = {
 
     async dentro(t) {
         const { A, B } = t;
-        await t.click(A, 'gioca in due');
-        await t.click(A, 'rete: online');
-        await t.click(A, 'ospita una partita');
+        await t.click(A, 'multiplayer');
+        await t.click(A, 'crea partita');
         await t.type(A, '.sx-step.active .sx-name-input', 'Ospite');
         await t.click(A, 'incidi');
         await t.click(A, 'conferma');
-        await t.click(A, 'apri la partita');
+        await t.click(A, 'apri la stanza');
         await t.until(A, () => /[A-Z0-9] [A-Z0-9]/.test(document.querySelector('.cx-code')?.textContent ?? ''));
         const code = (await A.evaluate(() => document.querySelector('.cx-code').textContent)).replace(/\s/g, '');
         // l'host parte da solo
@@ -516,7 +510,8 @@ export const SCENARIOS = {
         await t.shot(B, 'corsa-ospite');
     },
 
-    async finale(t) {        await enterTogether(t);
+    async finale(t) {
+        await enterTogether(t);
         const { A, B } = t;
         // sconfitta diretta: riepilogo, titoli e menu su entrambi (l'ospite al titolo, non in lobby)
         await scene(A, `g.ctx.flow.endGame('sconfitta')`);

@@ -13,7 +13,7 @@
 * **npc di trama**: nati mid-capitolo arrivano all'ospite (spawn e sparizione).
 * **citelis, scelte, quiz, trial**: il tabellone e le scelte aprono a chi ha bussato; la corsa la giudica chi corre; la porta morde chi sbaglia.
 * **dispensa comune**: shop ed eat dell'ospite passano dall'host (soldi e zaino condivisi, cura a chi mangia).
-* **doppio KO e finale**: SEI MORTO su entrambi, titoli coordinati (l'host aspetta i credits dell'ospite).
+* **doppio KO e finale**: SEI MORTO su entrambi, titoli su entrambi: l'host chiude la stanza a fine titoli, l'ospite finisce i suoi senza essere interrotto.
 
 ## regole decise e implementate
 

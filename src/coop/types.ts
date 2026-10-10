@@ -43,6 +43,7 @@ export function sanitizeCharacter(raw: unknown): Character | null {
     // chi manda più punti di quanti la forgia ne dà riparte da zero: niente trucchi a metà
     const total = stats.forza + stats.costituzione + stats.flusso;
     const fair = total <= MAX_POINTS ? stats : { forza: 0, costituzione: 0, flusso: 0 };
-    const name = c.name.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 12) || 'Geco';
+    // il nome finisce in titoli e toast montati come html: niente markup dall'altra parte
+    const name = c.name.replace(/[\u0000-\u001f<>&"'`]/g, '').trim().slice(0, 12) || 'Geco';
     return { name, stats: fair, skin: isValidSkinId(c.skin) ? c.skin! : DEFAULT_SKIN_ID };
 }

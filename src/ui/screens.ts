@@ -77,9 +77,9 @@ export class Screens {
     private awake = false;
     /** la porta della partita in due: la mette main */
     coopEntry: (() => void) | null = null;
-    /** in due certe scelte le fa l'altro o le guarda soltanto: true se il coop l'ha presa */
     /** la pausa in due: voci in più e una nota diversa (il mondo non aspetta) */
     pauseExtras: (() => { items: MenuItem[]; note: string } | null) | null = null;
+    /** in due certe scelte le fa l'altro o le guarda soltanto: true se il coop l'ha presa */
     choiceRouter: ((p: { title: string; options: { label: string; danger?: boolean }[]; onPick: (i: number) => void }) => boolean) | null = null;
     travelRouter: ((p: { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void }) => boolean) | null = null;
 
@@ -296,7 +296,7 @@ export class Screens {
         }
         items.push({ label: 'nuova partita', onPick: () => (state.hasSave ? this.confirmNewGame() : this.controller.newGame()) });
         const coopEntry = this.coopEntry;
-        if (coopEntry) items.push({ label: 'gioca in due', onPick: coopEntry });
+        if (coopEntry) items.push({ label: 'multiplayer', onPick: coopEntry });
         if (state.hasSave || state.godMode) items.push({ label: 'capitoli', onPick: () => this.showChapters(() => this.showMenu()) });
         items.push({ label: 'bacheca', onPick: () => this.showTrophies(() => this.showMenu()) });
         items.push({ label: 'comandi', onPick: () => this.showControls(() => this.showMenu()) });

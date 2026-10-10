@@ -183,7 +183,8 @@ export class SaveLink {
         state.run.trenbolone = !!r.trenbolone;
     }
 
-    private receive(keys: Partial<SharedSave>): void {        const save = state.save as unknown as Record<string, unknown>;
+    private receive(keys: Partial<SharedSave>): void {
+        const save = state.save as unknown as Record<string, unknown>;
         const before = { barre: state.save.barre, abilities: state.save.abilities.length, inv: JSON.stringify(state.save.inventory) };
         for (const [k, v] of Object.entries(keys)) {
             if (personal.has(k)) continue;

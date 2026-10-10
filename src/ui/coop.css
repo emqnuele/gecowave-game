@@ -29,43 +29,30 @@
   font-family: var(--font-fell-it);
   font-style: italic;
   font-size: 14px;
-  color: var(--sx-ash);
-  margin-bottom: 10px;
+  color: var(--sx-dim);
+  margin-bottom: 14px;
 }
 
 .cx-code-input {
-  letter-spacing: 0.3em;
+  width: min(360px, 80vw);
+  font-size: clamp(40px, 6vw, 62px);
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
   text-transform: uppercase;
 }
 
-.cx-facts {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 22px;
-  margin: 10px 0 4px;
-  max-width: min(640px, 100%);
-}
-
-.cx-fact {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-
-.cx-fact .k {
-  font-family: var(--font-martian);
-  font-size: 9px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--sx-dim);
-}
-
-.cx-fact .v {
+/* la partita in una frase, sotto il codice */
+.cx-line {
   font-family: var(--font-fell-it);
   font-style: italic;
-  font-size: 16px;
-  color: var(--sx-bone);
+  font-size: 17px;
+  color: var(--sx-ash);
+  max-width: min(560px, 100%);
+  text-align: center;
+}
+
+.cx-status:empty {
+  display: none;
 }
 
 .cx-party {
@@ -73,14 +60,14 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 14px 30px;
-  margin: 18px 0 6px;
+  margin: 22px 0 10px;
 }
 
 .cx-slot {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 220px;
+  min-width: 200px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--sx-line);
   transform: rotate(-0.6deg);
@@ -125,18 +112,15 @@
   color: var(--sx-bone);
 }
 
-.cx-slot.empty .cx-name {
+.cx-role {
   font-family: var(--font-fell-it);
   font-style: italic;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--sx-ash);
 }
 
-.cx-stats {
-  font-family: var(--font-martian);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--sx-dim);
+.cx-slot.ready .cx-role {
+  color: var(--sx-gold);
 }
 
 .sx-note.cx-warn {

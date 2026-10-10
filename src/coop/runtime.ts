@@ -187,14 +187,13 @@ class CoopRuntime {
             this.link = link;
             this.emit({ type: 'link', link });
         };
-        s.onClose = (reason) => {
+        s.onClose = () => {
             if (this.session !== s) return;
             this.session = null;
             this.partner = null;
             this.partnerReady = false;
             this.clearSessionHandlers();
             this.emit({ type: 'partner', char: null });
-            void reason;
         };
         this.offSession.push(s.on('char', (m) => {
             const c = sanitizeCharacter(m.char);
@@ -386,7 +385,8 @@ class CoopRuntime {
         const ending = this.inEnding;
         this.inEnding = false;
         if (!wasActive) return;
-        if (reason) this.emit({ type: 'closed', reason });
+        // dentro i titoli non si avvisa nessuno: finiti quelli si torna al titolo comunque
+        if (reason && !ending) this.emit({ type: 'closed', reason });
         if (toMenu && !ending) this.app?.toMenu(reason);
     }
 }

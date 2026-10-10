@@ -10,7 +10,7 @@ import { el } from './dom';
 import type { MenuItem, Screens } from './screens';
 import './coop.css';
 
-/* le pagine della partita in due: chi ospita sceglie e apre la stanza, chi entra
+/* le pagine del multiplayer: chi crea sceglie e apre la stanza, chi entra
    porta il suo geco. tutto passa dal runtime del coop, qui si mostra e basta */
 
 /** cosa le pagine chiedono a main */
@@ -19,6 +19,19 @@ export interface CoopUiHost {
     startHosted(fresh: boolean): void;
     /** si torna al titolo dal coop: il salvataggio torna quello da solo */
     backToTitle(): void;
+}
+
+/** le prove a due schede aprono le stanze sul BroadcastChannel con ?rete=locale: in build pubblica è sempre online */
+function roomKind(): RoomKind {
+    if (!import.meta.env.DEV) return 'online';
+    return new URLSearchParams(location.search).get('rete') === 'locale' ? 'locale' : 'online';
+}
+
+/** testo semplice: i nomi arrivano dall'altro giocatore, mai come html */
+function txt<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text: string): HTMLElementTagNameMap[K] {
+    const node = el(tag, cls);
+    node.textContent = text;
+    return node;
 }
 
 function chapterLabel(levelId: string): string {
@@ -31,20 +44,22 @@ function playTime(ms: number): string {
     return min >= 60 ? `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m` : `${min}m`;
 }
 
-/** il ritratto piccolo di un geco: pallino della pelle e nome */
-function gecoTag(c: Character | null, waiting: string): HTMLElement {
-    const box = el('div', `cx-slot${c ? '' : ' empty'}`);
+/** la partita in una frase: da dove si parte e con quale destino */
+function gameLine(g: { fresh: boolean; levelId: string; playMs: number; doomsday: boolean; assisted: boolean }): HTMLElement {
+    const where = g.fresh ? 'si parte dall’inizio' : `si riprende da ${chapterLabel(g.levelId)}, dopo ${playTime(g.playMs)}`;
+    const fate = g.doomsday ? ', col doomsday' : '';
+    const arrow = g.assisted ? ', freccia accesa' : '';
+    return txt('div', 'cx-line', `${where}${fate}${arrow}.`);
+}
+
+/** un geco della stanza: pallino della pelle, nome, e chi è */
+function gecoTag(c: Character | null, role: string, opts: { ready?: boolean } = {}): HTMLElement {
+    const box = el('div', `cx-slot${c ? '' : ' empty'}${opts.ready ? ' ready' : ''}`);
     const dot = el('i', 'cx-dot');
     if (c) dot.style.background = skinFinalCss(skinPreset(c.skin));
     const words = el('div', 'cx-words');
-    const name = el('span', 'cx-name');
-    name.textContent = c ? c.name.toLowerCase() : waiting;
-    words.append(name);
-    if (c) {
-        const s = el('span', 'cx-stats');
-        s.textContent = `forza ${c.stats.forza} · costituzione ${c.stats.costituzione} · flusso ${c.stats.flusso}`;
-        words.append(s);
-    }
+    if (c) words.append(txt('span', 'cx-name', c.name.toLowerCase()));
+    words.append(txt('span', 'cx-role', role));
     box.append(dot, words);
     return box;
 }
@@ -52,8 +67,7 @@ function gecoTag(c: Character | null, waiting: string): HTMLElement {
 export class CoopScreens {
     private readonly ui: Screens;
     private readonly host: CoopUiHost;
-    /** in sviluppo le stanze si aprono tra due schede, senza rete */
-    private kind: RoomKind = 'online';
+    private readonly kind = roomKind();
     private off: (() => void) | null = null;
 
     constructor(ui: Screens, host: CoopUiHost) {
@@ -61,37 +75,32 @@ export class CoopScreens {
         this.host = host;
     }
 
+    /** si entra nel capitolo: da qui la chiusura della stanza la gestisce il gioco, non queste pagine */
+    detach(): void {
+        this.stopListening();
+    }
+
     private stopListening(): void {
         this.off?.();
         this.off = null;
     }
 
-    /** la porta del coop dal titolo */
+    private hasHostedGame(): boolean {
+        return localStorage.getItem(COOP_SAVE_KEY) !== null && !!readMeta();
+    }
+
+    /** la porta del multiplayer dal titolo */
     show(note?: string): void {
         this.stopListening();
         const s = this.ui.openOverlay('screen sx menu-screen');
         const page = el('div', 'sx-page');
         page.append(el('div', 'sx-kick', 'due gechi, un realm'));
-        page.append(...this.ui.heading('gioca in due', 'uno ospita la partita, l’altro entra col codice. ognuno porta il suo geco.'));
-        const meta = readMeta();
-        const hasGame = localStorage.getItem(COOP_SAVE_KEY) !== null && !!meta;
-        const items: MenuItem[] = [
-            { label: 'ospita una partita', sub: hasGame ? 'continua la tua o creane una nuova' : 'crea la partita e scegli il destino', onPick: () => this.showHostChoice() },
-            { label: 'entra in una partita', sub: 'serve il codice di chi ospita', onPick: () => this.showJoin() },
-        ];
-        if (import.meta.env.DEV) {
-            items.push({
-                label: this.kind === 'online' ? 'rete: online' : 'rete: due schede',
-                sub: 'solo sviluppo: le schede dello stesso browser giocano senza internet',
-                small: true,
-                onPick: () => {
-                    this.kind = this.kind === 'online' ? 'locale' : 'online';
-                    this.show();
-                },
-            });
-        }
-        items.push({ label: 'torna al titolo', back: true, onPick: () => this.host.backToTitle() });
-        page.append(this.ui.menu(items));
+        page.append(...this.ui.heading('multiplayer', 'uno crea la partita, l’altro entra col codice.'));
+        page.append(this.ui.menu([
+            { label: 'crea partita', onPick: () => this.showHostChoice() },
+            { label: 'entra con un codice', onPick: () => this.showJoin() },
+            { label: 'indietro', back: true, onPick: () => this.host.backToTitle() },
+        ]));
         if (note) page.append(this.noteEl(note));
         s.append(page);
         this.ui.bindNav(page, () => this.host.backToTitle());
@@ -103,28 +112,25 @@ export class CoopScreens {
         return n;
     }
 
-    /* ---------- chi ospita ---------- */
+    /* ---------- chi crea ---------- */
 
     private showHostChoice(): void {
-        const meta = readMeta();
-        const hasGame = localStorage.getItem(COOP_SAVE_KEY) !== null && !!meta;
-        if (!hasGame) {
+        if (!this.hasHostedGame()) {
             this.newHostedGame();
             return;
         }
-        // la partita in due salvata si legge senza toccare quella da solo
+        // la partita multiplayer salvata si legge senza toccare quella da solo
         state.useSlot('coop');
         const save = state.save;
         state.useSlot('single');
         const s = this.ui.openOverlay('screen sx menu-screen');
         const page = el('div', 'sx-page');
-        page.append(el('div', 'sx-kick', 'ospita'));
-        page.append(...this.ui.heading('la tua partita in due'));
-        // il chi è già sotto coi due gechi: qui bastano capitolo, tempo e destino
-        const sub = `${chapterLabel(save.levelId)} · ${playTime(save.record.playMs)}${save.doomsdayMode ? ' · doomsday' : ''}`;
+        page.append(el('div', 'sx-kick', 'multiplayer'));
+        page.append(...this.ui.heading('la tua partita'));
+        const sub = `${chapterLabel(save.levelId)}, ${playTime(save.record.playMs)}${save.doomsdayMode ? ', doomsday' : ''}`;
         page.append(this.ui.menu([
             { label: 'continua', sub, onPick: () => this.continueHostedGame() },
-            { label: 'nuova partita in due', sub: 'quella salvata andrà perduta', danger: true, onPick: () => this.confirmNew() },
+            { label: 'nuova partita', danger: true, onPick: () => this.confirmNew() },
             { label: 'indietro', back: true, onPick: () => this.show() },
         ]));
         s.append(page);
@@ -134,10 +140,10 @@ export class CoopScreens {
     private confirmNew(): void {
         const s = this.ui.openOverlay('screen sx menu-screen');
         const page = el('div', 'sx-page');
-        page.append(...this.ui.heading('nuova partita in due', 'la partita in due salvata andrà perduta. il tuo viaggio da solo no: quello non si tocca.'));
+        page.append(...this.ui.heading('nuova partita', 'la partita multiplayer salvata andrà perduta. il tuo viaggio da solo resta com’è.'));
         page.append(this.ui.menu([
-            { label: 'ricomincia in due', danger: true, onPick: () => this.newHostedGame() },
-            { label: 'torna indietro', back: true, onPick: () => this.showHostChoice() },
+            { label: 'ricomincia', danger: true, onPick: () => this.newHostedGame() },
+            { label: 'indietro', back: true, onPick: () => this.showHostChoice() },
         ]));
         s.append(page);
         this.ui.bindNav(page, () => this.showHostChoice());
@@ -147,12 +153,12 @@ export class CoopScreens {
         this.ui.forge({
             back: () => this.show(),
             backLabel: 'indietro',
-            kick: 'ospita · il tuo geco',
-            kick2: 'ospita · allocazione del flusso',
+            kick: 'multiplayer · il tuo geco',
+            kick2: 'multiplayer · allocazione del flusso',
             fate: true,
-            doneLabel: 'apri la partita',
+            doneLabel: 'apri la stanza',
             onDone: (r) => {
-                // la partita in due nasce nel suo salvataggio: il viaggio da solo resta dov'è
+                // la partita multiplayer nasce nel suo salvataggio: il viaggio da solo resta dov'è
                 state.useSlot('coop');
                 state.reset();
                 state.save.playerName = r.name;
@@ -179,61 +185,43 @@ export class CoopScreens {
         this.stopListening();
         const s = this.ui.openOverlay('screen sx menu-screen cx-lobby');
         const page = el('div', 'sx-page');
-        page.append(el('div', 'sx-kick', fresh ? 'partita nuova' : 'partita in due'));
+        page.append(el('div', 'sx-kick', fresh ? 'partita nuova' : 'multiplayer'));
         page.append(...this.ui.heading('la stanza'));
+
         const codeBox = el('button', 'cx-code');
         codeBox.dataset.nav = '1';
         codeBox.textContent = '· · · · ·';
         codeBox.title = 'copia il codice';
-        const codeNote = el('div', 'cx-code-note');
-        codeNote.textContent = 'apro la stanza…';
+        const codeNote = txt('div', 'cx-code-note', 'apro la stanza…');
         page.append(codeBox, codeNote);
-
-        const facts = el('div', 'cx-facts');
-        const fact = (k: string, v: string) => {
-            const row = el('div', 'cx-fact');
-            const a = el('span', 'k');
-            a.textContent = k;
-            const b = el('span', 'v');
-            b.textContent = v;
-            row.append(a, b);
-            facts.append(row);
-        };
-        fact('destino', state.save.doomsdayMode ? 'doomsday' : 'il cammino');
-        fact('capitolo', fresh ? 'dall’inizio' : chapterLabel(state.save.levelId));
-        if (!fresh) fact('tempo', playTime(state.save.record.playMs));
-        if (state.save.assisted) fact('freccia', 'assistita');
-        page.append(facts);
+        page.append(gameLine({ fresh, levelId: state.save.levelId, playMs: state.save.record.playMs, doomsday: state.save.doomsdayMode, assisted: state.save.assisted }));
 
         const party = el('div', 'cx-party');
-        const paintParty = () => {
-            party.replaceChildren(
-                gecoTag(characterOf(state.save), ''),
-                gecoTag(coop.partner, coop.session?.open ? 'qualcuno sta entrando…' : 'in attesa di un compagno'),
-            );
-            const p = party.lastElementChild as HTMLElement;
-            if (coop.partner) p.classList.add('ready');
-        };
-        paintParty();
         page.append(party);
-
-        const status = el('div', 'sx-note');
+        const status = el('div', 'sx-note cx-status');
         page.append(status);
+
         let code = '';
-        const startItem: MenuItem = {
-            label: 'inizia',
-            sub: 'chi deve ancora entrare potrà farlo anche dopo',
-            onPick: () => {
-                if (!code) return;
-                this.stopListening();
-                this.host.startHosted(fresh);
-            },
-        };
-        const menu = this.ui.menu([
-            startItem,
-            { label: 'annulla', back: true, onPick: () => this.leaveLobby() },
-        ]);
+        const menu = el('div', 'cx-actions');
         page.append(menu);
+        const paint = () => {
+            const partner = coop.partner;
+            const entering = !partner && !!coop.session?.open;
+            party.replaceChildren(
+                gecoTag(characterOf(state.save), 'tu'),
+                gecoTag(partner, partner ? 'pronto' : entering ? 'sta entrando…' : 'in attesa…', { ready: !!partner }),
+            );
+            // da soli si può partire: chi ha il codice entra anche a capitolo iniziato
+            menu.replaceChildren(this.ui.menu([
+                { label: partner ? 'inizia' : 'inizia da solo', onPick: () => {
+                    if (!code) return;
+                    this.stopListening();
+                    this.host.startHosted(fresh);
+                } },
+                { label: 'chiudi la stanza', back: true, onPick: () => this.leaveLobby() },
+            ]));
+        };
+        paint();
         s.append(page);
         this.ui.bindNav(page, () => this.leaveLobby());
 
@@ -241,18 +229,21 @@ export class CoopScreens {
             if (!code) return;
             sfx.ui();
             void navigator.clipboard?.writeText(code).then(
-                () => { codeNote.textContent = 'codice copiato. mandalo a chi gioca con te.'; },
-                () => { codeNote.textContent = 'copialo a mano: il browser non mi lascia.'; },
+                () => { codeNote.textContent = 'copiato. mandalo a chi gioca con te.'; },
+                () => { codeNote.textContent = 'copialo a mano: il browser non lascia.'; },
             );
         };
         codeBox.addEventListener('click', copy);
 
+        let lastPartner: string | null = null;
         this.off = coop.listen((e) => {
             if (e.type === 'partner') {
-                paintParty();
-                status.textContent = e.char ? `${e.char.name.toLowerCase()} ha forgiato il suo geco.` : '';
+                if (e.char) status.textContent = '';
+                else if (lastPartner) status.textContent = `${lastPartner} è uscito dalla stanza.`;
+                lastPartner = e.char?.name.toLowerCase() ?? null;
+                paint();
             } else if (e.type === 'room-lost') {
-                status.textContent = 'la stanza non accetta più ingressi. annulla e riaprila.';
+                status.textContent = 'la stanza non accetta più ingressi. chiudila e riaprila.';
             }
         });
         const kind = this.kind;
@@ -260,7 +251,7 @@ export class CoopScreens {
             (c) => {
                 code = c;
                 codeBox.textContent = c.split('').join(' ');
-                codeNote.textContent = kind === 'locale' ? 'stanza tra schede: entra dall’altra scheda con questo codice.' : 'dallo a chi gioca con te. clic per copiarlo.';
+                codeNote.textContent = kind === 'locale' ? 'stanza tra schede: entra dall’altra scheda.' : 'clic per copiarlo';
             },
             (err: unknown) => {
                 if (err instanceof Error && err.message === 'annullato') return;
@@ -281,19 +272,20 @@ export class CoopScreens {
 
     private showJoin(prefill = '', error = ''): void {
         this.stopListening();
-        const s = this.ui.openOverlay('screen sx menu-screen');
+        const s = this.ui.openOverlay('screen sx menu-screen cx-lobby');
         const page = el('div', 'sx-page');
-        page.append(el('div', 'sx-kick', 'entra'));
-        page.append(...this.ui.heading('il codice della stanza', `${CODE_LENGTH} caratteri: te lo dà chi ospita`));
+        page.append(el('div', 'sx-kick', 'multiplayer'));
+        page.append(...this.ui.heading('il codice'));
         const input = el('input', 'sx-name-input cx-code-input');
         input.type = 'text';
         input.maxLength = CODE_LENGTH + 4;
         input.placeholder = '·····';
         input.spellcheck = false;
         input.autocomplete = 'off';
+        input.setAttribute('aria-label', 'codice della stanza');
         input.value = prefill;
         page.append(input);
-        const status = el('div', 'sx-note');
+        const status = el('div', 'sx-note cx-status');
         if (error) {
             status.classList.add('cx-warn');
             status.textContent = error;
@@ -327,6 +319,12 @@ export class CoopScreens {
                 go();
             }
         });
+        // il codice intero basta, senza invio: quello appena rifiutato si riprova solo a richiesta
+        const refused = error ? prefill : '';
+        input.addEventListener('input', () => {
+            const code = normalizeCode(input.value);
+            if (code && code !== refused) go();
+        });
         page.append(this.ui.menu([
             { label: 'entra', onPick: go },
             { label: 'indietro', back: true, onPick: () => { coop.end(null, false); this.show(); } },
@@ -336,41 +334,28 @@ export class CoopScreens {
         setTimeout(() => input.focus(), 120);
     }
 
-    /** chi ospita, com'è la partita, e con chi entri */
+    /** chi ha creato, com'è la partita, e con chi entri */
     private showGuestWelcome(info: GameInfo): void {
         this.stopListening();
         const s = this.ui.openOverlay('screen sx menu-screen cx-lobby');
         const page = el('div', 'sx-page');
-        page.append(el('div', 'sx-kick', 'sei dentro la stanza'));
-        const host = info.host;
+        page.append(el('div', 'sx-kick', 'sei nella stanza'));
+        // il nome dell'host si legge già ripulito dal runtime
+        const host = coop.partner ?? info.host;
         page.append(...this.ui.heading(`la partita di ${host.name.toLowerCase()}`));
-        const facts = el('div', 'cx-facts');
-        const fact = (k: string, v: string) => {
-            const row = el('div', 'cx-fact');
-            const a = el('span', 'k');
-            a.textContent = k;
-            const b = el('span', 'v');
-            b.textContent = v;
-            row.append(a, b);
-            facts.append(row);
-        };
-        fact('destino', info.doomsday ? 'doomsday: il tempo scorre per tutti e due' : 'il cammino');
-        fact('capitolo', info.fresh ? 'dall’inizio' : chapterLabel(info.levelId));
-        if (!info.fresh) fact('tempo', playTime(info.playMs));
-        if (info.assisted) fact('freccia', 'partita assistita');
-        page.append(facts);
-        const party = el('div', 'cx-party');
-        party.append(gecoTag(host, ''));
-        page.append(party);
+        page.append(gameLine(info));
         const known = rememberedCharacter(info.gameId);
+        const party = el('div', 'cx-party');
+        party.append(gecoTag(host, 'crea'), gecoTag(known, known ? 'tu, l’ultima volta' : 'tu'));
+        page.append(party);
         const forgeNew = () => this.guestForge(info, known ?? undefined);
         const items: MenuItem[] = known
             ? [
-                { label: `entra come ${known.name.toLowerCase()}`, sub: 'il geco che avevi in questa partita', onPick: () => this.guestReady(known) },
+                { label: `entra come ${known.name.toLowerCase()}`, onPick: () => this.guestReady(known) },
                 { label: 'forgia un altro geco', onPick: forgeNew },
             ]
-            : [{ label: 'forgia il tuo geco', sub: 'nome, attributi e pelle: come da solo', onPick: forgeNew }];
-        items.push({ label: 'esci dalla stanza', back: true, onPick: () => this.leaveAsGuest() });
+            : [{ label: 'forgia il tuo geco', onPick: forgeNew }];
+        items.push({ label: 'esci', back: true, onPick: () => this.leaveAsGuest() });
         page.append(this.ui.menu(items));
         s.append(page);
         this.ui.bindNav(page, () => this.leaveAsGuest());
@@ -378,13 +363,14 @@ export class CoopScreens {
     }
 
     private guestForge(info: GameInfo, initial?: Character): void {
+        const host = (coop.partner ?? info.host).name.toLowerCase();
         this.ui.forge({
             back: () => this.showGuestWelcome(info),
             backLabel: 'indietro',
             initial,
-            kick: `partita di ${info.host.name.toLowerCase()} · il tuo geco`,
-            kick2: `partita di ${info.host.name.toLowerCase()} · allocazione del flusso`,
-            note: info.doomsday ? `${info.host.name.toLowerCase()} ha scelto il doomsday: il tempo vero scorre anche per te.` : undefined,
+            kick: `partita di ${host} · il tuo geco`,
+            kick2: `partita di ${host} · allocazione del flusso`,
+            note: info.doomsday ? `${host} ha scelto il doomsday: il tempo vero scorre anche per te.` : undefined,
             fate: false,
             doneLabel: 'entra nella partita',
             onDone: (r) => this.guestReady({ name: r.name, stats: r.stats, skin: r.skin }),
@@ -397,14 +383,13 @@ export class CoopScreens {
         this.stopListening();
         const s = this.ui.openOverlay('screen sx menu-screen cx-lobby');
         const page = el('div', 'sx-page');
-        page.append(el('div', 'sx-kick', 'tutto pronto'));
+        page.append(el('div', 'sx-kick', 'sei nella stanza'));
         const name = coop.partner?.name.toLowerCase() ?? 'l’host';
-        page.append(...this.ui.heading(coop.info?.playing ? 'entri nel capitolo…' : `aspetti ${name}`, coop.info?.playing ? undefined : `${name} dà il via quando vuole.`));
+        page.append(...this.ui.heading(coop.info?.playing ? 'entri nel capitolo…' : `aspetti ${name}`));
         const party = el('div', 'cx-party');
-        party.append(gecoTag(coop.partner, ''), gecoTag(c, ''));
-        (party.lastElementChild as HTMLElement).classList.add('ready');
+        party.append(gecoTag(coop.partner, 'crea'), gecoTag(c, 'tu, pronto', { ready: true }));
         page.append(party);
-        page.append(this.ui.menu([{ label: 'esci dalla stanza', back: true, onPick: () => this.leaveAsGuest() }]));
+        page.append(this.ui.menu([{ label: 'esci', back: true, onPick: () => this.leaveAsGuest() }]));
         s.append(page);
         this.ui.bindNav(page, () => this.leaveAsGuest());
         this.watchGuest();

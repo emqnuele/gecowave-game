@@ -51,7 +51,6 @@ export const coopHooks = {
     menuOpen: false,
     /** il film dell'host è finito: l'ospite chiude il suo */
     filmEnded: null as (() => void) | null,
-    /** le scelte in due passano da qui prima di mostrarsi: true se il coop le ha prese */
     /** la pausa in due: raggiungere il compagno, chi è, dove sta */
     joinPartner: null as (() => void) | null,
     partnerName: null as (() => string | null) | null,
@@ -59,6 +58,7 @@ export const coopHooks = {
     actorKind: null as 'local' | 'remote' | null,
     /** il boccone dell'ospite passa dalla dispensa dell'host: true se preso in carico */
     requestEat: null as ((id: string | null) => boolean) | null,
+    /** le scelte in due passano da qui prima di mostrarsi: true se il coop le ha prese */
     choice: null as ((p: { title: string; options: { label: string; danger?: boolean }[]; onPick: (i: number) => void }) => boolean) | null,
     /** il tabellone del citelis passa da qui prima di mostrarsi: true se il coop l'ha preso */
     travel: null as ((p: { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void }) => boolean) | null,

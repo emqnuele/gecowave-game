@@ -92,8 +92,11 @@ async function boot(): Promise<void> {
         }
     });
 
+    // la ripresa segue com'era partita la pausa: chi ospita da solo si ferma davvero
+    let frozenPause = false;
     const startLevel = (levelId: string, checkpointId: string | null, showCard = true, spawnAt?: { x: number; y: number }): void => {
         state.flushPersist(true);
+        frozenPause = false;
         game.scene.stop('MenuScene');
         inGame = true;
         sfx.init();
@@ -132,8 +135,9 @@ async function boot(): Promise<void> {
         },
         pause() {
             state.flushPersist(true);
-            // in due il mondo non si ferma per il telefono o la pausa: si ferma il mio geco
-            if (coop.active && inGame) {
+            // in due il mondo non si ferma per telefono o pausa, si ferma il mio geco: da soli si ferma tutto
+            if (coop.together && inGame) {
+                frozenPause = true;
                 coopHooks.frozen = true;
                 coopHooks.menuOpen = true;
                 return;
@@ -142,7 +146,8 @@ async function boot(): Promise<void> {
             acoustics.setPaused(true);
         },
         resume() {
-            if (coop.active && inGame) {
+            if (frozenPause) {
+                frozenPause = false;
                 coopHooks.frozen = false;
                 coopHooks.menuOpen = false;
                 return;
@@ -152,6 +157,7 @@ async function boot(): Promise<void> {
         },
         quitToMenu() {
             inGame = false;
+            frozenPause = false;
             state.flushPersist(true);
             sfx.stopBeds();
             acoustics.reset();
@@ -204,15 +210,18 @@ async function boot(): Promise<void> {
         if (!coop.active) return null;
         const name = coopHooks.partnerName?.();
         const items = name && coopHooks.joinPartner
-            ? [{ label: `raggiungi ${name}`, sub: 'se ti sei perso o sei rimasto bloccato', onPick: () => { screens.closeOverlay(); controller.resume(); coopHooks.joinPartner?.(); } }]
+            ? [{ label: `raggiungi ${name}`, onPick: () => { screens.closeOverlay(); controller.resume(); coopHooks.joinPartner?.(); } }]
             : [];
         const who = coop.isHost ? 'uscire chiude la partita anche per l’altro.' : 'uscire ti riporta al menu: la partita resta all’host.';
+        // da soli in attesa di un compagno la pausa ferma tutto: la nota di sempre
+        if (!coop.together) return { items, note: 'il gioco aspetta. pedro no.' };
         return { items, note: `in due il mondo non aspetta: il tuo geco sì. ${who}` };
     };
     if (import.meta.env.DEV) Object.assign(window, { __coop: coop });
     coop.app = {
         startLevel(levelId, checkpointId, showCard, spawnAt) {
             const go = () => {
+                coopUi.detach();
                 screens.closeOverlay();
                 startLevel(levelId, checkpointId, showCard, spawnAt);
             };
@@ -221,7 +230,8 @@ async function boot(): Promise<void> {
         },
         attachHostCoop() {
             const scene = game.scene.getScene('GameScene') as GameScene | null;
-            if (scene && game.scene.isActive('GameScene')) {
+            // in pausa (dialogo, film, menu) la scena c'è lo stesso: il coop si aggancia lì
+            if (scene && (game.scene.isActive('GameScene') || game.scene.isPaused('GameScene'))) {
                 try {
                     scene.attachLateCoop();
                 } catch (e) {
@@ -230,7 +240,7 @@ async function boot(): Promise<void> {
             }
         },
         hostSpot() {
-            if (!inGame || !game.scene.isActive('GameScene')) return null;
+            if (!inGame || !(game.scene.isActive('GameScene') || game.scene.isPaused('GameScene'))) return null;
             const scene = game.scene.getScene('GameScene') as GameScene | null;
             const p = (scene as unknown as { player?: { x: number; y: number } } | null)?.player;
             return p ? { x: p.x, y: p.y } : null;
@@ -238,6 +248,7 @@ async function boot(): Promise<void> {
         toMenu(reason) {
             const wasInGame = inGame;
             inGame = false;
+            frozenPause = false;
             pendingCoopLevel = null;
             state.flushPersist(true);
             if (wasInGame) {
@@ -337,31 +348,13 @@ async function boot(): Promise<void> {
             game.scale.refresh();
             music.playMenu();
             const wasCoop = coop.active || state.saveSlot !== 'single';
-            if (coop.isGuest && wasCoop) {
-                // titoli finiti anche qui: si saluta in silenzio, la stanza la chiude l'host
-                coop.session?.send('ending-done', {});
+            // l'ospite saluta in silenzio; l'host chiude subito: chi è ancora nei titoli li finisce (inEnding)
+            if (wasCoop) {
+                const announce = !coop.isGuest;
                 coop.inEnding = false;
-                coop.end(null, false, false);
-            } else if (coop.isHost && coop.together) {
-                // l'ospite finisce i titoli al suo ritmo: la stanza cade quando ha finito (o dopo un po')
-                const s = coop.session;
-                let done = false;
-                const close = (): void => {
-                    if (done) return;
-                    done = true;
-                    coop.inEnding = false;
-                    coop.end(null, false);
-                };
-                const off = s?.on('ending-done', close);
-                window.setTimeout(() => {
-                    off?.();
-                    close();
-                }, 120000);
-            } else if (wasCoop) {
-                coop.inEnding = false;
-                coop.end(null, false);
+                coop.end(null, false, announce);
+                state.useSlot('single');
             }
-            if (wasCoop) state.useSlot('single');
             screens.showMenu();
         });
     });

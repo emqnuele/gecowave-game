@@ -127,9 +127,9 @@ export class TimeTrial {
             if (left <= 0) this.stop();
             return;
         }
-        const runner = r.runner === 'guest' ? partner : player;
-        if (!runner) return;
-        if (player.dead) {
+        // chi corre è caduto o è uscito: la corsa finisce, non resta appesa col cronometro fermo
+        const runner = r.runner === 'guest' ? partner ?? null : player.dead ? null : player;
+        if (!runner) {
             this.stop();
             return;
         }
