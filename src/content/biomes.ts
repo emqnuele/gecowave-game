@@ -44,7 +44,7 @@ export interface BiomeDef {
     /** tutto al chiuso: niente cielo, la regione è una tana di stanze */
     indoor?: boolean;
     /** sagome scure in primo piano davanti al giocatore */
-    foreground: 'leaves' | 'chains' | 'pillars' | 'pipes' | 'cables' | 'crystals' | 'reeds' | 'none';
+    foreground: 'leaves' | 'chains' | 'pillars' | 'pipes' | 'cables' | 'crystals' | 'reeds' | 'shards' | 'none';
 }
 
 const base = {
@@ -222,7 +222,7 @@ export const BIOMES: Record<string, BiomeDef> = {
         surface: ['grass'], ceiling: ['roots'],
         skyline: 'crossroads', skyTop: 0x05080a, skyBottom: 0x121a18, haze: 0x24302b,
         ambience: ['dust'], props: ['lantern', 'gravestone'],
-        spikes: 'thorns', ambient: 0.11, lightShafts: false, foreground: 'none',
+        spikes: 'thorns', ambient: 0.11, lightShafts: false, foreground: 'shards',
     },
 };
 

@@ -540,7 +540,7 @@ export function foregroundCanvas(b: BiomeDef, edge: 'top' | 'bottom'): HTMLCanva
     let x = rnd() * 300;
     while (x < SKY_W - 100) {
         const seed = Math.floor(rnd() * 1e9);
-        for (const off of [-SKY_W, 0, SKY_W]) fgElement(ctx, kind, x + off, y0, dir, mulberry32(seed));
+        for (const off of [-SKY_W, 0, SKY_W]) fgElement(ctx, kind, x + off, y0, dir, mulberry32(seed), b.accent);
         x += range(rnd, 380, 820);
     }
     ctx.filter = 'none';
@@ -548,8 +548,45 @@ export function foregroundCanvas(b: BiomeDef, edge: 'top' | 'bottom'): HTMLCanva
     return el;
 }
 
-function fgElement(ctx: CanvasRenderingContext2D, kind: BiomeDef['foreground'], x: number, y0: number, dir: number, rnd: Rng): void {
+/** un frammento frastagliato: un poligono storto attorno a un centro */
+function shard(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, rnd: Rng): void {
+    const n = 5 + Math.floor(rnd() * 3);
+    const spin = rnd() * Math.PI * 2;
+    ctx.beginPath();
+    for (let k = 0; k < n; k++) {
+        const a = spin + (k / n) * Math.PI * 2 + (rnd() - 0.5) * 0.5;
+        // allungato su un asse: una scheggia, non un sasso
+        const rr = r * range(rnd, 0.45, 1) * (k % 2 ? 0.55 : 1);
+        const px = cx + Math.cos(a) * rr * 1.5;
+        const py = cy + Math.sin(a) * rr;
+        if (k) ctx.lineTo(px, py);
+        else ctx.moveTo(px, py);
+    }
+    ctx.closePath();
+}
+
+function fgElement(ctx: CanvasRenderingContext2D, kind: BiomeDef['foreground'], x: number, y0: number, dir: number, rnd: Rng, accent: number): void {
     switch (kind) {
+        case 'shards': {
+            // i cocci della wave a un palmo dall'obiettivo: grossi, sfocati, tagliati dal bordo.
+            // il filo di luce sul bordo dice di cosa sono fatti
+            ctx.save();
+            ctx.filter = 'blur(5px)';
+            const big = dir > 0 ? range(rnd, 50, 105) : range(rnd, 26, 48);
+            const cx = x + (rnd() - 0.5) * 120;
+            const cy = dir > 0 ? range(rnd, 70, 160) : y0 - range(rnd, 0, 18);
+            const pieces: [number, number, number][] = [[cx, cy, big]];
+            for (let k = 0; k < 2; k++) pieces.push([cx + (rnd() - 0.5) * big * 4, cy + dir * range(rnd, 0.4, 1.4) * big, big * range(rnd, 0.18, 0.35)]);
+            for (const [px, py, r] of pieces) {
+                shard(ctx, px, py, r, rnd);
+                ctx.fill();
+                ctx.strokeStyle = hex(accent, 0.6);
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            }
+            ctx.restore();
+            break;
+        }
         case 'leaves': {
             // fronde di felce che entrano dal bordo
             const n = 3 + Math.floor(rnd() * 3);

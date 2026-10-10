@@ -17,11 +17,11 @@ import { state } from '../core/state';
 
 /** pixel di spostamento a mouse tutto da un lato: più il piano è vicino, più si muove */
 const SWAY = {
-    painted: 10,
-    camera: 44,
-    ridge: { x: 24, y: 9 },
-    dust: 34,
-    motes: 70,
+    painted: 14,
+    camera: 60,
+    ridge: { x: 32, y: 12 },
+    dust: 46,
+    motes: 95,
 } as const;
 
 export class MenuScene extends Phaser.Scene {

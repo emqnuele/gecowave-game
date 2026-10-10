@@ -184,10 +184,12 @@ export class ParallaxManager {
         for (const s of this.strips) {
             s.sprite.x = left + v.w / 2;
             s.sprite.tilePositionX = cam.scrollX * s.speedX;
+            // nel menu i piani vicini seguono il mouse anche in verticale; in gioco swayRoom è zero
+            const lift = this.sway.y * this.swayRoom * s.speedX * 1.2;
             if (s.anchor === 'bottom') {
-                s.sprite.y = bottom + s.sink + rise * s.speedY;
+                s.sprite.y = bottom + s.sink + rise * s.speedY - lift;
             } else {
-                s.sprite.y = top - s.sink;
+                s.sprite.y = top - s.sink - lift;
             }
         }
     }
