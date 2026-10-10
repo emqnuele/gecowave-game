@@ -642,8 +642,9 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     private present(time: number): void {
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
-        this.parallax.update(time);
-        this.ambience.update(this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor);
+        const outdoor = this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor;
+        this.parallax.update(time, outdoor);
+        this.ambience.update(outdoor);
         this.water.update(time);
     }
 
@@ -688,8 +689,9 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.enemies.updateLessons(time);
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
-        this.parallax.update(time);
-        this.ambience.update(this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor);
+        const outdoor = this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor;
+        this.parallax.update(time, outdoor);
+        this.ambience.update(outdoor);
         this.water.update(time);
 
         this.safe.track(delta);

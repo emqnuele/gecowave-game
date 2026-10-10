@@ -166,7 +166,8 @@ export class ParallaxManager {
         for (const s of this.strips) s.sprite.width = Math.ceil(v.w);
     }
 
-    update(time: number): void {
+    /** outdoor false: nelle stanze chiuse il primo piano svanisce, era fatto per incorniciare il cielo */
+    update(time: number, outdoor = true): void {
         const cam = this.scene.cameras.main;
         const v = this.view();
         const left = v.cx - v.w / 2;
@@ -188,6 +189,11 @@ export class ParallaxManager {
             // nel menu ogni piano segue il mouse col suo peso; in gioco swayRoom è zero
             s.sprite.tilePositionX = cam.scrollX * s.speedX + this.sway.x * this.swayRoom * s.swayK;
             const lift = this.sway.y * this.swayRoom * s.swayK * 0.5;
+            if (s.speedX > 1) {
+                const want = outdoor ? 0.92 : 0;
+                s.sprite.alpha += (want - s.sprite.alpha) * 0.06;
+                s.sprite.visible = s.sprite.alpha > 0.01;
+            }
             if (s.anchor === 'bottom') {
                 s.sprite.y = bottom + s.sink + rise * s.speedY - lift;
             } else {
