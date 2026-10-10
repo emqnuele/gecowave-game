@@ -15,6 +15,7 @@ import { isValidSkinId, SKIN_PRESETS, skinPreset } from '../content/skins';
 import { PLAYER_FRAME, renderSkinPreview, skinFinalCss } from '../art/playerSkin';
 import { music } from '../audio/music';
 import type { ZoneColor } from '../types';
+import type { MenuTone } from '../content/biomes';
 import { el, ui } from './dom';
 import { EndingFx } from './endingFx';
 import { phoneBanner } from './banner';
@@ -73,6 +74,8 @@ export class Screens {
     private cancelCapture: (() => void) | null = null;
     /** la scena del falò dietro al menu: la accende e la spegne main */
     private backdrop: (on: boolean) => void = () => {};
+    /** la tinta del capitolo appena entrato: la conosce solo chi ha la scena */
+    private levelTone: () => MenuTone | null = () => null;
     /** il primo menu dopo l'avvio chiede un tasto: sblocca l'audio ed è un ingresso */
     private awake = false;
     /** la porta della partita in due: la mette main */
@@ -105,6 +108,7 @@ export class Screens {
 
         bus.on('zone-changed', ({ title, accentWord, color, punchline, showCard }) => {
             this.setZone(color);
+            this.tint(this.levelTone());
             if (showCard) this.zoneCard(title, accentWord, color, punchline);
         });
         bus.on('toast', ({ text }) => this.toast(text));
@@ -131,6 +135,25 @@ export class Screens {
 
     setBackdrop(fn: (on: boolean) => void): void {
         this.backdrop = fn;
+    }
+
+    setLevelTone(fn: () => MenuTone | null): void {
+        this.levelTone = fn;
+    }
+
+    /** oro e brace delle schermate nella tinta data; null torna a quelli del codice */
+    tint(tone: MenuTone | null): void {
+        const root = document.documentElement.style;
+        for (const [name, color] of [['gold', tone?.gold], ['ember', tone?.ember]] as const) {
+            if (color === undefined) {
+                root.removeProperty(`--sx-${name}`);
+                root.removeProperty(`--sx-${name}-rgb`);
+                continue;
+            }
+            const rgb = `${(color >> 16) & 255}, ${(color >> 8) & 255}, ${color & 255}`;
+            root.setProperty(`--sx-${name}`, `rgb(${rgb})`);
+            root.setProperty(`--sx-${name}-rgb`, rgb);
+        }
     }
 
     /* ---------- atmosfera ---------- */

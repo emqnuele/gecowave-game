@@ -3,7 +3,7 @@ import { CAMERA_LERP, LOGIC_STEP_MS, TILE } from '../config';
 import { MECHANIC_HINTS } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../core/events';
-import { biomeFor } from '../content/biomes';
+import { biomeFor, type BiomeDef } from '../content/biomes';
 import { CameraLens } from '../stage/CameraLens';
 import { WetTrail } from '../stage/WetTrail';
 import { haptics } from '../input/haptics';
@@ -124,6 +124,11 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
 
     constructor() {
         super('GameScene');
+    }
+
+    /** il bioma del capitolo in corso: le schermate ne prendono la tinta */
+    get biome(): BiomeDef {
+        return this.world.biome;
     }
 
     init(data: SceneData): void {

@@ -86,13 +86,16 @@ async function boot(): Promise<void> {
             gameEl.style.display = '';
             const wanted = state.hasSave ? state.save.levelId : undefined;
             const levelId = wanted && LEVELS[wanted] ? wanted : undefined;
-            paintMenu(menuTone(menuBiome(levelId ? LEVELS[levelId] : undefined)));
+            screens.tint(menuTone(menuBiome(levelId ? LEVELS[levelId] : undefined)));
             if (game.scene.isActive('MenuScene')) game.scene.stop('MenuScene');
             game.scene.start('MenuScene', { levelId });
-        } else {
-            paintMenu(null);
-            if (game.scene.isActive('MenuScene')) game.scene.stop('MenuScene');
+        } else if (game.scene.isActive('MenuScene')) {
+            game.scene.stop('MenuScene');
         }
+    });
+    screens.setLevelTone(() => {
+        const scene = game.scene.getScene('GameScene') as GameScene | null;
+        return scene ? menuTone(scene.biome) : null;
     });
 
     // la ripresa segue com'era partita la pausa: chi ospita da solo si ferma davvero
@@ -403,17 +406,3 @@ async function boot(): Promise<void> {
 
 void boot();
 
-/** il menu prende la tinta del capitolo; spento torna l'oro e la brace del codice */
-function paintMenu(tone: { ember: number; gold: number } | null): void {
-    const root = document.documentElement.style;
-    for (const [name, color] of [['gold', tone?.gold], ['ember', tone?.ember]] as const) {
-        if (color === undefined) {
-            root.removeProperty(`--sx-${name}`);
-            root.removeProperty(`--sx-${name}-rgb`);
-            continue;
-        }
-        const rgb = `${(color >> 16) & 255}, ${(color >> 8) & 255}, ${color & 255}`;
-        root.setProperty(`--sx-${name}`, `rgb(${rgb})`);
-        root.setProperty(`--sx-${name}-rgb`, rgb);
-    }
-}

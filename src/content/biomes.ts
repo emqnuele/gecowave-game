@@ -264,8 +264,13 @@ export function menuBiome(def: LevelDef | undefined): BiomeDef {
     return def ? biomeFor(def) : BIOMES.title;
 }
 
-/** le tinte del menu: vicine all'accento del capitolo, schiarite quanto basta per leggersi sul buio */
-export function menuTone(b: BiomeDef): { ember: number; gold: number } {
+export interface MenuTone {
+    ember: number;
+    gold: number;
+}
+
+/** le tinte delle schermate: vicine all'accento del capitolo, schiarite quanto basta per leggersi sul buio */
+export function menuTone(b: BiomeDef): MenuTone {
     return { ember: mix(b.accent, 0xfff4e0, 0.15), gold: mix(b.accent, 0xe8dfc8, 0.4) };
 }
 
