@@ -34,6 +34,10 @@ export class ParallaxManager {
     private fog: Phaser.GameObjects.TileSprite | null = null;
     /** quota del terreno su cui poggiano le sagome, in pixel del mondo */
     private groundY = 0;
+    /** margine del dipinto oltre lo schermo: serve solo a chi lo fa ondeggiare (il menu) */
+    private swayRoom = 0;
+    /** ondeggiamento del dipinto, -1..1 per asse */
+    readonly sway = { x: 0, y: 0 };
     private onResize = () => this.resize();
 
     constructor(scene: Phaser.Scene) {
@@ -132,6 +136,12 @@ export class ParallaxManager {
         return { cx: cam.width / 2, cy: cam.height / 2, w: cam.width / cam.zoom + 8, h: cam.height / cam.zoom + 8 };
     }
 
+    /** il dipinto può ondeggiare di tanti pixel per lato senza scoprire i bordi */
+    allowSway(px: number): void {
+        this.swayRoom = px;
+        this.resize();
+    }
+
     resize(): void {
         const v = this.view();
         for (const img of [this.sky, this.veil]) {
@@ -141,10 +151,11 @@ export class ParallaxManager {
         }
         if (this.painted) {
             const sp = this.painted.sprite;
-            sp.setSize(Math.ceil(v.w), Math.ceil(v.h));
+            const ph = v.h + this.swayRoom * 2;
+            sp.setSize(Math.ceil(v.w), Math.ceil(ph));
             sp.setPosition(v.cx, v.cy);
             const tex = this.scene.textures.get(this.painted.sourceKey).getSourceImage() as HTMLImageElement;
-            if (tex.height) sp.setTileScale(v.h / tex.height, v.h / tex.height);
+            if (tex.height) sp.setTileScale(ph / tex.height, ph / tex.height);
         }
         if (this.fog) {
             this.fog.setSize(Math.ceil(v.w), Math.ceil(v.h));
@@ -165,7 +176,8 @@ export class ParallaxManager {
 
         if (this.painted) {
             const sp = this.painted.sprite;
-            sp.tilePositionX = (cam.scrollX * this.painted.speed) / sp.tileScaleX;
+            sp.tilePositionX = (cam.scrollX * this.painted.speed + this.sway.x * this.swayRoom) / sp.tileScaleX;
+            sp.y = v.cy - this.sway.y * this.swayRoom;
         }
         if (this.fog) this.fog.tilePositionX = cam.scrollX * 1.15 + time * 0.006;
 
