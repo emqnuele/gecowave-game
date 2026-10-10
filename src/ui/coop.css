@@ -1,0 +1,285 @@
+/* ===========================================================
+   la partita in due: il codice della stanza, i due gechi,
+   e in gioco il compagno (nome, cuori, dove sta)
+   =========================================================== */
+
+.cx-code {
+  margin: 18px 0 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(var(--sx-gold-rgb), 0.45);
+  padding: 4px 18px 10px;
+  font-family: var(--font-fell);
+  font-size: clamp(40px, 6.5vw, 68px);
+  letter-spacing: 0.22em;
+  color: var(--sx-bone);
+  cursor: pointer;
+  text-shadow: 0 0 26px rgba(var(--sx-ember-rgb), 0.28);
+  filter: url(#sx-ink);
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.cx-code:hover,
+.cx-code.on {
+  color: #fff4dc;
+  text-shadow: 0 0 34px rgba(var(--sx-ember-rgb), 0.5);
+}
+
+.cx-code-note {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--sx-dim);
+  margin-bottom: 14px;
+}
+
+.cx-code-input {
+  width: min(360px, 80vw);
+  font-size: clamp(40px, 6vw, 62px);
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+}
+
+/* la partita in una frase, sotto il codice */
+.cx-line {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--sx-ash);
+  max-width: min(560px, 100%);
+  text-align: center;
+}
+
+.cx-status:empty {
+  display: none;
+}
+
+.cx-party {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 30px;
+  margin: 22px 0 10px;
+}
+
+.cx-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--sx-line);
+  transform: rotate(-0.6deg);
+}
+
+.cx-slot:nth-child(2) {
+  transform: rotate(0.7deg);
+}
+
+.cx-slot.empty {
+  opacity: 0.55;
+}
+
+.cx-slot.empty .cx-dot {
+  background: transparent;
+  border: 1px dashed var(--sx-dim);
+  animation: cx-wait 1.6s ease-in-out infinite;
+}
+
+.cx-slot.ready .cx-dot {
+  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.9), 0 0 0 3px var(--sx-gold), 0 0 14px rgba(var(--sx-ember-rgb), 0.45);
+}
+
+.cx-dot {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.9), 0 0 0 3px rgba(232, 223, 200, 0.25);
+}
+
+.cx-words {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cx-name {
+  font-family: var(--font-fell);
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  color: var(--sx-bone);
+}
+
+.cx-role {
+  font-family: var(--font-fell-it);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--sx-ash);
+}
+
+.cx-slot.ready .cx-role {
+  color: var(--sx-gold);
+}
+
+.sx-note.cx-warn {
+  color: #d58b82;
+}
+
+@keyframes cx-wait {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+
+/* ---------- in gioco: il compagno ---------- */
+
+.cx-partner {
+  position: absolute;
+  left: 22px;
+  top: 104px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 10px;
+  background: rgba(5, 5, 5, 0.42);
+  border: 1px dashed rgba(232, 223, 200, 0.2);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  transform: rotate(-1deg);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.cx-partner .cx-dot {
+  width: 14px;
+  height: 14px;
+}
+
+.cx-partner .who {
+  font-family: var(--font-marker);
+  font-size: 14px;
+  color: var(--sx-bone);
+  text-transform: lowercase;
+}
+
+.cx-partner .hearts {
+  display: flex;
+  gap: 3px;
+}
+
+.cx-partner .hearts i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: #f87171;
+  box-shadow: 0 0 6px rgba(248, 113, 113, 0.5);
+}
+
+.cx-partner .hearts i.off {
+  background: rgba(232, 223, 200, 0.14);
+  box-shadow: none;
+}
+
+.cx-partner .state {
+  font-family: var(--font-martian);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sx-ash);
+}
+
+.cx-partner.down .who {
+  color: #d58b82;
+  text-decoration: line-through;
+}
+
+.cx-partner.weak {
+  border-color: rgba(250, 204, 21, 0.45);
+}
+
+.cx-partner.weak .state {
+  color: #facc15;
+}
+
+/* la freccia sul bordo dello schermo quando il compagno è fuori vista */
+.cx-arrow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.cx-arrow.on {
+  opacity: 0.92;
+}
+
+.cx-arrow .tip {
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 15px solid var(--cx-skin, #e8dfc8);
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.7));
+}
+
+.cx-arrow .lbl {
+  font-family: var(--font-marker);
+  font-size: 12px;
+  color: var(--sx-bone);
+  text-transform: lowercase;
+  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+  white-space: nowrap;
+}
+
+/* chi è a terra guarda l'altro: una fascia sotto, mai sopra il gioco */
+.cx-spectate {
+  position: absolute;
+  left: 50%;
+  bottom: 9vh;
+  transform: translateX(-50%) rotate(-0.8deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  text-align: center;
+  animation: sx-in 0.6s ease both;
+}
+
+.cx-spectate .t {
+  font-family: var(--font-fell);
+  font-size: clamp(22px, 3vw, 34px);
+  letter-spacing: 0.1em;
+  color: #d58b82;
+  filter: url(#sx-ink);
+}
+
+.cx-spectate .s {
+  font-family: var(--font-marker);
+  font-size: 15px;
+  color: var(--sx-ash);
+  text-transform: lowercase;
+}
+
+/* l'host tiene la scena: chi guarda il dialogo lo sa */
+.cx-waitbadge {
+  position: absolute;
+  right: 26px;
+  bottom: 22px;
+  font-family: var(--font-marker);
+  font-size: 13px;
+  color: var(--sx-ash);
+  text-transform: lowercase;
+  transform: rotate(-1.5deg);
+  pointer-events: none;
+}

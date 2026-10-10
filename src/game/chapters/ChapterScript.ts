@@ -8,7 +8,7 @@ export type EndingId = 'consegna' | 'dei' | 'pedro' | 'sconfitta' | 'riscatto';
 /** quello che uno script di capitolo usa: tutto il gioco, ma solo attraverso i sistemi */
 export type ChapterCtx = Pick<GameContext,
     'scene' | 'world' | 'player' | 'lighting' | 'groups' | 'feel' | 'bosses' | 'enemies' | 'combat'
-    | 'rewards' | 'interactions' | 'dialogues' | 'npcs' | 'flow' | 'guide' | 'terrain' | 'marks33' | 'lens'>;
+    | 'rewards' | 'interactions' | 'dialogues' | 'npcs' | 'flow' | 'guide' | 'terrain' | 'marks33' | 'lens' | 'coop'>;
 
 /** la trama di un capitolo: la scena chiama ogni aggancio dove il vecchio codice controllava def.id, così l'ordine resta */
 export interface ChapterScript extends GameSystem {

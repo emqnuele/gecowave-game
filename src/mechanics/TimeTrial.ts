@@ -4,6 +4,8 @@ import type { LightingManager } from '../stage/LightingManager';
 import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
 import { checkAchievements } from '../core/achievements';
+import { coop } from '../coop/runtime';
+import { coopHooks } from '../coop/hooks';
 import type { TrialLeg } from '../world/types';
 
 /* la corsa contro il citelis: accanto a una fermata c'è il palo con l'orario.
@@ -23,6 +25,10 @@ interface Run {
     limitMs: number;
     beacon: Phaser.GameObjects.Light;
     sparks: Phaser.GameObjects.Particles.ParticleEmitter;
+    /** in due corre uno solo: l'altro guarda boa e cronometro */
+    runner: 'host' | 'guest';
+    /** copia solo vista: non vince mai, il traguardo lo giudica l'host */
+    visual: boolean;
 }
 
 export class TimeTrial {
@@ -100,7 +106,8 @@ export class TimeTrial {
             frequency: 60,
             blendMode: Phaser.BlendModes.ADD,
         }).setDepth(6);
-        this.run = { from: p.from, to, startAt: this.scene.time.now, limitMs: p.limitMs, beacon, sparks };
+        this.run = { from: p.from, to, startAt: this.scene.time.now, limitMs: p.limitMs, beacon, sparks, runner: coopHooks.actorKind === 'remote' ? 'guest' : 'host', visual: false };
+        if (coop.isHost && coop.together) coop.session?.send('trial-run', { on: true, limitMs: p.limitMs });
         const dx = to.x - p.from.x;
         const dy = to.y - p.from.y;
         const where = [Math.abs(dx) > 200 ? (dx > 0 ? 'a destra' : 'a sinistra') : '', Math.abs(dy) > 200 ? (dy > 0 ? 'più giù' : 'più su') : '']
@@ -109,17 +116,24 @@ export class TimeTrial {
         bus.emit('toast', { text: `il citelis è partito. la fermata ${where || 'qui vicino'}: segui la luce gialla.` });
     }
 
-    update(player: { x: number; y: number; dead: boolean }): void {
+    /** la corsa la giudica l'host sul gecco che l'ha partita; l'altro la guarda e basta */
+    update(player: { x: number; y: number; dead: boolean }, partner?: { x: number; y: number } | null): void {
         const r = this.run;
         if (!r) return;
         const now = this.scene.time.now;
         const left = r.limitMs - (now - r.startAt);
         bus.emit('trial-timer', { left: Math.max(0, left), total: r.limitMs });
-        if (player.dead) {
+        if (r.visual) {
+            if (left <= 0) this.stop();
+            return;
+        }
+        // chi corre è caduto o è uscito: la corsa finisce, non resta appesa col cronometro fermo
+        const runner = r.runner === 'guest' ? partner ?? null : player.dead ? null : player;
+        if (!runner) {
             this.stop();
             return;
         }
-        if (Math.abs(player.x - r.to.x) < 90 && Math.abs(player.y - r.to.y) < 100) {
+        if (Math.abs(runner.x - r.to.x) < 90 && Math.abs(runner.y - r.to.y) < 100) {
             const ms = now - r.startAt;
             this.stop();
             this.win(ms);
@@ -130,6 +144,25 @@ export class TimeTrial {
             sfx.hurt();
             bus.emit('toast', { text: 'il citelis passa, suona il clacson e non si ferma. riprova dal palo.' });
         }
+    }
+
+    /** l'ospite accende boa e cronometro: vincere tocca all'host */
+    visualRun(limitMs: number): void {
+        const p = this.pair;
+        if (!p || this.run || !Number.isFinite(limitMs) || limitMs <= 0) return;
+        const to = p.to;
+        const beacon = this.lighting.static(to.x, to.y - 40, 0xfacc15, 300, 1.3);
+        const sparks = this.scene.add.particles(to.x, to.y + 20, 'p-dot', {
+            x: { min: -14, max: 14 },
+            speedY: { min: -260, max: -140 },
+            scale: { start: 0.5, end: 0 },
+            alpha: { start: 0.9, end: 0 },
+            tint: 0xfacc15,
+            lifespan: 1600,
+            frequency: 60,
+            blendMode: Phaser.BlendModes.ADD,
+        }).setDepth(6);
+        this.run = { from: p.from, to, startAt: this.scene.time.now, limitMs: Math.min(120000, limitMs), beacon, sparks, runner: 'guest', visual: true };
     }
 
     private win(ms: number): void {
@@ -157,6 +190,7 @@ export class TimeTrial {
         r.sparks.destroy();
         this.run = null;
         bus.emit('trial-timer', null);
+        if (!r.visual && coop.isHost && coop.together) coop.session?.send('trial-run', { on: false, limitMs: 0 });
     }
 
     private ensureTexture(): void {

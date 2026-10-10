@@ -9,6 +9,7 @@ import '@fontsource/im-fell-english/400-italic.css';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL, LEVELS, TOTAL_FRAGMENTS } from './content/levels';
+import { menuBiome, menuTone } from './content/biomes';
 import { endingCards, endingEpilogues, INTRO_CARDS } from './content/story';
 import { bus } from './core/events';
 import { sfx } from './audio/sfx';
@@ -31,6 +32,9 @@ import { Hud } from './ui/hud';
 import { Screens, type GameController } from './ui/screens';
 import { ui } from './ui/dom';
 import { installDevHandles, installLevelHook } from './dev/hooks';
+import { coop } from './coop/runtime';
+import { coopHooks } from './coop/hooks';
+import { CoopScreens } from './ui/coopScreens';
 
 async function boot(): Promise<void> {
     // i font devono esserci prima che il canvas li usi
@@ -75,22 +79,30 @@ async function boot(): Promise<void> {
     window.addEventListener('beforeunload', () => state.flushPersist(true));
 
     // il falò del titolo: vive solo mentre il menu è aperto
-    // livello garantito (bus) e scena sempre fresca: il menu non resta mai nero
+    // senza salvataggio c'è il fondale del titolo; scena sempre fresca: il menu non resta mai nero
     screens.setBackdrop((on) => {
         if (on) {
             const gameEl = document.getElementById('game')!;
             gameEl.style.display = '';
             const wanted = state.hasSave ? state.save.levelId : undefined;
-            const levelId = wanted && LEVELS[wanted] ? wanted : 'bus';
+            const levelId = wanted && LEVELS[wanted] ? wanted : undefined;
+            screens.tint(menuTone(menuBiome(levelId ? LEVELS[levelId] : undefined)));
             if (game.scene.isActive('MenuScene')) game.scene.stop('MenuScene');
             game.scene.start('MenuScene', { levelId });
         } else if (game.scene.isActive('MenuScene')) {
             game.scene.stop('MenuScene');
         }
     });
+    screens.setLevelTone(() => {
+        const scene = game.scene.getScene('GameScene') as GameScene | null;
+        return scene ? menuTone(scene.biome) : null;
+    });
 
-    const startLevel = (levelId: string, checkpointId: string | null, showCard = true): void => {
+    // la ripresa segue com'era partita la pausa: chi ospita da solo si ferma davvero
+    let frozenPause = false;
+    const startLevel = (levelId: string, checkpointId: string | null, showCard = true, spawnAt?: { x: number; y: number }): void => {
         state.flushPersist(true);
+        frozenPause = false;
         game.scene.stop('MenuScene');
         inGame = true;
         sfx.init();
@@ -98,11 +110,12 @@ async function boot(): Promise<void> {
         state.resetRun();
         hud.show();
         const scene = game.scene.getScene('GameScene');
+        const data = spawnAt ? { levelId, checkpointId, showCard, spawnAt } : { levelId, checkpointId, showCard };
         if (game.scene.isActive('GameScene') || game.scene.isPaused('GameScene')) {
-            scene.scene.restart({ levelId, checkpointId, showCard });
+            scene.scene.restart(data);
             game.scene.resume('GameScene');
         } else {
-            game.scene.start('GameScene', { levelId, checkpointId, showCard });
+            game.scene.start('GameScene', data);
         }
     };
     if (import.meta.env.DEV) {
@@ -128,20 +141,39 @@ async function boot(): Promise<void> {
         },
         pause() {
             state.flushPersist(true);
+            // in due il mondo non si ferma per telefono o pausa, si ferma il mio geco: da soli si ferma tutto
+            if (coop.together && inGame) {
+                frozenPause = true;
+                coopHooks.frozen = true;
+                coopHooks.menuOpen = true;
+                return;
+            }
             game.scene.pause('GameScene');
             acoustics.setPaused(true);
         },
         resume() {
+            if (frozenPause) {
+                frozenPause = false;
+                coopHooks.frozen = false;
+                coopHooks.menuOpen = false;
+                return;
+            }
             game.scene.resume('GameScene');
             acoustics.setPaused(false);
         },
         quitToMenu() {
             inGame = false;
+            frozenPause = false;
             state.flushPersist(true);
             sfx.stopBeds();
             acoustics.reset();
             game.scene.stop('GameScene');
             hud.hide();
+            // uscire dalla partita in due la chiude per chi ospita, e libera chi è ospite
+            if (coop.active || state.saveSlot !== 'single') {
+                coop.end(null, false);
+                state.useSlot('single');
+            }
             screens.showMenu();
             music.playMenu();
         },
@@ -152,6 +184,101 @@ async function boot(): Promise<void> {
         },
     };
     screens.bind(controller);
+
+    /* ---------- la partita in due ---------- */
+    // l'intro della partita nuova la vedono tutti e due: chi finisce prima aspetta il capitolo
+    let introBusy = false;
+    let pendingCoopLevel: (() => void) | null = null;
+    const coopUi = new CoopScreens(screens, {
+        startHosted(fresh) {
+            if (fresh) {
+                if (coop.together) coop.session?.send('intro', {});
+                introBusy = true;
+                screens.storySequence(INTRO_CARDS, () => {
+                    introBusy = false;
+                    startLevel(FIRST_LEVEL, null);
+                });
+                return;
+            }
+            screens.closeOverlay();
+            startLevel(state.save.levelId, state.save.checkpointId);
+        },
+        backToTitle() {
+            coop.end(null, false);
+            state.useSlot('single');
+            screens.showMenu();
+        },
+    });
+    screens.coopEntry = () => coopUi.show();
+    screens.choiceRouter = (p) => coopHooks.choice?.(p) ?? false;
+    screens.travelRouter = (p) => coopHooks.travel?.(p) ?? false;
+    screens.pauseExtras = () => {
+        if (!coop.active) return null;
+        const name = coopHooks.partnerName?.();
+        const items = name && coopHooks.joinPartner
+            ? [{ label: `raggiungi ${name}`, onPick: () => { screens.closeOverlay(); controller.resume(); coopHooks.joinPartner?.(); } }]
+            : [];
+        const who = coop.isHost ? 'uscire chiude la partita anche per l’altro.' : 'uscire ti riporta al menu: la partita resta all’host.';
+        // da soli in attesa di un compagno la pausa ferma tutto: la nota di sempre
+        if (!coop.together) return { items, note: 'il gioco aspetta. pedro no.' };
+        return { items, note: `in due il mondo non aspetta: il tuo geco sì. ${who}` };
+    };
+    if (import.meta.env.DEV) Object.assign(window, { __coop: coop });
+    coop.app = {
+        startLevel(levelId, checkpointId, showCard, spawnAt) {
+            const go = () => {
+                coopUi.detach();
+                screens.closeOverlay();
+                startLevel(levelId, checkpointId, showCard, spawnAt);
+            };
+            if (introBusy) pendingCoopLevel = go;
+            else go();
+        },
+        attachHostCoop() {
+            const scene = game.scene.getScene('GameScene') as GameScene | null;
+            // in pausa (dialogo, film, menu) la scena c'è lo stesso: il coop si aggancia lì
+            if (scene && (game.scene.isActive('GameScene') || game.scene.isPaused('GameScene'))) {
+                try {
+                    scene.attachLateCoop();
+                } catch (e) {
+                    if (import.meta.env.DEV) console.warn('coop tardivo saltato:', e);
+                }
+            }
+        },
+        hostSpot() {
+            if (!inGame || !(game.scene.isActive('GameScene') || game.scene.isPaused('GameScene'))) return null;
+            const scene = game.scene.getScene('GameScene') as GameScene | null;
+            const p = (scene as unknown as { player?: { x: number; y: number } } | null)?.player;
+            return p ? { x: p.x, y: p.y } : null;
+        },
+        toMenu(reason) {
+            const wasInGame = inGame;
+            inGame = false;
+            frozenPause = false;
+            pendingCoopLevel = null;
+            state.flushPersist(true);
+            if (wasInGame) {
+                sfx.stopBeds();
+                acoustics.reset();
+                game.scene.stop('GameScene');
+                hud.hide();
+                music.playMenu();
+            }
+            state.useSlot('single');
+            coopUi.show(reason ?? undefined);
+        },
+        playIntro(done) {
+            introBusy = true;
+            screens.storySequence(INTRO_CARDS, () => {
+                introBusy = false;
+                done();
+                const next = pendingCoopLevel;
+                pendingCoopLevel = null;
+                next?.();
+            });
+        },
+        inLevel: () => inGame,
+    };
 
     const phone = new Phone({
         pause: () => controller.pause(),
@@ -183,6 +310,8 @@ async function boot(): Promise<void> {
 
     bus.on('ending', ({ id, score, rank }) => {
         inGame = false;
+        // in due i titoli li vedono tutti e due, e la partita insieme finisce qui
+        if (coop.active) coop.inEnding = true;
         state.flushPersist(true);
         state.setFlag(`finale-${id}`);
         checkAchievements();
@@ -224,6 +353,14 @@ async function boot(): Promise<void> {
             gameEl.style.visibility = 'visible';
             game.scale.refresh();
             music.playMenu();
+            const wasCoop = coop.active || state.saveSlot !== 'single';
+            // l'ospite saluta in silenzio; l'host chiude subito: chi è ancora nei titoli li finisce (inEnding)
+            if (wasCoop) {
+                const announce = !coop.isGuest;
+                coop.inEnding = false;
+                coop.end(null, false, announce);
+                state.useSlot('single');
+            }
             screens.showMenu();
         });
     });
@@ -268,3 +405,4 @@ async function boot(): Promise<void> {
 }
 
 void boot();
+

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { riddleFor, TOASTS } from '../../content/story';
 import { bus } from '../../core/events';
+import { coopHooks } from '../../coop/hooks';
 import { haptics } from '../../input/haptics';
 import { sfx } from '../../audio/sfx';
 import { state } from '../../core/state';
@@ -55,11 +56,17 @@ export class MenteChapter extends Chapter {
                     // sbagliare costa, ma la testa di piema non ti cancella più: ti morde e cambia domanda
                     this.quizAttempts.set(id, attempt + 1);
                     bus.emit('toast', { text: TOASTS.quizErrore });
-                    this.scene.cameras.main.flash(240, 248, 113, 113);
-                    // la testa di piema ti morde: il pensiero si piega
-                    this.ctx.lens.kick({ barrel: 0.2, chroma: 1, angle: 0.025 }, 50, 150, 650);
-                    haptics.rumble(0.5, 0.6, 250);
-                    this.ctx.player.hurt(2, door.x);
+                    if (coopHooks.actorKind === 'remote' && this.ctx.coop) {
+                        // ha sbagliato l'ospite: la sberla arriva al suo geco, non all'host
+                        this.ctx.coop.session.send('cmd', { c: 'hurt', amount: 2, fromX: door.x });
+                        this.ctx.coop.session.send('cmd', { c: 'flash', r: 248, g: 113, b: 113 });
+                    } else {
+                        this.scene.cameras.main.flash(240, 248, 113, 113);
+                        // la testa di piema ti morde: il pensiero si piega
+                        this.ctx.lens.kick({ barrel: 0.2, chroma: 1, angle: 0.025 }, 50, 150, 650);
+                        haptics.rumble(0.5, 0.6, 250);
+                        this.ctx.player.hurt(2, door.x);
+                    }
                     for (const side of [-1, 1]) {
                         const at = this.ctx.world.openSpotNear(door.x + side * 180, door.y - 40, 8);
                         this.ctx.enemies.spawnEnemy('numero', at.x, at.y, { hunting: true });
@@ -68,6 +75,8 @@ export class MenteChapter extends Chapter {
                 }
                 state.setFlag(`aperta-${id}`);
                 this.ctx.interactions.remove(entry);
+                // in due la porta cade anche dall'altra parte: niente fantasmi che si aprono
+                this.ctx.coop?.session.send('quiz-gone', { x: door.x, y: door.y });
                 sfx.unlock();
                 const burst = this.scene.add.particles(door.x, door.y, 'p-spark', {
                     speed: { min: 40, max: 160 },

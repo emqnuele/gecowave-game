@@ -25,6 +25,7 @@ import type { Rewards } from './Rewards';
 import type { SafeGround } from './SafeGround';
 import type { Travel } from './Travel';
 import type { LevelWorld } from './world/LevelWorld';
+import type { CoopScene } from './coop/CoopScene';
 
 /** come si riavvia la scena: il capitolo, il microfono di partenza, la carta del titolo */
 export interface SceneData {
@@ -53,8 +54,10 @@ export interface GameSystem {
 /** una vita di scena: ogni sistema ne prende con Pick solo quello che usa, così le dipendenze stanno nel tipo */
 export class GameContext {
     readonly scene: Phaser.Scene;
-    /** questa istanza decide lo stato del mondo: in single sempre, in coop solo l'host (fase 3) */
-    readonly simulates: boolean = true;
+    /** questa istanza decide lo stato del mondo: in single sempre, in coop solo l'host */
+    readonly simulates: boolean;
+    /** la partita in due dentro il capitolo: null da soli */
+    coop: CoopScene | null = null;
     world!: LevelWorld;
     player!: Player;
     controls!: Input;
@@ -83,7 +86,8 @@ export class GameContext {
     doomsday!: Doomsday;
     lens!: CameraLens;
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Phaser.Scene, simulates = true) {
         this.scene = scene;
+        this.simulates = simulates;
     }
 }

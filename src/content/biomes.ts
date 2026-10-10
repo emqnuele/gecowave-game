@@ -1,4 +1,5 @@
 import type { LevelDef, ZoneColor } from '../types';
+import { mix } from '../art/ink';
 
 /* ogni capitolo ha un bioma: è lui a decidere di che materia è fatto
    il terreno, cosa cresce sopra e sotto, cosa si vede in lontananza */
@@ -43,7 +44,7 @@ export interface BiomeDef {
     /** tutto al chiuso: niente cielo, la regione è una tana di stanze */
     indoor?: boolean;
     /** sagome scure in primo piano davanti al giocatore */
-    foreground: 'leaves' | 'chains' | 'pillars' | 'pipes' | 'cables' | 'crystals' | 'reeds' | 'none';
+    foreground: 'leaves' | 'chains' | 'pillars' | 'pipes' | 'cables' | 'crystals' | 'reeds' | 'shards' | 'none';
 }
 
 const base = {
@@ -214,6 +215,15 @@ export const BIOMES: Record<string, BiomeDef> = {
         ambience: ['dust'], props: ['lantern', 'chair', 'busstop', 'signpost', 'crate'],
         spikes: 'metal', ambient: 0.16, lightShafts: false, foreground: 'cables',
     },
+    /* il titolo senza salvataggio: nessun capitolo, solo il realm e la wave in frantumi */
+    title: {
+        ...base, id: 'title', material: 'stone',
+        rock: 0x57544c, rim: 0xd8d4bc, accent: 0x4ade80,
+        surface: ['grass'], ceiling: ['roots'],
+        skyline: 'crossroads', skyTop: 0x05080a, skyBottom: 0x121a18, haze: 0x24302b,
+        ambience: ['dust'], props: ['lantern', 'gravestone'],
+        spikes: 'thorns', ambient: 0.11, lightShafts: false, foreground: 'shards',
+    },
 };
 
 const LEVEL_BIOME: Record<string, string> = {
@@ -248,6 +258,21 @@ const ZONE_FALLBACK: Record<ZoneColor, string> = {
     blue: 'library',
     cyan: 'servers',
 };
+
+/** il bioma del titolo: quello del capitolo salvato, o il fondale apposta a partita nuova */
+export function menuBiome(def: LevelDef | undefined): BiomeDef {
+    return def ? biomeFor(def) : BIOMES.title;
+}
+
+export interface MenuTone {
+    ember: number;
+    gold: number;
+}
+
+/** le tinte delle schermate: vicine all'accento del capitolo, schiarite quanto basta per leggersi sul buio */
+export function menuTone(b: BiomeDef): MenuTone {
+    return { ember: mix(b.accent, 0xfff4e0, 0.15), gold: mix(b.accent, 0xe8dfc8, 0.4) };
+}
 
 export function biomeFor(def: Pick<LevelDef, 'id' | 'color'> & { biome?: string }): BiomeDef {
     const id = def.biome ?? LEVEL_BIOME[def.id] ?? ZONE_FALLBACK[def.color];

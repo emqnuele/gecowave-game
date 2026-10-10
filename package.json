@@ -1,7 +1,7 @@
 {
   "name": "gecowave-flux-of-coscience",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "action-platformer 2D ambientato nel GecoRealm, sviluppato per gecowave",
   "author": "emqnuele (https://emanuelefaraci.com)",
   "license": "MIT",
@@ -44,6 +44,7 @@
     "@fontsource/im-fell-english-sc": "^5.3.0",
     "@fontsource/martian-mono": "^5.2.7",
     "@fontsource/permanent-marker": "^5.2.7",
+    "peerjs": "1.5.5",
     "phaser": "^3.90.0"
   },
   "build": {

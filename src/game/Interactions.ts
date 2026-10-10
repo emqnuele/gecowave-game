@@ -8,6 +8,8 @@ export interface Interactable {
     y: number;
     range: number;
     onInteract: () => void;
+    /** in due: si fa sul proprio schermo senza chiedere all'host (passanti, nascondigli) */
+    local?: boolean;
 }
 
 /** il registro di cosa si può toccare: npc, passanti, missioni, storia, meccaniche, sigilli, sfide, corse */
@@ -31,6 +33,11 @@ export class Interactions implements GameSystem {
         this.list = this.list.filter((it) => it !== item);
     }
 
+    /** via quello che sta qui intorno: porte cadute anche dall'altra parte */
+    removeNear(x: number, y: number, r: number): void {
+        this.list = this.list.filter((it) => Math.hypot(it.x - x, it.y - y) > r);
+    }
+
     /** dove sta già qualcosa, per chi deve piazzare altro senza coprirlo */
     points(): { x: number; y: number }[] {
         return this.list.map((it) => ({ x: it.x, y: it.y }));
@@ -41,7 +48,12 @@ export class Interactions implements GameSystem {
     }
 
     nearest(): Interactable | null {
-        const p = this.ctx.player;
+        return this.nearestTo(this.ctx.player.x, this.ctx.player.y);
+    }
+
+    /** il più vicino a un punto: in due l'host lo cerca dove sta l'ospite */
+    nearestTo(x: number, y: number): Interactable | null {
+        const p = { x, y };
         let best: Interactable | null = null;
         let bestDist = Infinity;
         for (const it of this.list) {

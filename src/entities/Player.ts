@@ -9,6 +9,7 @@ import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
 import type { AbilityId } from '../types';
 import { emitWorld } from '../core/worldEvents';
+import { coopHooks } from '../coop/hooks';
 
 export type AttackDir = 'side' | 'up' | 'down';
 
@@ -187,7 +188,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     get invulnerable(): boolean {
-        return state.godMode || this.dashing || this.hidden || this.scene.time.now < this.invulnUntil;
+        return state.godMode || this.dashing || this.hidden || coopHooks.frozen || this.scene.time.now < this.invulnUntil;
     }
 
     private get grounded(): boolean {
@@ -231,6 +232,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.cancelEat();
             body.setAccelerationX(0);
             body.setVelocity(0, 0);
+            return;
+        }
+        if (coopHooks.frozen) {
+            // in due, chi legge un dialogo o il telefono resta lì: il mondo intorno continua
+            this.cancelCharge();
+            body.setAccelerationX(0);
+            body.setVelocityX(body.velocity.x * 0.8);
+            this.updateAnimation(body);
+            this.updateHitbox();
             return;
         }
         if (this.eating) {
@@ -460,6 +470,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.updateRisonante(now);
 
         if (this.controls.pressed('eat')) {
+            if (coopHooks.requestEat?.(null)) return;
             const msg = this.startEat(null);
             if (msg) bus.emit('toast', { text: msg });
         }

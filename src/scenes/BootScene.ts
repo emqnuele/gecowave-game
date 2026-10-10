@@ -25,6 +25,7 @@ export class BootScene extends Phaser.Scene {
         // capitoli segreti di walter: fondali dedicati (se mancano, fallback al parallax legacy)
         this.load.image('bg-painted-galliate', 'assets/backgrounds/galliate.png');
         this.load.image('bg-painted-marcetti', 'assets/backgrounds/marcetti.png');
+        this.load.image('bg-painted-title', 'assets/mainmenu.png');
 
         // le regioni generate offline: se una manca si gioca il capitolo vecchio
         for (const id of REGION_IDS) this.load.json(regionKey(id), regionUrl(id));

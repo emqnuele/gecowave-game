@@ -3,7 +3,7 @@ import { CAMERA_LERP, LOGIC_STEP_MS, TILE } from '../config';
 import { MECHANIC_HINTS } from '../content/story';
 import { LEVELS, TOTAL_FRAGMENTS } from '../content/levels';
 import { bus } from '../core/events';
-import { biomeFor } from '../content/biomes';
+import { biomeFor, type BiomeDef } from '../content/biomes';
 import { CameraLens } from '../stage/CameraLens';
 import { WetTrail } from '../stage/WetTrail';
 import { haptics } from '../input/haptics';
@@ -66,6 +66,9 @@ import type { SceneData } from '../game/context';
 import { emitWorld, offWorld, onWorld, type WorldEvent, type WorldHandler } from '../core/worldEvents';
 import { reseedRng, rng } from '../core/rng';
 import { FixedStep } from '../rules/fixedStep';
+import { coop } from '../coop/runtime';
+import { CoopScene } from '../game/coop/CoopScene';
+import { coopHooks } from '../coop/hooks';
 
 const FALL_DEATH_MARGIN = 3000;
 
@@ -73,6 +76,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     private ctx!: GameContext;
     /** nasce in create: phaser riusa l'istanza, un passo a metà non deve passare alla vita dopo */
     private sim!: FixedStep;
+    private wasFrozen = false;
     private world!: LevelWorld;
     private player!: Player;
     /** il livello input: nessuno legge più tasti fisici */
@@ -122,10 +126,15 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         super('GameScene');
     }
 
+    /** il bioma del capitolo in corso: le schermate ne prendono la tinta */
+    get biome(): BiomeDef {
+        return this.world.biome;
+    }
+
     init(data: SceneData): void {
         // ogni livello pesca da sequenze sue: quello che è successo prima non sposta la sua trama
         reseedRng();
-        this.ctx = new GameContext(this);
+        this.ctx = new GameContext(this, !coop.isGuest);
         const region = loadRegion(this, data.levelId);
         const def = region?.def ?? LEVELS[data.levelId];
         if (!def) throw new Error(`livello sconosciuto: ${data.levelId}`);
@@ -135,6 +144,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
 
     create(data: SceneData): void {
         this.sim = new FixedStep(LOGIC_STEP_MS);
+        this.createCoop();
         this.progression = this.ctx.flow = new Progression(this.ctx);
         this.bosses = this.ctx.bosses = new Bosses(this.ctx);
         this.arena = this.ctx.arena = new Arena(this.ctx);
@@ -328,8 +338,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
                 trialRunning: () => !!this.challenges.trial?.active,
                 chaseRunning: () => !!this.chapter.pursuer?.()?.active,
                 chaseRanges: () => this.chapter.chaseRanges?.() ?? [],
-                addInteractable: (x, y, range, onInteract) => {
-                    const entry: Interactable = { x, y, range, onInteract };
+                addInteractable: (x, y, range, onInteract, local) => {
+                    const entry: Interactable = local ? { x, y, range, onInteract, local } : { x, y, range, onInteract };
                     this.interactions.add(entry);
                     return () => {
                         this.interactions.remove(entry);
@@ -415,6 +425,46 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.dialogues.playIntro(introId, !!this.chapter.startsInDark?.());
 
         this.setupScript();
+        this.setupCoop(data);
+    }
+
+    /** la partita in due nasce prima dei sistemi: chi nasce durante il caricamento si conta già */
+    private createCoop(): void {
+        const session = coop.session;
+        if (!coop.active || !session) return;
+        this.mountCoop(session);
+    }
+
+    /** un coop per scena: quello vecchio si chiude, e alla chiusura della scena se ne va anche il nuovo */
+    private mountCoop(session: NonNullable<typeof coop.session>): CoopScene {
+        const hadCoop = !!this.ctx.coop;
+        this.ctx.coop?.destroy();
+        const cs = new CoopScene(this.ctx, session);
+        this.ctx.coop = cs;
+        if (!hadCoop) {
+            this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+                this.ctx.coop?.destroy();
+                this.ctx.coop = null;
+            });
+        }
+        return cs;
+    }
+
+    /** l'host partito da solo aggancia il coop quando il guest si presenta: stessa scena, nuova sessione */
+    attachLateCoop(): void {
+        const session = coop.session;
+        if (!coop.isHost || !session || !session.open) return;
+        if (this.ctx.coop?.session === session) return;
+        this.mountCoop(session).loaded();
+    }
+
+    /** la partita in due: l'host annuncia il capitolo, l'ospite dice che è arrivato */
+    private setupCoop(data: SceneData): void {
+        const session = coop.session;
+        if (!coop.active) return;
+        this.ctx.coop?.loaded();
+        if (coop.isHost) coop.hostEnteredLevel(this.world.def.id, data.checkpointId ?? null, { x: this.player.x, y: this.player.y }, data.showCard !== false);
+        else session?.send('ready', { seq: coop.levelSeq });
     }
 
     /* ---------- costruzione ---------- */
@@ -423,6 +473,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         for (const { spec, x, y } of this.world.level.entities) {
             switch (spec.type) {
                 case 'enemy': {
+                    // l'ospite li riceve dall'host, già vivi o già morti
+                    if (!this.ctx.simulates) break;
                     // una parte dei nemici dorme: si passa piano, o si sveglia tutto
                     const h = hashString(`${this.world.def.id}:${x}:${y}`);
                     const elite = this.enemies.isEliteSpot(x, y, h);
@@ -461,6 +513,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
                         this.bosses.recoverReward(spec.kind, x, y);
                         break;
                     }
+                    if (!this.ctx.simulates) break;
                     // l'ombra senza abbonamento è addestrata su poco footage
                     const hpOverride = spec.kind === 'ombra' && !state.hasFlag('tommasorveglianza') ? 34 : undefined;
                     this.bosses.current = this.bosses.make(x, y, spec.kind, hpOverride);
@@ -502,6 +555,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     }
 
     private setupScript(): void {
+        // la trama dei capitoli la racconta l'host: all'ospite arriva fatta
+        if (!this.ctx.simulates) return;
         const hint = MECHANIC_HINTS[this.world.def.id];
         if (hint && this.mechanic) waveOnce(this, `meccanica-${this.world.def.id}`, hint, 12000);
         this.chapter.setup?.();
@@ -547,6 +602,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => offHealed());
         // dal telefono si ordina, nel mondo si mangia: il boccone parte qui
         const offEat = bus.on('eat-requested', ({ id }) => {
+            if (coopHooks.requestEat?.(id ?? null)) return;
             const msg = this.player.startEat(id);
             if (msg) bus.emit('toast', { text: msg });
         });
@@ -570,6 +626,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         for (let i = 0; i < n; i++) this.tick(time - (n - 1 - i) * this.sim.dt, this.sim.dt);
         // senza passo il mondo è fermo, ma la camera si è mossa: quello che si vede la segue
         if (n === 0) this.present(time);
+        this.ctx.coop?.present(delta);
         this.lens.update(this.player);
     }
 
@@ -585,22 +642,31 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     private present(time: number): void {
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
-        this.parallax.update(time);
-        this.ambience.update(this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor);
+        const outdoor = this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor;
+        this.parallax.update(time, outdoor);
+        this.ambience.update(outdoor);
         this.water.update(time);
     }
 
     /** un passo di logica: l'ordine è quello di sempre, a 60 hz un passo per fotogramma */
     private tick(time: number, delta: number): void {
+        // in due dialogo e menu non fermano la scena: all'uscita si riallinea come dopo una pausa, o il tasto che chiude riapre
+        if (this.wasFrozen && !coopHooks.frozen) this.controls.reset();
+        this.wasFrozen = coopHooks.frozen;
         this.controls.update();
-        if (this.controls.pressed('interact')) this.tryInteract();
-        else if (this.controls.device === 'gamepad' && this.controls.pressed('up')
+        // in due chi legge un dialogo ha il mondo che gira: il tasto che lo manda avanti non riapre niente
+        const talking = coopHooks.frozen;
+        if (!talking && this.controls.pressed('interact')) this.tryInteract();
+        else if (!talking && this.controls.device === 'gamepad' && this.controls.pressed('up')
             && !this.controls.down('wave') && this.player.still && this.interactions.nearest()) {
             // col pad interagisci premendo su da fermo, come a hallownest
             this.tryInteract();
         }
         if (this.controls.pressed('pause')) bus.emit('request-pause', {});
+        this.ctx.coop?.mine(true);
         this.player.update(time, delta);
+        this.ctx.coop?.mine(false);
+        this.ctx.coop?.tick(delta);
         this.mechanic?.update(time, delta);
 
         if (!this.player.dead && this.player.y > this.world.level.heightPx + FALL_DEATH_MARGIN) {
@@ -613,8 +679,8 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         if (!film) {
             this.enemies.updateEnemies(time, delta, target);
             this.enemies.updateSpawners(time);
-            if (this.ctx.simulates) this.bosses.current?.update(time, delta, target);
-            this.chapter.updateFoes?.(time);
+            if (this.ctx.simulates && this.bosses.current) this.bosses.current.update(time, delta, this.ctx.coop ? this.ctx.coop.targetFor(this.bosses.current, target) : target);
+            if (this.ctx.simulates) this.chapter.updateFoes?.(time);
             this.bosses.updateVoices(time);
         }
         this.pedroGhost?.update(this.player);
@@ -623,18 +689,27 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.enemies.updateLessons(time);
         this.lighting.update();
         this.terrain.update(this.cameras.main.worldView);
-        this.parallax.update(time);
-        this.ambience.update(this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor);
+        const outdoor = this.world.layout ? !!this.world.roomAt(this.player.x, this.player.y)?.surface : !this.world.biome.indoor;
+        this.parallax.update(time, outdoor);
+        this.ambience.update(outdoor);
         this.water.update(time);
 
         this.safe.track(delta);
         state.save.record.playMs += delta;
         state.flushPersist();
         state.run.nearMic = this.world.level.checkpoints.some((cp) => Math.abs(cp.x - this.player.x) < 110 && Math.abs(cp.y - this.player.y) < 110);
-        this.progression.checkExits();
+        // l'ospite non esce da solo: la sua uscita la vede l'host, e porta tutti e due
+        const partner = this.ctx.coop?.partnerSpot() ?? null;
+        if (this.ctx.simulates) {
+            this.progression.checkExits();
+            if (partner) this.progression.checkExits(partner);
+        }
         this.interactions.updatePrompt();
         // l'ingaggio aspetta la fine del film: niente dialoghi sopra il ricordo
-        if (!flashback.isPlaying) this.bosses.updateTrigger();
+        if (!flashback.isPlaying) {
+            this.bosses.updateTrigger();
+            if (partner) this.bosses.updateTrigger(partner);
+        }
         this.enemies.magnetBarre();
         this.abilities.updateClone(time, delta);
         this.rewards.updateHoming(delta);
@@ -648,9 +723,9 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
             flood: this.hazards.floodAhead,
             rain: this.atmosphere.rainLevel,
         });
-        this.traps.update(time, delta, this.player);
+        this.traps.update(time, delta, this.player, this.ctx.coop?.partnerSpot() ?? null);
         this.hazards.update(time, delta, this.player);
-        this.challenges.trial?.update(this.player);
+        this.challenges.trial?.update(this.player, this.ctx.coop?.partnerSpot() ?? null);
         this.updateArenaLock(time);
         this.progression.updateExplore();
         this.travel.updateBusStops();
@@ -669,7 +744,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
         this.abilities.updateAcquaTossica(time);
         this.abilities.updateAbilityFx(time);
         this.abilities.updatePoison(time);
-        this.chapter.update?.(time, delta);
+        if (this.ctx.simulates) this.chapter.update?.(time, delta);
         this.updateFakeWalls();
         if (this.player.consumeSlamLanding()) this.combat.slamLand(this.player.x, this.player.y);
         this.doomsday.update(time, delta);
@@ -695,6 +770,10 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
 
     private tryInteract(): void {
         if (this.player.dead || this.progression.exiting) return;
+        if (this.ctx.coop) {
+            this.ctx.coop.rules.interact();
+            return;
+        }
         this.interactions.nearest()?.onInteract();
     }
 

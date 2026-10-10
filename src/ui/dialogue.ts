@@ -1,5 +1,5 @@
 import { ZONE_CSS } from '../config';
-import { bus } from '../core/events';
+import { bus, type DialogueCoop } from '../core/events';
 import { matchesAction } from '../input/actions';
 import { formatKeys, keyLabel } from '../input/keyText';
 import { music } from '../audio/music';
@@ -16,7 +16,9 @@ export class DialogueBox {
     private typing: number | null = null;
     private onEnd?: () => void;
     private shown = '';
+    private coop: DialogueCoop | null = null;
     private keyHandler = (e: KeyboardEvent) => {
+        if (this.coop?.follow) return;
         if (e.code === 'Enter' || matchesAction(e, 'jump') || matchesAction(e, 'attack') || matchesAction(e, 'interact')) {
             e.preventDefault();
             this.advance();
@@ -24,30 +26,51 @@ export class DialogueBox {
     };
 
     constructor() {
-        bus.on('dialogue-start', ({ lines, onEnd }) => this.start(lines, onEnd));
+        bus.on('dialogue-start', ({ lines, onEnd, coop }) => this.start(lines, onEnd, coop));
+        bus.on('dialogue-step', ({ index }) => this.jump(index));
+    }
+
+    /** chi segue il dialogo dell'altro salta alla sua riga; oltre l'ultima si chiude */
+    private jump(index: number): void {
+        if (!this.box || !this.coop?.follow) return;
+        if (index >= this.lines.length) {
+            this.close(true);
+            return;
+        }
+        if (index === this.index) return;
+        this.index = index;
+        this.showLine();
     }
 
     get open(): boolean {
         return this.box !== null;
     }
 
-    private start(lines: DialogueLine[], onEnd?: () => void): void {
+    private start(lines: DialogueLine[], onEnd?: () => void, coop?: DialogueCoop): void {
+        // il dialogo che questo sostituisce deve chiudere il suo seguito (in due: avvisare l'altro),
+        // ma la scena non si tocca: chi segue la trama non deve riprenderla a metà
+        const replaced = this.box ? this.coop?.onReplaced : undefined;
         this.close(false);
         this.lines = lines;
         this.index = 0;
         this.onEnd = onEnd;
+        this.coop = coop ?? null;
 
         this.box = el('div', 'glass-panel');
         this.box.id = 'dialogue';
         this.box.dataset.anim = '1';
         const speaker = el('div', 'speaker sticker');
         const text = el('div', 'text font-martian');
-        const hint = el('div', 'hint', `${keyLabel('interact')} / clic per continuare`);
+        const hint = el('div', 'hint');
+        hint.textContent = coop?.hint ?? `${keyLabel('interact')} / clic per continuare`;
         this.box.append(speaker, text, hint);
-        this.box.addEventListener('click', () => this.advance());
+        this.box.addEventListener('click', () => {
+            if (!this.coop?.follow) this.advance();
+        });
         ui().append(this.box);
         window.addEventListener('keydown', this.keyHandler);
         this.showLine();
+        replaced?.();
     }
 
     private showLine(): void {
@@ -96,6 +119,7 @@ export class DialogueBox {
             return;
         }
         this.index++;
+        this.coop?.onStep?.(this.index);
         if (this.index < this.lines.length) {
             this.showLine();
         } else {

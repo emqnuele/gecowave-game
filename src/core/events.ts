@@ -9,9 +9,11 @@ export interface GameEvents {
     'fragments-changed': { count: number; total: number };
     'zone-changed': { title: string; accentWord: string; color: ZoneColor; punchline: string; showCard: boolean };
     'abilities-changed': { abilities: AbilityId[] };
-    'dialogue-start': { lines: DialogueLine[]; onEnd?: () => void };
+    'dialogue-start': { lines: DialogueLine[]; onEnd?: () => void; coop?: DialogueCoop };
     'dialogue-end': {};
-    'player-died': { lost: number; score: number | null };
+    /** in due: chi segue il dialogo dell'altro passa alla riga che l'altro ha raggiunto */
+    'dialogue-step': { index: number };
+    'player-died': { lost: number; score: number | null; guestOf?: string };
     'toast': { text: string };
     'wavesung': { sender: string; text: string };
     'ability-unlocked': { ability: AbilityId };
@@ -50,10 +52,21 @@ export interface GameEvents {
     'controls-changed': {};
 }
 
+/** in due il dialogo si segue o si guida: chi segue non manda avanti, chi guida dice a che riga è */
+export interface DialogueCoop {
+    follow?: boolean;
+    onStep?: (index: number) => void;
+    hint?: string;
+    /** un altro dialogo prende il posto di questo: chi l'ha aperto deve comunque chiudere il suo seguito */
+    onReplaced?: () => void;
+}
+
 type Handler<T> = (payload: T) => void;
 
 class EventBus {
     private handlers = new Map<string, Set<Handler<unknown>>>();
+    /** chi ascolta tutto: l'host del coop gira all'altro quello che conta per entrambi */
+    tap: (<K extends keyof GameEvents>(event: K, payload: GameEvents[K]) => void) | null = null;
 
     on<K extends keyof GameEvents>(event: K, handler: Handler<GameEvents[K]>): () => void {
         if (!this.handlers.has(event)) this.handlers.set(event, new Set());
@@ -62,6 +75,7 @@ class EventBus {
     }
 
     emit<K extends keyof GameEvents>(event: K, payload: GameEvents[K]): void {
+        this.tap?.(event, payload);
         this.handlers.get(event)?.forEach((h) => h(payload));
     }
 }

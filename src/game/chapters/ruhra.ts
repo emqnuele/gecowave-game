@@ -38,7 +38,8 @@ export class RuhraChapter extends Chapter {
     }
 
     objective(): Target | null | undefined {
-        if (state.hasAbility('analisi')) return undefined;
+        // la storia si misura dalla mente chiusa, non dall'abilità: in godmode l'analisi c'è già
+        if (state.hasFlag('boss-down-teorema')) return undefined;
         const at = this.ctx.npcs.at.get('piema-mente');
         return at ? { ...at, label: 'piema' } : null;
     }

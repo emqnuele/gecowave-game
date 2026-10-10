@@ -9,9 +9,10 @@ import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
 import type { AbilityId, BossKind } from '../types';
 import type { GameContext, GameSystem } from './context';
+import type { PickupSpawn } from '../coop/protocol';
 
 
-type RewardsCtx = Pick<GameContext, 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'dialogues'>;
+type RewardsCtx = Pick<GameContext, 'coop' | 'scene' | 'world' | 'player' | 'lighting' | 'interactions' | 'dialogues'>;
 
 /** tutto quello che si raccoglie: oggetti, frammenti, cuori, maschere, barre, note */
 export class Rewards implements GameSystem {
@@ -20,6 +21,8 @@ export class Rewards implements GameSystem {
     private homing: { obj: Phaser.Physics.Arcade.Sprite; at: number; moving: boolean }[] = [];
     /** frammenti della wave vivi nel mondo: la freccia ci punta finché non li prendi */
     private liveFragments: { x: number; y: number; ability: AbilityId; obj: Phaser.Physics.Arcade.Sprite }[] = [];
+    /** ogni premio vivo, per chiave: l'host lo ritrova anche se il coop si è agganciato dopo */
+    private readonly coopPickups = new Map<string, { spec: PickupSpawn; sprite: Phaser.GameObjects.GameObject }>();
 
     constructor(ctx: RewardsCtx) {
         this.ctx = ctx;
@@ -28,6 +31,20 @@ export class Rewards implements GameSystem {
 
     hasLiveFragment(ability: AbilityId): boolean {
         return this.liveFragments.some((f) => f.ability === ability);
+    }
+
+    /** i premi vivi in questo capitolo: l'host li adotta quando il coop si aggancia a partita iniziata */
+    livePickups(): IterableIterator<{ spec: PickupSpawn; sprite: Phaser.GameObjects.GameObject }> {
+        return this.coopPickups.values();
+    }
+
+    /** registra un premio per il coop: lo tiene per chiave e lo annuncia a chi comanda il mondo */
+    private publish(spec: PickupSpawn, sprite: Phaser.GameObjects.GameObject, always = false): void {
+        this.coopPickups.set(spec.key, { spec, sprite });
+        sprite.once(Phaser.GameObjects.Events.DESTROY, () => {
+            if (this.coopPickups.get(spec.key)?.sprite === sprite) this.coopPickups.delete(spec.key);
+        });
+        this.ctx.coop?.pickupSpawned(spec, sprite, always);
     }
 
     /** sacchetto o amuleto a terra: si raccoglie una volta sola per salvataggio */
@@ -51,6 +68,11 @@ export class Rewards implements GameSystem {
         this.ctx.lighting.follow(pickup, isCharm ? 0xc084fc : 0xfacc15, 150, 0.8);
         this.scene.tweens.add({ targets: pickup, y: y - 7, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.scene.physics.add.overlap(this.ctx.player, pickup, () => {
+            // in due decide l'host: qui si chiede, il premio torna col save
+            if (this.ctx.coop?.mirror) {
+                this.ctx.coop.mirror.claim(persistKey, pickup);
+                return;
+            }
             pickup.destroy();
             state.save.collectedLore.push(persistKey);
             state.addItem(item, amount);
@@ -62,6 +84,7 @@ export class Rewards implements GameSystem {
                 bus.emit('inventory-changed', {});
             }
         });
+        this.publish({ kind: 'item', key: persistKey, x, y, item, amount, loose }, pickup);
     }
 
     /** ogni boss lascia il suo amuleto, una volta sola */
@@ -97,6 +120,7 @@ export class Rewards implements GameSystem {
 
     spawnFragment(x: number, y: number, ability: AbilityId, loose = false): void {
         if (loose) ({ x, y } = this.ctx.world.rewardSpot(x, y));
+        const key = `frammento-${ability}-${Math.round(x)}-${Math.round(y)}`;
         const shard = this.scene.physics.add.sprite(x, y, 'fragment').setDepth(5);
         (shard.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.ctx.lighting.follow(shard, 0x4ade80, 200, 1.0);
@@ -106,6 +130,11 @@ export class Rewards implements GameSystem {
         this.liveFragments.push({ x, y, ability, obj: shard });
         this.scene.physics.add.overlap(this.ctx.player, shard, () => {
             if (!shard.active) return;
+            // in due decide l'host: qui si chiede, il premio torna col save
+            if (this.ctx.coop?.mirror) {
+                this.ctx.coop.mirror.claim(key, shard);
+                return;
+            }
             this.liveFragments = this.liveFragments.filter((f) => f.obj !== shard);
             shard.destroy();
             // doppione (es. dono di markolino + pickup libero): sparisce in silenzio
@@ -121,6 +150,7 @@ export class Rewards implements GameSystem {
                 this.scene.time.delayedCall(1500, () => bus.emit('wavesung', WAVESUNG.markolinoSigilli));
             }
         });
+        this.publish({ kind: 'fragment', key, x, y, ability, loose }, shard);
     }
 
     spawnLore(id: string, x: number, y: number): void {
@@ -148,6 +178,11 @@ export class Rewards implements GameSystem {
         this.ctx.lighting.follow(ghost, 0x4ade80, 130, 0.7);
         this.scene.tweens.add({ targets: ghost, y: drop.y - 8, alpha: 0.6, duration: 900, yoyo: true, repeat: -1 });
         this.scene.physics.add.overlap(this.ctx.player, ghost, () => {
+            // in due decide l'host: qui si chiede, il premio torna col save
+            if (this.ctx.coop?.mirror) {
+                this.ctx.coop.mirror.claim('barre-perse', ghost);
+                return;
+            }
             ghost.destroy();
             state.save.barre += drop.amount;
             state.dropped = null;
@@ -156,6 +191,7 @@ export class Rewards implements GameSystem {
             bus.emit('barre-changed', { barre: state.save.barre, gained: true });
             bus.emit('toast', { text: TOASTS.barreRecovered });
         });
+        this.publish({ kind: 'barre', key: 'barre-perse', x: drop.x, y: drop.y, amount: drop.amount }, ghost, true);
     }
 
     spawnBarrePickup(x: number, y: number, amount: number, persistKey?: string): void {
@@ -166,6 +202,11 @@ export class Rewards implements GameSystem {
         (note.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.scene.tweens.add({ targets: note, y: y - 6, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.scene.physics.add.overlap(this.ctx.player, note, () => {
+            // in due decide l'host: qui si chiede, il premio torna col save
+            if (this.ctx.coop?.mirror) {
+                this.ctx.coop.mirror.claim(key, note);
+                return;
+            }
             note.destroy();
             state.save.collectedLore.push(key);
             state.save.barre += amount;
@@ -173,9 +214,10 @@ export class Rewards implements GameSystem {
             sfx.pickup();
             bus.emit('barre-changed', { barre: state.save.barre, gained: true });
         });
+        this.publish({ kind: 'barre', key, x, y, amount }, note);
     }
 
-    /** cuore del realm: +1 vita massima, per sempre */
+    /** cuore del realm: +1 vita massima, per sempre. in due lo assegna l'host e torna a tutti col grant */
     spawnCuore(x: number, y: number, persistKey: string, loose = false): void {
         expectLoreKey(this.ctx.world.def.id, persistKey, 'heart');
         if (state.save.collectedLore.includes(persistKey)) return;
@@ -187,6 +229,11 @@ export class Rewards implements GameSystem {
         this.scene.tweens.add({ targets: heart, y: y - 8, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.scene.tweens.add({ targets: heart, scale: { from: 1, to: 1.15 }, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.scene.physics.add.overlap(this.ctx.player, heart, () => {
+            // in due decide l'host: qui si chiede, il premio torna col save
+            if (this.ctx.coop?.mirror) {
+                this.ctx.coop.mirror.claim(persistKey, heart);
+                return;
+            }
             heart.destroy();
             state.save.collectedLore.push(persistKey);
             state.save.stats.costituzione += 1;
@@ -197,6 +244,7 @@ export class Rewards implements GameSystem {
             bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
             bus.emit('toast', { text: TOASTS.cuore });
         });
+        this.publish({ kind: 'cuore', key: persistKey, x, y, loose }, heart);
     }
 
     private maschereCount(): number {
@@ -212,6 +260,11 @@ export class Rewards implements GameSystem {
         this.scene.tweens.add({ targets: mask, y: y - 8, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.scene.tweens.add({ targets: mask, angle: { from: -6, to: 6 }, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.scene.physics.add.overlap(this.ctx.player, mask, () => {
+            // in due decide l'host: qui si chiede, il premio torna col save
+            if (this.ctx.coop?.mirror) {
+                this.ctx.coop.mirror.claim(persistKey, mask);
+                return;
+            }
             mask.destroy();
             state.save.collectedLore.push(persistKey);
             state.save.barre += 25;
@@ -232,6 +285,7 @@ export class Rewards implements GameSystem {
                 bus.emit('toast', { text: TOASTS.mascheraCompleta });
             }
         });
+        this.publish({ kind: 'maschera', key: persistKey, x, y }, mask);
     }
 
     /** frammento della wave ancora a terra in questo capitolo, il più vicino: la freccia ci porta prima qui */
@@ -243,7 +297,7 @@ export class Rewards implements GameSystem {
         let found = false;
         // prima quelli vivi nel mondo (es. il dono appena caduto ai piedi di markolino)
         for (const f of this.liveFragments) {
-            if (state.hasAbility(f.ability)) continue;
+            if (!f.obj.active || state.hasAbility(f.ability)) continue;
             const d = Math.hypot(f.x - this.ctx.player.x, f.y - this.ctx.player.y);
             if (d < bd) { bd = d; bx = f.x; by = f.y; found = true; }
         }

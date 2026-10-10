@@ -36,7 +36,8 @@ export interface MechanicCtx {
     /** le zone di caccia come intervalli di progresso, per i nascondigli */
     chaseRanges: () => { start: number; end: number }[];
     /** un punto E premibile messo dalla meccanica (gli armadi della tana) */
-    addInteractable: (x: number, y: number, range: number, onInteract: () => void) => () => void;
+    /** local: in due si fa sul proprio schermo (un nascondiglio è di chi ci entra) */
+    addInteractable: (x: number, y: number, range: number, onInteract: () => void, local?: boolean) => () => void;
 }
 
 export interface Mechanic {

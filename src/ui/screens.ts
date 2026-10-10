@@ -15,6 +15,7 @@ import { isValidSkinId, SKIN_PRESETS, skinPreset } from '../content/skins';
 import { PLAYER_FRAME, renderSkinPreview, skinFinalCss } from '../art/playerSkin';
 import { music } from '../audio/music';
 import type { ZoneColor } from '../types';
+import type { MenuTone } from '../content/biomes';
 import { el, ui } from './dom';
 import { EndingFx } from './endingFx';
 import { phoneBanner } from './banner';
@@ -33,7 +34,7 @@ export interface GameController {
 
 /* ---------- comandi ---------- */
 
-interface MenuItem {
+export interface MenuItem {
     label: string;
     onPick: () => void;
     sub?: string;
@@ -41,6 +42,21 @@ interface MenuItem {
     small?: boolean;
     /** suono di ritorno invece di quello di scelta */
     back?: boolean;
+}
+
+/** come si apre la forgia: il destino c'è solo per chi crea la partita */
+export interface ForgeConfig {
+    back: () => void;
+    backLabel?: string;
+    /** il personaggio di partenza (rientro in una partita in due già vista) */
+    initial?: { name: string; stats: { forza: number; costituzione: number; flusso: number }; skin: string };
+    kick?: string;
+    kick2?: string;
+    /** una riga sotto gli attributi: per l'ospite, com'è la partita in cui entra */
+    note?: string;
+    fate: boolean;
+    doneLabel: string;
+    onDone: (r: { name: string; stats: { forza: number; costituzione: number; flusso: number }; skin: string; doomsday: boolean }) => void;
 }
 
 /* il menu e le pagine come un codice a inchiostro: serif da stampa antica,
@@ -58,8 +74,17 @@ export class Screens {
     private cancelCapture: (() => void) | null = null;
     /** la scena del falò dietro al menu: la accende e la spegne main */
     private backdrop: (on: boolean) => void = () => {};
+    /** la tinta del capitolo appena entrato: la conosce solo chi ha la scena */
+    private levelTone: () => MenuTone | null = () => null;
     /** il primo menu dopo l'avvio chiede un tasto: sblocca l'audio ed è un ingresso */
     private awake = false;
+    /** la porta della partita in due: la mette main */
+    coopEntry: (() => void) | null = null;
+    /** la pausa in due: voci in più e una nota diversa (il mondo non aspetta) */
+    pauseExtras: (() => { items: MenuItem[]; note: string } | null) | null = null;
+    /** in due certe scelte le fa l'altro o le guarda soltanto: true se il coop l'ha presa */
+    choiceRouter: ((p: { title: string; options: { label: string; danger?: boolean }[]; onPick: (i: number) => void }) => boolean) | null = null;
+    travelRouter: ((p: { stops: { key: string; levelId: string; label: string }[]; current: string; onPick: (key: string) => void }) => boolean) | null = null;
 
     constructor() {
         this.bg = el('div');
@@ -83,17 +108,24 @@ export class Screens {
 
         bus.on('zone-changed', ({ title, accentWord, color, punchline, showCard }) => {
             this.setZone(color);
+            this.tint(this.levelTone());
             if (showCard) this.zoneCard(title, accentWord, color, punchline);
         });
         bus.on('toast', ({ text }) => this.toast(text));
         bus.on('wavesung', ({ sender, text }) => this.wavesung(sender, text));
-        bus.on('player-died', ({ lost, score }) => this.showDeath(lost, score));
+        bus.on('player-died', ({ lost, score, guestOf }) => this.showDeath(lost, score, guestOf));
         bus.on('ability-unlocked', ({ ability }) => this.abilityCard(ability));
         bus.on('charm-found', ({ id }) => this.charmCard(id));
         bus.on('achievement', ({ id }) => this.trophy(id));
-        bus.on('travel-show', (p) => this.travelBoard(p));
+        bus.on('travel-show', (p) => {
+            if (this.travelRouter?.(p)) return;
+            this.travelBoard(p);
+        });
         bus.on('chapter-score', (p) => this.chapterScore(p));
-        bus.on('choice-show', ({ title, options, onPick }) => this.choice(title, options, onPick));
+        bus.on('choice-show', (p) => {
+            if (this.choiceRouter?.(p)) return;
+            this.choice(p.title, p.options, p.onPick);
+        });
         bus.on('request-pause', () => this.showPause());
     }
 
@@ -103,6 +135,25 @@ export class Screens {
 
     setBackdrop(fn: (on: boolean) => void): void {
         this.backdrop = fn;
+    }
+
+    setLevelTone(fn: () => MenuTone | null): void {
+        this.levelTone = fn;
+    }
+
+    /** oro e brace delle schermate nella tinta data; null torna a quelli del codice */
+    tint(tone: MenuTone | null): void {
+        const root = document.documentElement.style;
+        for (const [name, color] of [['gold', tone?.gold], ['ember', tone?.ember]] as const) {
+            if (color === undefined) {
+                root.removeProperty(`--sx-${name}`);
+                root.removeProperty(`--sx-${name}-rgb`);
+                continue;
+            }
+            const rgb = `${(color >> 16) & 255}, ${(color >> 8) & 255}, ${color & 255}`;
+            root.setProperty(`--sx-${name}`, `rgb(${rgb})`);
+            root.setProperty(`--sx-${name}-rgb`, rgb);
+        }
     }
 
     /* ---------- atmosfera ---------- */
@@ -118,7 +169,7 @@ export class Screens {
 
     /* ---------- mattoni ---------- */
 
-    private openOverlay(cls = 'screen'): HTMLElement {
+    openOverlay(cls = 'screen'): HTMLElement {
         this.closeOverlay();
         this.overlay = el('div', cls);
         ui().append(this.overlay);
@@ -150,8 +201,11 @@ export class Screens {
         return wrap.firstElementChild as HTMLElement;
     }
 
-    private heading(title: string, sub?: string): HTMLElement[] {
-        const out: HTMLElement[] = [el('h2', 'sx-h', title), this.orn()];
+    heading(title: string, sub?: string): HTMLElement[] {
+        // testo semplice: in multiplayer nei titoli finiscono nomi arrivati dalla rete
+        const h = el('h2', 'sx-h');
+        h.textContent = title;
+        const out: HTMLElement[] = [h, this.orn()];
         if (sub) {
             const s = el('div', 'sx-sub');
             s.textContent = sub;
@@ -180,7 +234,7 @@ export class Screens {
         return b;
     }
 
-    private menu(items: MenuItem[], cls = ''): HTMLElement {
+    menu(items: MenuItem[], cls = ''): HTMLElement {
         const m = el('nav', `sx-menu ${cls}`);
         items.forEach((it, i) => {
             const b = this.item(it);
@@ -191,7 +245,7 @@ export class Screens {
     }
 
     /** frecce e invio su tutto ciò che ha data-nav; sinistra e destra cambiano i valori */
-    private bindNav(root: HTMLElement, onBack?: () => void): void {
+    bindNav(root: HTMLElement, onBack?: () => void): void {
         const list = () => [...root.querySelectorAll<HTMLElement>('[data-nav]')].filter((e) => e.offsetParent !== null && !e.hasAttribute('disabled'));
         let idx = -1;
         const focus = (i: number, sound = true) => {
@@ -243,7 +297,7 @@ export class Screens {
     }
 
     /** cambia passo nella forgia senza chiudere la schermata */
-    private closeNavOnly(): void {
+    closeNavOnly(): void {
         if (this.navHandler) window.removeEventListener('keydown', this.navHandler);
         this.navHandler = null;
     }
@@ -267,6 +321,8 @@ export class Screens {
             items.push({ label: 'continua', sub: `${state.save.playerName.toLowerCase()} · ${lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : state.save.levelId} · ${time}`, onPick: () => this.controller.continueGame() });
         }
         items.push({ label: 'nuova partita', onPick: () => (state.hasSave ? this.confirmNewGame() : this.controller.newGame()) });
+        const coopEntry = this.coopEntry;
+        if (coopEntry) items.push({ label: 'multiplayer', onPick: coopEntry });
         if (state.hasSave || state.godMode) items.push({ label: 'capitoli', onPick: () => this.showChapters(() => this.showMenu()) });
         items.push({ label: 'bacheca', onPick: () => this.showTrophies(() => this.showMenu()) });
         items.push({ label: 'comandi', onPick: () => this.showControls(() => this.showMenu()) });
@@ -401,12 +457,14 @@ export class Screens {
             this.closeOverlay();
             this.controller.resume();
         };
+        const extra = this.pauseExtras?.() ?? null;
         page.append(this.menu([
             { label: 'riprendi', onPick: resume },
+            ...(extra?.items ?? []),
             { label: 'comandi', onPick: () => this.showControls(() => this.showPause(), true) },
             { label: 'impostazioni', onPick: () => this.showSettings(() => this.showPause(), true) },
             { label: 'esci al menu', danger: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
-        ]), el('div', 'sx-note', 'il gioco aspetta. pedro no.'));
+        ]), el('div', 'sx-note', extra?.note ?? 'il gioco aspetta. pedro no.'));
         s.append(page);
         this.bindNav(page, resume);
     }
@@ -708,7 +766,7 @@ export class Screens {
 
     /* ---------- morte ---------- */
 
-    private showDeath(lost: number, score: number | null): void {
+    private showDeath(lost: number, score: number | null, guestOf?: string): void {
         const s = this.openOverlay('screen sx sx-death');
         const band = el('div', 'sx-death-band');
         band.append(el('h1', 'sx-death-title', 'sei morto'));
@@ -721,10 +779,20 @@ export class Screens {
             band.append(loss);
         }
         band.append(this.scoreBadge(score, 'punteggio della partita'));
-        band.append(this.menu([
-            { label: 'rialzati al microfono', onPick: () => { this.closeOverlay(); this.controller.retry(); } },
-            { label: 'esci al menu', back: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
-        ], 'row'));
+        if (guestOf) {
+            // l'ospite guarda la stessa schermata, ma il microfono lo preme l'host
+            const note = el('div', 'sx-note');
+            note.textContent = `${guestOf} vi rialza al microfono.`;
+            band.append(note);
+            band.append(this.menu([
+                { label: 'esci al menu', back: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
+            ], 'row'));
+        } else {
+            band.append(this.menu([
+                { label: 'rialzati al microfono', onPick: () => { this.closeOverlay(); this.controller.retry(); } },
+                { label: 'esci al menu', back: true, onPick: () => { this.closeOverlay(); this.controller.quitToMenu(); } },
+            ], 'row'));
+        }
         s.append(band);
         // le scelte arrivano dopo il titolo: prima si incassa
         setTimeout(() => { if (this.overlay === s) this.bindNav(band); }, 2400);
@@ -746,7 +814,7 @@ export class Screens {
 
     /* ---------- scelte ---------- */
 
-    private choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
+    choice(title: string, options: { label: string; danger?: boolean }[], onPick: (i: number) => void): void {
         this.controller.pause();
         const s = this.openOverlay('screen sx');
         const page = el('div', 'sx-page');
@@ -1103,20 +1171,46 @@ export class Screens {
     /* ---------- forgia del personaggio ---------- */
 
     showCharacterCreation(onConfirm: () => void): void {
+        this.forge({
+            back: () => this.showMenu(),
+            fate: true,
+            doneLabel: 'inizia il viaggio',
+            onDone: (r) => {
+                state.save.playerName = r.name;
+                state.save.skin = r.skin;
+                state.save.stats.forza = r.stats.forza;
+                state.save.stats.costituzione = r.stats.costituzione;
+                state.save.stats.flusso = r.stats.flusso;
+                state.save.doomsdayMode = r.doomsday;
+                state.save.doomsday = 0;
+                // chi parte con la freccia accesa gioca assistito dal primo passo
+                state.save.assisted = state.settings.guide;
+                state.persist();
+                state.resetRun();
+                this.closeOverlay();
+                onConfirm();
+            },
+        });
+    }
+
+    /** la forgia del personaggio: in single e per chi ospita c'è anche il destino, chi entra nella partita di un altro sceglie solo sé stesso */
+    forge(cfg: ForgeConfig): void {
         const s = this.openOverlay('screen sx sx-forge menu-screen');
         this.setZone('yellow');
 
-        // ogni nuova run parte non assistita: la freccia è opt-in,
-        // mai ereditata dalle impostazioni o dalla partita precedente
-        state.settings.guide = false;
-        state.persistSettings();
+        if (cfg.fate) {
+            // ogni nuova run parte non assistita: la freccia è opt-in,
+            // mai ereditata dalle impostazioni o dalla partita precedente
+            state.settings.guide = false;
+            state.persistSettings();
+        }
 
-        let finalName = 'Geco';
+        let finalName = cfg.initial?.name ?? 'Geco';
         let doomsdayMode = false;
-        let availablePoints = 10;
-        const stats = { forza: 0, costituzione: 0, flusso: 0 };
+        const stats = { forza: cfg.initial?.stats.forza ?? 0, costituzione: cfg.initial?.stats.costituzione ?? 0, flusso: cfg.initial?.stats.flusso ?? 0 };
+        let availablePoints = 10 - stats.forza - stats.costituzione - stats.flusso;
         // la pelle parte da quella salvata (nuova run = bosco dopo il reset)
-        let skinId = isValidSkinId(state.save.skin) ? state.save.skin : 'bosco';
+        let skinId = cfg.initial ? cfg.initial.skin : isValidSkinId(state.save.skin) ? state.save.skin : 'bosco';
 
         const backs = new Map<HTMLElement, (() => void) | undefined>();
         const show = (from: HTMLElement, to: HTMLElement) => {
@@ -1129,11 +1223,13 @@ export class Screens {
 
         // --- il nome ---
         const step1 = el('div', 'sx-step active');
-        step1.append(el('div', 'sx-kick', 'capitolo zero · il custode provvisorio'));
+        const kick1 = el('div', 'sx-kick');
+        kick1.textContent = cfg.kick ?? 'capitolo zero · il custode provvisorio';
+        step1.append(kick1);
         step1.append(...this.heading('come ti chiami?', 'incidi il tuo nome nella memoria del flusso'));
         const input = el('input', 'sx-name-input');
         input.type = 'text';
-        input.value = '';
+        input.value = cfg.initial?.name ?? '';
         input.maxLength = 12;
         input.placeholder = 'Geco';
         input.spellcheck = false;
@@ -1146,7 +1242,7 @@ export class Screens {
         step1.append(input);
         step1.append(this.menu([
             { label: 'incidi', onPick: goToStep2 },
-            { label: 'torna al titolo', back: true, onPick: () => this.showMenu() },
+            { label: cfg.backLabel ?? 'torna al titolo', back: true, onPick: cfg.back },
         ]));
         input.addEventListener('keydown', (e) => {
             if (e.code === 'Enter') {
@@ -1156,11 +1252,13 @@ export class Screens {
             }
         });
         s.append(step1);
-        backs.set(step1, () => this.showMenu());
+        backs.set(step1, cfg.back);
 
         // --- gli attributi ---
         const step2 = el('div', 'sx-step');
-        step2.append(el('div', 'sx-kick', 'capitolo zero · allocazione del flusso'));
+        const kick2 = el('div', 'sx-kick');
+        kick2.textContent = cfg.kick2 ?? 'capitolo zero · allocazione del flusso';
+        step2.append(kick2);
         const [title2, ...rest2] = this.heading('la forgia');
         step2.append(title2, ...rest2);
         const grid = el('div', 'sx-forge-grid');
@@ -1350,9 +1448,17 @@ export class Screens {
         };
 
         const back2 = () => show(step2, step1);
+        const result = () => ({ name: finalName, stats: { ...stats }, skin: skinId, doomsday: doomsdayMode });
+        if (cfg.note) {
+            const note = el('div', 'sx-note');
+            note.textContent = cfg.note;
+            step2.append(note);
+        }
         step2.append(this.menu([
             { label: 'indietro', back: true, onPick: back2 },
-            { label: 'conferma', onPick: () => { selectMode(doomsdayMode, false); show(step2, step3); } },
+            cfg.fate
+                ? { label: 'conferma', onPick: () => { selectMode(doomsdayMode, false); show(step2, step3); } }
+                : { label: cfg.doneLabel, onPick: () => { stopPreview(); cfg.onDone(result()); } },
         ], 'row'));
         s.append(step2);
         backs.set(step2, back2);
@@ -1385,24 +1491,10 @@ export class Screens {
             s.classList.remove('doom');
             show(step3, step2);
         };
-        const start = () => {
-            state.save.playerName = finalName;
-            state.save.skin = skinId;
-            state.save.stats.forza = stats.forza;
-            state.save.stats.costituzione = stats.costituzione;
-            state.save.stats.flusso = stats.flusso;
-            state.save.doomsdayMode = doomsdayMode;
-            state.save.doomsday = 0;
-            // chi parte con la freccia accesa gioca assistito dal primo passo
-            state.save.assisted = state.settings.guide;
-            state.persist();
-            state.resetRun();
-            this.closeOverlay();
-            onConfirm();
-        };
+        const start = () => cfg.onDone(result());
         step3.append(this.menu([
             { label: 'indietro', back: true, onPick: back3 },
-            { label: 'inizia il viaggio', onPick: start },
+            { label: cfg.doneLabel, onPick: start },
         ], 'row'));
         s.append(step3);
         backs.set(step3, back3);
@@ -1418,7 +1510,7 @@ export class Screens {
         standardCard.addEventListener('click', () => selectMode(false));
         doomsdayCard.addEventListener('click', () => selectMode(true));
 
-        this.bindNav(step1, () => this.showMenu());
+        this.bindNav(step1, cfg.back);
         setTimeout(() => input.focus(), 140);
         updateAll();
         selectMode(false, false);

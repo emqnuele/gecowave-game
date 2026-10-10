@@ -1,6 +1,7 @@
 import { ACHIEVEMENTS } from '../content/achievements';
 import { bus } from './events';
 import { state } from './state';
+import { coop } from '../coop/runtime';
 
 /* i trofei si prendono solo giocando senza aiuti: con la freccia accesa niente */
 
@@ -15,6 +16,8 @@ export function unlockAchievement(id: string): void {
     state.save.achievements.push(id);
     state.persist();
     bus.emit('achievement', { id });
+    // in due il trofeo è della partita: l'host lo incide, il sync lo riporta indietro
+    if (coop.isGuest && coop.together) coop.session?.send('achieve', { id });
 }
 
 /** quelli che dipendono solo dal salvataggio: si ricontrollano spesso, costano niente */

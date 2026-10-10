@@ -87,7 +87,7 @@ export class Travel implements GameSystem {
     }
 
     /** viaggio col citelis: si scende alla fermata scelta, accanto al suo microfono */
-    private travelTo(key: string): void {
+    travelTo(key: string): void {
         const [levelId, cpId] = key.split(':');
         if (!LEVELS[levelId]) return;
         sfx.dash();

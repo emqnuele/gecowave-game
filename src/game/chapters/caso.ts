@@ -2,7 +2,7 @@ import { bus } from '../../core/events';
 import { haptics } from '../../input/haptics';
 import { state } from '../../core/state';
 import type { BossKind } from '../../types';
-import { Chapter, type ChapterCtx } from './ChapterScript';
+import { Chapter, type ChapterCtx, type Target } from './ChapterScript';
 import { Ambushes } from './shared/Ambushes';
 
 /** il limite si arresta solo con tutti e tre gli indizi */
@@ -43,6 +43,17 @@ export class CasoChapter extends Chapter {
             default:
                 return false;
         }
+    }
+
+    /** il limite resta invulnerabile finché il fascicolo non è completo */
+    urgentObjective(): Target | null {
+        if (state.hasFlag('boss-down-limite')) return null;
+        for (const id of ['indizio-1', 'indizio-2', 'indizio-3']) {
+            if (state.hasFlag(id)) continue;
+            const at = this.ctx.npcs.at.get(id);
+            if (at) return { ...at, label: 'indizio' };
+        }
+        return null;
     }
 
     bossDefeated(kind: BossKind, x: number, y: number): void {

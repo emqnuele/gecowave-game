@@ -54,6 +54,8 @@ export interface FolkTalk {
     y: number;
     range: number;
     onInteract: () => void;
+    /** due chiacchiere coi passanti non toccano il mondo: in due si fanno sul proprio schermo */
+    local: true;
 }
 
 class Wanderer {
@@ -97,7 +99,7 @@ class Wanderer {
         this.x = x;
         this.feet = feet;
         this.home = home;
-        this.talk = { x, y: feet - 26, range: 70, onInteract: () => onTalk(this) };
+        this.talk = { x, y: feet - 26, range: 70, onInteract: () => onTalk(this), local: true };
         this.baseScaleY = sprite.scaleY;
     }
 }

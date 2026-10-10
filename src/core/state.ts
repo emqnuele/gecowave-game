@@ -8,6 +8,11 @@ import type { Action, PresetId } from '../input/actions';
 
 const SAVE_KEY = 'gecowave-save-v2';
 const SETTINGS_KEY = 'gecowave-settings-v1';
+/** la partita in due vive accanto a quella da solo: ospitarla non tocca il viaggio di nessuno */
+export const COOP_SAVE_KEY = 'gecowave-coop-save-v1';
+
+/** quale salvataggio è in uso: il tuo, quello della partita in due che ospiti, o una copia di quello dell'host che non si scrive mai */
+export type SaveSlot = 'single' | 'coop' | 'ospite';
 
 /* il doomsday ci mette ~22 minuti di gioco passivo a riempirsi.
    ogni boss di trama abbattuto lo ricaccia indietro di un bel pezzo. */
@@ -54,6 +59,7 @@ class GameState {
     /** dove tornare uscendo da un capitolo segreto (transient, non persistito) */
     portalReturn: PortalReturn | null = null;
     private doomsdaySinceSave = 0;
+    private slot: SaveSlot = 'single';
 
     constructor() {
         try {
@@ -78,7 +84,45 @@ class GameState {
     }
 
     get hasSave(): boolean {
-        return localStorage.getItem(SAVE_KEY) !== null;
+        if (this.slot === 'ospite') return true;
+        return localStorage.getItem(this.slot === 'coop' ? COOP_SAVE_KEY : SAVE_KEY) !== null;
+    }
+
+    get saveSlot(): SaveSlot {
+        return this.slot;
+    }
+
+    /** cambia salvataggio: quello di prima si scrive se aveva qualcosa in coda, la run riparte */
+    useSlot(slot: SaveSlot, save?: SaveData): void {
+        this.flushPersist(true);
+        this.slot = slot;
+        let next = save ?? null;
+        if (!next && slot !== 'ospite') {
+            try {
+                const raw = localStorage.getItem(slot === 'coop' ? COOP_SAVE_KEY : SAVE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    next = loadedSave(parsed);
+                    migrateSave(next, parsed);
+                }
+            } catch {
+                // salvataggio illeggibile: meglio una partita nuova che un menu rotto
+                next = null;
+            }
+        }
+        this.save = next ?? defaultSave();
+        this.modsCache = null;
+        this.dropped = null;
+        this.portalReturn = null;
+        this.doomsdaySinceSave = 0;
+        this.lastPersist = 0;
+        this.dirty = false;
+        this.resetRun();
+    }
+
+    /** i campi del salvataggio cambiati da fuori (la copia dell'ospite): gli amuleti si ricalcolano */
+    invalidateMods(): void {
+        this.modsCache = null;
     }
 
     get maxHp(): number {
@@ -139,7 +183,8 @@ class GameState {
     private writeSave(): void {
         this.lastPersist = performance.now();
         this.dirty = false;
-        localStorage.setItem(SAVE_KEY, JSON.stringify(this.save));
+        if (this.slot === 'single') localStorage.setItem(SAVE_KEY, JSON.stringify(this.save));
+        else if (this.slot === 'coop') localStorage.setItem(COOP_SAVE_KEY, JSON.stringify(this.save));
     }
 
     persistSettings(): void {
@@ -154,7 +199,8 @@ class GameState {
         // il prossimo persist scrive subito: hasSave torna vero immediatamente
         this.lastPersist = 0;
         this.dirty = false;
-        localStorage.removeItem(SAVE_KEY);
+        if (this.slot === 'single') localStorage.removeItem(SAVE_KEY);
+        else if (this.slot === 'coop') localStorage.removeItem(COOP_SAVE_KEY);
     }
 
     get abilities(): AbilityId[] {

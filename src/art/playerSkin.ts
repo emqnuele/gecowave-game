@@ -293,3 +293,42 @@ export function resetPlayerSkinCache(): void {
     pristine = null;
     appliedId = null;
 }
+
+let partnerId: string | null = null;
+
+/** il geco del compagno: un secondo paio di texture con la sua pelle, e animazioni p2-* */
+export function ensurePartnerSkin(scene: Phaser.Scene, skinId: unknown): void {
+    const preset = skinPreset(isValidSkinId(skinId) ? skinId : DEFAULT_SKIN_ID);
+    if (partnerId === preset.id && scene.textures.exists('player2') && scene.textures.exists('player2_atk')) return;
+    if (!capturePristine(scene)) return;
+    const src = pristine!;
+    const out = document.createElement('canvas');
+    out.width = src.width;
+    out.height = src.height;
+    const ctx = out.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    ctx.drawImage(src, 0, 0);
+    try {
+        const img = ctx.getImageData(0, 0, out.width, out.height);
+        recolorSkinPixels(img.data, preset);
+        ctx.putImageData(img, 0, 0);
+    } catch {
+        return;
+    }
+    if (scene.textures.exists('player2')) scene.textures.remove('player2');
+    if (scene.textures.exists('player2_atk')) scene.textures.remove('player2_atk');
+    scene.textures.addSpriteSheet('player2', out as unknown as HTMLImageElement, { frameWidth: 350, frameHeight: 350 });
+    scene.textures.addSpriteSheet('player2_atk', out as unknown as HTMLImageElement, { frameWidth: 700, frameHeight: 350 });
+    const defs: Array<[string, string, number, number, number, number]> = [
+        ['p2-idle', 'player2', 0, 7, 5, -1],
+        ['p2-run', 'player2', 8, 15, 11, -1],
+        ['p2-jump', 'player2', 16, 19, 10, 0],
+        ['p2-land', 'player2', 20, 23, 14, 0],
+        ['p2-attack', 'player2_atk', 12, 15, 18, 0],
+    ];
+    for (const [key, tex, start, end, frameRate, repeat] of defs) {
+        if (scene.anims.exists(key)) scene.anims.remove(key);
+        scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(tex, { start, end }), frameRate, repeat });
+    }
+    partnerId = preset.id;
+}
