@@ -1,4 +1,5 @@
 import type { LevelDef, ZoneColor } from '../types';
+import { mix } from '../art/ink';
 
 /* ogni capitolo ha un bioma: è lui a decidere di che materia è fatto
    il terreno, cosa cresce sopra e sotto, cosa si vede in lontananza */
@@ -261,6 +262,11 @@ const ZONE_FALLBACK: Record<ZoneColor, string> = {
 /** il bioma del titolo: quello del capitolo salvato, o il fondale apposta a partita nuova */
 export function menuBiome(def: LevelDef | undefined): BiomeDef {
     return def ? biomeFor(def) : BIOMES.title;
+}
+
+/** le tinte del menu: vicine all'accento del capitolo, schiarite quanto basta per leggersi sul buio */
+export function menuTone(b: BiomeDef): { ember: number; gold: number } {
+    return { ember: mix(b.accent, 0xfff4e0, 0.15), gold: mix(b.accent, 0xe8dfc8, 0.4) };
 }
 
 export function biomeFor(def: Pick<LevelDef, 'id' | 'color'> & { biome?: string }): BiomeDef {

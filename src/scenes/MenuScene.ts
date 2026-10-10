@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { LEVELS } from '../content/levels';
-import { BIOMES, menuBiome, type BiomeDef } from '../content/biomes';
+import { BIOMES, menuBiome, menuTone, type BiomeDef } from '../content/biomes';
 import { ParallaxManager } from '../stage/ParallaxManager';
 import { canvas, hex, mix, shade, smoothNoise1D } from '../art/ink';
 import { mulberry32 } from '../rules/hash';
@@ -43,6 +43,7 @@ export class MenuScene extends Phaser.Scene {
         this.dust = null;
         const def = data.levelId ? LEVELS[data.levelId] : undefined;
         const biome = this.biome = menuBiome(def);
+        const tone = menuTone(biome);
         if (!this.textures.exists('fog')) generateFogTexture(this);
 
         // il buio del bioma, appena tinto: si legge solo ciò che il fuoco tocca
@@ -60,8 +61,8 @@ export class MenuScene extends Phaser.Scene {
         this.geco.play('p-idle');
 
         // l'alone caldo sommato sopra la griglia: è lui il falò
-        this.halo = this.add.image(0, 0, 'p-dot').setScrollFactor(0).setDepth(12).setBlendMode(Phaser.BlendModes.ADD).setTint(0xffa24a).setAlpha(0.55);
-        this.fire = this.lights.addLight(0, 0, 520, 0xffa95e, 1.9).setScrollFactor(0);
+        this.halo = this.add.image(0, 0, 'p-dot').setScrollFactor(0).setDepth(12).setBlendMode(Phaser.BlendModes.ADD).setTint(tone.ember).setAlpha(0.55);
+        this.fire = this.lights.addLight(0, 0, 520, mix(tone.ember, 0xffffff, 0.08), 1.9).setScrollFactor(0);
         this.moon = this.lights.addLight(0, 0, 900, mix(mix(0x8ea4c8, biome.rim, 0.3), biome.accent, 0.35), 0.55).setScrollFactor(0);
 
         this.embers = this.add.particles(0, 0, 'p-dot', {
@@ -71,8 +72,7 @@ export class MenuScene extends Phaser.Scene {
             lifespan: { min: 2200, max: 4200 },
             scale: { start: 0.32, end: 0 },
             alpha: { start: 0.95, end: 0 },
-            // il cuore resta brace, metà delle scintille prende l'aria del posto
-            tint: [0xffc078, 0xff8a3d, mix(0xffc078, biome.accent, 0.55), mix(0xffe2a8, biome.accent, 0.75)],
+            tint: [tone.ember, mix(tone.ember, 0xffffff, 0.35), tone.gold],
             blendMode: Phaser.BlendModes.ADD,
             frequency: 70,
         }).setScrollFactor(0).setDepth(13);

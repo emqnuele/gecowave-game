@@ -14,7 +14,7 @@
   letter-spacing: 0.22em;
   color: var(--sx-bone);
   cursor: pointer;
-  text-shadow: 0 0 26px rgba(255, 154, 74, 0.28);
+  text-shadow: 0 0 26px rgba(var(--sx-ember-rgb), 0.28);
   filter: url(#sx-ink);
   transition: color 0.2s ease, text-shadow 0.2s ease;
 }
@@ -22,7 +22,7 @@
 .cx-code:hover,
 .cx-code.on {
   color: #fff4dc;
-  text-shadow: 0 0 34px rgba(255, 154, 74, 0.5);
+  text-shadow: 0 0 34px rgba(var(--sx-ember-rgb), 0.5);
 }
 
 .cx-code-note {
@@ -88,7 +88,7 @@
 }
 
 .cx-slot.ready .cx-dot {
-  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.9), 0 0 0 3px var(--sx-gold), 0 0 14px rgba(255, 154, 74, 0.45);
+  box-shadow: 0 0 0 2px rgba(5, 5, 5, 0.9), 0 0 0 3px var(--sx-gold), 0 0 14px rgba(var(--sx-ember-rgb), 0.45);
 }
 
 .cx-dot {

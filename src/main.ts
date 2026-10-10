@@ -9,8 +9,7 @@ import '@fontsource/im-fell-english/400-italic.css';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL, LEVELS, TOTAL_FRAGMENTS } from './content/levels';
-import { menuBiome } from './content/biomes';
-import { hex } from './art/ink';
+import { menuBiome, menuTone } from './content/biomes';
 import { endingCards, endingEpilogues, INTRO_CARDS } from './content/story';
 import { bus } from './core/events';
 import { sfx } from './audio/sfx';
@@ -87,11 +86,12 @@ async function boot(): Promise<void> {
             gameEl.style.display = '';
             const wanted = state.hasSave ? state.save.levelId : undefined;
             const levelId = wanted && LEVELS[wanted] ? wanted : undefined;
-            document.documentElement.style.setProperty('--menu-glow', hex(menuBiome(levelId ? LEVELS[levelId] : undefined).accent, 0.34));
+            paintMenu(menuTone(menuBiome(levelId ? LEVELS[levelId] : undefined)));
             if (game.scene.isActive('MenuScene')) game.scene.stop('MenuScene');
             game.scene.start('MenuScene', { levelId });
-        } else if (game.scene.isActive('MenuScene')) {
-            game.scene.stop('MenuScene');
+        } else {
+            paintMenu(null);
+            if (game.scene.isActive('MenuScene')) game.scene.stop('MenuScene');
         }
     });
 
@@ -402,3 +402,18 @@ async function boot(): Promise<void> {
 }
 
 void boot();
+
+/** il menu prende la tinta del capitolo; spento torna l'oro e la brace del codice */
+function paintMenu(tone: { ember: number; gold: number } | null): void {
+    const root = document.documentElement.style;
+    for (const [name, color] of [['gold', tone?.gold], ['ember', tone?.ember]] as const) {
+        if (color === undefined) {
+            root.removeProperty(`--sx-${name}`);
+            root.removeProperty(`--sx-${name}-rgb`);
+            continue;
+        }
+        const rgb = `${(color >> 16) & 255}, ${(color >> 8) & 255}, ${color & 255}`;
+        root.setProperty(`--sx-${name}`, `rgb(${rgb})`);
+        root.setProperty(`--sx-${name}-rgb`, rgb);
+    }
+}
