@@ -289,10 +289,13 @@ class CoopRuntime {
                 }
                 this.end(reason, true);
             };
-            this.offSession.push(s.on('info', (info) => {
+            this.offSession.push(s.on('info', (raw) => {
+                // chi entra mostra solo dati ripuliti: un host scartato diventa un geco qualsiasi
+                const host = sanitizeCharacter(raw.host) ?? sanitizeCharacter({ name: '', stats: {} })!;
+                const info: GameInfo = { ...raw, gameId: String(raw.gameId).slice(0, 32), levelId: String(raw.levelId).slice(0, 32), host };
                 this.info = info;
                 this.gameId = info.gameId;
-                this.partner = sanitizeCharacter(info.host);
+                this.partner = host;
                 this.emit({ type: 'info', info });
                 if (!got) {
                     got = true;

@@ -318,6 +318,41 @@ export const SCENARIOS = {
         t.check('il seguito del dialogo dell’ospite lo fa l’host', gift);
     },
 
+    async parla(t) {
+        await enterTogether(t);
+        const npc = await scene(t.A, `const p = g.ctx.npcs.at.get('markolino-dono'); return p ? { x: p.x, y: p.y } : null`);
+        t.check('markolino c’è', !!npc, JSON.stringify(npc));
+        const open = (p) => p.evaluate(() => !!document.getElementById('dialogue'));
+        // il tasto tenuto come una persona: phaser lo legge a ogni passo, non per evento
+        const tapE = async (p) => {
+            await p.keyboard.down('KeyE');
+            await t.wait(110);
+            await p.keyboard.up('KeyE');
+        };
+        for (const [who, p] of [['host', t.A], ['ospite', t.B]]) {
+            await scene(p, `g.player.body.reset(arg.x - 30, arg.y - 10)`, npc);
+            await t.wait(600);
+            await tapE(p);
+            await t.until(p, () => !!document.getElementById('dialogue'), null, 5000);
+            let presses = 0;
+            for (; presses < 60 && (await open(p)); presses++) {
+                await tapE(p);
+                await t.wait(120);
+            }
+            await t.wait(1500);
+            t.check(`${who}: chiuso con E, il dialogo resta chiuso`, !(await open(p)), `${presses} pressioni`);
+        }
+        // la pausa in due non ferma la scena: l'esc che la chiude non deve riaprirla
+        const paused = () => t.A.evaluate(() => [...document.querySelectorAll('.sx-page button')].some((b) => /riprendi/.test(b.textContent || '')));
+        for (const down of [true, false]) {
+            await t.A.keyboard.down('Escape');
+            await t.wait(110);
+            await t.A.keyboard.up('Escape');
+            await t.wait(600);
+            t.check(down ? 'esc apre la pausa' : 'esc la chiude e resta chiusa', (await paused()) === down);
+        }
+    },
+
     async mondo(t) {
         await enterTogether(t);
         const host = await scene(t.A, `return g.ctx.groups.enemies.getChildren().filter((e) => e.active).length`);

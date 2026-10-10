@@ -76,6 +76,7 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
     private ctx!: GameContext;
     /** nasce in create: phaser riusa l'istanza, un passo a metà non deve passare alla vita dopo */
     private sim!: FixedStep;
+    private wasFrozen = false;
     private world!: LevelWorld;
     private player!: Player;
     /** il livello input: nessuno legge più tasti fisici */
@@ -643,6 +644,9 @@ export class GameScene extends Phaser.Scene implements PlayerHost {
 
     /** un passo di logica: l'ordine è quello di sempre, a 60 hz un passo per fotogramma */
     private tick(time: number, delta: number): void {
+        // in due dialogo e menu non fermano la scena: all'uscita si riallinea come dopo una pausa, o il tasto che chiude riapre
+        if (this.wasFrozen && !coopHooks.frozen) this.controls.reset();
+        this.wasFrozen = coopHooks.frozen;
         this.controls.update();
         // in due chi legge un dialogo ha il mondo che gira: il tasto che lo manda avanti non riapre niente
         const talking = coopHooks.frozen;

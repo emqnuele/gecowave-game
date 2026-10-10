@@ -340,8 +340,8 @@ export class CoopScreens {
         const s = this.ui.openOverlay('screen sx menu-screen cx-lobby');
         const page = el('div', 'sx-page');
         page.append(el('div', 'sx-kick', 'sei nella stanza'));
-        // il nome dell'host si legge già ripulito dal runtime
-        const host = coop.partner ?? info.host;
+        // info arriva già ripulito dal runtime
+        const host = info.host;
         page.append(...this.ui.heading(`la partita di ${host.name.toLowerCase()}`));
         page.append(gameLine(info));
         const known = rememberedCharacter(info.gameId);
@@ -363,7 +363,7 @@ export class CoopScreens {
     }
 
     private guestForge(info: GameInfo, initial?: Character): void {
-        const host = (coop.partner ?? info.host).name.toLowerCase();
+        const host = info.host.name.toLowerCase();
         this.ui.forge({
             back: () => this.showGuestWelcome(info),
             backLabel: 'indietro',

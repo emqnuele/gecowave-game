@@ -179,7 +179,10 @@ export class Screens {
     }
 
     heading(title: string, sub?: string): HTMLElement[] {
-        const out: HTMLElement[] = [el('h2', 'sx-h', title), this.orn()];
+        // testo semplice: in multiplayer nei titoli finiscono nomi arrivati dalla rete
+        const h = el('h2', 'sx-h');
+        h.textContent = title;
+        const out: HTMLElement[] = [h, this.orn()];
         if (sub) {
             const s = el('div', 'sx-sub');
             s.textContent = sub;
@@ -1197,7 +1200,9 @@ export class Screens {
 
         // --- il nome ---
         const step1 = el('div', 'sx-step active');
-        step1.append(el('div', 'sx-kick', cfg.kick ?? 'capitolo zero · il custode provvisorio'));
+        const kick1 = el('div', 'sx-kick');
+        kick1.textContent = cfg.kick ?? 'capitolo zero · il custode provvisorio';
+        step1.append(kick1);
         step1.append(...this.heading('come ti chiami?', 'incidi il tuo nome nella memoria del flusso'));
         const input = el('input', 'sx-name-input');
         input.type = 'text';
@@ -1228,7 +1233,9 @@ export class Screens {
 
         // --- gli attributi ---
         const step2 = el('div', 'sx-step');
-        step2.append(el('div', 'sx-kick', cfg.kick2 ?? 'capitolo zero · allocazione del flusso'));
+        const kick2 = el('div', 'sx-kick');
+        kick2.textContent = cfg.kick2 ?? 'capitolo zero · allocazione del flusso';
+        step2.append(kick2);
         const [title2, ...rest2] = this.heading('la forgia');
         step2.append(title2, ...rest2);
         const grid = el('div', 'sx-forge-grid');
@@ -1419,7 +1426,11 @@ export class Screens {
 
         const back2 = () => show(step2, step1);
         const result = () => ({ name: finalName, stats: { ...stats }, skin: skinId, doomsday: doomsdayMode });
-        if (cfg.note) step2.append(el('div', 'sx-note', cfg.note));
+        if (cfg.note) {
+            const note = el('div', 'sx-note');
+            note.textContent = cfg.note;
+            step2.append(note);
+        }
         step2.append(this.menu([
             { label: 'indietro', back: true, onPick: back2 },
             cfg.fate
