@@ -31,8 +31,20 @@ jobs:
 
       - run: npm ci
 
+      # i VITE_* finiscono in chiaro nella build: i secret li tengono solo fuori dal repo
       - name: build app
         run: npm run build
+        env:
+          VITE_METERED_USER: ${{ secrets.VITE_METERED_USER }}
+          VITE_METERED_CRED: ${{ secrets.VITE_METERED_CRED }}
+          VITE_TURN_ENDPOINT: ${{ secrets.VITE_TURN_ENDPOINT }}
+          VITE_OWN_TURN_HOST: ${{ secrets.VITE_OWN_TURN_HOST }}
+          VITE_OWN_TURN_USER: ${{ secrets.VITE_OWN_TURN_USER }}
+          VITE_OWN_TURN_CRED: ${{ secrets.VITE_OWN_TURN_CRED }}
+          VITE_OWN_PEER_HOST: ${{ secrets.VITE_OWN_PEER_HOST }}
+          VITE_OWN_PEER_PORT: ${{ secrets.VITE_OWN_PEER_PORT }}
+          VITE_OWN_PEER_PATH: ${{ secrets.VITE_OWN_PEER_PATH }}
+          VITE_OWN_PEER_KEY: ${{ secrets.VITE_OWN_PEER_KEY }}
 
       - name: generate icons & installer art
         run: npm run gen-icons
