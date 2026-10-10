@@ -267,7 +267,8 @@ export class CameraLens {
         const max = state.maxHp;
         const hp = state.run.hp;
         const low = !p.dead && hp > 0 && (hp <= 1 || hp / max <= 0.25);
-        if (low) this.hold('vita', { pulse: 0.24 * heartbeat(now, 900), desat: 0.15 }, 1, 2);
+        // il rosso resta acceso, il battito ci pulsa sopra: un picco da solo dura troppo poco per vederlo
+        if (low) this.hold('vita', { pulse: 0.26 + 0.2 * heartbeat(now, 900), desat: 0.15 }, 1, 2);
         else this.release('vita', 2);
         // dura due capitoli, fino al fiume: un'ombra di troppo colore, niente che ondeggi
         if (state.run.trenbolone) this.hold('trenbolone', { chroma: 0.15, desat: -0.2 }, 1, 1);
