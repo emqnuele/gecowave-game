@@ -28,6 +28,8 @@ export class Guide implements GameSystem {
 
     /** cosa serve adesso per andare avanti, in ordine di urgenza */
     currentObjective(): Target | null {
+        // boss che sta morendo: flag e ricompense arrivano a fine animazione, prima la freccia mentirebbe
+        if (this.ctx.bosses.current && !this.ctx.bosses.current.active) return null;
         // la wave libera prima dell'uscita: se il capitolo nasconde un frammento
         // non ancora preso (es. la scivolata in perduta), la freccia ci porta lì.
         // in perduta markolino la annuncia: prima lui, poi il frammento, poi l'uscita.

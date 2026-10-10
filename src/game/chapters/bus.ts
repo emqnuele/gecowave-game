@@ -6,7 +6,7 @@ import { sfx } from '../../audio/sfx';
 import { state } from '../../core/state';
 import type { Boss } from '../../entities/Boss';
 import type { BossKind } from '../../types';
-import { Chapter } from './ChapterScript';
+import { Chapter, type Target } from './ChapterScript';
 import { waveOnce } from './shared/wave';
 
 /** il citelis: guggu nel loop, ivan maggini che si sacrifica, walter che dorme al palo */
@@ -80,6 +80,13 @@ export class BusChapter extends Chapter {
             default:
                 return false;
         }
+    }
+
+    /** senza la furia di ivan guggu non si taglia: prima lui */
+    urgentObjective(): Target | null {
+        if (state.hasFlag('ivan') || state.hasFlag('boss-down-guggu')) return null;
+        const at = this.ctx.npcs.at.get('ivan-incontro');
+        return at ? { ...at, label: 'ivan' } : null;
     }
 
     bossDefeated(kind: BossKind, x: number, y: number): void {

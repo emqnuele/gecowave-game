@@ -8,7 +8,7 @@ import { music } from '../../audio/music';
 import { sfx } from '../../audio/sfx';
 import { state } from '../../core/state';
 import type { BossKind } from '../../types';
-import { Chapter } from './ChapterScript';
+import { Chapter, type Target } from './ChapterScript';
 import { waveOnce } from './shared/wave';
 import { rng } from '../../core/rng';
 
@@ -21,6 +21,8 @@ export class SantuarioChapter extends Chapter {
     private lamettaActive = false;
     private colorDropsTaken = 0;
     private mirror: Phaser.GameObjects.Sprite | null = null;
+    /** dove sta la goccia di colore da prendere, senza il dondolio */
+    private dropAt: { x: number; y: number } | null = null;
 
     /** lametta presiede l'arena: si vede ma non si parla */
     marker(id: string, x: number, y: number): boolean {
@@ -41,6 +43,14 @@ export class SantuarioChapter extends Chapter {
 
     update(time: number): void {
         this.updateLamettaArena(time);
+    }
+
+    /** l'uscita vera è lo specchio di lametta, non il varco in fondo */
+    objective(): Target | undefined {
+        if (this.mirror) return { x: this.mirror.x, y: this.mirror.y, label: 'lo specchio nero' };
+        if (this.dropAt) return { ...this.dropAt, label: 'la goccia di colore' };
+        if (this.lamettaCenter && !this.lamettaActive) return { ...this.lamettaCenter, label: 'lametta' };
+        return undefined;
     }
 
     bossDefeated(kind: BossKind, x: number, y: number): void {
@@ -96,12 +106,14 @@ export class SantuarioChapter extends Chapter {
         const x = c.x + (rng.logic.next() - 0.5) * 620;
         // tetto a ~90px (sotto la soglia col double jump), ma fascia ampia: da quasi-terra in su
         const y = this.lamettaFloorY - 8 - rng.logic.next() * 82;
+        this.dropAt = { x, y };
         const drop = this.scene.physics.add.sprite(x, y, 'color-drop').setTint(color).setDepth(5);
         (drop.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         this.ctx.lighting.follow(drop, color, 140, 0.9);
         this.scene.tweens.add({ targets: drop, y: y - 10, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         this.scene.physics.add.overlap(this.ctx.player, drop, () => {
             drop.destroy();
+            this.dropAt = null;
             this.colorDropsTaken++;
             sfx.pickup();
             this.ctx.bosses.voice?.event(`goccia-${this.colorDropsTaken}`);

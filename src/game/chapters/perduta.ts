@@ -34,7 +34,6 @@ export class PerdutaChapter extends Chapter {
 
     /** prima lui, poi il frammento, poi l'uscita */
     urgentObjective(): Target | null {
-        if (state.hasAbility('scivolata')) return null;
         const dono = this.ctx.npcs.at.get('markolino-dono');
         if (dono && !state.hasFlag('markolino-dono-visto')) return { ...dono, label: 'markolino' };
         return null;

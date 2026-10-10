@@ -50,7 +50,12 @@ export class StabilimentoChapter extends Chapter {
         return true;
     }
 
+    /** danjilo e smela non sbarrano l'uscita, ma la storia passa da loro */
     objective(): Target | undefined {
+        const boss = this.ctx.bosses.current;
+        if (boss?.active && !boss.engaged && (boss.def.kind === 'danjilo' || boss.def.kind === 'smela')) {
+            return { x: boss.x, y: boss.y, label: boss.def.name.split(',')[0] };
+        }
         if (this.smelaArena && state.hasFlag('boss-down-danjilo')) return { ...this.smelaArena, label: 'la sorgente' };
         return undefined;
     }

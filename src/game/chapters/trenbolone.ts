@@ -8,6 +8,14 @@ import { waveOnce } from './shared/wave';
 
 /** il trenbolone: senza la dose dello spaccino la via per il rio resta sbarrata */
 export class TrenboloneChapter extends Chapter {
+    /** gli spaccini sono due con lo stesso id: npcs.at ne ricorda solo uno */
+    private spaccini: { x: number; y: number }[] = [];
+
+    marker(id: string, x: number, y: number): boolean {
+        if (id === 'spaccino') this.spaccini.push({ x, y });
+        return false;
+    }
+
     interact(id: string): boolean {
         if (id !== 'spaccino') return false;
         if (state.run.trenbolone) {
@@ -63,9 +71,14 @@ export class TrenboloneChapter extends Chapter {
         return state.run.trenbolone ? null : 'la via per il rio merdone è sbarrata. ti serve il trenbolone.';
     }
 
-    objective(): Target | null | undefined {
-        if (state.run.trenbolone || state.hasFlag('boss-down-flauto')) return undefined;
-        const at = this.ctx.npcs.at.get('spaccino');
+    /** senza la dose l'uscita resta chiusa, anche a flauto battuto: lo spaccino viene prima di tutto */
+    urgentObjective(): Target | null {
+        if (state.run.trenbolone) return null;
+        const world = this.ctx.world;
+        const p = world.progressAt(this.ctx.player.x, this.ctx.player.y);
+        const byProgress = [...this.spaccini].sort((a, b) => world.progressAt(a.x, a.y) - world.progressAt(b.x, b.y));
+        // il primo davanti a te; se li hai superati tutti, l'ultimo che hai lasciato indietro
+        const at = byProgress.find((s) => world.progressAt(s.x, s.y) >= p) ?? byProgress.at(-1);
         return at ? { ...at, label: 'lo spaccino' } : null;
     }
 
