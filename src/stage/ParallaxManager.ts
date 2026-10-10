@@ -16,6 +16,8 @@ interface Strip {
     sink: number;
     anchor: 'bottom' | 'top';
     driftX?: number;
+    /** quanto segue l'ondeggiamento del menu, in frazioni di swayRoom: lo sfondo molto, i props poco */
+    swayK: number;
 }
 
 interface Painted {
@@ -76,17 +78,17 @@ export class ParallaxManager {
             [1, hex(biome.haze, 0.38)],
         ])).setOrigin(0.5).setScrollFactor(0).setDepth(-19);
 
-        const layers: { depth: number; speedX: number; speedY: number; sink: number; z: number }[] = [
-            { depth: 0, speedX: 0.12, speedY: 0.05, sink: -40, z: -16 },
-            { depth: 1, speedX: 0.26, speedY: 0.1, sink: 10, z: -14 },
-            { depth: 2, speedX: 0.48, speedY: 0.18, sink: 60, z: -12 },
+        const layers: { depth: number; speedX: number; speedY: number; sink: number; z: number; swayK: number }[] = [
+            { depth: 0, speedX: 0.12, speedY: 0.05, sink: -40, z: -16, swayK: 0.85 },
+            { depth: 1, speedX: 0.26, speedY: 0.1, sink: 10, z: -14, swayK: 0.65 },
+            { depth: 2, speedX: 0.48, speedY: 0.18, sink: 60, z: -12, swayK: 0.45 },
         ];
         for (const l of layers) {
             const tex = key(`sky${l.depth}`);
             if (!this.scene.textures.exists(tex)) this.scene.textures.addCanvas(tex, skylineCanvas(biome, l.depth));
             const src = this.scene.textures.get(tex).getSourceImage() as HTMLCanvasElement;
             const sprite = this.scene.add.tileSprite(0, 0, 16, src.height, tex).setOrigin(0.5, 1).setScrollFactor(0).setDepth(l.z);
-            this.strips.push({ sprite, speedX: l.speedX, speedY: l.speedY, sink: l.sink, anchor: 'bottom' });
+            this.strips.push({ sprite, speedX: l.speedX, speedY: l.speedY, sink: l.sink, anchor: 'bottom', swayK: l.swayK });
         }
 
         if (this.scene.textures.exists('fog')) {
@@ -101,7 +103,7 @@ export class ParallaxManager {
             const sprite = this.scene.add.tileSprite(0, 0, 16, FG_H, tex)
                 .setOrigin(0.5, edge === 'bottom' ? 1 : 0).setScrollFactor(0).setDepth(20).setAlpha(0.92);
             // il primo piano incornicia: si muove solo in orizzontale, più veloce del mondo
-            this.strips.push({ sprite, speedX: 1.35, speedY: 0, sink: edge === 'bottom' ? 70 : 60, anchor: edge });
+            this.strips.push({ sprite, speedX: 1.35, speedY: 0, sink: edge === 'bottom' ? 70 : 60, anchor: edge, swayK: 0.12 });
         }
 
         this.resize();
@@ -177,15 +179,15 @@ export class ParallaxManager {
         if (this.painted) {
             const sp = this.painted.sprite;
             sp.tilePositionX = (cam.scrollX * this.painted.speed + this.sway.x * this.swayRoom) / sp.tileScaleX;
-            sp.y = v.cy - this.sway.y * this.swayRoom;
+            sp.y = v.cy - this.sway.y * this.swayRoom * 0.5;
         }
         if (this.fog) this.fog.tilePositionX = cam.scrollX * 1.15 + time * 0.006;
 
         for (const s of this.strips) {
             s.sprite.x = left + v.w / 2;
-            s.sprite.tilePositionX = cam.scrollX * s.speedX;
-            // nel menu i piani vicini seguono il mouse anche in verticale; in gioco swayRoom è zero
-            const lift = this.sway.y * this.swayRoom * s.speedX * 1.2;
+            // nel menu ogni piano segue il mouse col suo peso; in gioco swayRoom è zero
+            s.sprite.tilePositionX = cam.scrollX * s.speedX + this.sway.x * this.swayRoom * s.swayK;
+            const lift = this.sway.y * this.swayRoom * s.swayK * 0.5;
             if (s.anchor === 'bottom') {
                 s.sprite.y = bottom + s.sink + rise * s.speedY - lift;
             } else {

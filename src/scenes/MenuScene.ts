@@ -15,13 +15,12 @@ import { state } from '../core/state';
    d'inchiostro e sopra il microfono che arde. il geco veglia accanto.
    è la stessa pipeline di luci del gioco: niente fondale finto */
 
-/** pixel di spostamento a mouse tutto da un lato: più il piano è vicino, più si muove */
+/** pixel di spostamento a mouse tutto da un lato: lo sfondo si muove molto, i piani vicini appena */
 const SWAY = {
-    painted: 14,
-    camera: 60,
-    ridge: { x: 32, y: 12 },
-    dust: 46,
-    motes: 95,
+    painted: 40,
+    ridge: { x: 10, y: 4 },
+    dust: 14,
+    motes: 18,
 } as const;
 
 export class MenuScene extends Phaser.Scene {
@@ -270,10 +269,9 @@ export class MenuScene extends Phaser.Scene {
             n.obj.x = n.x - this.sway.x * n.depth.x;
             n.obj.y = n.y - this.sway.y * n.depth.y;
         }
-        // il mondo scorre piano dietro al fuoco; sagome e nebbia seguono la camera
+        // il mondo scorre piano dietro al fuoco
         this.drift += delta * 0.014;
-        const cam = this.cameras.main;
-        cam.scrollX = this.drift + this.sway.x * SWAY.camera;
+        this.cameras.main.scrollX = this.drift;
         this.parallax.update(this.t);
         const k = this.noise(this.t / 160) * 0.5 + this.noise(this.t / 47) * 0.25;
         this.fire.setIntensity(1.85 + k * 0.6);
