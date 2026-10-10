@@ -9,6 +9,8 @@ import '@fontsource/im-fell-english/400-italic.css';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL, LEVELS, TOTAL_FRAGMENTS } from './content/levels';
+import { menuBiome } from './content/biomes';
+import { hex } from './art/ink';
 import { endingCards, endingEpilogues, INTRO_CARDS } from './content/story';
 import { bus } from './core/events';
 import { sfx } from './audio/sfx';
@@ -78,13 +80,14 @@ async function boot(): Promise<void> {
     window.addEventListener('beforeunload', () => state.flushPersist(true));
 
     // il falò del titolo: vive solo mentre il menu è aperto
-    // livello garantito (bus) e scena sempre fresca: il menu non resta mai nero
+    // senza salvataggio c'è il fondale del titolo; scena sempre fresca: il menu non resta mai nero
     screens.setBackdrop((on) => {
         if (on) {
             const gameEl = document.getElementById('game')!;
             gameEl.style.display = '';
             const wanted = state.hasSave ? state.save.levelId : undefined;
-            const levelId = wanted && LEVELS[wanted] ? wanted : 'bus';
+            const levelId = wanted && LEVELS[wanted] ? wanted : undefined;
+            document.documentElement.style.setProperty('--menu-glow', hex(menuBiome(levelId ? LEVELS[levelId] : undefined).accent, 0.34));
             if (game.scene.isActive('MenuScene')) game.scene.stop('MenuScene');
             game.scene.start('MenuScene', { levelId });
         } else if (game.scene.isActive('MenuScene')) {

@@ -214,6 +214,15 @@ export const BIOMES: Record<string, BiomeDef> = {
         ambience: ['dust'], props: ['lantern', 'chair', 'busstop', 'signpost', 'crate'],
         spikes: 'metal', ambient: 0.16, lightShafts: false, foreground: 'cables',
     },
+    /* il titolo senza salvataggio: nessun capitolo, solo il realm e la wave in frantumi */
+    title: {
+        ...base, id: 'title', material: 'stone',
+        rock: 0x57544c, rim: 0xd8d4bc, accent: 0x4ade80,
+        surface: ['grass'], ceiling: ['roots'],
+        skyline: 'crossroads', skyTop: 0x05080a, skyBottom: 0x121a18, haze: 0x24302b,
+        ambience: ['dust'], props: ['lantern', 'gravestone'],
+        spikes: 'thorns', ambient: 0.11, lightShafts: false, foreground: 'none',
+    },
 };
 
 const LEVEL_BIOME: Record<string, string> = {
@@ -248,6 +257,11 @@ const ZONE_FALLBACK: Record<ZoneColor, string> = {
     blue: 'library',
     cyan: 'servers',
 };
+
+/** il bioma del titolo: quello del capitolo salvato, o il fondale apposta a partita nuova */
+export function menuBiome(def: LevelDef | undefined): BiomeDef {
+    return def ? biomeFor(def) : BIOMES.title;
+}
 
 export function biomeFor(def: Pick<LevelDef, 'id' | 'color'> & { biome?: string }): BiomeDef {
     const id = def.biome ?? LEVEL_BIOME[def.id] ?? ZONE_FALLBACK[def.color];

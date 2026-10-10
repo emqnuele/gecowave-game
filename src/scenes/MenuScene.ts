@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { LEVELS } from '../content/levels';
-import { biomeFor } from '../content/biomes';
+import { BIOMES, menuBiome, type BiomeDef } from '../content/biomes';
 import { ParallaxManager } from '../stage/ParallaxManager';
 import { canvas, hex, mix, shade, smoothNoise1D } from '../art/ink';
 import { mulberry32 } from '../rules/hash';
@@ -11,7 +11,7 @@ import { ensurePlayerSkin } from '../art/playerSkin';
 import { state } from '../core/state';
 
 /* il titolo come un falò dei souls: il dipinto dell'ultimo capitolo
-   raggiunto, le sagome del parallasse che scorrono piano, una cresta
+   raggiunto (o quello del titolo, a partita nuova), le sagome del parallasse che scorrono piano, una cresta
    d'inchiostro e sopra il microfono che arde. il geco veglia accanto.
    è la stessa pipeline di luci del gioco: niente fondale finto */
 
@@ -25,7 +25,7 @@ export class MenuScene extends Phaser.Scene {
     private moon!: Phaser.GameObjects.Light;
     private embers!: Phaser.GameObjects.Particles.ParticleEmitter;
     private dust: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
-    private levelId = 'bus';
+    private biome: BiomeDef = BIOMES.title;
     private noise = smoothNoise1D(7);
     private t = 0;
     /** fogli da costruire in idle: entrando nel livello sono già pronti */
@@ -41,15 +41,14 @@ export class MenuScene extends Phaser.Scene {
         this.t = 0;
         this.ridge = null;
         this.dust = null;
-        this.levelId = data.levelId && LEVELS[data.levelId] ? data.levelId : 'bus';
-        const def = LEVELS[this.levelId];
-        const biome = biomeFor(def);
+        const def = data.levelId ? LEVELS[data.levelId] : undefined;
+        const biome = this.biome = menuBiome(def);
         if (!this.textures.exists('fog')) generateFogTexture(this);
 
         // il buio del bioma, appena tinto: si legge solo ciò che il fuoco tocca
         this.lights.enable().setAmbientColor(mix(0x0c0b0a, biome.rim, 0.08));
         this.parallax = new ParallaxManager(this);
-        this.parallax.build(def.color, this.levelId, biome, this.scale.height);
+        this.parallax.build(def ? def.color : null, def ? def.id : 'title', biome, this.scale.height);
 
         this.mic = this.add.sprite(0, 0, ensureCreature(this, 'mic'), 0).setPipeline('Light2D').setScrollFactor(0).setDepth(10);
         this.mic.setScale(2.1 / creatureRes(this, 'mic'));
@@ -63,7 +62,7 @@ export class MenuScene extends Phaser.Scene {
         // l'alone caldo sommato sopra la griglia: è lui il falò
         this.halo = this.add.image(0, 0, 'p-dot').setScrollFactor(0).setDepth(12).setBlendMode(Phaser.BlendModes.ADD).setTint(0xffa24a).setAlpha(0.55);
         this.fire = this.lights.addLight(0, 0, 520, 0xffa95e, 1.9).setScrollFactor(0);
-        this.moon = this.lights.addLight(0, 0, 900, mix(0x8ea4c8, biome.rim, 0.3), 0.55).setScrollFactor(0);
+        this.moon = this.lights.addLight(0, 0, 900, mix(mix(0x8ea4c8, biome.rim, 0.3), biome.accent, 0.35), 0.55).setScrollFactor(0);
 
         this.embers = this.add.particles(0, 0, 'p-dot', {
             speedY: { min: -70, max: -22 },
@@ -72,7 +71,8 @@ export class MenuScene extends Phaser.Scene {
             lifespan: { min: 2200, max: 4200 },
             scale: { start: 0.32, end: 0 },
             alpha: { start: 0.95, end: 0 },
-            tint: [0xffc078, 0xff8a3d, 0xffe2a8],
+            // il cuore resta brace, metà delle scintille prende l'aria del posto
+            tint: [0xffc078, 0xff8a3d, mix(0xffc078, biome.accent, 0.55), mix(0xffe2a8, biome.accent, 0.75)],
             blendMode: Phaser.BlendModes.ADD,
             frequency: 70,
         }).setScrollFactor(0).setDepth(13);
@@ -92,7 +92,7 @@ export class MenuScene extends Phaser.Scene {
 
     /** cresta d'inchiostro su cui sta il falò: ridisegnata a ogni misura dello schermo */
     private drawRidge(w: number, h: number, fx: number): { top: (x: number) => number } {
-        const biome = biomeFor(LEVELS[this.levelId]);
+        const biome = this.biome;
         const rnd = mulberry32(31);
         const n = smoothNoise1D(11);
         const H = Math.round(h * 0.34);
@@ -180,7 +180,7 @@ export class MenuScene extends Phaser.Scene {
             lifespan: 9000,
             scale: { start: 0.12, end: 0.04 },
             alpha: { start: 0.45, end: 0 },
-            tint: 0xe8d8b0,
+            tint: mix(0xe8d8b0, this.biome.accent, 0.25),
             frequency: 260,
             blendMode: Phaser.BlendModes.ADD,
         }).setScrollFactor(0).setDepth(14);

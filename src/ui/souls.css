@@ -255,6 +255,7 @@
 
 .sx-logo .w {
   color: var(--sx-gold);
+  text-shadow: 0 0 44px var(--menu-glow, rgba(255, 150, 70, 0.18)), 0 3px 0 #000;
 }
 
 .sx-tagline {

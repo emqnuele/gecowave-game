@@ -40,7 +40,8 @@ export class ParallaxManager {
         this.scene = scene;
     }
 
-    build(zone: ZoneColor, levelId: string, biome: BiomeDef, groundY: number): void {
+    /** zona null: il dipinto non prende tinta, è il fondale del titolo */
+    build(zone: ZoneColor | null, levelId: string, biome: BiomeDef, groundY: number): void {
         this.groundY = groundY;
         const key = (k: string) => `${k}-${biome.id}`;
 
@@ -52,13 +53,15 @@ export class ParallaxManager {
         const paintedKey = levelId !== 'perduta' && this.scene.textures.exists(`bg-painted-${levelId}`) ? `bg-painted-${levelId}` : legacy;
         if (this.scene.textures.exists(paintedKey)) {
             const sprite = this.scene.add.tileSprite(0, 0, 16, 16, paintedKey).setOrigin(0.5).setScrollFactor(0).setDepth(-20);
-            const tint = Phaser.Display.Color.IntegerToColor(ZONE_HEX[zone]);
-            const s = paintedKey === legacy ? 0.4 : 0.14;
-            sprite.setTint(Phaser.Display.Color.GetColor(
-                Math.round(255 * (1 - s) + tint.red * s),
-                Math.round(255 * (1 - s) + tint.green * s),
-                Math.round(255 * (1 - s) + tint.blue * s),
-            ));
+            if (zone) {
+                const tint = Phaser.Display.Color.IntegerToColor(ZONE_HEX[zone]);
+                const s = paintedKey === legacy ? 0.4 : 0.14;
+                sprite.setTint(Phaser.Display.Color.GetColor(
+                    Math.round(255 * (1 - s) + tint.red * s),
+                    Math.round(255 * (1 - s) + tint.green * s),
+                    Math.round(255 * (1 - s) + tint.blue * s),
+                ));
+            }
             this.painted = { sprite, sourceKey: paintedKey, speed: 0.03 };
         }
 
