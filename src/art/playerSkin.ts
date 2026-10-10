@@ -188,13 +188,21 @@ export function skinFinalCss(preset: SkinPreset): string {
 
 export const PLAYER_FRAME = 350;
 
+/** copia incontaminata dello sheet, catturata prima del primo swap */
+let pristine: HTMLCanvasElement | null = null;
+let appliedId: string | null = null;
+
 /**
  * anteprima onesta: ritaglia un frame dallo sheet, applica la pelle
  * con lo STESSO codice del gioco e poi la luce nominale. Ciò che vedi
  * è ciò che vedrai in game (a meno di torce e biomi lontani).
+ * parte dallo sheet che il gioco ha già caricato: un png ricaricato a mano
+ * sotto file:// (electron) non si trova o sporca il canvas.
  */
-export function renderSkinPreview(source: CanvasImageSource, preset: SkinPreset, frameIndex = 0): HTMLCanvasElement | null {
-    const cols = Math.max(1, Math.floor((source as { width?: number }).width! / PLAYER_FRAME));
+export function renderSkinPreview(preset: SkinPreset, frameIndex = 0): HTMLCanvasElement | null {
+    const source = pristine;
+    if (!source) return null;
+    const cols = Math.max(1, Math.floor(source.width / PLAYER_FRAME));
     const sx = (frameIndex % cols) * PLAYER_FRAME;
     const sy = Math.floor(frameIndex / cols) * PLAYER_FRAME;
     const cv = document.createElement('canvas');
@@ -216,9 +224,6 @@ export function renderSkinPreview(source: CanvasImageSource, preset: SkinPreset,
     return cv;
 }
 
-/** copia incontaminata dello sheet, catturata prima del primo swap */
-let pristine: HTMLCanvasElement | null = null;
-let appliedId: string | null = null;
 
 function capturePristine(scene: Phaser.Scene): boolean {
     if (pristine) return true;

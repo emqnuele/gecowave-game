@@ -1329,13 +1329,11 @@ export class Screens {
         const gecoEl = right.querySelector<HTMLElement>('.sx-geco')!;
         // anteprima onesta e viva: gli 8 frame di idle renderizzati come in
         // game, in loop a 5fps. il timer si spegne da solo a forgia chiusa.
-        gecoEl.classList.add('sx-geco-live');
         const previewCv = document.createElement('canvas');
         previewCv.width = PLAYER_FRAME;
         previewCv.height = PLAYER_FRAME;
         previewCv.className = 'sx-geco-frame';
         gecoEl.append(previewCv);
-        let sheetImg: HTMLImageElement | null = null;
         let previewFrames: HTMLCanvasElement[] = [];
         let previewTick = 0;
         let previewTimer: number | null = null;
@@ -1358,13 +1356,13 @@ export class Screens {
             stopPreview();
             previewTick = 0;
             previewFrames = [];
-            if (sheetImg) {
-                const preset = skinPreset(skinId);
-                for (let i = 0; i < 8; i++) {
-                    const cv = renderSkinPreview(sheetImg, preset, i);
-                    if (cv) previewFrames.push(cv);
-                }
+            const preset = skinPreset(skinId);
+            for (let i = 0; i < 8; i++) {
+                const cv = renderSkinPreview(preset, i);
+                if (cv) previewFrames.push(cv);
             }
+            // senza sheet torna il ritratto statico: meglio del buco
+            gecoEl.classList.toggle('sx-geco-live', previewFrames.length > 0);
             blitPreview();
             const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             if (!reduce && previewFrames.length > 1) {
@@ -1377,14 +1375,6 @@ export class Screens {
                 }, 200);
             }
         };
-        const sheetLoader = new Image();
-        sheetLoader.onload = () => {
-            sheetImg = sheetLoader;
-            buildPreview();
-        };
-        // se lo sheet non si carica, torna il ritratto statico: meglio del buco
-        sheetLoader.onerror = () => gecoEl.classList.remove('sx-geco-live');
-        sheetLoader.src = '/assets/sprites/player_sheet.png';
         const derived = el('div', 'sx-derived');
         right.append(derived);
         const dRow = (label: string) => {
