@@ -3,6 +3,7 @@ import { ZONE_HEX } from '../config';
 import type { BiomeDef } from '../content/biomes';
 import { hex, mix } from '../art/ink';
 import { Mist } from '../art/fx/Mist';
+import { foregroundCanvas as classicForeground, skylineCanvas as classicSkyline } from '../art/scenery/classic';
 import { FG_H, foregroundCanvas } from '../art/scenery/foreground';
 import { LAYER_H, sceneryCanvas } from '../art/scenery/layers';
 import { samplePalette } from '../art/scenery/palette';
@@ -10,6 +11,9 @@ import type { ZoneColor } from '../types';
 
 /* dal fondo verso il giocatore: cielo, dipinto, velo di foschia, tre piani di sagome
    con la foschia viva in mezzo, poi il primo piano nero e la nebbia davanti */
+
+/** i biomi che tengono le sagome piatte di prima */
+const CLASSIC = new Set(['crater']);
 
 interface Strip {
     sprite: Phaser.GameObjects.TileSprite;
@@ -98,23 +102,29 @@ export class ParallaxManager {
             [1, hex(biome.haze, 0.38)],
         ])).setOrigin(0.5).setScrollFactor(0).setDepth(-19);
 
+        const classic = CLASSIC.has(biome.id);
         const layers: { depth: number; speedX: number; speedY: number; sink: number; z: number; swayK: number }[] = [
             { depth: 0, speedX: 0.12, speedY: 0.05, sink: -40, z: -16, swayK: 0.85 },
             { depth: 1, speedX: 0.26, speedY: 0.1, sink: 10, z: -14, swayK: 0.65 },
             { depth: 2, speedX: 0.48, speedY: 0.18, sink: 60, z: -12, swayK: 0.45 },
         ];
         for (const l of layers) {
-            const tex = `scn-${sceneKey}-${l.depth}`;
-            if (!this.scene.textures.exists(tex)) this.scene.textures.addCanvas(tex, sceneryCanvas(sceneKey, biome, palette, l.depth));
-            const sprite = this.scene.add.tileSprite(0, 0, 16, LAYER_H[l.depth], tex).setOrigin(0.5, 1).setScrollFactor(0).setDepth(l.z);
+            const tex = classic ? `sky-${biome.id}-${l.depth}` : `scn-${sceneKey}-${l.depth}`;
+            if (!this.scene.textures.exists(tex)) {
+                this.scene.textures.addCanvas(tex, classic ? classicSkyline(biome, l.depth) : sceneryCanvas(sceneKey, biome, palette, l.depth));
+            }
+            const height = classic ? (this.scene.textures.get(tex).getSourceImage() as HTMLCanvasElement).height : LAYER_H[l.depth];
+            const sprite = this.scene.add.tileSprite(0, 0, 16, height, tex).setOrigin(0.5, 1).setScrollFactor(0).setDepth(l.z);
             this.strips.push({ sprite, speedX: l.speedX, speedY: l.speedY, sink: l.sink, anchor: 'bottom', swayK: l.swayK });
         }
 
         // la foschia vive tra un piano e l'altro: li stacca e li lega al dipinto
         const haze = mix(palette.haze, palette.floor, 0.35);
+        // le sagome piatte vogliono restare nere: lì la foschia in mezzo è appena un fiato
+        const thin = classic ? 0.3 : 1;
         const between = [
-            { depth: -15, speedX: 0.18, speedY: 0.07, look: { color: haze, alpha: 0.5, scale: 300, band: [0.42, 1.02] as [number, number], floor: 0.5 } },
-            { depth: -13, speedX: 0.36, speedY: 0.14, look: { color: mix(haze, palette.dark, 0.25), alpha: 0.44, scale: 230, band: [0.56, 1.06] as [number, number], floor: 0.6 } },
+            { depth: -15, speedX: 0.18, speedY: 0.07, look: { color: haze, alpha: 0.5 * thin, scale: 300, band: [0.42, 1.02] as [number, number], floor: 0.5 } },
+            { depth: -13, speedX: 0.36, speedY: 0.14, look: { color: mix(haze, palette.dark, 0.25), alpha: 0.44 * thin, scale: 230, band: [0.56, 1.06] as [number, number], floor: 0.6 } },
         ];
         for (const m of between) {
             const mist = Mist.add(this.scene, m.depth, m.look);
@@ -127,9 +137,9 @@ export class ParallaxManager {
         }
 
         for (const edge of ['top', 'bottom'] as const) {
-            const el = foregroundCanvas(sceneKey, biome, palette, edge);
+            const el = classic ? classicForeground(biome, edge) : foregroundCanvas(sceneKey, biome, palette, edge);
             if (!el) continue;
-            const tex = `fg-${sceneKey}-${edge}`;
+            const tex = classic ? `fgc-${biome.id}-${edge}` : `fg-${sceneKey}-${edge}`;
             if (!this.scene.textures.exists(tex)) this.scene.textures.addCanvas(tex, el);
             const sprite = this.scene.add.tileSprite(0, 0, 16, FG_H, tex)
                 .setOrigin(0.5, edge === 'bottom' ? 1 : 0).setScrollFactor(0).setDepth(20).setAlpha(0.92);
