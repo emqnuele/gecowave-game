@@ -619,7 +619,25 @@ export class TerrainRenderer {
         if (this.scene.textures.exists(key)) this.scene.textures.remove(key);
         // addCanvas crea un CanvasTexture che rilegge tutti i pixel dalla gpu (getImageData): qui nessuno li legge mai
         this.scene.textures.addImage(key, el as unknown as HTMLImageElement);
+        this.clampEdges(key);
         this.textureKeys.push(key);
+    }
+
+    /** le tele da 512 sono potenze di due e phaser le ripete: sul bordo affiorava il lato opposto, una riga scura */
+    private clampEdges(key: string): void {
+        const renderer = this.scene.renderer;
+        if (!(renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer)) return;
+        const wrapper = this.scene.textures.get(key).source[0]?.glTexture;
+        if (!wrapper?.webGLTexture) return;
+        const gl = renderer.gl;
+        gl.activeTexture(gl.TEXTURE0);
+        const current = gl.getParameter(gl.TEXTURE_BINDING_2D) as WebGLTexture | null;
+        gl.bindTexture(gl.TEXTURE_2D, wrapper.webGLTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        wrapper.wrapS = gl.CLAMP_TO_EDGE;
+        wrapper.wrapT = gl.CLAMP_TO_EDGE;
+        if (current) gl.bindTexture(gl.TEXTURE_2D, current);
     }
 
     private removeTexture(key: string): void {

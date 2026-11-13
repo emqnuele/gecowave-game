@@ -231,11 +231,16 @@ export function generateFogTexture(scene: Phaser.Scene): void {
             const x = rnd() * 512;
             const y = rnd() * 512;
             const r = 40 + rnd() * 90;
-            const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-            grad.addColorStop(0, 'rgba(170,180,200,0.05)');
-            grad.addColorStop(1, 'rgba(170,180,200,0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(x - r, y - r, r * 2, r * 2);
+            // ogni sbuffo si ripete oltre i bordi: la texture si ripete senza cuciture
+            for (const ox of [-512, 0, 512]) {
+                for (const oy of [-512, 0, 512]) {
+                    const grad = ctx.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
+                    grad.addColorStop(0, 'rgba(170,180,200,0.05)');
+                    grad.addColorStop(1, 'rgba(170,180,200,0)');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(x + ox - r, y + oy - r, r * 2, r * 2);
+                }
+            }
         }
         tex.refresh();
     }
