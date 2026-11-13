@@ -101,6 +101,92 @@ function contactFor(sender: string): Contact | undefined {
     return CONTACTS.find((c) => c.name === sender || c.id === sender);
 }
 
+function glyph(id: string, cls = 'gl'): HTMLElement {
+    return el('span', cls, pixelIcon(id));
+}
+
+/** la tessera a gradini con dentro una faccia: contatti, autori, il geco */
+function avatar(icon: string, color: ZoneColor, cls = ''): HTMLElement {
+    const a = text('span', `os-avatar ${cls}`, icon);
+    a.style.setProperty('--app', ZONE_CSS[color]);
+    a.setAttribute('aria-hidden', 'true');
+    return a;
+}
+
+function cell(o: { tag?: 'button' | 'div'; lead?: Node; name: string; sub?: string; trail?: string; lines?: number }): HTMLElement {
+    const c = el(o.tag ?? 'div', 'os-cell');
+    if (o.lead) c.append(o.lead);
+    const main = el('span', 'main');
+    main.append(text('span', 'name', o.name));
+    if (o.sub) {
+        const sub = text('span', 'sub', o.sub);
+        if (o.lines) sub.style.setProperty('--lines', String(o.lines));
+        main.append(sub);
+    }
+    c.append(main);
+    if (o.trail !== undefined) c.append(text('span', 'trail', o.trail));
+    return c;
+}
+
+function heading(title: string, aside = ''): HTMLElement {
+    const h = el('div', 'os-h');
+    h.append(text('span', '', title));
+    if (aside) h.append(text('span', 'aside', aside));
+    return h;
+}
+
+function tile(label: string, value: string, sub = ''): HTMLElement {
+    const t = el('div', 'os-tile');
+    t.append(text('span', 'label', label), text('span', 'value', value));
+    if (sub) t.append(text('span', 'sub', sub));
+    return t;
+}
+
+/** barra a blocchi: un pezzo per unità finché ci stanno, poi in proporzione */
+function meter(done: number, total: number, tone = ''): HTMLElement {
+    const m = el('span', `os-meter ${tone}`);
+    const blocks = Math.max(1, Math.min(total, 12));
+    const lit = total > 0 ? Math.round((Math.min(done, total) / total) * blocks) : 0;
+    for (let i = 0; i < blocks; i++) m.append(el('i', i < lit ? 'on' : ''));
+    m.setAttribute('role', 'img');
+    m.setAttribute('aria-label', `${done} su ${total}`);
+    return m;
+}
+
+function button(label: string, kind: 'fill' | 'ghost' | 'danger', onClick: () => void): HTMLButtonElement {
+    const b = el('button', `os-btn ${kind}`);
+    b.type = 'button';
+    b.textContent = label;
+    b.addEventListener('click', () => {
+        sfx.ui();
+        onClick();
+    });
+    return b;
+}
+
+function empty(icon: string, title: string, body: string): HTMLElement {
+    const e = el('div', 'os-empty');
+    e.append(glyph(icon, 'gl big'), text('div', 'title', title), text('div', 'body', body));
+    return e;
+}
+
+function switchCell(name: string, get: () => boolean, set: (v: boolean) => void): HTMLElement {
+    const c = el('div', 'os-cell');
+    const s = el('button', 'os-switch');
+    s.type = 'button';
+    s.setAttribute('role', 'switch');
+    s.setAttribute('aria-label', name);
+    const paint = () => s.setAttribute('aria-checked', String(get()));
+    paint();
+    s.addEventListener('click', () => {
+        set(!get());
+        paint();
+        sfx.ui();
+    });
+    c.append(text('span', 'name', name), s);
+    return c;
+}
+
 export class Phone {
     private host: PhoneHost;
     private root: HTMLElement | null = null;
@@ -113,6 +199,10 @@ export class Phone {
     private app: AppId | null = null;
     private stack: (() => void)[] = [];
     private liked = new Set<number>();
+    /** la scheda aperta in ogni app: resta quella anche se l'app si ridisegna */
+    private tabOf: Partial<Record<AppId, string>> = {};
+    private titleEl: HTMLElement | null = null;
+    private subEl: HTMLElement | null = null;
     private clock: number | null = null;
     private keyHandler = (e: KeyboardEvent) => this.onKey(e);
 
@@ -283,19 +373,40 @@ export class Phone {
         this.body = b;
         v.append(wall, b);
 
-        b.append(text('div', 'phone-clock', realmClock()));
         const level = LEVELS[state.save.levelId];
+        b.append(text('div', 'phone-clock', realmClock()));
         b.append(text('div', 'phone-greet', level ? `${level.title.toLowerCase()} ${level.accentWord}` : 'segnale: gecowave 5g'));
 
-        // il widget dell'obiettivo apre il diario
-        const widget = el('button', 'home-widget');
-        widget.append(
+        // la notifica sta sopra tutto, come su un telefono vero
+        const unread = state.unreadMessages;
+        if (unread > 0) {
+            const last = state.save.messages[state.save.messages.length - 1];
+            const note = el('button', 'home-notice');
+            const words = el('span', 'main');
+            words.append(text('span', 'name', last ? last.sender : 'messaggi'), text('span', 'sub', last ? formatKeys(last.text) : ''));
+            note.append(glyph('messaggi', 'gl tile-s'), words, text('span', 'count', String(unread)));
+            (note.firstElementChild as HTMLElement).style.setProperty('--app', ZONE_CSS.blue);
+            note.addEventListener('click', (e) => this.launch('messaggi', e.currentTarget as HTMLElement));
+            b.append(note);
+        }
+
+        const widgets = el('div', 'home-widgets');
+        const goal = el('button', 'home-widget wide');
+        goal.append(
             text('span', 'w-kick', 'adesso'),
-            text('span', 'w-waves', `✦ ${state.abilities.length}/${TOTAL_FRAGMENTS}`),
             text('span', 'w-text', formatKeys(OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.')),
         );
-        widget.addEventListener('click', (e) => this.launch('diario', e.currentTarget as HTMLElement));
-        b.append(widget);
+        goal.addEventListener('click', (e) => this.launch('diario', e.currentTarget as HTMLElement));
+
+        const life = el('button', 'home-widget');
+        life.append(text('span', 'w-kick', 'vita'), text('span', 'w-big', `${state.run.hp}/${state.maxHp}`), meter(state.run.hp, state.maxHp, 'red'));
+        life.addEventListener('click', (e) => this.launch('profilo', e.currentTarget as HTMLElement));
+
+        const purse = el('button', 'home-widget');
+        purse.append(text('span', 'w-kick', 'barre'), text('span', 'w-big', `♪ ${state.save.barre}`), text('span', 'w-sub', `${state.abilities.length}/${TOTAL_FRAGMENTS} frammenti`));
+        purse.addEventListener('click', (e) => this.launch('wavezon', e.currentTarget as HTMLElement));
+        widgets.append(goal, life, purse);
+        b.append(widgets);
 
         const grid = el('div', 'phone-grid');
         const dock = el('div', 'phone-dock');
@@ -336,10 +447,11 @@ export class Phone {
         const scroll = keepScroll && this.body ? this.body.scrollTop : 0;
         const fresh = this.app !== id;
         this.app = id;
+        this.stack = [];
         const def = APPS.find((a) => a.id === id)!;
         this.setTint(def.tint);
         const v = this.view;
-        v.className = `phone-view app${fresh ? '' : ' still'}`;
+        v.className = `phone-view app app-${id}${fresh ? '' : ' still'}`;
         if (this.origin) {
             v.style.setProperty('--ox', `${this.origin.x}px`);
             v.style.setProperty('--oy', `${this.origin.y}px`);
@@ -351,16 +463,18 @@ export class Phone {
         v.append(b);
         const head = el('div', 'phone-head');
         const back = el('button', 'phone-back');
-        back.append(text('b', '', '‹'), text('span', '', 'home'));
+        back.append(text('b', '', '‹'), text('span', '', 'indietro'));
         back.addEventListener('click', () => {
             sfx.ui();
-            this.home();
+            this.back();
         });
         const badge = el('span', 'app-icon', pixelIcon(def.id));
         badge.style.setProperty('--app', ZONE_CSS[def.tint]);
         head.append(back, badge);
-        b.append(head, text('div', 'phone-title', def.title), text('div', 'phone-sub', def.sub));
-        const content = el('div');
+        this.titleEl = text('div', 'phone-title', def.title);
+        this.subEl = text('div', 'phone-sub', def.sub);
+        b.append(head, this.titleEl, this.subEl);
+        const content = el('div', 'app-content');
         b.append(content);
         switch (id) {
             case 'messaggi': this.renderMessages(content); break;
@@ -382,32 +496,107 @@ export class Phone {
         if (!keepScroll) back.focus();
     }
 
+    /* ---------- pezzi comuni: testata, schede, foglio, avviso ---------- */
+
+    /** una schermata interna cambia la testata, o la toglie del tutto */
+    private chrome(title: string | null, sub = ''): void {
+        if (!this.titleEl || !this.subEl) return;
+        this.titleEl.hidden = title === null;
+        this.subEl.hidden = title === null || sub === '';
+        if (title !== null) {
+            this.titleEl.textContent = title;
+            this.subEl.textContent = sub;
+        }
+    }
+
+    private tabbar(tabs: { id: string; label: string; glyph: string }[], active: string, pick: (id: string) => void): void {
+        if (!this.view) return;
+        this.dropTabbar();
+        const bar = el('div', 'os-tabbar');
+        bar.setAttribute('role', 'tablist');
+        for (const t of tabs) {
+            const btn = el('button', `os-tab${t.id === active ? ' on' : ''}`);
+            btn.setAttribute('role', 'tab');
+            btn.setAttribute('aria-selected', String(t.id === active));
+            btn.append(glyph(t.glyph), text('span', '', t.label));
+            btn.addEventListener('click', () => {
+                sfx.ui();
+                pick(t.id);
+            });
+            bar.append(btn);
+        }
+        this.view.append(bar);
+        this.body?.classList.add('has-tabbar');
+    }
+
+    private dropTabbar(): void {
+        this.view?.querySelector('.os-tabbar')?.remove();
+        this.body?.classList.remove('has-tabbar');
+    }
+
+    /** il foglio che sale dal basso: i dettagli stanno qui, non in fondo alla lista */
+    private sheet(build: (box: HTMLElement, close: () => void) => void): void {
+        if (!this.view) return;
+        const scrim = el('div', 'os-sheet-scrim');
+        const box = el('div', 'os-sheet');
+        box.setAttribute('role', 'dialog');
+        const close = () => {
+            if (!scrim.isConnected) return;
+            scrim.remove();
+            const i = this.stack.indexOf(close);
+            if (i >= 0) this.stack.splice(i, 1);
+        };
+        scrim.addEventListener('click', (e) => {
+            if (e.target === scrim) close();
+        });
+        box.append(el('span', 'os-grab'));
+        build(box, close);
+        scrim.append(box);
+        this.view.append(scrim);
+        this.stack.push(close);
+        (box.querySelector('button') as HTMLElement | null)?.focus();
+    }
+
+    /** sta sullo schermo e non nell'app: sopravvive a quando l'app si ridisegna */
+    private toast(message: string, ok: boolean): void {
+        if (!this.screen) return;
+        this.screen.querySelector('.os-toast')?.remove();
+        const t = text('div', `os-toast ${ok ? 'good' : 'bad'}`, message);
+        t.setAttribute('role', 'status');
+        this.screen.append(t);
+        window.setTimeout(() => t.remove(), 2600);
+    }
+
     /* ---------- messaggi e chiamate ---------- */
 
-    private renderMessages(root: HTMLElement, tab: 'chat' | 'rubrica' = 'chat'): void {
+    private renderMessages(root: HTMLElement): void {
         root.replaceChildren();
-        const tabs = el('div', 'phone-tabs');
-        for (const t of ['chat', 'rubrica'] as const) {
-            const btn = el('button', `phone-tab sticker ${t === tab ? 'active' : ''}`);
-            btn.textContent = t;
-            btn.addEventListener('click', () => this.renderMessages(root, t));
-            tabs.append(btn);
-        }
-        root.append(tabs);
+        const tab = this.tabOf.messaggi ?? 'chat';
+        this.tabbar([
+            { id: 'chat', label: 'chat', glyph: 'messaggi' },
+            { id: 'rubrica', label: 'rubrica', glyph: 'persona' },
+        ], tab, (id) => {
+            this.tabOf.messaggi = id;
+            this.renderMessages(root);
+        });
 
         if (tab === 'rubrica') {
+            this.chrome('RUBRICA', 'rispondono sempre. quasi sempre.');
+            const grid = el('div', 'contact-grid');
             for (const c of CONTACTS) {
-                const row = el('button', `phone-row glass-chip glass-acid-${c.color}`);
-                row.append(text('span', 'lead', c.icon));
-                const main = el('div', 'main');
-                main.append(text('div', 'name', c.name), text('div', 'preview', 'tocca per chiamare'));
-                row.append(main, text('span', 'meta', '📞'));
-                row.addEventListener('click', () => this.call(root, c));
-                root.append(row);
+                const card = el('button', 'contact-card');
+                card.setAttribute('aria-label', `chiama ${c.name}`);
+                const call = el('span', 'call-chip');
+                call.append(glyph('telefono'), text('span', '', 'chiama'));
+                card.append(avatar(c.icon, c.color, 'big'), text('span', 'name', c.name), call);
+                card.addEventListener('click', () => this.call(root, c));
+                grid.append(card);
             }
+            root.append(grid);
             return;
         }
 
+        this.chrome('MESSAGGI', 'tutti ti scrivono, nessuno ti chiede come stai');
         const threads = new Map<string, { last: number; preview: string; unread: number }>();
         for (const m of state.save.messages) {
             const t = threads.get(m.sender) ?? { last: 0, preview: '', unread: 0 };
@@ -417,76 +606,90 @@ export class Phone {
             threads.set(m.sender, t);
         }
         if (threads.size === 0) {
-            root.append(text('div', 'phone-empty', 'nessun messaggio. il realm ti ignora, per ora.'));
+            root.append(empty('messaggi', 'nessun messaggio', 'il realm ti ignora, per ora. prova a chiamare qualcuno dalla rubrica.'));
             return;
         }
+        const list = el('div', 'os-group');
         const sorted = [...threads.entries()].sort((a, b) => b[1].last - a[1].last);
         for (const [sender, t] of sorted) {
             const contact = contactFor(sender);
-            const row = el('button', `phone-row glass-chip glass-acid-${contact?.color ?? 'blue'}`);
-            row.append(text('span', 'lead', contact?.icon ?? '📨'));
-            const main = el('div', 'main');
-            main.append(text('div', 'name', sender), text('div', 'preview', formatKeys(t.preview)));
-            row.append(main);
-            if (t.unread) row.append(el('span', 'dot'));
-            row.append(text('span', 'meta', since(t.last)));
+            const row = cell({ tag: 'button', lead: avatar(contact?.icon ?? '📨', contact?.color ?? 'blue'), name: sender, sub: formatKeys(t.preview), lines: 2 });
+            const trail = el('span', 'trail col');
+            trail.append(text('span', 'when', since(t.last)));
+            if (t.unread) trail.append(text('span', 'os-count', String(t.unread)));
+            row.append(trail);
+            if (t.unread) row.classList.add('unread');
             row.addEventListener('click', () => this.thread(root, sender));
-            root.append(row);
+            list.append(row);
         }
+        root.append(list);
     }
 
     private thread(root: HTMLElement, sender: string): void {
         this.stack.push(() => this.openApp('messaggi'));
+        this.dropTabbar();
+        this.chrome(null);
         root.replaceChildren();
         const contact = contactFor(sender);
-        root.append(text('div', 'phone-section', `chat con ${sender}`));
+
+        const bar = el('div', 'thread-bar');
+        const who = el('div', 'who');
+        who.append(text('div', 'name', sender), text('div', 'sub', contact ? 'in linea, purtroppo' : 'numero sconosciuto'));
+        bar.append(avatar(contact?.icon ?? '📨', contact?.color ?? 'blue'), who);
+        if (contact) {
+            const call = el('button', 'round-btn good');
+            call.setAttribute('aria-label', `chiama ${sender}`);
+            call.append(glyph('telefono'));
+            call.addEventListener('click', () => this.call(root, contact));
+            bar.append(call);
+        }
+        root.append(bar);
+
+        const log = el('div', 'thread');
+        let lastAt = 0;
         for (const m of state.save.messages) {
             if (m.sender !== sender) continue;
             m.read = true;
-            const bubble = el('div', `bubble glass-chip glass-acid-${contact?.color ?? 'blue'}`);
-            bubble.textContent = formatKeys(m.text);
-            bubble.append(text('span', 'when', since(m.at)));
-            root.append(bubble);
+            // un'ora di silenzio e la conversazione riparte con l'orario
+            if (m.at - lastAt > 3600000) log.append(text('div', 'stamp', since(m.at) === 'ora' ? 'adesso' : `${since(m.at)} fa`));
+            lastAt = m.at;
+            log.append(text('div', 'bubble', formatKeys(m.text)));
         }
+        root.append(log);
         state.persist();
         this.renderHint();
-        if (contact) {
-            const call = el('button', 'phone-btn sticker glass-acid-green');
-            call.textContent = 'chiama';
-            call.addEventListener('click', () => this.call(root, contact));
-            root.append(call);
-        }
         this.body?.scrollTo({ top: this.body.scrollHeight });
     }
 
     private call(root: HTMLElement, c: Contact): void {
         this.stack.push(() => this.openApp('messaggi'));
+        this.dropTabbar();
+        this.chrome(null);
         sfx.ui();
         root.replaceChildren();
         const screen = el('div', 'call-screen');
-        const avatar = el('div', `call-avatar sticker glass-acid-${c.color} call-ring`);
-        avatar.textContent = c.icon;
+        screen.style.setProperty('--app', ZONE_CSS[c.color]);
+        const ring = el('div', 'call-ring');
+        ring.append(avatar(c.icon, c.color, 'huge'));
         const stateLine = text('div', 'call-state', 'squilla…');
-        screen.append(avatar, text('div', 'call-name', c.name.toUpperCase()), stateLine);
-        const hang = el('button', 'phone-btn sticker glass-acid-red');
-        hang.textContent = 'riattacca';
+        const talk = el('div', 'call-talk');
+        const hang = el('button', 'round-btn bad big');
+        hang.setAttribute('aria-label', 'riattacca');
+        hang.append(glyph('telefono'));
         hang.addEventListener('click', () => this.back());
-        screen.append(hang);
+        screen.append(ring, text('div', 'call-name', c.name), stateLine, talk, hang, text('div', 'call-hint', 'riattacca'));
         root.append(screen);
         hang.focus();
         window.setTimeout(() => {
-            if (!avatar.isConnected) return;
-            avatar.classList.remove('call-ring');
+            if (!ring.isConnected) return;
+            ring.classList.add('live');
             stateLine.textContent = 'in chiamata';
-            const reply = el('div', `bubble glass-chip glass-acid-${c.color}`);
-            reply.textContent = formatKeys(c.call({
+            talk.append(text('div', 'bubble', formatKeys(c.call({
                 levelId: state.save.levelId,
                 flags: state.save.flags,
                 barre: state.save.barre,
                 abilities: state.abilities.length,
-            }));
-            reply.style.textAlign = 'left';
-            screen.insertBefore(reply, hang);
+            }))));
             sfx.pickup();
         }, 1100);
     }
@@ -495,28 +698,61 @@ export class Phone {
 
     private renderWavegram(root: HTMLElement): void {
         const visible = POSTS.map((p, i) => ({ p, i })).filter(({ p }) => !p.needs || state.hasFlag(p.needs)).reverse();
+
+        // le storie: chi ha postato, in fila. toccarne una porta al suo post
+        const stories = el('div', 'stories');
+        const seen = new Set<string>();
+        const anchors = new Map<string, HTMLElement>();
+        for (const { p } of visible) {
+            if (seen.has(p.author)) continue;
+            seen.add(p.author);
+            const s = el('button', 'story');
+            s.append(avatar(p.author[0], p.color, 'letter ring'), text('span', '', p.author.split(' ')[0]));
+            s.addEventListener('click', () => anchors.get(p.author)?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+            stories.append(s);
+        }
+        root.append(stories);
+
         for (const { p, i } of visible) {
-            const post = el('article', `post glass-chip glass-acid-${p.color}`);
+            const post = el('article', 'post');
+            post.style.setProperty('--app', ZONE_CSS[p.color]);
+            if (!anchors.has(p.author)) anchors.set(p.author, post);
             const who = el('div', 'who');
-            const author = text('span', 'author', p.author);
-            author.style.color = ZONE_CSS[p.color];
-            who.append(author, text('span', 'handle', p.handle));
-            const like = el('button', `like ${this.liked.has(i) ? 'on' : ''}`);
+            const names = el('div', 'names');
+            names.append(text('span', 'author', p.author), text('span', 'handle', p.handle));
+            who.append(avatar(p.author[0], p.color, 'letter'), names);
+
+            const media = el('div', 'media');
+            media.append(text('p', '', p.text));
+
+            const like = el('button', 'like');
+            const count = text('span', '', '');
+            const heart = el('span', 'gl');
+            like.append(heart, count);
             const paint = () => {
-                like.textContent = `${this.liked.has(i) ? '♥' : '♡'} ${p.likes + (this.liked.has(i) ? 1 : 0)}`;
-                like.classList.toggle('on', this.liked.has(i));
+                const on = this.liked.has(i);
+                heart.innerHTML = pixelIcon(on ? 'cuore' : 'cuorevuoto');
+                count.textContent = (p.likes + (on ? 1 : 0)).toLocaleString('it-IT');
+                like.classList.toggle('on', on);
+                like.setAttribute('aria-pressed', String(on));
+                like.setAttribute('aria-label', on ? 'togli il mi piace' : 'metti mi piace');
             };
-            paint();
-            like.addEventListener('click', () => {
+            const flip = () => {
                 if (this.liked.has(i)) this.liked.delete(i);
                 else this.liked.add(i);
                 sfx.ui();
                 paint();
+            };
+            paint();
+            like.addEventListener('click', flip);
+            // doppio tocco sul post, come sull'originale
+            media.addEventListener('dblclick', () => {
+                if (!this.liked.has(i)) flip();
             });
-            post.append(who, text('p', '', p.text), like);
+            post.append(who, media, like);
             root.append(post);
         }
-        root.append(text('div', 'phone-empty', 'vai avanti nel realm: la gente posta di più quando succede qualcosa.'));
+        root.append(text('div', 'os-foot', 'vai avanti nel realm: la gente posta di più quando succede qualcosa.'));
     }
 
     /* ---------- fotocamera e galleria ---------- */
@@ -526,21 +762,38 @@ export class Phone {
 
     private renderCamera(root: HTMLElement): void {
         root.replaceChildren();
+        this.chrome(null);
         const draft = this.photoDraft;
         if (!draft) {
-            const vf = el('div', 'vf');
-            vf.append(el('div', 'vf-cross'));
-            vf.append(text('div', 'vf-hint', 'l\u2019obiettivo vede quello che vedi tu. il realm resta fermo in posa.'));
-            const note = el('div', 'phone-note');
-            const shoot = el('button', 'cam-shoot', 'scatta');
+            const vf = el('div', 'vf', '<i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i><i class="thirds"></i>');
+            vf.append(text('div', 'vf-hint', 'l’obiettivo vede quello che vedi tu. il realm resta fermo in posa.'));
+            const note = text('div', 'cam-note', '');
+            const bar = el('div', 'cam-bar');
+            const last = listPhotos()[0];
+            const roll = el('button', 'cam-roll');
+            roll.setAttribute('aria-label', 'apri la galleria');
+            if (last) {
+                const img = el('img');
+                img.src = last.dataUrl;
+                img.alt = '';
+                roll.append(img);
+            }
+            roll.addEventListener('click', () => {
+                sfx.ui();
+                this.openApp('galleria');
+            });
+            const shoot = el('button', 'cam-shoot');
             shoot.type = 'button';
+            shoot.setAttribute('aria-label', 'scatta');
+            const fail = () => {
+                shoot.disabled = false;
+                note.textContent = 'obiettivo tappato. riprova.';
+            };
             shoot.addEventListener('click', async () => {
-                shoot.textContent = '···';
+                shoot.disabled = true;
                 const src = await this.host.snapshot();
                 if (!src) {
-                    shoot.textContent = 'scatta';
-                    note.textContent = 'obiettivo tappato. riprova.';
-                    note.className = 'phone-note bad';
+                    fail();
                     return;
                 }
                 const img = new Image();
@@ -549,14 +802,11 @@ export class Phone {
                     this.photoDraft = { img, filter: 'naturale', letterbox: true, caption: lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : '' };
                     this.renderCamera(root);
                 };
-                img.onerror = () => {
-                    shoot.textContent = 'scatta';
-                    note.textContent = 'obiettivo tappato. riprova.';
-                    note.className = 'phone-note bad';
-                };
+                img.onerror = fail;
                 img.src = src;
             });
-            root.append(vf, shoot, note);
+            bar.append(roll, shoot, text('span', 'cam-mode', 'foto'));
+            root.append(vf, note, bar);
             return;
         }
 
@@ -565,12 +815,13 @@ export class Phone {
         preview.alt = 'anteprima dello scatto';
         preview.src = develop();
 
-        const filters = el('div', 'cam-filters');
+        const filters = el('div', 'os-seg');
         const paintFilters = () => {
             filters.replaceChildren();
             for (const f of PHOTO_FILTERS) {
-                const b = el('button', `cam-filter${f.id === draft.filter ? ' on' : ''}`);
+                const b = el('button', f.id === draft.filter ? 'on' : '');
                 b.textContent = f.name;
+                b.setAttribute('aria-pressed', String(f.id === draft.filter));
                 b.addEventListener('click', () => {
                     draft.filter = f.id;
                     sfx.ui();
@@ -582,64 +833,53 @@ export class Phone {
         };
         paintFilters();
 
-        const frameRow = el('div', 'cam-row');
-        frameRow.append(text('span', 'cam-label', 'mascherino'));
-        const frameBtn = el('button', 'cam-toggle');
-        const paintFrame = () => {
-            frameBtn.textContent = `‹ ${draft.letterbox ? 'cinema' : 'pieno'} ›`;
-        };
-        paintFrame();
-        frameBtn.addEventListener('click', () => {
-            draft.letterbox = !draft.letterbox;
-            sfx.ui();
+        const options = el('div', 'os-group');
+        options.append(switchCell('mascherino da cinema', () => draft.letterbox, (v) => {
+            draft.letterbox = v;
             preview.src = develop();
-            paintFrame();
-        });
-        frameRow.append(frameBtn);
-
-        const caption = el('input', 'cam-caption');
+        }));
+        const captionCell = el('label', 'os-cell');
+        const caption = el('input', 'os-input');
         caption.type = 'text';
         caption.maxLength = 60;
-        caption.placeholder = 'didascalia…';
+        caption.placeholder = 'scrivi una didascalia';
         caption.value = draft.caption;
         caption.setAttribute('aria-label', 'didascalia della foto');
         caption.addEventListener('input', () => {
             draft.caption = caption.value;
         });
+        caption.addEventListener('change', () => {
+            preview.src = develop();
+        });
         caption.addEventListener('keydown', (e) => e.stopPropagation());
+        captionCell.append(caption);
+        options.append(captionCell);
 
-        const actions = el('div', 'cam-actions');
-        const actNote = el('div', 'phone-note');
-        const save = el('button', 'btn-gold', 'salva in galleria');
-        save.type = 'button';
-        save.addEventListener('click', () => {
-            const url = develop();
-            const done = savePhoto({ levelId: state.save.levelId, filter: draft.filter, caption: draft.caption, dataUrl: url });
-            if (!done) {
-                // rullino bloccato: lo scatto si scarica subito, non si perde
-                const dl = document.createElement('a');
-                dl.href = url;
-                dl.download = `gecowave-${Date.now().toString(36)}.jpg`;
-                dl.click();
-                actNote.textContent = 'rullino bloccato: scatto scaricato al volo.';
-                actNote.className = 'phone-note bad';
-                sfx.ui();
-                return;
-            }
-            sfx.unlock();
-            this.photoDraft = null;
-            this.galleryOpen = done.id;
-            this.openApp('galleria');
-        });
-        const trash = el('button', 'btn-ghost', 'butta');
-        trash.type = 'button';
-        trash.addEventListener('click', () => {
-            sfx.ui();
-            this.photoDraft = null;
-            this.renderCamera(root);
-        });
-        actions.append(save, trash);
-        root.append(preview, filters, frameRow, caption, actions, actNote);
+        const actions = el('div', 'os-actions');
+        actions.append(
+            button('butta', 'ghost', () => {
+                this.photoDraft = null;
+                this.renderCamera(root);
+            }),
+            button('salva in galleria', 'fill', () => {
+                const url = develop();
+                const done = savePhoto({ levelId: state.save.levelId, filter: draft.filter, caption: draft.caption, dataUrl: url });
+                if (!done) {
+                    // rullino bloccato: lo scatto si scarica subito, non si perde
+                    const dl = document.createElement('a');
+                    dl.href = url;
+                    dl.download = `gecowave-${Date.now().toString(36)}.jpg`;
+                    dl.click();
+                    this.toast('rullino bloccato: scatto scaricato al volo.', false);
+                    return;
+                }
+                sfx.unlock();
+                this.photoDraft = null;
+                this.galleryOpen = done.id;
+                this.openApp('galleria');
+            }),
+        );
+        root.append(preview, filters, options, actions);
     }
 
     private renderGallery(root: HTMLElement): void {
@@ -648,41 +888,41 @@ export class Phone {
         const openId = this.galleryOpen;
         this.galleryOpen = null;
         if (!photos.length) {
-            root.append(text('div', 'phone-empty', 'rullino vuoto. scatta dalla fotocamera: il realm posa sempre.'));
+            this.chrome('GALLERIA', 'scatti dal realm, da portare via');
+            const hole = empty('fotocamera', 'rullino vuoto', 'il realm posa sempre: fai il primo scatto.');
+            hole.append(button('apri la fotocamera', 'fill', () => this.openApp('fotocamera')));
+            root.append(hole);
             return;
         }
         const open = openId ? photos.find((p) => p.id === openId) ?? photos[0] : null;
         if (open) {
+            this.stack.push(() => this.renderGallery(root));
+            this.chrome(null);
             const view = el('div', 'ph-viewer');
             const img = el('img', 'ph-photo');
             img.src = open.dataUrl;
             img.alt = open.caption || 'scatto dal realm';
             view.append(img);
             if (open.caption) view.append(text('div', 'ph-caption', open.caption));
-            view.append(text('div', 'ph-meta', `${since(open.at)} · ${open.filter}`));
-            const actions = el('div', 'ph-actions');
-            const dl = el('a', 'btn-gold');
+            view.append(text('div', 'ph-meta', `${since(open.at) === 'ora' ? 'adesso' : `${since(open.at)} fa`}, filtro ${open.filter}`));
+            const actions = el('div', 'os-actions');
+            const dl = el('a', 'os-btn fill');
             dl.textContent = 'scarica';
             dl.href = open.dataUrl;
             dl.download = `gecowave-${open.id}.jpg`;
-            const del = el('button', 'btn-ghost', 'strappa');
-            del.type = 'button';
-            del.addEventListener('click', () => {
-                deletePhoto(open.id);
-                sfx.ui();
-                this.renderGallery(root);
-            });
-            const close = el('button', 'btn-ghost', 'chiudi');
-            close.type = 'button';
-            close.addEventListener('click', () => {
-                sfx.ui();
-                this.renderGallery(root);
-            });
-            actions.append(dl, del, close);
+            actions.append(
+                button('strappa', 'danger', () => {
+                    deletePhoto(open.id);
+                    this.stack.pop();
+                    this.renderGallery(root);
+                }),
+                dl,
+            );
             view.append(actions);
             root.append(view);
             return;
         }
+        this.chrome('GALLERIA', `${photos.length} ${photos.length === 1 ? 'scatto' : 'scatti'} nel rullino`);
         const grid = el('div', 'ph-grid');
         for (const p of photos) {
             const b = el('button', 'ph-thumb');
@@ -703,70 +943,45 @@ export class Phone {
 
     /* ---------- zaino ---------- */
 
-    private renderInventory(root: HTMLElement, selected?: string): void {
+    private renderInventory(root: HTMLElement): void {
         root.replaceChildren();
         const consumables = Object.entries(state.save.inventory).filter(([id, n]) => n > 0 && ITEMS[id]);
         const keys = Object.values(ITEMS).filter((it) => it.kind === 'chiave' && it.flag && state.hasFlag(it.flag));
 
-        root.append(text('div', 'phone-section', 'da usare'));
+        root.append(heading('da usare', consumables.length ? `${consumables.reduce((n, [, q]) => n + q, 0)} pezzi` : ''));
         if (consumables.length === 0) {
-            root.append(text('div', 'phone-note', 'zaino vuoto. wavezon consegna ovunque.'));
+            const hole = empty('zaino', 'zaino vuoto', 'wavezon consegna ovunque, anche qui.');
+            hole.append(button('apri wavezon', 'fill', () => this.openApp('wavezon')));
+            root.append(hole);
         } else {
             const grid = el('div', 'slot-grid');
-            for (const [id, n] of consumables) grid.append(this.slot(ITEMS[id], n, id === selected, () => this.renderInventory(root, id)));
+            for (const [id, n] of consumables) grid.append(this.slot(ITEMS[id], n, () => this.itemSheet(ITEMS[id], n)));
             root.append(grid);
         }
 
         if (keys.length) {
-            root.append(text('div', 'phone-section', 'oggetti chiave'));
+            root.append(heading('oggetti chiave'));
             const grid = el('div', 'slot-grid');
-            for (const it of keys) grid.append(this.slot(it, 0, it.id === selected, () => this.renderInventory(root, it.id)));
+            for (const it of keys) grid.append(this.slot(it, 0, () => this.itemSheet(it, 0)));
             root.append(grid);
         }
 
-        root.append(text('div', 'phone-section', 'collezione'));
+        root.append(heading('collezione'));
         const lore = state.save.collectedLore;
-        const lines: [string, string][] = [
-            ['maschere del primo custode', `${lore.filter((k) => k.startsWith('maschera-')).length}/${TOTAL_MASCHERE}`],
-            ['cuori del realm', String(lore.filter((k) => k.startsWith('cuore-')).length)],
-            ['pagine di lore', String(lore.filter((k) => !k.startsWith('mic-') && !k.startsWith('maschera-') && !k.startsWith('cuore-') && !k.startsWith('item-') && !k.startsWith('charm-')).length)],
-        ];
-        for (const [k, v] of lines) {
-            const line = el('div', 'stat-line');
-            line.append(text('span', '', k), text('b', '', v));
-            root.append(line);
-        }
-
-        if (selected && ITEMS[selected]) {
-            const it = ITEMS[selected];
-            const detail = this.detail(it);
-            if (it.kind === 'consumabile') {
-                const actions = el('div', 'actions');
-                const use = el('button', 'phone-btn sticker glass-acid-green');
-                use.textContent = 'usa';
-                const note = el('span', 'phone-note');
-                use.addEventListener('click', () => {
-                    const problem = eatProblem(it.id);
-                    note.textContent = problem ?? 'chiudi e mangia: il boccone vuole tempo.';
-                    note.className = `phone-note ${problem ? 'bad' : 'good'}`;
-                    if (problem) return;
-                    // il telefono si chiude e il mondo riparte: il boccone vive lì
-                    bus.emit('eat-requested', { id: it.id });
-                    this.close();
-                });
-                actions.append(use, note);
-                detail.append(actions);
-            }
-            root.append(detail);
-            detail.scrollIntoView({ block: 'nearest' });
-        }
+        const tiles = el('div', 'os-tiles three');
+        tiles.append(
+            tile('maschere', `${lore.filter((k) => k.startsWith('maschera-')).length}/${TOTAL_MASCHERE}`),
+            tile('cuori', String(lore.filter((k) => k.startsWith('cuore-')).length)),
+            tile('pagine', String(lore.filter((k) => !k.startsWith('mic-') && !k.startsWith('maschera-') && !k.startsWith('cuore-') && !k.startsWith('item-') && !k.startsWith('charm-')).length)),
+        );
+        root.append(tiles);
     }
 
-    private slot(it: ItemDef, qty: number, selected: boolean, onPick: () => void): HTMLElement {
-        const s = el('button', `slot glass-chip glass-acid-orange ${selected ? 'selected' : ''}`);
+    private slot(it: ItemDef, qty: number, onPick: () => void): HTMLElement {
+        const s = el('button', 'slot');
         s.setAttribute('aria-label', it.name);
-        s.textContent = it.icon;
-        if (qty > 1) s.append(text('span', 'qty', `×${qty}`));
+        s.append(text('span', 'emoji', it.icon));
+        if (qty > 1) s.append(text('span', 'qty', String(qty)));
         s.addEventListener('click', () => {
             sfx.ui();
             onPick();
@@ -774,88 +989,120 @@ export class Phone {
         return s;
     }
 
-    private detail(it: ItemDef): HTMLElement {
-        const d = el('div', 'detail glass-panel');
-        d.append(text('div', 'name', `${it.icon} ${it.name}`), text('p', '', it.desc));
-        if (it.punch) d.append(text('div', 'punch', it.punch));
-        return d;
+    /** la testa di ogni foglio di dettaglio: icona grande, nome, descrizione, battuta */
+    private itemHead(box: HTMLElement, it: ItemDef, kicker: string): void {
+        const head = el('div', 'sheet-head');
+        const words = el('div', 'words');
+        words.append(text('div', 'kicker', kicker), text('div', 'name', it.name));
+        head.append(text('span', 'emoji', it.icon), words);
+        box.append(head, text('p', 'desc', it.desc));
+        if (it.punch) box.append(text('p', 'punch', it.punch));
+    }
+
+    private itemSheet(it: ItemDef, qty: number): void {
+        this.sheet((box) => {
+            this.itemHead(box, it, it.kind === 'consumabile' ? `ne hai ${qty}` : 'oggetto chiave');
+            if (it.kind !== 'consumabile') return;
+            const problem = eatProblem(it.id);
+            const use = button('usa adesso', 'fill', () => {
+                // il telefono si chiude e il mondo riparte: il boccone vive lì
+                bus.emit('eat-requested', { id: it.id });
+                this.close();
+            });
+            if (problem) {
+                (use as HTMLButtonElement).disabled = true;
+                box.append(text('p', 'sheet-note bad', problem));
+            } else {
+                box.append(text('p', 'sheet-note', 'il telefono si chiude e mangi: il boccone vuole tempo.'));
+            }
+            box.append(use);
+        });
     }
 
     /* ---------- amuleti ---------- */
 
-    private renderCharms(root: HTMLElement, selected?: string, message?: { text: string; ok: boolean }): void {
+    private renderCharms(root: HTMLElement): void {
         root.replaceChildren();
-        const notches = el('div', 'notches');
         const used = state.usedNotches;
-        for (let i = 0; i < state.save.notches; i++) {
-            const n = el('i');
-            if (i < used) n.className = 'used';
-            notches.append(n);
-        }
-        root.append(text('div', 'phone-section', `tacche ${used}/${state.save.notches}`), notches);
-        root.append(text('div', `phone-note ${state.run.nearMic ? 'good' : ''}`,
-            state.run.nearMic ? 'sei vicino a un microfono: puoi cambiarli.' : 'trova un microfono per cambiarli. intanto puoi guardarli.'));
-
+        const total = state.save.notches;
         const owned = state.save.charms.map((id) => ITEMS[id]).filter(Boolean);
+        const worn = owned.filter((it) => state.isEquipped(it.id));
+
+        // l'assetto in cima: cosa indossi e quante tacche restano
+        const load = el('div', 'loadout');
+        const top = el('div', 'top');
+        top.append(text('span', 'label', 'tacche'), text('span', 'value', `${used}/${total}`));
+        const notches = el('div', 'notches');
+        for (let i = 0; i < total; i++) notches.append(el('i', i < used ? 'used' : ''));
+        const wornRow = el('div', 'worn');
+        if (worn.length === 0) wornRow.append(text('span', 'none', 'non indossi niente'));
+        for (const it of worn) wornRow.append(text('span', 'emoji', it.icon));
+        load.append(top, notches, wornRow);
+        root.append(load);
+        root.append(text('div', `os-banner ${state.run.nearMic ? 'good' : ''}`,
+            state.run.nearMic ? 'sei vicino a un microfono: puoi cambiarli.' : 'si cambiano solo vicino a un microfono. intanto puoi guardarli.'));
+
         if (owned.length === 0) {
-            root.append(text('div', 'phone-empty', 'nessun amuleto. i boss li lasciano cadere, wavezon li vende.'));
+            root.append(empty('amuleti', 'nessun amuleto', 'i boss li lasciano cadere, wavezon li vende.'));
             return;
         }
+        root.append(heading('i tuoi amuleti', `${owned.length}`));
         const grid = el('div', 'slot-grid');
         for (const it of owned) {
-            const s = el('button', `slot glass-chip glass-acid-purple ${it.id === selected ? 'selected' : ''} ${state.isEquipped(it.id) ? 'equipped' : ''}`);
-            s.setAttribute('aria-label', it.name);
-            s.textContent = it.icon;
+            const s = this.slot(it, 0, () => this.charmSheet(root, it));
+            if (state.isEquipped(it.id)) {
+                s.classList.add('equipped');
+                s.append(glyph('check', 'gl mark'));
+            }
             const pips = el('span', 'pips');
             for (let i = 0; i < (it.cost ?? 0); i++) pips.append(el('i'));
             s.append(pips);
-            s.addEventListener('click', () => {
-                sfx.ui();
-                this.renderCharms(root, it.id);
-            });
             grid.append(s);
         }
         root.append(grid);
+    }
 
-        if (selected && ITEMS[selected]) {
-            const it = ITEMS[selected];
-            const d = this.detail(it);
-            d.append(text('div', 'punch', `costo: ${it.cost} ${it.cost === 1 ? 'tacca' : 'tacche'}`));
-            const actions = el('div', 'actions');
-            const toggle = el('button', 'phone-btn sticker glass-acid-purple');
-            toggle.textContent = state.isEquipped(it.id) ? 'togli' : 'indossa';
-            toggle.addEventListener('click', () => {
+    private charmSheet(root: HTMLElement, it: ItemDef): void {
+        this.sheet((box) => {
+            this.itemHead(box, it, `costa ${it.cost} ${it.cost === 1 ? 'tacca' : 'tacche'}`);
+            const note = text('p', 'sheet-note', '');
+            const toggle = button('', 'fill', () => {
                 const err = state.toggleCharm(it.id);
                 if (!err) {
                     sfx.checkpoint();
                     bus.emit('hp-changed', { hp: state.run.hp, maxHp: state.maxHp, hurt: false });
+                    this.renderCharms(root);
                 }
-                this.renderCharms(root, it.id, err ? { text: err, ok: false } : { text: state.isEquipped(it.id) ? 'indossato.' : 'tolto.', ok: true });
+                note.textContent = err ?? (state.isEquipped(it.id) ? 'indossato.' : 'tolto.');
+                note.className = `sheet-note ${err ? 'bad' : 'good'}`;
+                paint();
             });
-            actions.append(toggle);
-            if (message) actions.append(text('span', `phone-note ${message.ok ? 'good' : 'bad'}`, message.text));
-            d.append(actions);
-            root.append(d);
-            d.scrollIntoView({ block: 'nearest' });
-        }
+            const paint = () => {
+                toggle.textContent = state.isEquipped(it.id) ? 'togli' : 'indossa';
+            };
+            paint();
+            box.append(note, toggle);
+        });
     }
 
     /* ---------- wavezon ---------- */
 
-    private renderShop(root: HTMLElement, message?: { text: string; ok: boolean }): void {
+    private renderShop(root: HTMLElement): void {
         root.replaceChildren();
-        root.append(text('div', 'wallet sticker glass-acid-yellow', `♪ ${state.save.barre} barre`));
-        if (message) root.append(text('div', `phone-note ${message.ok ? 'good' : 'bad'}`, message.text));
+        const wallet = el('div', 'wallet');
+        wallet.append(text('span', 'label', 'il tuo saldo'), text('span', 'value', `♪ ${state.save.barre}`), text('span', 'sub', 'le barre servono a due cose: curarti e costruirti.'));
+        root.append(wallet);
 
         const buy = (id: string, label: string, price: number, give: () => void) => {
             // in due la cassa è una sola: compra l'host, per tutti e due
             if (coop.isGuest && coop.active) {
                 coop.session?.send('shop-buy', { id });
                 sfx.barra();
+                this.toast(`${label}: ordine mandato alla cassa.`, true);
                 return;
             }
             if (state.save.barre < price) {
-                this.renderShop(root, { text: 'barre insufficienti. il realm non fa credito.', ok: false });
+                this.toast('barre insufficienti. il realm non fa credito.', false);
                 return;
             }
             state.save.barre -= price;
@@ -863,45 +1110,76 @@ export class Phone {
             state.persist();
             sfx.barra();
             bus.emit('barre-changed', { barre: state.save.barre, gained: false });
-            this.renderShop(root, { text: `${label}: consegnato nello zaino.`, ok: true });
+            this.toast(`${label}: consegnato.`, true);
         };
 
-        root.append(text('div', 'phone-note', 'le barre servono a due cose: curarti e costruirti. il resto è chiacchiera.'));
-        root.append(text('div', 'phone-section', 'cure'));
-        for (const id of SHOP_STOCK) {
-            const it = ITEMS[id];
-            if (!it?.price) continue;
-            const owned = it.kind === 'amuleto' && state.hasCharm(id);
-            if (it.kind === 'amuleto' && root.querySelector('[data-charms]') === null) {
-                const sec = text('div', 'phone-section', 'amuleti');
-                sec.dataset.charms = '1';
-                root.append(sec);
+        const product = (it: ItemDef, price: number, owned: boolean, give: () => void): HTMLElement => {
+            const card = el('button', 'product');
+            card.append(text('span', 'emoji', it.icon), text('span', 'name', it.name), text('span', 'desc', it.desc));
+            card.append(text('span', `price${owned ? ' owned' : state.save.barre < price ? ' short' : ''}`, owned ? 'già tuo' : `♪ ${price}`));
+            if (owned) {
+                card.disabled = true;
+                return card;
             }
-            const row = el('button', 'phone-row glass-chip glass-acid-yellow');
-            row.append(text('span', 'lead', it.icon));
-            const main = el('div', 'main');
-            main.append(text('div', 'name', it.name), text('div', 'preview', it.desc));
-            row.append(main, text('span', 'price', owned ? 'già tuo' : `♪ ${it.price}`));
-            if (owned) row.setAttribute('disabled', '');
-            else row.addEventListener('click', () => buy(id, it.name, it.price!, () => state.addItem(id)));
-            root.append(row);
+            card.addEventListener('click', () => {
+                sfx.ui();
+                this.sheet((box, close) => {
+                    this.itemHead(box, it, `♪ ${price}`);
+                    const short = state.save.barre < price;
+                    if (short) box.append(text('p', 'sheet-note bad', `ti mancano ${price - state.save.barre} barre.`));
+                    const pay = button(`compra per ♪ ${price}`, 'fill', () => {
+                        close();
+                        buy(it.id, it.name, price, give);
+                    });
+                    (pay as HTMLButtonElement).disabled = short;
+                    box.append(pay);
+                });
+            });
+            return card;
+        };
+
+        const stock = SHOP_STOCK.map((id) => ITEMS[id]).filter((it) => it?.price);
+        const shelves: [string, ItemDef[]][] = [
+            ['cure', stock.filter((it) => it.kind !== 'amuleto')],
+            ['amuleti', stock.filter((it) => it.kind === 'amuleto')],
+        ];
+        for (const [name, items] of shelves) {
+            if (!items.length) continue;
+            root.append(heading(name));
+            const grid = el('div', 'products');
+            for (const it of items) grid.append(product(it, it.price!, it.kind === 'amuleto' && state.hasCharm(it.id), () => state.addItem(it.id)));
+            root.append(grid);
         }
 
         const bought = state.save.notches - BASE_NOTCHES;
         if (bought < NOTCH_PRICES.length) {
-            root.append(text('div', 'phone-section', 'potenziamenti'));
-            const price = NOTCH_PRICES[bought];
-            const row = el('button', 'phone-row glass-chip glass-acid-yellow');
-            row.append(text('span', 'lead', ITEMS.tacca.icon));
-            const main = el('div', 'main');
-            main.append(text('div', 'name', ITEMS.tacca.name), text('div', 'preview', ITEMS.tacca.desc));
-            row.append(main, text('span', 'price', `♪ ${price}`));
-            row.addEventListener('click', () => buy('tacca', 'tacca', price, () => state.addItem('tacca')));
-            root.append(row);
+            root.append(heading('potenziamenti'));
+            const grid = el('div', 'products');
+            grid.append(product(ITEMS.tacca, NOTCH_PRICES[bought], false, () => state.addItem('tacca')));
+            root.append(grid);
         }
     }
 
-    /* ---------- mappa del realm ---------- */
+    /* ---------- mappa ---------- */
+
+    private renderMap(root: HTMLElement): void {
+        root.replaceChildren();
+        const hasRegion = regionView.layout !== null && regionView.id === state.save.levelId;
+        const tab = this.tabOf.mappa ?? (hasRegion ? 'zona' : 'realm');
+        this.tabbar([
+            { id: 'zona', label: 'qui', glyph: 'mappa' },
+            { id: 'realm', label: 'il realm', glyph: 'globo' },
+        ], tab, (id) => {
+            this.tabOf.mappa = id;
+            this.renderMap(root);
+        });
+        if (tab === 'zona') {
+            if (hasRegion) this.renderRegionMap(root);
+            else root.append(empty('mappa', 'niente mappa qui', 'questa zona non si lascia disegnare. guarda il realm intero.'));
+            return;
+        }
+        this.renderRealm(root);
+    }
 
     /** la regione in corso: si vede solo dove sei passato, più il contorno dei varchi accanto */
     private renderRegionMap(root: HTMLElement): void {
@@ -981,177 +1259,144 @@ export class Phone {
         if (regionView.player) {
             add('circle', { cx: regionView.player.x / T, cy: regionView.player.y / T, r: 4.5, fill: '#fff', stroke: accent, 'stroke-width': 2, class: 'here' });
         }
-        const map = el('div', 'region-map glass-panel');
+        this.chrome(lv ? lv.accentWord.toUpperCase() : 'MAPPA', `${explored.size} stanze viste su ${L.rooms.length}`);
+        const map = el('div', 'region-map');
         map.append(svg);
-        root.append(text('div', 'phone-section', `${lv ? lv.accentWord : 'regione'} · ${explored.size}/${L.rooms.length} stanze`), map);
-        if (goal) root.append(text('div', 'region-goal', `✶ obiettivo: ${goal.label}`));
+        root.append(map);
+        if (goal) {
+            const g = el('div', 'os-banner goal');
+            g.append(text('b', '', '✶'), text('span', '', `obiettivo: ${goal.label}`));
+            root.append(g);
+        }
+        const legend = el('div', 'legend');
+        for (const [cls, label] of [['you', 'tu'], ['mic', 'microfono'], ['exit', 'uscita'], ['door', 'varco']]) {
+            const k = el('span', 'key');
+            k.append(el('i', cls), text('span', '', label));
+            legend.append(k);
+        }
+        root.append(legend);
         // completamento del capitolo: gli stessi numeri del riepilogo di fine livello
         const comp = regionView.id ? chapterCompletion(regionView.id) : null;
         if (comp) {
-            const lines: [string, string][] = [
-                ['esplorazione', comp.total > 0 ? `${comp.visited}/${comp.total} · ${comp.percent}%` : 'mappa non disponibile'],
-                ['cuori', comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : 'nessun cuore qui'],
-                ['segreti', `${comp.things.found}/${comp.things.total}`],
-            ];
-            for (const [k, v] of lines) {
-                const line = el('div', 'stat-line');
-                line.append(text('span', '', k), text('b', '', v));
-                root.append(line);
-            }
+            const tiles = el('div', 'os-tiles three');
+            tiles.append(
+                tile('esplorato', comp.total > 0 ? `${comp.percent}%` : '—', comp.total > 0 ? `${comp.visited}/${comp.total}` : ''),
+                tile('cuori', comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : '—'),
+                tile('segreti', `${comp.things.found}/${comp.things.total}`),
+            );
+            root.append(tiles);
         }
         // i 33 letti nel mondo: aperti su visti, senza dire quanti ne restano
         const seals = L.seals ?? [];
         const visti = seals.filter((s) => state.hasFlag(`visto-sigillo-${s.id}`)).length;
         if (visti > 0) {
             const aperti = seals.filter((s) => state.hasFlag(`sigillo-${s.id}`)).length;
-            const line = el('div', 'stat-line');
-            line.append(text('span', '', '33 letti'), text('b', '', `${aperti}/${visti}`));
-            root.append(line);
+            const g = el('div', 'os-group');
+            g.append(cell({ name: '33 letti', trail: `${aperti}/${visti}` }));
+            root.append(g);
         }
-        root.append(text('div', 'phone-section', `il gecorealm · ${LEVEL_ORDER.filter((id) => state.hasFlag(`visto-${id}`)).length}/${LEVEL_ORDER.length}`));
     }
 
-    private renderMap(root: HTMLElement): void {
-        this.renderRegionMap(root);
-        const ids = LEVEL_ORDER;
-        const step = 46;
-        const w = 300;
-        const h = ids.length * step + 30;
-        const pts = ids.map((_, i) => ({ x: i % 2 === 0 ? 70 : 230, y: 30 + i * step }));
-        const ns = 'http://www.w3.org/2000/svg';
-        const svg = document.createElementNS(ns, 'svg');
-        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-        svg.setAttribute('role', 'img');
-        svg.setAttribute('aria-label', 'mappa del gecorealm');
-
-        // sentiero a pennarello tra i capitoli
-        let d = `M ${pts[0].x} ${pts[0].y}`;
-        for (let i = 1; i < pts.length; i++) {
-            const a = pts[i - 1];
-            const b = pts[i];
-            d += ` C ${a.x} ${a.y + step * 0.6}, ${b.x} ${b.y - step * 0.6}, ${b.x} ${b.y}`;
-        }
-        const path = document.createElementNS(ns, 'path');
-        path.setAttribute('d', d);
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', 'rgba(207,167,92,0.45)');
-        path.setAttribute('stroke-width', '3');
-        path.setAttribute('stroke-dasharray', '7 7');
-        path.setAttribute('stroke-linecap', 'round');
-        svg.append(path);
-
-        const info = el('div');
-        ids.forEach((id, i) => {
+    /** tutti i capitoli in fila, dal primo all'ultimo: una linea del tempo, non un disegno */
+    private renderRealm(root: HTMLElement): void {
+        const seenCount = LEVEL_ORDER.filter((id) => id === state.save.levelId || state.hasFlag(`visto-${id}`)).length;
+        this.chrome('IL REALM', `${seenCount} ${seenCount === 1 ? 'capitolo visto' : 'capitoli visti'} su ${LEVEL_ORDER.length}`);
+        const line = el('div', 'timeline');
+        for (const id of LEVEL_ORDER) {
             const lv = LEVELS[id];
-            const seen = state.hasFlag(`visto-${id}`);
             const here = state.save.levelId === id;
-            const g = document.createElementNS(ns, 'g');
-            g.setAttribute('class', `node ${seen ? '' : 'locked'}`);
-            g.setAttribute('tabindex', seen ? '0' : '-1');
-            const c = document.createElementNS(ns, 'circle');
-            c.setAttribute('cx', String(pts[i].x));
-            c.setAttribute('cy', String(pts[i].y));
-            c.setAttribute('r', here ? '10' : '7');
-            c.setAttribute('fill', seen ? ZONE_CSS[lv.color] : '#1a1a1e');
-            c.setAttribute('stroke', 'rgba(0,0,0,0.9)');
-            c.setAttribute('stroke-width', '3');
-            g.append(c);
-            if (here) {
-                const ring = document.createElementNS(ns, 'circle');
-                ring.setAttribute('cx', String(pts[i].x));
-                ring.setAttribute('cy', String(pts[i].y));
-                ring.setAttribute('r', '15');
-                ring.setAttribute('fill', 'none');
-                ring.setAttribute('stroke', ZONE_CSS[lv.color]);
-                ring.setAttribute('stroke-width', '2');
-                ring.setAttribute('class', 'here');
-                g.append(ring);
+            const seen = here || state.hasFlag(`visto-${id}`);
+            const row = el('button', `stop${seen ? '' : ' locked'}${here ? ' here' : ''}`);
+            row.style.setProperty('--app', ZONE_CSS[lv.color]);
+            const node = el('span', 'node');
+            if (!seen) node.append(glyph('lucchetto'));
+            const words = el('span', 'words');
+            words.append(text('span', 'name', seen ? lv.accentWord : '???'), text('span', 'sub', seen ? lv.title.toLowerCase() : 'non ci sei ancora stato'));
+            row.append(node, words);
+            if (here) row.append(text('span', 'os-pill', 'sei qui'));
+            else if (seen) {
+                const comp = chapterCompletion(id);
+                if (comp && comp.total > 0) row.append(text('span', 'pct', `${comp.percent}%`));
             }
-            const t = document.createElementNS(ns, 'text');
-            const left = pts[i].x > w / 2;
-            t.setAttribute('x', String(pts[i].x + (left ? -20 : 20)));
-            t.setAttribute('y', String(pts[i].y + 5));
-            t.setAttribute('text-anchor', left ? 'end' : 'start');
-            t.setAttribute('font-size', '13');
-            t.setAttribute('transform', `rotate(${left ? 2 : -2} ${pts[i].x} ${pts[i].y})`);
-            t.textContent = seen ? lv.accentWord : '???';
-            g.append(t);
-            if (seen) {
-                const show = () => {
-                    info.replaceChildren();
-                    const card = el('div', 'detail glass-panel');
-                    card.append(text('div', 'name', `${lv.title.toLowerCase()} ${lv.accentWord}`), text('p', '', lv.punchline));
-                    const mask = state.save.collectedLore.includes(`maschera-${id}`);
-                    card.append(text('div', 'punch', mask ? 'maschera trovata' : 'qui potrebbe esserci una maschera'));
-                    // conti del capitolo già visitato: gli stessi del riepilogo
+            if (!seen) row.disabled = true;
+            else row.addEventListener('click', () => {
+                sfx.ui();
+                this.sheet((box) => {
+                    const head = el('div', 'sheet-head');
+                    const words2 = el('div', 'words');
+                    words2.append(text('div', 'kicker', lv.title.toLowerCase()), text('div', 'name', lv.accentWord));
+                    const dot = el('span', 'node big');
+                    dot.style.setProperty('--app', ZONE_CSS[lv.color]);
+                    head.append(dot, words2);
+                    box.append(head, text('p', 'desc', lv.punchline));
                     const comp = chapterCompletion(id);
-                    if (comp) {
-                        const done = el('div', 'punch', `esplorazione: ${comp.total > 0 ? `${comp.visited}/${comp.total} · ${comp.percent}%` : 'mappa non disponibile'} · cuori: ${comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : '—'} · segreti: ${comp.things.found}/${comp.things.total}`);
-                        card.append(done);
-                    }
-                    info.append(card);
-                    card.scrollIntoView({ block: 'nearest' });
-                };
-                g.addEventListener('click', show);
-                g.addEventListener('keydown', (e) => {
-                    if ((e as KeyboardEvent).code === 'Enter') show();
+                    const tiles = el('div', 'os-tiles three');
+                    tiles.append(
+                        tile('esplorato', comp && comp.total > 0 ? `${comp.percent}%` : '—'),
+                        tile('cuori', comp && comp.hearts.total > 0 ? `${comp.hearts.found}/${comp.hearts.total}` : '—'),
+                        tile('segreti', comp ? `${comp.things.found}/${comp.things.total}` : '—'),
+                    );
+                    box.append(tiles);
+                    const mask = state.save.collectedLore.includes(`maschera-${id}`);
+                    box.append(text('p', `sheet-note ${mask ? 'good' : ''}`, mask ? 'maschera trovata.' : 'qui potrebbe esserci una maschera.'));
                 });
-            }
-            svg.append(g);
-        });
-        const map = el('div', 'realm-map');
-        map.append(svg);
-        root.append(map, info);
+            });
+            line.append(row);
+        }
+        root.append(line);
     }
 
     /* ---------- diario ---------- */
 
     private renderJournal(root: HTMLElement): void {
         const lv = LEVELS[state.save.levelId];
-        const obj = el('div', 'objective glass-panel glass-acid-red');
-        obj.append(text('span', 'where', lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : 'da qualche parte'));
-        obj.append(document.createTextNode(formatKeys(OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.')));
-        root.append(obj);
+        const hero = el('div', 'hero');
+        hero.append(
+            text('span', 'kicker', lv ? `${lv.title.toLowerCase()} ${lv.accentWord}` : 'da qualche parte'),
+            text('p', 'text', formatKeys(OBJECTIVES[state.save.levelId] ?? 'vai avanti. il realm non si salva da solo.')),
+        );
+        const frag = el('div', 'frag');
+        frag.append(text('span', '', 'frammenti della gecowave'), text('b', '', `${state.save.abilities.length}/${TOTAL_FRAGMENTS}`));
+        hero.append(frag, meter(state.save.abilities.length, TOTAL_FRAGMENTS));
+        root.append(hero);
 
-        root.append(text('div', 'phone-section', 'il resto della vita'));
+        // le missioni dei passanti accettate, con lo stato
+        const mine = QUESTS.filter((q) => state.save.quests[q.id]);
+        if (mine.length) {
+            root.append(heading('missioni dei passanti', `${mine.filter((q) => state.save.quests[q.id].s === 'fatta').length}/${mine.length}`));
+            const list = el('div', 'os-group');
+            for (const q of mine) {
+                const st = state.save.quests[q.id];
+                const where = LEVELS[q.region];
+                const how = st.s === 'fatta' ? 'completata' : st.s === 'pronta' ? 'torna da chi te l\'ha chiesto'
+                    : q.kind === 'caccia' && q.hunt ? `${st.n}/${q.hunt.count} ${q.hunt.label}`
+                    : q.kind === 'cerca' ? `cerca: ${q.thing?.name} (stanze laterali)` : `porta ${q.thing?.name} a ${q.recipient?.name}`;
+                const row = cell({ name: q.title, sub: `${where?.accentWord ?? q.region}, ${how}`, lines: 2 });
+                row.append(text('span', `os-pill ${st.s === 'fatta' ? 'done' : st.s === 'pronta' ? 'ready' : ''}`, st.s === 'fatta' ? 'fatta' : st.s === 'pronta' ? 'pronta' : 'in corso'));
+                if (st.s === 'fatta') row.classList.add('dim');
+                list.append(row);
+            }
+            root.append(list);
+        }
+
         const lore = state.save.collectedLore;
         const quests: { name: string; done: number; total: number; show: boolean }[] = [
-            { name: 'frammenti della gecowave', done: state.save.abilities.length, total: TOTAL_FRAGMENTS, show: true },
-            { name: 'le maschere del primo custode', done: lore.filter((k) => k.startsWith('maschera-')).length, total: TOTAL_MASCHERE, show: true },
+            { name: 'maschere del primo custode', done: lore.filter((k) => k.startsWith('maschera-')).length, total: TOTAL_MASCHERE, show: true },
+            { name: 'amuleti', done: state.save.charms.length, total: Object.values(ITEMS).filter((i) => i.kind === 'amuleto').length, show: true },
             { name: 'il caso analisi 1', done: ['indizio-1', 'indizio-2', 'indizio-3'].filter((f) => state.hasFlag(f)).length, total: 3, show: state.hasFlag('visto-caso') },
             { name: 'la quest di walter baruffoni', done: ['boss-down-maranza', 'boss-down-maranzone', 'boss-down-istruttore', 'boss-down-annascrivania', 'boss-down-walter'].filter((f) => state.hasFlag(f)).length, total: 5, show: state.hasFlag('visto-galliate') },
             { name: 'il quaderno strappato di pedro', done: lore.filter((k) => k.startsWith('pagina-pedro-')).length, total: TOTAL_PAGES, show: lore.some((k) => k.startsWith('pagina-pedro-')) },
             { name: 'storie sparse del realm', done: lore.filter((k) => k.startsWith('nota-')).length, total: TOTAL_NOTES, show: lore.some((k) => k.startsWith('nota-')) },
-            { name: 'amuleti collezionati', done: state.save.charms.length, total: Object.values(ITEMS).filter((i) => i.kind === 'amuleto').length, show: true },
         ];
-        // le missioni dei passanti accettate, con lo stato
-        const mine = QUESTS.filter((q) => state.save.quests[q.id]);
-        if (mine.length) {
-            root.append(text('div', 'phone-section', 'missioni dei passanti'));
-            for (const q of mine) {
-                const st = state.save.quests[q.id];
-                const row = el('div', `phone-row glass-chip ${st.s === 'fatta' ? '' : 'glass-acid-yellow'}`);
-                const main = el('div', 'main');
-                const lv = LEVELS[q.region];
-                const how = st.s === 'fatta' ? 'completata' : st.s === 'pronta' ? 'torna da chi te l\'ha chiesto'
-                    : q.kind === 'caccia' && q.hunt ? `${st.n}/${q.hunt.count} ${q.hunt.label}`
-                    : q.kind === 'cerca' ? `cerca: ${q.thing?.name} (stanze laterali)` : `porta ${q.thing?.name} a ${q.recipient?.name}`;
-                main.append(text('div', 'name', q.title), text('div', 'preview', `${lv?.accentWord ?? q.region} · ${how}`));
-                row.append(main, text('span', 'meta', st.s === 'fatta' ? '✓' : st.s === 'pronta' ? '?' : '…'));
-                if (st.s === 'fatta') row.style.opacity = '0.6';
-                root.append(row);
-            }
-            root.append(text('div', 'phone-section', 'collezioni'));
-        }
+        root.append(heading('il resto della vita'));
+        const tiles = el('div', 'os-tiles two');
         for (const q of quests.filter((q) => q.show)) {
-            const row = el('div', 'phone-row glass-chip');
-            const main = el('div', 'main');
-            main.append(text('div', 'name', q.name));
-            const bar = el('div', 'progress', `<span style="width:${Math.min(100, (q.done / q.total) * 100)}%"></span>`);
-            main.append(bar);
-            row.append(main, text('span', 'meta', `${q.done}/${q.total}`));
-            root.append(row);
+            const t = tile(q.name, `${q.done}/${q.total}`);
+            t.append(meter(q.done, q.total));
+            if (q.done >= q.total) t.classList.add('done');
+            tiles.append(t);
         }
+        root.append(tiles);
     }
 
     /* ---------- codex: note, pagine, misteri in ordine ---------- */
@@ -1159,191 +1404,208 @@ export class Phone {
     private renderCodex(root: HTMLElement): void {
         const sections = codexSections(state.save.collectedLore, (f) => state.hasFlag(f));
         if (!sections.length) {
-            root.append(text('div', 'phone-empty', 'ancora niente da rileggere. esplora le stanze laterali: chi cerca, legge.'));
+            root.append(empty('taccuino', 'ancora niente da rileggere', 'esplora le stanze laterali: chi cerca, legge.'));
             return;
         }
-        root.append(text('div', 'phone-note', CODEX_HINT));
+        root.append(text('div', 'os-banner', CODEX_HINT));
         for (const s of sections) {
-            root.append(text('div', 'phone-section', `${s.title} — ${s.sub}`));
+            const found = s.entries.filter((e) => e.collected).length;
+            root.append(heading(s.title, `${found}/${s.entries.length}`), text('div', 'os-sub', s.sub));
+            const list = el('div', 'os-group');
             for (const e of s.entries) {
-                const row = el('button', `phone-row glass-chip ${e.collected ? 'glass-acid-cyan' : ''}`);
-                const main = el('div', 'main');
-                main.append(text('div', 'name', e.collected ? e.title : `${e.title.split('—')[0].trim()} — ???`), text('div', 'preview', e.collected ? (DIALOGUES[e.id]?.[0]?.text ?? '') : 'non ancora trovato: esplora le stanze laterali.'));
-                row.append(text('span', 'lead', e.collected ? '📖' : '❔'), main, text('span', 'meta', e.collected ? '✓' : '…'));
-                if (e.collected && DIALOGUES[e.id]) {
+                const lines = e.collected ? DIALOGUES[e.id] : undefined;
+                const row = cell({
+                    tag: 'button',
+                    lead: glyph(e.collected ? 'nota' : 'lucchetto', `gl lead-gl${e.collected ? ' on' : ''}`),
+                    name: e.collected ? e.title : `${e.title.split('—')[0].trim()}, ???`,
+                    sub: e.collected ? (lines?.[0]?.text ?? '') : 'non ancora trovato.',
+                    trail: lines ? '›' : undefined,
+                });
+                if (lines) {
                     row.addEventListener('click', () => {
-                        // seconda toccata richiude: niente pile di righe uguali
-                        const next = row.nextElementSibling;
-                        if (next?.classList.contains('codex-open')) {
-                            next.remove();
-                            return;
-                        }
-                        const lines = DIALOGUES[e.id];
-                        const full = lines.map((l) => `${l.speaker}: ${l.text}`).join('\n\n');
-                        const overlay = el('div', 'phone-row glass-chip glass-acid-cyan codex-open');
-                        overlay.append(text('div', 'preview', full));
-                        row.after(overlay);
+                        sfx.ui();
+                        this.sheet((box) => {
+                            box.classList.add('reader');
+                            box.append(text('div', 'reader-title', e.title));
+                            for (const l of lines) {
+                                const p = el('p', 'line');
+                                p.append(text('b', '', l.speaker), document.createTextNode(l.text));
+                                box.append(p);
+                            }
+                        });
                     });
-                }
-                if (!e.collected) (row as HTMLButtonElement).disabled = true;
-                root.append(row);
+                } else (row as HTMLButtonElement).disabled = true;
+                list.append(row);
             }
+            root.append(list);
         }
     }
 
     /* ---------- radio ---------- */
 
     private renderRadio(root: HTMLElement): void {
-        const current = state.save.radio;
-        const np = el('div', 'now-playing glass-panel glass-acid-yellow');
-        np.append(text('div', 'freq', '99.2'));
-        const track = RADIO.find((r) => r.file === current);
-        const line = el('div', 'track');
-        line.append(document.createTextNode(track ? `${track.title} — ${track.artist} ` : 'la musica del capitolo '), el('span', 'eq', '<i></i><i></i><i></i>'));
-        np.append(line);
-        root.append(np);
-
-        const reset = el('button', 'phone-btn sticker glass-acid-yellow');
-        reset.textContent = 'musica del capitolo';
-        reset.disabled = current === null;
-        reset.addEventListener('click', () => {
-            music.setRadio(null);
-            this.renderRadio(this.clear(root));
-        });
-        root.append(reset, text('div', 'phone-section', 'scaletta'));
-        for (const r of RADIO) {
-            const row = el('button', `phone-row glass-chip ${r.file === current ? 'glass-acid-yellow' : ''}`);
-            row.append(text('span', 'lead', r.file === current ? '▶' : '♪'));
-            const main = el('div', 'main');
-            main.append(text('div', 'name', r.title), text('div', 'preview', r.artist));
-            row.append(main);
-            row.addEventListener('click', () => {
-                music.setRadio(r.file);
-                sfx.ui();
-                this.renderRadio(this.clear(root));
-            });
-            root.append(row);
-        }
-    }
-
-    private clear(root: HTMLElement): HTMLElement {
         root.replaceChildren();
-        return root;
+        const current = state.save.radio;
+        const at = RADIO.findIndex((r) => r.file === current);
+        const track = at >= 0 ? RADIO[at] : null;
+        const tune = (file: string | null) => {
+            music.setRadio(file);
+            sfx.ui();
+            this.renderRadio(root);
+        };
+
+        const player = el('div', 'player');
+        player.append(el('div', 'cover', '<span class="eq"><i></i><i></i><i></i><i></i><i></i></span>'));
+        player.append(text('div', 'freq', track ? 'radio gecowave 99.2' : 'in onda adesso'));
+        player.append(text('div', 'title', track ? track.title : 'la musica del capitolo'));
+        player.append(text('div', 'artist', track ? track.artist : 'quella che suona dove sei'));
+        const controls = el('div', 'controls');
+        const step = (dir: number) => tune(RADIO[(at + dir + RADIO.length) % RADIO.length].file);
+        const prev = el('button', 'round-btn');
+        prev.setAttribute('aria-label', 'brano precedente');
+        prev.append(glyph('indietro'));
+        prev.addEventListener('click', () => step(at < 0 ? 0 : -1));
+        const next = el('button', 'round-btn');
+        next.setAttribute('aria-label', 'brano successivo');
+        next.append(glyph('avanti'));
+        next.addEventListener('click', () => step(at < 0 ? 0 : 1));
+        const auto = el('button', `round-btn big${track ? '' : ' on'}`);
+        auto.setAttribute('aria-label', 'torna alla musica del capitolo');
+        auto.setAttribute('aria-pressed', String(!track));
+        auto.append(glyph('musica'));
+        auto.addEventListener('click', () => tune(null));
+        controls.append(prev, auto, next);
+        player.append(controls);
+        root.append(player);
+
+        root.append(heading('scaletta', `${RADIO.length} brani`));
+        const list = el('div', 'os-group');
+        RADIO.forEach((r, i) => {
+            const on = r.file === current;
+            const lead = on ? el('span', 'eq small', '<i></i><i></i><i></i>') : text('span', 'num', String(i + 1));
+            const row = cell({ tag: 'button', lead, name: r.title, sub: r.artist });
+            if (on) row.classList.add('on');
+            row.addEventListener('click', () => tune(r.file));
+            list.append(row);
+        });
+        root.append(list);
     }
 
     /* ---------- profilo ---------- */
 
     private renderProfile(root: HTMLElement): void {
-        const card = el('div', 'player-card glass-panel glass-acid-green');
-        const who = el('div');
-        who.append(text('div', 'pname', state.save.playerName), text('div', 'phone-note', state.hasFlag('quaderno-completo') ? 'custode della gecowave' : 'custode provvisorio della gecowave'));
-        card.append(text('span', 'avatar', '🦎'), who);
+        this.chrome(null);
+        const card = el('div', 'profile');
+        card.append(
+            avatar('🦎', 'green', 'huge'),
+            text('div', 'pname', state.save.playerName),
+            text('div', 'role', state.hasFlag('quaderno-completo') ? 'custode della gecowave' : 'custode provvisorio della gecowave'),
+        );
         root.append(card);
+
+        const build = el('div', 'os-tiles three');
+        build.append(
+            tile('forza', String(state.save.stats.forza)),
+            tile('costituzione', String(state.save.stats.costituzione)),
+            tile('flusso', String(state.save.stats.flusso)),
+        );
+        root.append(build);
 
         const r = state.save.record;
         const hours = Math.floor(r.playMs / 3600000);
         const mins = Math.floor((r.playMs % 3600000) / 60000);
+        const pair = el('div', 'os-tiles two');
+        pair.append(
+            tile('vita massima', String(state.maxHp)),
+            tile('tempo nel realm', `${hours}h ${mins}m`),
+        );
+        root.append(pair);
+
+        root.append(heading('il conto'));
         const lines: [string, string][] = [
-            ['forza', String(state.save.stats.forza)],
-            ['costituzione', String(state.save.stats.costituzione)],
-            ['flusso', String(state.save.stats.flusso)],
-            ['vita massima', String(state.maxHp)],
             ['nemici abbattuti', String(r.kills)],
             ['boss sconfitti', String(r.bosses)],
             ['morti', String(r.deaths)],
-            ['tempo nel realm', `${hours} h ${mins} min`],
             ['punteggio totale', Object.values(state.save.scores).reduce((n, sc) => n + sc.score, 0).toLocaleString('it-IT')],
             ['trofei', `${state.save.achievements.length}`],
         ];
-        for (const [k, v] of lines) {
-            const line = el('div', 'stat-line');
-            line.append(text('span', '', k), text('b', '', v));
-            root.append(line);
+        const list = el('div', 'os-group');
+        for (const [k, v] of lines) list.append(cell({ name: k, trail: v }));
+        root.append(list);
+
+        root.append(heading('le tue wave', `${state.abilities.length}/${TOTAL_FRAGMENTS}`));
+        if (state.abilities.length === 0) {
+            root.append(text('div', 'os-banner', 'ancora nessuna. markolino ti guarda deluso.'));
+            return;
         }
-        root.append(text('div', 'phone-section', 'le tue wave'));
-        if (state.abilities.length === 0) root.append(text('div', 'phone-note', 'ancora nessuna. markolino ti guarda deluso.'));
+        const waves = el('div', 'os-group');
         for (const a of state.abilities) {
             const card2 = ABILITY_CARDS[a];
-            const row = el('div', 'phone-row glass-chip glass-acid-green');
-            const main = el('div', 'main');
-            main.append(text('div', 'name', card2.name), text('div', 'preview', formatKeys(card2.desc)));
-            row.append(main, text('span', 'meta', formatKeys(card2.key)));
-            root.append(row);
+            const row = cell({ name: card2.name, sub: formatKeys(card2.desc), lines: 3 });
+            row.append(text('kbd', 'os-key', formatKeys(card2.key)));
+            waves.append(row);
         }
+        root.append(waves);
     }
 
     /* ---------- impostazioni ---------- */
 
     private renderSettings(root: HTMLElement): void {
-        const vol = el('div', 'phone-row glass-chip');
-        vol.append(text('span', 'name', 'volume'));
-        const slider = el('input');
+        root.append(heading('audio'));
+        const audio = el('div', 'os-group');
+        const vol = el('label', 'os-cell');
+        const slider = el('input', 'os-range');
         slider.type = 'range';
         slider.min = '0';
         slider.max = '1';
         slider.step = '0.05';
         slider.value = String(state.settings.volume);
         slider.setAttribute('aria-label', 'volume');
+        const fill = () => slider.style.setProperty('--fill', `${Number(slider.value) * 100}%`);
+        fill();
         slider.addEventListener('input', () => {
             state.settings.volume = Number(slider.value);
             state.persistSettings();
             sfx.setVolume(state.settings.volume);
             music.setVolume(state.settings.volume);
+            fill();
         });
-        vol.append(slider);
-        root.append(vol);
+        vol.append(text('span', 'name', 'volume'), slider);
+        audio.append(vol);
+        root.append(audio);
 
-        const shake = el('div', 'phone-row glass-chip');
-        shake.append(text('span', 'name', 'screen shake'));
-        const toggle = el('button', `toggle sticker ${state.settings.screenShake ? 'on' : ''}`);
-        toggle.textContent = state.settings.screenShake ? 'attivo' : 'spento';
-        toggle.addEventListener('click', () => {
-            state.settings.screenShake = !state.settings.screenShake;
-            state.persistSettings();
-            toggle.classList.toggle('on', state.settings.screenShake);
-            toggle.textContent = state.settings.screenShake ? 'attivo' : 'spento';
-            sfx.ui();
-        });
-        shake.append(toggle);
-        root.append(shake);
+        root.append(heading('sensazioni'));
+        const feel = el('div', 'os-group');
+        feel.append(
+            switchCell('screen shake', () => state.settings.screenShake, (v) => {
+                state.settings.screenShake = v;
+                state.persistSettings();
+            }),
+            switchCell('effetti di camera', () => state.settings.cameraFx, (v) => {
+                state.settings.cameraFx = v;
+                state.persistSettings();
+            }),
+            switchCell('vibrazione del pad', () => state.settings.rumble, (v) => {
+                state.settings.rumble = v;
+                state.persistSettings();
+                if (v) haptics.rumble(0.3, 0.5, 160);
+                else haptics.stop();
+            }),
+        );
+        root.append(feel);
 
-        const lens = el('div', 'phone-row glass-chip');
-        lens.append(text('span', 'name', 'effetti di camera'));
-        const lensToggle = el('button', `toggle sticker ${state.settings.cameraFx ? 'on' : ''}`);
-        lensToggle.textContent = state.settings.cameraFx ? 'attivi' : 'spenti';
-        lensToggle.addEventListener('click', () => {
-            state.settings.cameraFx = !state.settings.cameraFx;
-            state.persistSettings();
-            lensToggle.classList.toggle('on', state.settings.cameraFx);
-            lensToggle.textContent = state.settings.cameraFx ? 'attivi' : 'spenti';
-            sfx.ui();
-        });
-        lens.append(lensToggle);
-        root.append(lens);
+        root.append(heading('aiuto'));
+        const help = el('div', 'os-group');
+        help.append(assistToggle({ rowClass: 'os-cell' }));
+        root.append(help);
 
-        const buzz = el('div', 'phone-row glass-chip');
-        buzz.append(text('span', 'name', 'vibrazione del pad'));
-        const buzzToggle = el('button', `toggle sticker ${state.settings.rumble ? 'on' : ''}`);
-        buzzToggle.textContent = state.settings.rumble ? 'attiva' : 'spenta';
-        buzzToggle.addEventListener('click', () => {
-            state.settings.rumble = !state.settings.rumble;
-            state.persistSettings();
-            buzzToggle.classList.toggle('on', state.settings.rumble);
-            buzzToggle.textContent = state.settings.rumble ? 'attiva' : 'spenta';
-            if (!state.settings.rumble) haptics.stop();
-            else haptics.rumble(0.3, 0.5, 160);
-            sfx.ui();
-        });
-        buzz.append(buzzToggle);
-        root.append(buzz);
-
-        root.append(assistToggle({ rowClass: 'phone-row glass-chip' }));
-
-        root.append(text('div', 'phone-section', 'comandi del telefono'));
+        root.append(heading('comandi del telefono'));
+        const keys = el('div', 'os-group');
         for (const [k, v] of [['apri e chiudi', keyLabel('phone')], ['indietro', keyLabel('pause')], ['mangia al volo', keyLabel('eat')]]) {
-            const line = el('div', 'stat-line');
-            line.append(text('span', '', k), text('b', '', v));
-            root.append(line);
+            const row = cell({ name: k });
+            row.append(text('kbd', 'os-key', v.toLowerCase()));
+            keys.append(row);
         }
+        root.append(keys);
     }
 }
