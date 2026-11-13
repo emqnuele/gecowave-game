@@ -6,6 +6,7 @@ import '@fontsource/martian-mono/400.css';
 import '@fontsource/martian-mono/700.css';
 import '@fontsource/im-fell-english-sc/400.css';
 import '@fontsource/im-fell-english/400-italic.css';
+import '@fontsource-variable/pixelify-sans/wght.css';
 import './style.css';
 import { PHYSICS } from './config';
 import { FIRST_LEVEL, LEVELS, TOTAL_FRAGMENTS } from './content/levels';

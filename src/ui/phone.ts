@@ -18,6 +18,7 @@ import { sfx } from '../audio/sfx';
 import { state } from '../core/state';
 import { regionView } from '../core/regionView';
 import { realmClock } from '../stage/Atmosphere';
+import { pixelIcon } from './phoneIcons';
 import { buildTrophyCabinet } from './trophies';
 import { assistToggle } from './assist';
 import { QUESTS } from '../content/quests';
@@ -43,27 +44,26 @@ type AppId = 'messaggi' | 'wavegram' | 'fotocamera' | 'galleria' | 'mappa' | 'za
 interface AppDef {
     id: AppId;
     name: string;
-    icon: string;
     tint: ZoneColor;
     title: string;
     sub: string;
 }
 
 const APPS: AppDef[] = [
-    { id: 'messaggi', name: 'messaggi', icon: '💬', tint: 'blue', title: 'MESSAGGI', sub: 'tutti ti scrivono, nessuno ti chiede come stai' },
-    { id: 'wavegram', name: 'wavegram', icon: '📸', tint: 'purple', title: 'WAVEGRAM', sub: 'il realm che collassa, ma con i filtri' },
-    { id: 'fotocamera', name: 'fotocamera', icon: '📷', tint: 'red', title: 'FOTOCAMERA', sub: 'il realm in posa, poi in cornice' },
-    { id: 'galleria', name: 'galleria', icon: '🖼️', tint: 'yellow', title: 'GALLERIA', sub: 'scatti dal realm, da portare via' },
-    { id: 'mappa', name: 'mappa', icon: '🗺️', tint: 'green', title: 'MAPPA', sub: 'tu sei qui. purtroppo.' },
-    { id: 'zaino', name: 'zaino', icon: '🎒', tint: 'orange', title: 'ZAINO', sub: 'tutto quello che un geco può portare' },
-    { id: 'amuleti', name: 'amuleti', icon: '🔮', tint: 'purple', title: 'AMULETI', sub: 'si cambiano solo vicino a un microfono' },
-    { id: 'wavezon', name: 'wavezon', icon: '📦', tint: 'yellow', title: 'WAVEZON', sub: 'consegna in giornata, anche nel void' },
-    { id: 'diario', name: 'diario', icon: '📓', tint: 'red', title: 'DIARIO', sub: 'cose da fare prima che il realm finisca' },
-    { id: 'taccuino', name: 'taccuino', icon: '📓', tint: 'cyan', title: 'TACCUINO', sub: 'note, pagine, misteri: rileggili in ordine' },
-    { id: 'radio', name: 'radio', icon: '📻', tint: 'yellow', title: 'RADIO', sub: 'radio gecowave, l\'unica che non chiude' },
-    { id: 'trofei', name: 'trofei', icon: '🏆', tint: 'yellow', title: 'TROFEI', sub: 'la gloria, ma in pixel' },
-    { id: 'profilo', name: 'io', icon: '🦎', tint: 'green', title: 'IO', sub: 'il custode, in numeri' },
-    { id: 'impostazioni', name: 'impostazioni', icon: '⚙️', tint: 'cyan', title: 'IMPOSTAZIONI', sub: 'per chi vuole il realm più basso' },
+    { id: 'messaggi', name: 'messaggi', tint: 'blue', title: 'MESSAGGI', sub: 'tutti ti scrivono, nessuno ti chiede come stai' },
+    { id: 'wavegram', name: 'wavegram', tint: 'purple', title: 'WAVEGRAM', sub: 'il realm che collassa, ma con i filtri' },
+    { id: 'fotocamera', name: 'fotocamera', tint: 'red', title: 'FOTOCAMERA', sub: 'il realm in posa, poi in cornice' },
+    { id: 'galleria', name: 'galleria', tint: 'yellow', title: 'GALLERIA', sub: 'scatti dal realm, da portare via' },
+    { id: 'mappa', name: 'mappa', tint: 'green', title: 'MAPPA', sub: 'tu sei qui. purtroppo.' },
+    { id: 'zaino', name: 'zaino', tint: 'orange', title: 'ZAINO', sub: 'tutto quello che un geco può portare' },
+    { id: 'amuleti', name: 'amuleti', tint: 'purple', title: 'AMULETI', sub: 'si cambiano solo vicino a un microfono' },
+    { id: 'wavezon', name: 'wavezon', tint: 'yellow', title: 'WAVEZON', sub: 'consegna in giornata, anche nel void' },
+    { id: 'diario', name: 'diario', tint: 'red', title: 'DIARIO', sub: 'cose da fare prima che il realm finisca' },
+    { id: 'taccuino', name: 'taccuino', tint: 'cyan', title: 'TACCUINO', sub: 'note, pagine, misteri: rileggili in ordine' },
+    { id: 'radio', name: 'radio', tint: 'yellow', title: 'RADIO', sub: 'radio gecowave, l\'unica che non chiude' },
+    { id: 'trofei', name: 'trofei', tint: 'yellow', title: 'TROFEI', sub: 'la gloria, ma in pixel' },
+    { id: 'profilo', name: 'io', tint: 'green', title: 'IO', sub: 'il custode, in numeri' },
+    { id: 'impostazioni', name: 'impostazioni', tint: 'cyan', title: 'IMPOSTAZIONI', sub: 'per chi vuole il realm più basso' },
 ];
 
 /** le app fisse nel dock in basso */
@@ -309,7 +309,7 @@ export class Phone {
         btn.setAttribute('aria-label', app.name);
         const icon = el('span', 'icon');
         icon.style.setProperty('--app', ZONE_CSS[app.tint]);
-        icon.textContent = app.icon;
+        icon.append(el('span', 'tile', pixelIcon(app.id)));
         const badge = this.badgeFor(app.id);
         if (badge > 0) icon.append(text('span', 'badge', String(badge)));
         btn.append(icon, text('span', '', app.name));
@@ -356,7 +356,9 @@ export class Phone {
             sfx.ui();
             this.home();
         });
-        head.append(back, text('span', 'app-icon', def.icon));
+        const badge = el('span', 'app-icon', pixelIcon(def.id));
+        badge.style.setProperty('--app', ZONE_CSS[def.tint]);
+        head.append(back, badge);
         b.append(head, text('div', 'phone-title', def.title), text('div', 'phone-sub', def.sub));
         const content = el('div');
         b.append(content);
@@ -451,7 +453,6 @@ export class Phone {
         if (contact) {
             const call = el('button', 'phone-btn sticker glass-acid-green');
             call.textContent = 'chiama';
-            call.style.transform = 'rotate(-1.5deg)';
             call.addEventListener('click', () => this.call(root, contact));
             root.append(call);
         }
@@ -1204,7 +1205,6 @@ export class Phone {
 
         const reset = el('button', 'phone-btn sticker glass-acid-yellow');
         reset.textContent = 'musica del capitolo';
-        reset.style.transform = 'rotate(-1deg)';
         reset.disabled = current === null;
         reset.addEventListener('click', () => {
             music.setRadio(null);

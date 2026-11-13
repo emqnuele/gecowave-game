@@ -555,7 +555,6 @@
 
 .phone-sub {
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 15px;
   color: var(--tint);
   margin: 6px 0 18px;
@@ -672,7 +671,6 @@ button.phone-row {
   padding: 10px 13px;
   margin: 0 0 10px;
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 13px;
   line-height: 1.6;
   color: #cfc6b0;
@@ -924,7 +922,6 @@ button.phone-row {
 
 .realm-map .node text {
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 13px;
   fill: var(--sx-bone);
 }
@@ -1102,7 +1099,6 @@ button.phone-row {
 
 .post p {
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 14px;
   line-height: 1.65;
   color: #cfc6b0;
@@ -1236,7 +1232,6 @@ button.phone-row {
   bottom: 8px;
   text-align: center;
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 12px;
   color: var(--sx-ash);
   padding: 0 12px;
@@ -1279,7 +1274,6 @@ button.phone-row {
   padding: 8px 2px;
   cursor: pointer;
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 13px;
   color: var(--sx-ash);
 }
@@ -1310,7 +1304,6 @@ button.phone-row {
   border: none;
   cursor: pointer;
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 15px;
   color: var(--sx-ash);
 }
@@ -1323,7 +1316,6 @@ button.phone-row {
   border-bottom: 1px solid rgba(207, 167, 92, 0.5);
   outline: none;
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 16px;
   color: var(--sx-bone);
   padding: 6px 2px;
@@ -1373,7 +1365,6 @@ button.phone-row {
   cursor: pointer;
   color: var(--sx-ash);
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 14px;
   text-align: center;
   text-decoration: none;
@@ -1431,7 +1422,6 @@ button.phone-row {
 
 .ph-caption {
   font-family: var(--font-fell-it);
-  font-style: italic;
   font-size: 15px;
   color: var(--sx-bone);
   text-align: center;
@@ -1456,4 +1446,631 @@ button.phone-row {
   flex: 1;
   text-align: center;
   text-decoration: none;
+}
+
+/* ===========================================================
+   wavesung os: griglia e gerarchie da telefono vero, spigoli e glifi a pixel.
+   sta in fondo perché ridisegna le superfici comuni di tutte le app
+   =========================================================== */
+
+.phone {
+  --ink: #000;
+  --panel: #1c1c1e;
+  --panel-2: #2c2c2e;
+  --line: rgba(84, 84, 88, 0.6);
+  --muted: #8e8e93;
+  --label: #f2f2f7;
+  --px: 'Pixelify Sans Variable', var(--font-martian);
+  --sf: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+  /* dentro lo schermo i ruoli cambiano mano: titoli a pixel, testo di sistema */
+  --font-fell: var(--px);
+  --font-marker: var(--px);
+  --font-fell-it: var(--sf);
+  --font-martian: var(--sf);
+  /* spigolo a gradini: due passi da --step */
+  --step: 3px;
+  --notch: polygon(
+    calc(var(--step) * 2) 0, calc(100% - var(--step) * 2) 0,
+    calc(100% - var(--step) * 2) var(--step), calc(100% - var(--step)) var(--step),
+    calc(100% - var(--step)) calc(var(--step) * 2), 100% calc(var(--step) * 2),
+    100% calc(100% - var(--step) * 2), calc(100% - var(--step)) calc(100% - var(--step) * 2),
+    calc(100% - var(--step)) calc(100% - var(--step)), calc(100% - var(--step) * 2) calc(100% - var(--step)),
+    calc(100% - var(--step) * 2) 100%, calc(var(--step) * 2) 100%,
+    calc(var(--step) * 2) calc(100% - var(--step)), var(--step) calc(100% - var(--step)),
+    var(--step) calc(100% - var(--step) * 2), 0 calc(100% - var(--step) * 2),
+    0 calc(var(--step) * 2), var(--step) calc(var(--step) * 2),
+    var(--step) var(--step), calc(var(--step) * 2) var(--step)
+  );
+  /* dritto: i pixel inclinati si impastano */
+  transform: translateY(50%);
+  animation-name: phone-rise;
+  background: linear-gradient(160deg, #3a3a3f, #1b1b1e 45%, #2a2a2e);
+  box-shadow: 0 0 0 1px #000, 0 30px 80px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.14), inset 0 0 0 4px #0a0a0b;
+}
+
+.phone:hover,
+.phone:focus-within {
+  transform: translateY(50%);
+}
+
+.phone.closing {
+  animation: phone-fall 0.26s ease-in both;
+}
+
+@keyframes phone-rise {
+  from { transform: translateY(130%); }
+  to { transform: translateY(50%); }
+}
+
+@keyframes phone-fall {
+  from { transform: translateY(50%); }
+  to { transform: translateY(140%); }
+}
+
+.phone-screen {
+  font-family: var(--sf);
+  -webkit-font-smoothing: antialiased;
+}
+
+.phone-crack {
+  opacity: 0.1;
+}
+
+/* ---------- barra di stato ---------- */
+
+.phone-status {
+  font-size: 12px;
+}
+
+.phone-status .time {
+  font-family: var(--px);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.phone-status .carrier {
+  font-size: 10px;
+}
+
+.phone-status .bars {
+  gap: 2px;
+}
+
+.phone-status .bars i,
+.phone-status .battery,
+.phone-status .battery::before,
+.phone-status .battery::after {
+  border-radius: 0;
+}
+
+.phone-status .bars i:nth-child(1) { height: 4px; }
+.phone-status .bars i:nth-child(2) { height: 6px; }
+.phone-status .bars i:nth-child(3) { height: 8px; }
+
+.phone-status .battery {
+  width: 24px;
+  height: 12px;
+  border-width: 2px;
+}
+
+.phone-status .battery::after {
+  right: -5px;
+  top: 2px;
+  height: 4px;
+}
+
+/* ---------- home ---------- */
+
+.home-wall::after {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.35) 45%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.home-body {
+  padding-top: 64px;
+}
+
+.phone-clock {
+  font-family: var(--px);
+  font-weight: 700;
+  font-size: 76px;
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.phone-greet {
+  margin: 8px 0 20px;
+  font-family: var(--sf);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.82);
+  transform: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.home-widget {
+  padding: 13px 15px 14px;
+  border-radius: 22px;
+  background: rgba(28, 28, 30, 0.86);
+  border: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.home-widget .w-kick {
+  font-family: var(--px);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tint);
+}
+
+.home-widget .w-waves {
+  font-family: var(--px);
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.home-widget .w-text {
+  font-size: 13px;
+  line-height: 1.38;
+  color: var(--label);
+}
+
+.phone-grid {
+  gap: 16px 4px;
+}
+
+.phone-app {
+  gap: 5px;
+  font-family: var(--sf);
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* l'ombra sta fuori dal ritaglio a gradini: per questo è un filtro e non un box-shadow */
+.phone-app .icon {
+  width: 60px;
+  height: 60px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45));
+}
+
+.phone-app .tile,
+.phone-head .app-icon {
+  --step: 4px;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--app) 78%, #fff) 0%,
+    var(--app) 42%,
+    color-mix(in srgb, var(--app) 62%, #000) 100%);
+  clip-path: var(--notch);
+}
+
+.phone-app .tile svg {
+  width: 36px;
+  height: 36px;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.22));
+}
+
+/* il fuoco è un contorno a pixel che segue i gradini dell'icona */
+.phone-app:focus-visible .icon {
+  box-shadow: none;
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff);
+}
+
+.phone-app .badge {
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 0;
+  background: #ff453a;
+  color: #fff;
+  font-family: var(--px);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+  --step: 2px;
+  clip-path: var(--notch);
+}
+
+.phone-dock {
+  padding: 13px 8px;
+  border-radius: 30px;
+  background: rgba(60, 60, 67, 0.55);
+  border: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+.phone-home-bar span {
+  width: 120px;
+  height: 4px;
+  border-radius: 0;
+  background: #fff;
+}
+
+/* ---------- testata delle app ---------- */
+
+.phone-head {
+  margin: 0 0 6px;
+}
+
+.phone-back {
+  font-family: var(--sf);
+  font-size: 15px;
+  color: var(--tint);
+}
+
+.phone-back b {
+  font-family: var(--px);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 0.7;
+}
+
+.phone-head .app-icon {
+  --step: 2px;
+  width: 28px;
+  height: 28px;
+  font-size: 0;
+}
+
+.phone-head .app-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.phone-title {
+  font-family: var(--px);
+  font-weight: 700;
+  font-size: 34px;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.phone-sub {
+  font-family: var(--sf);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+  margin: 4px 0 18px;
+}
+
+.phone-section {
+  margin: 22px 4px 8px;
+  font-family: var(--px);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+.phone-empty {
+  font-family: var(--px);
+  font-size: 16px;
+  color: var(--muted);
+  transform: none;
+}
+
+.phone-note {
+  font-family: var(--sf);
+  font-size: 13px;
+  line-height: 1.4;
+  transform: none;
+}
+
+/* ---------- celle, pannelli, pulsanti ---------- */
+
+.phone .glass-chip,
+.phone .glass-panel {
+  background-color: var(--panel);
+  border: none;
+  border-radius: 14px;
+  box-shadow: none;
+  transform: none;
+}
+
+.phone .glass-panel {
+  border-radius: 18px;
+}
+
+.phone-row {
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--label);
+}
+
+button.phone-row {
+  border: none;
+}
+
+.phone-row:hover,
+.phone-row:focus-visible {
+  background-color: var(--panel-2);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tint) 70%, transparent);
+}
+
+.phone-row .name {
+  font-family: var(--px);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.phone-row .preview {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.phone-row .meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.phone-row .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  background: #0a84ff;
+}
+
+.phone .sticker {
+  --step: 2px;
+  background: var(--panel-2);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: var(--notch);
+  transform: none;
+}
+
+.phone-btn {
+  padding: 9px 16px;
+  font-family: var(--px);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.phone-btn.glass-acid-green { background: #248a3d; }
+.phone-btn.glass-acid-red { background: #c9342c; }
+.phone-btn.glass-acid-purple { background: #8944ab; }
+.phone-btn.glass-acid-yellow { background: #b27c00; }
+
+.phone-btn:hover,
+.phone-btn:focus-visible {
+  transform: none !important;
+  filter: brightness(1.2);
+}
+
+.phone-btn:active {
+  filter: brightness(0.85);
+}
+
+/* controllo a segmenti */
+.phone-tabs {
+  gap: 2px;
+  padding: 2px;
+  background: var(--panel);
+  --step: 2px;
+  clip-path: var(--notch);
+}
+
+.phone-tab {
+  flex: 1;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 8px;
+  font-family: var(--px);
+  font-size: 14px;
+  letter-spacing: 0;
+  color: var(--muted);
+  background: none !important;
+}
+
+.phone-tab.active {
+  background: #636366 !important;
+  color: #fff;
+}
+
+/* ---------- chat ---------- */
+
+.bubble {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  font-family: var(--sf);
+  font-size: 14px;
+  line-height: 1.35;
+  color: #fff;
+  background: #262629;
+  border: none;
+  border-radius: 0;
+  --step: 3px;
+  clip-path: var(--notch);
+}
+
+.bubble.me {
+  background: #0a84ff;
+}
+
+.bubble .when {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.call-avatar {
+  --step: 6px;
+  border-radius: 0;
+  clip-path: var(--notch);
+  transform: none;
+}
+
+.call-name {
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.call-state {
+  font-family: var(--sf);
+  color: var(--muted);
+}
+
+@keyframes call-ring {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ---------- zaino, amuleti, negozio ---------- */
+
+.slot-grid {
+  gap: 8px;
+}
+
+.slot,
+.slot:nth-child(3n),
+.slot:nth-child(3n + 1) {
+  transform: none;
+  --step: 3px;
+  border-radius: 0;
+  clip-path: var(--notch);
+}
+
+.slot:hover,
+.slot:focus-visible,
+.slot.selected {
+  transform: none;
+  background-color: color-mix(in srgb, var(--tint) 32%, var(--panel));
+}
+
+.slot .qty {
+  font-family: var(--px);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* dentro il ritaglio: l'alone non può più uscire dalla casella */
+.slot.equipped::after {
+  inset: 0;
+  border-radius: 0;
+  border: 3px solid var(--purple);
+  box-shadow: none;
+}
+
+.slot .pips i,
+.notches i {
+  border-radius: 0;
+}
+
+.notches i.used {
+  box-shadow: none;
+}
+
+.detail .name {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.detail p {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--label);
+}
+
+.detail .punch {
+  font-family: var(--sf);
+  color: var(--muted);
+}
+
+.price,
+.wallet {
+  font-family: var(--px);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.wallet {
+  transform: none;
+}
+
+/* ---------- diario, profilo, radio, wavegram ---------- */
+
+.objective {
+  font-size: 14px;
+  line-height: 1.42;
+  transform: none;
+}
+
+.objective .where {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.progress,
+.progress span {
+  border-radius: 0;
+}
+
+.progress {
+  height: 6px;
+  background: var(--panel-2);
+}
+
+.stat-line {
+  padding: 11px 4px;
+  font-size: 14px;
+  color: var(--label);
+  border-bottom: 1px solid var(--line);
+}
+
+.stat-line b {
+  font-family: var(--px);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.player-card,
+.now-playing {
+  transform: none;
+}
+
+.player-card .avatar {
+  transform: none;
+}
+
+.player-card .pname {
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.post {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone,
+  .phone.closing {
+    animation: none;
+  }
 }
